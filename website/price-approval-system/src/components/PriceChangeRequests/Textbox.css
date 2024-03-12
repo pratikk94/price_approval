@@ -1,0 +1,16 @@
+.input-container {
+  margin: 20px;
+}
+
+.custom-input {
+  padding: 10px;
+  font-size: 16px;
+  border: 2px solid #007bff;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.custom-input:focus {
+  border-color: #0056b3;
+}

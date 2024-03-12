@@ -1,0 +1,9 @@
+﻿id,payment_terms_id,terms
+1,C030,Payment within 30 days
+2,C045,Payment within 45 days
+3,C060,Payment within 60 days
+4,D021,Payment within 21 days
+5,U90,LC 90 days
+6,C017,Payment within 17 days
+7,AD00,Advance payment (100)
+8,ADV,Advance

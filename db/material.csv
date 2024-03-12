@@ -1,0 +1,25 @@
+﻿id,grade,fsc,grade_description,profit_center_id,status
+1,CYXL,N,Cyber,1,1
+2,BXHS,N,Cyber,2,1
+3,CYXD,N,Cyber,3,2
+4,CYXF,Y,Cyber FSC,4,1
+5,BXHF,Y,Cyber FSC,5,1
+6,CYSF,Y,Cyber FSC,6,2
+7,CYXL,N,Cyber,7,1
+8,BXHS,Y,Cyber FSC,8,1
+9,CYXD,Y,Cyber FSC,9,1
+10,CYXF,Y,Cyber FSC,10,2
+11,BXHF,N,Cyber,11,1
+12,CYSF,Y,Cyber FSC,12,2
+13,CYXL,N,Cyber,13,1
+14,BXHS,Y,Cyber FSC,14,1
+15,CYXD,Y,Cyber FSC,15,2
+16,CYXF,N,Cyber,16,2
+17,BXHF,Y,Cyber FSC,17,1
+18,CYSF,Y,Cyber FSC,18,2
+19,CYXL,N,Cyber,19,1
+20,BXHS,N,Cyber,20,1
+21,CYXD,Y,Cyber FSC,21,1
+22,CYXF,Y,Cyber FSC,22,1
+23,BXHF,N,Cyber,23,2
+24,CYSF,Y,Cyber FSC,24,1
