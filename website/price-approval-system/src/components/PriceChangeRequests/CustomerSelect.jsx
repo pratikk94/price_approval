@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Select, { components } from "react-select";
 import { backend_url } from "../../util";
 
-const CustomerSelect = ({ id, name }) => {
+const CustomerSelect = ({ id, name, setSelection, checkCheckBox }) => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
 
@@ -29,6 +29,9 @@ const CustomerSelect = ({ id, name }) => {
 
   const handleChange = (selectedOptions) => {
     setSelectedCustomers(selectedOptions);
+    setSelection(selectedOptions);
+    checkCheckBox();
+    console.log("Called");
   };
 
   // Customizing the option component

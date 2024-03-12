@@ -6,7 +6,7 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Select from "react-select";
 import { backend_url } from "../../util";
-function TableWithInputs() {
+function TableWithInputs({ setTableRowsDataFunction }) {
   const [grades, setGrades] = useState([]);
   const [rows, setRows] = useState([
     {
@@ -102,6 +102,10 @@ function TableWithInputs() {
       })
     );
   };
+
+  useEffect(() => {
+    setTableRowsDataFunction(rows);
+  }, [rows, setTableRowsDataFunction]);
 
   // Add a new row
   const addRow = () => {
