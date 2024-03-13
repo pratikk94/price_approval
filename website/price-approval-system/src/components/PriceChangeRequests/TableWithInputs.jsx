@@ -105,6 +105,7 @@ function TableWithInputs({ setTableRowsDataFunction }) {
 
   useEffect(() => {
     setTableRowsDataFunction(rows);
+    fetch_grades(fscCode);
   }, [rows, setTableRowsDataFunction]);
 
   // Add a new row

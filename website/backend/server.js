@@ -4,6 +4,7 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(cors());
+app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
@@ -28,13 +29,13 @@ app.get("/api/fetch_customers", async (req, res) => {
     if (type == 3) {
       console.log("selected");
       result = await pool.request()
-        .query`SELECT code, name FROM customer where category IN (6)`;
+        .query`SELECT code, name FROM customer where category IN ('END_USE')`;
     } else if (type == 2) {
       result = await pool.request()
-        .query`SELECT code, name FROM customer where category IN (2, 4)`;
+        .query`SELECT code, name FROM customer where category IN ('DOM_CONS','EXP_CONS')`;
     } else {
       result = await pool.request()
-        .query`SELECT code, name FROM customer where category IN (1, 3, 5)`;
+        .query`SELECT code, name FROM customer WHERE category IN ('DOM_CUST', 'EXP_CUST', 'INTERDIV_CUST')`;
     }
     // Send the results as a response
     res.json(result.recordset);
@@ -139,6 +140,32 @@ app.get("/api/fetch_grade", async (req, res) => {
         console.error("Failed to close the pool:", err);
       }
     }
+  }
+});
+
+app.post("/api/add_price_request", async (req, res) => {
+  let pool = null;
+  try {
+    // Connect to database
+    pool = await sql.connect(config);
+    console.log(req.body);
+    // Insert into the main table
+    const mainResult = await pool.request()
+      .query`INSERT INTO main (customer_id, consignee_id, plant, end_use_id, end_use_segment_id, payment_terms_id, valid_from, valid_to, fsc, mappint_type) VALUES (${req.body.customerIds}, ${req.body.consigneeIds}, ${req.body.plants}, ${req.body.endUseIds}, ${req.body.endUseSegmentIds}, ${req.body.paymentTermsId}, ${req.body.validFrom}, ${req.body.validTo}, ${req.body.fsc},${req.body.mappingType}); SELECT SCOPE_IDENTITY() as id;`;
+
+    const requestId = mainResult.recordset[0].id;
+
+    // Insert into the main_price_table
+    const priceTable = req.body.priceTable; // Assuming this is an array of objects
+    for (const item of priceTable) {
+      await pool.request()
+        .query`INSERT INTO main_price_table (request_id, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, reel_discount, pack_upcharge, tpc, offline_discount, net_nsr, old_net_nsr) VALUES (${requestId}, ${item.grade}, ${item.gradeType}, ${item.gsmRangeFrom}, ${item.gsmRangeTo}, ${item.agreedPrice}, ${item.specialDiscount}, ${item.reelDiscount}, ${item.packUpcharge}, ${item.tpc}, ${item.offlineDiscount}, ${item.netNsr}, ${item.oldNetNsr});`;
+    }
+
+    res.status(200).send("Data added successfully");
+  } catch (err) {
+    console.error("Database operation failed:", err);
+    res.status(500).send("Failed to add data");
   }
 });
 

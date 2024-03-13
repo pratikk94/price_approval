@@ -1,11 +1,10 @@
 Save as draft.
 Preview.
-Grading fetch by fsm. (done)
-Grade type fetch by grade.
-Customer Multi select. (done)
-
-Remarks:Sr.no,time stamp , from , remark/note.
 
 Add options to create request.
+Grade type fetch by grade.
 
-Match consignee to consumer.
+Grading fetch by fsm. (done)
+Customer Multi select. (done)
+Remarks:Sr.no,time stamp , from , remark/note. (done)
+Match consignee to consumer.(done)

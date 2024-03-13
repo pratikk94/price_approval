@@ -1,24 +1,22 @@
+import { Label } from "@mui/icons-material";
+import { TextField, Typography } from "@mui/material";
 import React, { useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
-function DateSelector({ name }) {
-  const [selectedDate, setSelectedDate] = useState("");
-
-  const handleDateChange = (event) => {
-    setSelectedDate(event.target.value);
-  };
+function CustomDatePicker({ name }) {
+  const [startDate, setStartDate] = useState(new Date());
 
   return (
     <div>
-      <label htmlFor="datePicker">{name}</label>
-      <input
-        type="date"
-        id="datePicker"
-        value={selectedDate}
-        onChange={handleDateChange}
+      <Typography variant="p">{name + "\t"}</Typography>
+
+      <DatePicker
+        selected={startDate}
+        onChange={(date) => setStartDate(date)}
       />
-      {selectedDate && <p>Selected Date: {selectedDate}</p>}
     </div>
   );
 }
 
-export default DateSelector;
+export default CustomDatePicker;

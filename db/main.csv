@@ -1,2 +1,2 @@
-﻿id,customer_id,consignee_id,plant,end_use_id,end_use_segment_id,payment_terms_id,valid_from,valid_to,fsc,grade,grade_type,gsm_range_from ,gsm_range_to,agreed_price,special_discount,ree_ discount,pack_upcharge,tpc,offline _iscount,net_nsr,old_net_nsr,remarks
-1,1,1,1,1,1,1,2019-01-01,2019-12-31,1,1,1,100,200,300,400,500,600,700,800,900,1000,No remarks
+﻿"customer_id","consignee_id","plant","end_use_id","end_use_segment_id","payment_terms_id","valid_from","valid_to","fsc","mappint_type"
+"1,2","11,12","31,32","41,42","51,52","1","2019-01-01","2019-12-31","1",1
