@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-function CustomDatePicker({ name }) {
+function CustomDatePicker({ name, setSelection }) {
   const [startDate, setStartDate] = useState(new Date());
 
   return (
@@ -13,7 +13,10 @@ function CustomDatePicker({ name }) {
 
       <DatePicker
         selected={startDate}
-        onChange={(date) => setStartDate(date)}
+        onChange={(date) => {
+          setStartDate(date);
+          setSelection(date);
+        }}
       />
     </div>
   );

@@ -3,6 +3,7 @@ const sql = require("mssql");
 const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3000;
+const { format } = require("date-fns");
 app.use(cors());
 app.use(express.json());
 // Configuration object for your SQL Server
@@ -29,10 +30,10 @@ app.get("/api/fetch_customers", async (req, res) => {
     if (type == 3) {
       console.log("selected");
       result = await pool.request()
-        .query`SELECT code, name FROM customer where category IN ('END_USE')`;
+        .query`SELECT code, name FROM customer where category IN ('END-USE')`;
     } else if (type == 2) {
       result = await pool.request()
-        .query`SELECT code, name FROM customer where category IN ('DOM_CONS','EXP_CONS')`;
+        .query`SELECT code, name FROM customer where category IN ('DOM-CONS','EXP-CONS')`;
     } else {
       result = await pool.request()
         .query`SELECT code, name FROM customer WHERE category IN ('DOM_CUST', 'EXP_CUST', 'INTERDIV_CUST')`;
@@ -142,30 +143,66 @@ app.get("/api/fetch_grade", async (req, res) => {
     }
   }
 });
-
+//TO-DO:update user id from ad.
+//api to add price request.
 app.post("/api/add_price_request", async (req, res) => {
   let pool = null;
   try {
     // Connect to database
     pool = await sql.connect(config);
-    console.log(req.body);
     // Insert into the main table
     const mainResult = await pool.request()
-      .query`INSERT INTO main (customer_id, consignee_id, plant, end_use_id, end_use_segment_id, payment_terms_id, valid_from, valid_to, fsc, mappint_type) VALUES (${req.body.customerIds}, ${req.body.consigneeIds}, ${req.body.plants}, ${req.body.endUseIds}, ${req.body.endUseSegmentIds}, ${req.body.paymentTermsId}, ${req.body.validFrom}, ${req.body.validTo}, ${req.body.fsc},${req.body.mappingType}); SELECT SCOPE_IDENTITY() as id;`;
+      .query`INSERT INTO price_approval_requests (customer_id, consignee_id, plant, end_use_id, end_use_segment_id, payment_terms_id, valid_from, valid_to, fsc, mappint_type) VALUES (${req.body.customerIds}, ${req.body.consigneeIds}, ${req.body.plants}, ${req.body.endUseIds}, ${req.body.endUseSegmentIds}, ${req.body.paymentTermsId}, ${req.body.validFrom}, ${req.body.validTo}, ${req.body.fsc},${req.body.mappingType}); SELECT SCOPE_IDENTITY() as id;`;
 
     const requestId = mainResult.recordset[0].id;
-
+    console.log(requestId);
     // Insert into the main_price_table
     const priceTable = req.body.priceTable; // Assuming this is an array of objects
     for (const item of priceTable) {
       await pool.request()
-        .query`INSERT INTO main_price_table (request_id, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, reel_discount, pack_upcharge, tpc, offline_discount, net_nsr, old_net_nsr) VALUES (${requestId}, ${item.grade}, ${item.gradeType}, ${item.gsmRangeFrom}, ${item.gsmRangeTo}, ${item.agreedPrice}, ${item.specialDiscount}, ${item.reelDiscount}, ${item.packUpcharge}, ${item.tpc}, ${item.offlineDiscount}, ${item.netNsr}, ${item.oldNetNsr});`;
+        .query`INSERT INTO price_approval_requests_price_table (req_id, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, reel_discount, pack_upcharge, tpc, offline_discount, net_nsr, old_net_nsr) VALUES (
+          ${requestId}, 
+          ${item.grade},  ${item.gradeType}, 
+          ${item.gsmFrom}, 
+          ${item.gsmTo}, 
+          ${item.agreedPrice != undefined ? item.agreedPrice : 0}, 
+          ${item.specialDiscount != undefined ? item.specialDiscount : 0}, 
+          ${item.reelDiscount != undefined ? item.reelDiscount : 0}, 
+          ${item.packUpcharge != undefined ? item.packUpcharge : 0}, 
+          ${item.tpc != undefined ? item.tpc : 0}, 
+          ${item.offlineDiscount != undefined ? item.offlineDiscount : 0}, 
+          ${item.netNSR != undefined ? item.netNSR : 0}, 
+          ${item.oldNetNSR != undefined ? item.oldNetNSR : 0});`;
     }
+    const time = format(Date(), "yyyy-MM-dd HH:mm:ss");
+    const query = `
+    INSERT INTO report_status (report_id,status, status_updated_by_id , created_at, last_updated_at) 
+    VALUES (
+        ${requestId},
+        ${1},
+        ${1},
+        '${time}',
+        '${time}')`;
+
+    console.log(query);
+
+    // Execute the query with parameters
+    await pool.request().query(query);
+
+    console.log("Data inserted successfully.");
 
     res.status(200).send("Data added successfully");
   } catch (err) {
     console.error("Database operation failed:", err);
     res.status(500).send("Failed to add data");
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
   }
 });
 

@@ -30,7 +30,7 @@ const CustomerSelect = ({ id, name, setSelection, checkCheckBox }) => {
   const handleChange = (selectedOptions) => {
     setSelectedCustomers(selectedOptions);
     setSelection(selectedOptions);
-    checkCheckBox();
+    if (id != 3) checkCheckBox();
     console.log("Called");
   };
 

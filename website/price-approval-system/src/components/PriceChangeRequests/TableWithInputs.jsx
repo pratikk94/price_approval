@@ -6,12 +6,12 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Select from "react-select";
 import { backend_url } from "../../util";
-function TableWithInputs({ setTableRowsDataFunction }) {
+function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
   const [grades, setGrades] = useState([]);
   const [rows, setRows] = useState([
     {
       id: Date.now(),
-      grade: "",
+      grade: "A",
       gradeType: "",
       gsmFrom: "",
       gsmTo: "",
@@ -22,7 +22,7 @@ function TableWithInputs({ setTableRowsDataFunction }) {
       tpc: 0,
       offlineDiscount: 0,
       netNSR: 0,
-      oldNetNSR: "",
+      oldNetNSR: 0,
     },
   ]);
 
@@ -56,6 +56,15 @@ function TableWithInputs({ setTableRowsDataFunction }) {
       console.error("Error fetching customer data:", error);
     }
   };
+
+  // const onHandleGSMTo = (e) => {
+  //   setGSMTo(e.target.value);
+  // };
+
+  // const onHandleGSMFrom = (e) => {
+  //   //setGSMFrom(e.target.value);
+  //   setGSMFrom(e.target.value);
+  // };
 
   // Update row field values and calculate netNSR dynamically
   const handleRowChange = (id, field, value) => {
@@ -95,7 +104,7 @@ function TableWithInputs({ setTableRowsDataFunction }) {
               // return;
             }
           }
-
+          // setNetNSR(updatedRow.netNSR);
           return updatedRow;
         }
         return row;
@@ -112,7 +121,7 @@ function TableWithInputs({ setTableRowsDataFunction }) {
   const addRow = () => {
     const newRow = {
       id: Date.now(),
-      grade: "",
+      grade: "A",
       gradeType: "",
       gsmFrom: "",
       gsmTo: "",
@@ -123,7 +132,7 @@ function TableWithInputs({ setTableRowsDataFunction }) {
       tpc: 0,
       offlineDiscount: 0,
       netNSR: 0,
-      oldNetNSR: "",
+      oldNetNSR: 0,
     };
     setRows((prevRows) => [...prevRows, newRow]);
   };
@@ -138,6 +147,7 @@ function TableWithInputs({ setTableRowsDataFunction }) {
     setGrades(e.target.checked ? 1 : 0);
     setFSC((e) => {
       fetch_grades(e ? 0 : 1);
+      setFSCCode(e ? 0 : 1);
       return e ? 0 : 1;
     });
   }
@@ -221,20 +231,22 @@ function TableWithInputs({ setTableRowsDataFunction }) {
                   <input
                     type="number"
                     value={row.gsmFrom}
-                    onChange={(e) =>
-                      handleRowChange(row.id, "gsmFrom", e.target.value)
-                    }
+                    onChange={(e) => {
+                      // setGSMFrom(e.target.value);
+                      handleRowChange(row.id, "gsmFrom", e.target.value);
+                    }}
                   />
                 </td>
               }
               {
                 <td>
                   <input
-                    type="number"
+                    type="text"
                     value={row.gsmTo}
-                    onChange={(e) =>
-                      handleRowChange(row.id, "gsmTo", e.target.value)
-                    }
+                    onChange={(e) => {
+                      // setGSMFrom(e.target.value);
+                      handleRowChange(row.id, "gsmTo", e.target.value);
+                    }}
                   />
                 </td>
               }
