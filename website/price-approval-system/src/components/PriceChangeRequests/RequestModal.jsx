@@ -16,6 +16,7 @@ import Plant from "./Plant";
 import DateSelector from "./DateSelector";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import RemarkBox from "./RemarkBox";
 
 const modalStyle = {
   position: "absolute",
@@ -152,6 +153,8 @@ const CreateRequestModal = ({ open, handleClose }) => {
         <SpacingWrapper space="24px" />
         <Typography>Select pricing conditions</Typography>
         <TableWithInputs setTableRowsDataFunction={setTableRowsDataFunction} />
+        <SpacingWrapper space="24px" />
+        <RemarkBox />
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
           <Button onClick={handleClose} color="primary">
             Close
