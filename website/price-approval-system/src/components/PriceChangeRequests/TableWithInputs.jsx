@@ -144,12 +144,17 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
   const [fscCode, setFSC] = useState(0);
 
   function handleFSCChange(e) {
-    setGrades(e.target.checked ? 1 : 0);
+    // setGrades(e.target.checked ? 1 : 0);
     setFSC((e) => {
       fetch_grades(e ? 0 : 1);
       setFSCCode(e ? 0 : 1);
       return e ? 0 : 1;
     });
+  }
+
+  function handleGradeChange(e) {
+    console.log(e);
+    setGrades(e.label);
   }
 
   return (
@@ -206,14 +211,15 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
             <tr key={index}>
               <td>
                 <Select
-                  value={fscCode}
+                  value={row.grade}
                   style={{ margintop: "10px" }}
                   name="customers"
                   options={grades}
                   className="basic-multi-select"
                   classNamePrefix="select"
-                  onChange={handleFSCChange}
-                  placeholder={`Select plant`}
+                  // onChange={handleFSCChange}
+                  onChange={(e) => handleRowChange(row.id, "grade", e.label)}
+                  placeholder={`Select grade`}
                 />
               </td>
               <td>

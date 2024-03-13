@@ -66,13 +66,16 @@ const CreateRequestModal = ({ open, handleClose }) => {
     formData["validFrom"] = validFrom;
     formData["validTo"] = validTo;
     formData["remarks"] = remarks;
-    formData["mappingType"] = isChecked ? 1 : 2;
+    formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
     formData["fsc"] = 1;
     formData["priceTable"] = tableRowsData;
     console.log(formData.length);
     const val = JSON.stringify(formData);
     console.log(val);
     submitData(formData);
+    setSelectedConsignees([]);
+    setSelectedCustomers([]);
+
     handleClose(); // Close modal after submission, you might want to do this after successful submission
     if (checkBoxEnabled && isChecked) {
       oneToManyMapping(selectedCustomers, selectedConsignees);
@@ -105,13 +108,11 @@ const CreateRequestModal = ({ open, handleClose }) => {
   };
 
   const CheckCheckBox = () => {
-    if (
-      selectedCustomers.length === selectedConsignees.length &&
-      selectedCustomers.length == 0
-    ) {
+    console.log(selectedConsignees.length, selectedCustomers.length);
+    if (selectedConsignees.length == 0 || selectedCustomers.length == 0) {
       setCheckBoxEnabled(false);
-    }
-    if (selectedConsignees.length === selectedCustomers.length) {
+    } else if (selectedConsignees.length == selectedCustomers.length) {
+      alert("One to one mapping?");
       setCheckBoxEnabled(true);
     } else {
       setCheckBoxEnabled(false);
@@ -171,14 +172,16 @@ const CreateRequestModal = ({ open, handleClose }) => {
             <CustomerSelect
               id={1}
               name={"customer"}
-              setSelection={setSelectedCustomers}
+              customerState={setSelectedCustomers}
+              consigneeState={setSelectedConsignees}
+              endUseState={setEndUse}
               checkCheckBox={CheckCheckBox}
             />
             <SpacingWrapper space="12px" />
             <FormControlLabel
               control={
                 <Checkbox
-                  disabled={selectedCustomers.length === 0 || checkBoxEnabled}
+                  disabled={checkBoxEnabled ? false : true}
                   icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
                   checkedIcon={<CheckBoxIcon fontSize="medium" />}
                   checked={isChecked}
@@ -191,7 +194,9 @@ const CreateRequestModal = ({ open, handleClose }) => {
             <CustomerSelect
               id={3}
               name={"end use"}
-              setSelection={setEndUse}
+              customerState={setSelectedCustomers}
+              consigneeState={setSelectedConsignees}
+              endUseState={setEndUse}
               checkCheckBox={CheckCheckBox}
             />
             <SpacingWrapper space="12px" />
@@ -214,7 +219,9 @@ const CreateRequestModal = ({ open, handleClose }) => {
             <CustomerSelect
               id={2}
               name={"consignee"}
-              setSelection={setSelectedConsignees}
+              customerState={setSelectedCustomers}
+              consigneeState={setSelectedConsignees}
+              endUseState={setEndUse}
               checkCheckBox={CheckCheckBox}
             />
 
