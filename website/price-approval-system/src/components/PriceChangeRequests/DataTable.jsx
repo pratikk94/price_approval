@@ -12,7 +12,18 @@ import {
   FormControlLabel,
   TableSortLabel,
   TextField,
+  IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  OutlinedInput,
+  MenuItem,
+  ListItemText,
 } from "@mui/material";
+import ViewIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import DownloadIcon from "@mui/icons-material/GetApp";
+
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
 
@@ -104,34 +115,71 @@ function DynamicTable() {
     setPage(0); // Reset to the first page
   };
 
-  const sortedData = React.useMemo(() => {
-    if (!sortConfig.key) return data;
-    return [...data].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key])
-        return sortConfig.direction === "asc" ? -1 : 1;
-      if (a[sortConfig.key] > b[sortConfig.key])
-        return sortConfig.direction === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [data, sortConfig]);
+  //   const sortedData = React.useMemo(() => {
+  //     if (!sortConfig.key) return data;
+  //     return [...data].sort((a, b) => {
+  //       if (a[sortConfig.key] < b[sortConfig.key])
+  //         return sortConfig.direction === "asc" ? -1 : 1;
+  //       if (a[sortConfig.key] > b[sortConfig.key])
+  //         return sortConfig.direction === "asc" ? 1 : -1;
+  //       return 0;
+  //     });
+  //   }, [data, sortConfig]);
+  const selectedColumns = Object.entries(columnVisibility)
+    .filter(([key, value]) => value)
+    .map(([key]) => key);
 
-  const handleColumnVisibilityChange = (column) => {
-    setColumnVisibility((prev) => ({
-      ...prev,
-      [column]: !prev[column],
-    }));
+  const handleColumnVisibilityChange = (event) => {
+    const { value } = event.target;
+    // Create a new visibility object, setting all to false initially
+    const newVisibility = Object.keys(columnVisibility).reduce(
+      (acc, column) => ({
+        ...acc,
+        [column]: false,
+      }),
+      {}
+    );
+
+    // Set selected columns to true
+    value.forEach((column) => {
+      newVisibility[column] = true;
+    });
+
+    setColumnVisibility(newVisibility);
+  };
+
+  // Function to handle actions (as examples):
+  const handleView = (id) => {
+    console.log(`View action for ${id}`);
+    // Implement view logic here
+  };
+
+  const handleEdit = (id) => {
+    console.log(`Edit action for ${id}`);
+    // Implement edit logic here
+  };
+
+  const handleDownload = (id) => {
+    console.log(`Download action for ${id}`);
+    // Implement download logic here
   };
 
   return (
-    <Paper>
-      <TextField
-        label="Search"
-        variant="outlined"
-        size="small"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
-      <div style={{ margin: "10px" }}>
+    <Paper style={{ width: "80vw", overflowX: "auto" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-evenly",
+          alignItems: "center",
+        }}
+      >
+        <TextField
+          label="Search"
+          variant="outlined"
+          size="small"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
         <span>Start Date: </span>
         <DatePicker
           selected={startDate}
@@ -147,22 +195,29 @@ function DynamicTable() {
           isClearable
           minDate={startDate} // Optional: Ensures end date is after start date
         />
-      </div>
-      <div>
-        {Object.keys(columnVisibility).map((column) => (
-          <FormControlLabel
-            key={column}
-            control={
-              <Checkbox
-                checked={columnVisibility[column]}
-                onChange={() => handleColumnVisibilityChange(column)}
-              />
-            }
-            label={column
-              .replace(/_/g, " ")
-              .replace(/\b\w/g, (letter) => letter.toUpperCase())}
-          />
-        ))}
+        <FormControl sx={{ m: 1, width: 300 }}>
+          <InputLabel id="column-visibility-select-label">Columns</InputLabel>
+          <Select
+            labelId="column-visibility-select-label"
+            id="column-visibility-select"
+            multiple
+            value={selectedColumns}
+            onChange={handleColumnVisibilityChange}
+            input={<OutlinedInput label="Columns" />}
+            renderValue={(selected) => selected.join(", ")}
+          >
+            {Object.keys(columnVisibility).map((column) => (
+              <MenuItem key={column} value={column}>
+                <Checkbox checked={selectedColumns.indexOf(column) > -1} />
+                <ListItemText
+                  primary={column
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </div>
       <TableContainer>
         <Table>
@@ -185,6 +240,7 @@ function DynamicTable() {
                     </TableSortLabel>
                   </TableCell>
                 ))}
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -201,6 +257,17 @@ function DynamicTable() {
                           : value}
                       </TableCell>
                     ))}
+                  <TableCell>
+                    <IconButton onClick={() => handleView(row.id)}>
+                      <ViewIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleEdit(row.id)}>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDownload(row.id)}>
+                      <DownloadIcon />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               ))}
           </TableBody>
