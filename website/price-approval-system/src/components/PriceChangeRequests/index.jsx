@@ -29,6 +29,7 @@ import {
   Delete,
 } from "@mui/icons-material";
 import CreateRequestModal from "./RequestModal";
+import DataTable from "./DataTable";
 
 // Initial dummy data with status
 const initialData = [
@@ -155,51 +156,6 @@ function PriceChangeRequest() {
         flexWrap="wrap"
         marginBottom={2}
       >
-        {statusFilters.map((filter, index) => (
-          <Button
-            key={filter}
-            variant={activeFilter === filter ? "contained" : "outlined"}
-            onClick={() => handleFilterClick(filter)}
-            sx={{ mb: 1, ...(filter === "Rework" && { mr: 2 }) }} // Add space after "Rework"
-          >
-            {filter}
-          </Button>
-        ))}
-        <Box sx={{ width: "20vw", flexShrink: 0 }}></Box>
-        <TextField
-          size="small"
-          placeholder="Search..."
-          variant="outlined"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          sx={{ mb: 1 }}
-        />
-        <FormControl sx={{ m: 1, minWidth: 200, mb: 1 }}>
-          <InputLabel id="demo-multiple-checkbox-label">Columns</InputLabel>
-          <Select
-            labelId="demo-multiple-checkbox-label"
-            multiple
-            value={selectedColumns}
-            onChange={handleColumnSelectionChange}
-            renderValue={() => ""} // Don't show selected items outside the dropdown
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  maxHeight: 320,
-                },
-              },
-            }}
-          >
-            {initialColumns
-              .filter((col) => !col.alwaysVisible)
-              .map((column) => (
-                <MenuItem key={column.id} value={column.id}>
-                  <Checkbox checked={selectedColumns.indexOf(column.id) > -1} />
-                  <ListItemText primary={column.label} />
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
         <Button
           variant="contained"
           color="primary"
@@ -213,7 +169,7 @@ function PriceChangeRequest() {
           <Refresh />
         </IconButton>
       </Box>
-      <TableContainer component={Paper}>
+      {/* <TableContainer component={Paper}>
         <Table aria-label="simple table">
           <TableHead>
             <TableRow>
@@ -245,7 +201,8 @@ function PriceChangeRequest() {
             ))}
           </TableBody>
         </Table>
-      </TableContainer>
+      </TableContainer> */}
+      <DataTable />
     </div>
   );
 }

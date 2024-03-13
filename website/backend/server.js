@@ -143,6 +143,37 @@ app.get("/api/fetch_grade", async (req, res) => {
     }
   }
 });
+
+// Api to fetch grade.
+app.get("/api/fetch_price_requests", async (req, res) => {
+  let pool = null;
+  const fsc = req.query.fsc == 1 ? "Y" : "N";
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+
+    // Query the database
+    const result = await pool.request()
+      .query`SELECT * FROM price_approval_requests `;
+
+    // Send the results as a response
+    res.json(result.recordset);
+  } catch (err) {
+    // If an error occurs, send an error response
+    console.error("SQL error", err);
+    res.status(500).send("An error occurred while fetching customers");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
 //TO-DO:update user id from ad.
 //api to add price request.
 app.post("/api/add_price_request", async (req, res) => {
