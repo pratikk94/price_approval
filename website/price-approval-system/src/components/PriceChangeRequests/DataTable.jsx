@@ -115,16 +115,6 @@ function DynamicTable() {
     setPage(0); // Reset to the first page
   };
 
-  //   const sortedData = React.useMemo(() => {
-  //     if (!sortConfig.key) return data;
-  //     return [...data].sort((a, b) => {
-  //       if (a[sortConfig.key] < b[sortConfig.key])
-  //         return sortConfig.direction === "asc" ? -1 : 1;
-  //       if (a[sortConfig.key] > b[sortConfig.key])
-  //         return sortConfig.direction === "asc" ? 1 : -1;
-  //       return 0;
-  //     });
-  //   }, [data, sortConfig]);
   const selectedColumns = Object.entries(columnVisibility)
     .filter(([key, value]) => value)
     .map(([key]) => key);
