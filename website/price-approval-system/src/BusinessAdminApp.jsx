@@ -80,6 +80,9 @@ function BusinessAdminApp() {
         }}
       >
         <Toolbar />
+        <Typography variant="h6" gutterBottom>
+          {activePane}
+        </Typography>
         {drawerItems.find((item) => item.text === activePane)?.component}
       </Box>
     </Box>
