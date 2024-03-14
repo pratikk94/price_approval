@@ -12,21 +12,28 @@ import {
   CssBaseline,
   Divider,
 } from "@mui/material";
-import Dashboard from "./Role_AM/Screens/Dashboard";
-import PriceChangeRequests from "./Role_AM/Screens/PriceChangeRequests";
-import RequestsHistory from "./Role_AM/Screens/RequestHistory";
-import ReportsAndAnalysis from "./Role_AM/Screens/ReportsAndAnalysis";
-
+import Dashboard from "../src/Role_Business_Admin/Screens/Dashboard";
+import RoleAssignment from "../src/Role_Business_Admin/Screens/RoleAssignment";
+import EmployeeManagement from "../src/Role_Business_Admin/Screens/EmployeeManagement";
+import SetPriceRange from "../src/Role_Business_Admin/Screens/SetPriceRange";
+import PriceRequest from "../src/Role_Business_Admin/Screens/PriceRequest";
+import RequestHistory from "../src/Role_Business_Admin/Screens/RequestHistory";
+import ReportsAndAnalysis from "../src/Role_Business_Admin/Screens/ReportsAndAnalysis";
+import Master from "../src/Role_Business_Admin/Screens/Master";
 const drawerWidth = 240;
 
-function ResponsiveDrawer() {
+function BusinessAdminApp() {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
     { text: "Dashboard", component: <Dashboard /> },
-    { text: "Price Requests", component: <PriceChangeRequests /> },
-    { text: "Requests History", component: <RequestsHistory /> },
+    { text: "Role assignment", component: <RoleAssignment /> },
+    { text: "Employee Management", component: <EmployeeManagement /> },
+    { text: "Set Price Range", component: <SetPriceRange /> },
+    { text: "Price Requests", component: <PriceRequest /> },
+    { text: "Request History", component: <RequestHistory /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
+    { text: "Master", component: <Master /> },
   ];
 
   return (
@@ -79,4 +86,4 @@ function ResponsiveDrawer() {
   );
 }
 
-export default ResponsiveDrawer;
+export default BusinessAdminApp;

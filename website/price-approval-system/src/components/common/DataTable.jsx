@@ -33,7 +33,7 @@ import DownloadIcon from "@mui/icons-material/GetApp";
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
 import DownloadModal from "./DownloadModal";
-function DynamicTable() {
+function DynamicTable({ url }) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -48,9 +48,7 @@ function DynamicTable() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:3000/api/fetch_price_requests"
-        );
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }

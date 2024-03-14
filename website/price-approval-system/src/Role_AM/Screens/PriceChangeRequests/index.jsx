@@ -30,6 +30,7 @@ import {
 } from "@mui/icons-material";
 import CreateRequestModal from "./RequestModal";
 import DataTable from "../../../components/common/DataTable";
+import { backend_url } from "../../../util";
 
 // Initial dummy data with status
 const initialData = [
@@ -184,7 +185,7 @@ function PriceChangeRequest() {
         </Button>
         <CreateRequestModal open={modalOpen} handleClose={handleCloseModal} />
       </Box>
-      <DataTable />
+      <DataTable url={`${backend_url}api/fetch_price_requests`} />
     </div>
   );
 }

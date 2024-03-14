@@ -18,23 +18,14 @@ const config = {
   },
 };
 
-// Create a global connection pool instance
-const pool = new sql.ConnectionPool(config);
-const poolConnect = pool.connect();
-
-pool.on("error", (err) => {
-  console.error("Unexpected error on idle connection pool", err);
-});
-
 async function getCustomerNamesByIds(customerIds) {
-  await poolConnect; // Ensures that the pool is connected
-
+  let pool = null;
   try {
     // Preparing a Table variable to pass the customerIds array to SQL query
     const sanitizedIds = customerIds
       .map((id) => parseInt(id, 10))
       .filter((id) => !isNaN(id));
-    let pool = await sql.connect(config);
+    pool = await sql.connect(config);
 
     // Dynamically generate placeholders for the query
     const placeholders = sanitizedIds.map((_, index) => `@id${index}`);
@@ -57,6 +48,15 @@ async function getCustomerNamesByIds(customerIds) {
   } catch (err) {
     console.error("Database query failed:", err);
     throw err; // Rethrowing the error to be handled by the caller
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
   }
 }
 
@@ -186,6 +186,151 @@ app.get("/api/fetch_grade", async (req, res) => {
   }
 });
 
+// A simple API endpoint that fetches employee data
+app.get("/api/fetch_employees", async (req, res) => {
+  let pool = null;
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+
+    // Query to select employee_name and employee_id
+    const result = await pool.request()
+      .query`SELECT employee_name as name, employee_id as id FROM user_master`;
+
+    // Send query results as a response
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Database query failed:", err);
+    res.status(500).send("Error fetching employee data");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+// A simple API endpoint that fetches roles
+app.get("/api/fetch_roles", async (req, res) => {
+  let pool = null;
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+
+    // Query to select employee_name and employee_id
+    const result = await pool.request().query`SELECT * FROM roles`;
+
+    // Send query results as a response
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Database query failed:", err);
+    res.status(500).send("Error fetching employee data");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+// A simple API endpoint that fetches region
+app.get("/api/fetch_region", async (req, res) => {
+  let pool = null;
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+
+    // Query to select employee_name and employee_id
+    const result = await pool.request().query`SELECT * from region`;
+
+    // Send query results as a response
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Database query failed:", err);
+    res.status(500).send("Error fetching employee data");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.post("/api/add_employee_role", async (req, res) => {
+  const { employee_id, employee_name, role, region, created_date } = req.body;
+  const user_id = 1; // Hardcoded as per requirement
+  const created_by = "backend_user"; // This can also be fetched dynamically if needed
+  let pool = null; // Initialize the pool variable
+  try {
+    pool = await sql.connect(config);
+
+    const query = `
+          INSERT INTO define_roles (employee_id, employee_name, role, region, created_by, created_date,active ) 
+          VALUES (@employee_id, @employee_name, @role, @region, @created_by, @created_date, @active);
+      `;
+
+    const request = new sql.Request(pool);
+    request.input("employee_id", sql.VarChar, employee_id);
+    request.input("employee_name", sql.VarChar, employee_name);
+    request.input("role", sql.VarChar, role);
+    request.input("region", sql.VarChar, region);
+    request.input("created_by", sql.VarChar, created_by);
+    request.input("active", 1);
+    request.input(
+      "created_date",
+      sql.DateTime,
+      created_date ? new Date(created_date) : new Date()
+    ); // Use provided date or current date
+
+    await request.query(query);
+
+    res.status(200).send("Role and employee details added successfully.");
+  } catch (err) {
+    console.error("Database operation failed:", err);
+    res.status(500).send("Failed to add role and employee details.");
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+//fetch data from roles table
+app.get("/api/fetch_roles_data", async (req, res) => {
+  let pool = null;
+  try {
+    // Connect to the database
+    pool = await sql.connect(config);
+
+    // Query to fetch all values from the 'define' table
+    const result = await pool.request().query`SELECT * FROM define_roles`;
+
+    // Send the query results as a response
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    res.status(500).send("Failed to fetch data.");
+  } finally {
+    // Close the database connection
+    sql.close();
+  }
+});
 // Api to fetch grade.
 app.get("/api/fetch_price_requests", async (req, res) => {
   let pool = null;
