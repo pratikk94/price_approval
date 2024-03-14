@@ -145,7 +145,7 @@ function PriceChangeRequest() {
   const handleCloseModal = () => setModalOpen(false);
 
   return (
-    <div style={{ width: "80    vw", height: "96vh" }}>
+    <div style={{ width: "80vw", height: "96vh" }}>
       <Typography variant="h4" gutterBottom>
         Price Requests
       </Typography>
@@ -155,7 +155,25 @@ function PriceChangeRequest() {
         gap={1}
         flexWrap="wrap"
         marginBottom={2}
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
       >
+        <span>
+          {statusFilters.map((filter, index) => (
+            <Button
+              key={filter}
+              variant={activeFilter === filter ? "contained" : "outlined"}
+              onClick={() => handleFilterClick(filter)}
+              style={{ marginRight: "2vw" }}
+              sx={{ mb: 1, ...(filter === "Rework" && { mr: 2 }) }} // Add space after "Rework"
+            >
+              {filter}
+            </Button>
+          ))}
+        </span>
         <Button
           variant="contained"
           color="primary"
@@ -165,43 +183,7 @@ function PriceChangeRequest() {
           Create Request
         </Button>
         <CreateRequestModal open={modalOpen} handleClose={handleCloseModal} />
-        <IconButton onClick={handleRefresh} sx={{ mb: 1 }}>
-          <Refresh />
-        </IconButton>
       </Box>
-      {/* <TableContainer component={Paper}>
-        <Table aria-label="simple table">
-          <TableHead>
-            <TableRow>
-              {initialColumns
-                .filter(
-                  (col) => selectedColumns.includes(col.id) || col.alwaysVisible
-                )
-                .map((column) => (
-                  <TableCell key={column.id}>{column.label}</TableCell>
-                ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredData.map((row) => (
-              <TableRow key={row.id}>
-                {initialColumns
-                  .filter(
-                    (col) =>
-                      selectedColumns.includes(col.id) || col.alwaysVisible
-                  )
-                  .map((column) => (
-                    <TableCell key={column.id}>
-                      {column.id === "actions"
-                        ? renderActionIcons()
-                        : row[column.id]}
-                    </TableCell>
-                  ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer> */}
       <DataTable />
     </div>
   );

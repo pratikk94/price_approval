@@ -19,6 +19,12 @@ import {
   OutlinedInput,
   MenuItem,
   ListItemText,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  DialogContentText,
 } from "@mui/material";
 import ViewIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
@@ -26,19 +32,19 @@ import DownloadIcon from "@mui/icons-material/GetApp";
 
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
-
+import DownloadModal from "../PriceChangeRequests/DownloadModal";
 function DynamicTable() {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-
+  const [open, setOpen] = useState(false);
   const [filteredData, setFilteredData] = useState([]); // State to hold the filtered data
   const [searchQuery, setSearchQuery] = useState(""); // State to hold the search query
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-
+  const [id, setId] = useState(0);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -141,6 +147,8 @@ function DynamicTable() {
   // Function to handle actions (as examples):
   const handleView = (id) => {
     console.log(`View action for ${id}`);
+    setOpen(true);
+    setId(id);
     // Implement view logic here
   };
 
@@ -152,6 +160,10 @@ function DynamicTable() {
   const handleDownload = (id) => {
     console.log(`Download action for ${id}`);
     // Implement download logic here
+  };
+
+  const handleClose = () => {
+    setOpen(false);
   };
 
   return (
@@ -248,7 +260,7 @@ function DynamicTable() {
                       </TableCell>
                     ))}
                   <TableCell>
-                    <IconButton onClick={() => handleView(row.id)}>
+                    <IconButton onClick={() => handleView(row["req_id"])}>
                       <ViewIcon />
                     </IconButton>
                     <IconButton onClick={() => handleEdit(row.id)}>
@@ -272,6 +284,9 @@ function DynamicTable() {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
+
+      {/* <DownloadModal open={open} handleClose={handleClose} setOpen={setOpen} /> */}
+      <DownloadModal open={open} onClose={handleClose} />
     </Paper>
   );
 }

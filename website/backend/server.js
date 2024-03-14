@@ -237,6 +237,73 @@ app.post("/api/add_price_request", async (req, res) => {
   }
 });
 
+app.get("/api/price-requests", async (req, res) => {
+  try {
+    pool = await sql.connect(config);
+    const req_id = req.query.id;
+    console.log(req_id);
+    const result = await sql.query(`
+      SELECT pra.*, prt.*
+      FROM price_approval_requests pra
+      LEFT JOIN price_approval_requests_price_table prt ON pra.req_id = prt.req_id
+      where pra.req_id = ${req_id}
+    `);
+
+    const formattedResult = result.recordset.reduce((acc, row) => {
+      if (!acc[row.req_id]) {
+        acc[row.req_id] = {
+          customer_id: row.customer_id,
+          consignee_id: row.consignee_id,
+          plant: row.plant,
+          end_use_id: row.end_use_id,
+          end_use_segment_id: row.end_use_segment_id,
+          payment_terms_id: row.payment_terms_id,
+          valid_from: row.valid_from,
+          valid_to: row.valid_to,
+          fsc: row.fsc,
+          mappint_type: row.mappint_type,
+          price: [],
+        };
+      }
+      // Check if there's meaningful price table data before adding
+      if (
+        row.req_id /* Use an actual identifier from price_requests_approval_price_table to check */
+      ) {
+        acc[row.req_id].price.push({
+          grade: row.grade,
+          grade_type: row.grade_type,
+          gsm_range_from: row.gsm_range_from,
+          gsm_range_to: row.gsm_range_to,
+          agreed_price: row.agreed_price,
+          special_discount: row.special_discount,
+          reel_discount: row.reel_discount,
+          pack_upcharge: row.push_upcharge,
+          tpc: row.tpc,
+          offline_discount: row.offline_discount,
+          net_nsr: row.net_nsr,
+          old_net_nsr: row.old_net_nsr,
+
+          // Other price table specific fields...
+        });
+      }
+      return acc;
+    }, {});
+
+    res.json(Object.values(formattedResult));
+  } catch (err) {
+    console.error("Database query failed:", err);
+    res.status(500).send("Failed to fetch data");
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
