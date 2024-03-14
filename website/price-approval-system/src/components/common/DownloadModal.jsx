@@ -53,13 +53,14 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-function FullScreenDialog({ open, onClose }) {
+function FullScreenDialog({ open, onClose, id }) {
   const [priceRequests, setPriceRequests] = useState([]);
 
   useEffect(() => {
     // Replace 'id=6' with dynamic ID if needed
+    console.log(id);
     axios
-      .get("http://localhost:3000/api/price-requests?id=6")
+      .get(`http://localhost:3000/api/price-requests?id=63`)
       .then((response) => {
         // Assuming the response data is directly the array you want to use
         setPriceRequests(response.data);
@@ -90,7 +91,7 @@ function FullScreenDialog({ open, onClose }) {
       </AppBar>
 
       <PDFViewer style={{ width: "100%", height: "90vh" }}>
-        <MyDocument data={priceRequests} />
+        <MyDocument data={priceRequests} id={id} />
       </PDFViewer>
       <Typography variant="body1" style={{ margin: 20 }}>
         This is an example of a full-screen dialog.

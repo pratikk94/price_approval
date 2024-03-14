@@ -29,7 +29,7 @@ import {
   Delete,
 } from "@mui/icons-material";
 import CreateRequestModal from "./RequestModal";
-import DataTable from "./DataTable";
+import DataTable from "../../../components/common/DataTable";
 
 // Initial dummy data with status
 const initialData = [

@@ -12,10 +12,10 @@ import {
   CssBaseline,
   Divider,
 } from "@mui/material";
-import Dashboard from "./components/Dashboard";
-import PriceChangeRequests from "./components/PriceChangeRequests";
-import RequestsHistory from "./components/RequestHistory";
-import ReportsAndAnalysis from "./components/ReportsAndAnalysis";
+import Dashboard from "./Role_AM/Screens/Dashboard";
+import PriceChangeRequests from "./Role_AM/Screens/PriceChangeRequests";
+import RequestsHistory from "./Role_AM/Screens/RequestHistory";
+import ReportsAndAnalysis from "./Role_AM/Screens/ReportsAndAnalysis";
 
 const drawerWidth = 240;
 

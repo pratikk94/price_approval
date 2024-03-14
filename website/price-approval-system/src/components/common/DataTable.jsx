@@ -32,7 +32,7 @@ import DownloadIcon from "@mui/icons-material/GetApp";
 
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
-import DownloadModal from "../PriceChangeRequests/DownloadModal";
+import DownloadModal from "./DownloadModal";
 function DynamicTable() {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
@@ -90,7 +90,12 @@ function DynamicTable() {
           Object.entries(row).some(
             ([key, value]) =>
               columnVisibility[key] &&
-              value.toString().toLowerCase().includes(searchQuery.toLowerCase())
+              (value
+                ? value
+                    .toString()
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())
+                : false)
           )
       );
     setFilteredData(filtered);
@@ -286,7 +291,7 @@ function DynamicTable() {
       />
 
       {/* <DownloadModal open={open} handleClose={handleClose} setOpen={setOpen} /> */}
-      <DownloadModal open={open} onClose={handleClose} />
+      <DownloadModal open={open} onClose={handleClose} id={id} />
     </Paper>
   );
 }

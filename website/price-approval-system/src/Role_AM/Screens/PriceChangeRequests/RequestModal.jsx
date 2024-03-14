@@ -8,16 +8,16 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
-import TableWithInputs from "./TableWithInputs";
-import CustomerSelect from "./CustomerSelect";
-import SpacingWrapper from "../util/SpacingWrapper";
-import PaymentTerms from "./PaymentTerms";
-import Plant from "./Plant";
-import DateSelector from "./DateSelector";
+import TableWithInputs from "../../../components/common/TableWithInputs";
+import CustomerSelect from "../../../components/common/CustomerSelect";
+import SpacingWrapper from "../../../components/util/SpacingWrapper";
+import PaymentTerms from "../../../components/common/PaymentTerms";
+import Plant from "../../../components/common/Plant";
+import DateSelector from "../../../components/common/DateSelector";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import RemarkBox from "./RemarkBox";
-import { backend_url } from "../../util";
+import RemarkBox from "../../../components/common/RemarkBox";
+import { backend_url } from "../../../util";
 
 const modalStyle = {
   position: "absolute",

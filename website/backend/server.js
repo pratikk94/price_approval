@@ -18,6 +18,48 @@ const config = {
   },
 };
 
+// Create a global connection pool instance
+const pool = new sql.ConnectionPool(config);
+const poolConnect = pool.connect();
+
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle connection pool", err);
+});
+
+async function getCustomerNamesByIds(customerIds) {
+  await poolConnect; // Ensures that the pool is connected
+
+  try {
+    // Preparing a Table variable to pass the customerIds array to SQL query
+    const sanitizedIds = customerIds
+      .map((id) => parseInt(id, 10))
+      .filter((id) => !isNaN(id));
+    let pool = await sql.connect(config);
+
+    // Dynamically generate placeholders for the query
+    const placeholders = sanitizedIds.map((_, index) => `@id${index}`);
+    const query = `
+    SELECT name
+    FROM Customer
+    WHERE code IN (${placeholders.join(", ")})
+  `;
+
+    const request = new sql.Request(pool);
+    // Bind each customer ID to its corresponding placeholder
+    sanitizedIds.forEach((id, index) => {
+      request.input(`id${index}`, sql.Int, id);
+    });
+
+    const result = await request.query(query);
+
+    // Return only the names
+    return result.recordset.map((record) => record.name);
+  } catch (err) {
+    console.error("Database query failed:", err);
+    throw err; // Rethrowing the error to be handled by the caller
+  }
+}
+
 // Api to fetch customers. based upon ids which are currently hardcoded.
 app.get("/api/fetch_customers", async (req, res) => {
   let pool = null;
@@ -153,11 +195,39 @@ app.get("/api/fetch_price_requests", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query the database
-    const result = await pool.request()
-      .query`SELECT * FROM price_approval_requests `;
-
+    const result = await pool.request().query`SELECT 
+      pra.req_id,
+      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+          FROM customer c
+          JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
+      ) AS CustomerNames,
+      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+          FROM customer c
+          JOIN STRING_SPLIT(pra.consignee_id, ',') AS splitConsigneeIds ON c.code = TRY_CAST(splitConsigneeIds.value AS INT)
+      ) AS ConsigneeNames,
+      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+          FROM customer c
+          JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
+      ) AS EndUseNames,
+      pra.*,
+      prt.*,
+      rs.created_at as created_on,rs.last_updated_at as updated_on,rs.status_updated_by_id as created_by
+  FROM 
+      price_approval_requests pra
+  LEFT JOIN
+      report_status rs ON pra.req_id = rs.report_id
+  LEFT JOIN 
+      price_approval_requests_price_table prt ON pra.req_id = prt.req_id
+      
+      `;
+    // WHERE rs.status = 1
     // Send the results as a response
-    res.json(result.recordset);
+
+    const transformedData = result.recordset.map((item) => ({
+      ...item, // Spread the rest of the properties of the object
+      req_id: item.req_id[0], // Assuming all values in req_id array are the same, take the first one
+    }));
+    res.json(transformedData);
   } catch (err) {
     // If an error occurs, send an error response
     console.error("SQL error", err);
@@ -238,24 +308,47 @@ app.post("/api/add_price_request", async (req, res) => {
 });
 
 app.get("/api/price-requests", async (req, res) => {
+  let pool = null;
   try {
     pool = await sql.connect(config);
     const req_id = req.query.id;
     console.log(req_id);
     const result = await sql.query(`
-      SELECT pra.*, prt.*
-      FROM price_approval_requests pra
-      LEFT JOIN price_approval_requests_price_table prt ON pra.req_id = prt.req_id
-      where pra.req_id = ${req_id}
+    SELECT 
+    pra.*,
+    prt.*,
+    rs.created_at,rs.last_updated_at,rs.status_updated_by_id,
+    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+        FROM customer c
+        JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
+    ) AS CustomerNames,
+    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+        FROM customer c
+        JOIN STRING_SPLIT(pra.consignee_id, ',') AS splitConsigneeIds ON c.code = TRY_CAST(splitConsigneeIds.value AS INT)
+    ) AS ConsigneeNames,
+    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+        FROM customer c
+        JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
+    ) AS EndUseNames
+FROM 
+    price_approval_requests pra
+LEFT JOIN 
+    price_approval_requests_price_table prt ON pra.req_id = prt.req_id
+  LEFT JOIN
+      report_status rs ON pra.req_id = rs.report_id
+WHERE 
+    pra.req_id = ${req_id} and
+    rs.status = 1
     `);
 
     const formattedResult = result.recordset.reduce((acc, row) => {
       if (!acc[row.req_id]) {
         acc[row.req_id] = {
-          customer_id: row.customer_id,
-          consignee_id: row.consignee_id,
+          req_id: row.req_id,
+          customer_id: row.CustomerNames,
+          consignee_id: row.ConsigneeNames,
           plant: row.plant,
-          end_use_id: row.end_use_id,
+          end_use_id: row.EndUseNames,
           end_use_segment_id: row.end_use_segment_id,
           payment_terms_id: row.payment_terms_id,
           valid_from: row.valid_from,
@@ -266,6 +359,7 @@ app.get("/api/price-requests", async (req, res) => {
         };
       }
       // Check if there's meaningful price table data before adding
+
       if (
         row.req_id /* Use an actual identifier from price_requests_approval_price_table to check */
       ) {
@@ -288,8 +382,13 @@ app.get("/api/price-requests", async (req, res) => {
       }
       return acc;
     }, {});
-
-    res.json(Object.values(formattedResult));
+    console.log(formattedResult);
+    const transformedData = Object.values(formattedResult).map((item) => ({
+      ...item, // Spread the rest of the properties of the object
+      req_id: item.req_id[0], // Assuming all values in req_id array are the same, take the first one
+    }));
+    res.json(transformedData);
+    //res.json(Object.values(formattedResult));
   } catch (err) {
     console.error("Database query failed:", err);
     res.status(500).send("Failed to fetch data");
