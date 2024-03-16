@@ -328,7 +328,13 @@ app.get("/api/fetch_roles_data", async (req, res) => {
     res.status(500).send("Failed to fetch data.");
   } finally {
     // Close the database connection
-    sql.close();
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
   }
 });
 // Api to fetch grade.
@@ -377,6 +383,161 @@ app.get("/api/fetch_price_requests", async (req, res) => {
     // If an error occurs, send an error response
     console.error("SQL error", err);
     res.status(500).send("An error occurred while fetching customers");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.get("/api/fetch_approvers", async (req, res) => {
+  const { role, region } = req.query;
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    const query = `SELECT * FROM define_roles WHERE role like '%${
+      role ?? ""
+    }%' AND region like '%${region ?? ""}%'`;
+    const result = await pool.request().query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching customers");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.get("/api/fetch_profit_centers", async (req, res) => {
+  const { role, region } = req.query;
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    const query = `SELECT  [id], [name]
+    FROM [PriceApprovalSystem].[dbo].[profit_center]
+    ORDER BY name ASC;`;
+    const result = await pool.request().query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching customers");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.get("/api/fetch_profit_centers", async (req, res) => {
+  const { role, region } = req.query;
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    const query = `SELECT  [id], [name]
+    FROM [PriceApprovalSystem].[dbo].[profit_center]
+    ORDER BY name ASC`;
+    const result = await pool.request().query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching customers");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.get("/api/get_approver", async (req, res) => {
+  const { role, region } = req.query;
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    const query = `SELECT  * from define_roles`;
+    const result = await pool.request().query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching customers");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.get("/api/fetch_rules", async (req, res) => {
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    const query = `SELECT r.*, STRING_AGG(dr.employee_name, ', ') AS approver_names
+    FROM rules r
+    CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(r.approvers, '[', ''), ']', ''), ',') AS s
+    JOIN define_roles dr ON dr.employee_id = s.value 
+    WHERE r.status = 1
+    -- TRY_CAST(s.value AS INT)
+    GROUP BY r.name,r.id,r.region
+          ,r.profit_center
+          ,r.valid_from
+          ,r.valid_to
+          ,r.approvers
+          ,r.status
+          ,r.created_by
+    ,r.created_date;`;
+    const result = await pool.request().query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching customers");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.get("/api/fetch_report_status", async (req, res) => {
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    const query = `SELECT  * from report_status`;
+    const result = await pool.request().query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching customers");
   } finally {
     // Close the database connection
     if (pool) {

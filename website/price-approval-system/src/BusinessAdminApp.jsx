@@ -13,7 +13,7 @@ import {
   Divider,
 } from "@mui/material";
 import Dashboard from "../src/Role_Business_Admin/Screens/Dashboard";
-import RoleAssignment from "../src/Role_Business_Admin/Screens/RoleAssignment";
+import RuleAssignment from "./Role_Business_Admin/Screens/RuleAssignment";
 import EmployeeManagement from "../src/Role_Business_Admin/Screens/EmployeeManagement";
 import SetPriceRange from "../src/Role_Business_Admin/Screens/SetPriceRange";
 import PriceRequest from "../src/Role_Business_Admin/Screens/PriceRequest";
@@ -27,7 +27,7 @@ function BusinessAdminApp() {
 
   const drawerItems = [
     { text: "Dashboard", component: <Dashboard /> },
-    { text: "Role assignment", component: <RoleAssignment /> },
+    { text: "Role assignment", component: <RuleAssignment /> },
     { text: "Employee Management", component: <EmployeeManagement /> },
     { text: "Set Price Range", component: <SetPriceRange /> },
     { text: "Price Requests", component: <PriceRequest /> },

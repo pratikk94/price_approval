@@ -66,7 +66,7 @@ function SelectModal() {
         PaperProps={{
           style: {
             width: "80vw", // Custom width
-            height: "30vh", // Custom height
+
             // Add more styles as needed
           },
         }}
