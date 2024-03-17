@@ -70,7 +70,6 @@ app.get("/api/fetch_customers", async (req, res) => {
     // Query the database
     let result;
     if (type == 3) {
-      console.log("selected");
       result = await pool.request()
         .query`SELECT code, name FROM customer where category IN ('END-USE')`;
     } else if (type == 2) {
@@ -550,53 +549,51 @@ app.get("/api/fetch_report_status", async (req, res) => {
   }
 });
 
-//TO-DO:update user id from ad.
-//api to add price request.
 app.post("/api/add_price_request", async (req, res) => {
   let pool = null;
   try {
-    // Connect to database
     pool = await sql.connect(config);
-    // Insert into the main table
-    const mainResult = await pool.request()
-      .query`INSERT INTO price_approval_requests (customer_id, consignee_id, plant, end_use_id, end_use_segment_id, payment_terms_id, valid_from, valid_to, fsc, mappint_type) VALUES (${req.body.customerIds}, ${req.body.consigneeIds}, ${req.body.plants}, ${req.body.endUseIds}, ${req.body.endUseSegmentIds}, ${req.body.paymentTermsId}, ${req.body.validFrom}, ${req.body.validTo}, ${req.body.fsc},${req.body.mappingType}); SELECT SCOPE_IDENTITY() as id;`;
+    const mainResult = await pool
+      .request()
+      .input("customerIds", sql.VarChar, req.body.customerIds)
+      .input("consigneeIds", sql.VarChar, req.body.consigneeIds)
+      .input("plants", sql.VarChar, req.body.plants)
+      .input("endUseIds", sql.VarChar, req.body.endUseIds)
+      .input("endUseSegmentIds", sql.VarChar, req.body.endUseSegmentIds)
+      .input("paymentTermsId", sql.VarChar, req.body.paymentTermsId)
+      .input("validFrom", sql.DateTime, new Date(req.body.validFrom))
+      .input("validTo", sql.DateTime, new Date(req.body.validTo))
+      .input("fsc", sql.Int, req.body.fsc)
+      .input("mappint_type", sql.Int, req.body.mappingType)
+      .query(`INSERT INTO price_approval_requests (customer_id, consignee_id, plant, end_use_id, end_use_segment_id, payment_terms_id, valid_from, valid_to, fsc, mappint_type) 
+              VALUES (@customerIds, @consigneeIds, @plants, @endUseIds, @endUseSegmentIds, @paymentTermsId, @validFrom, @validTo, @fsc, @mappint_type);
+              SELECT SCOPE_IDENTITY() AS id;`);
 
     const requestId = mainResult.recordset[0].id;
-    console.log(requestId);
-    // Insert into the main_price_table
-    const priceTable = req.body.priceTable; // Assuming this is an array of objects
-    for (const item of priceTable) {
-      await pool.request()
-        .query`INSERT INTO price_approval_requests_price_table (req_id, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, reel_discount, pack_upcharge, tpc, offline_discount, net_nsr, old_net_nsr) VALUES (
-          ${requestId}, 
-          ${item.grade},  ${item.gradeType}, 
-          ${item.gsmFrom}, 
-          ${item.gsmTo}, 
-          ${item.agreedPrice != undefined ? item.agreedPrice : 0}, 
-          ${item.specialDiscount != undefined ? item.specialDiscount : 0}, 
-          ${item.reelDiscount != undefined ? item.reelDiscount : 0}, 
-          ${item.packUpcharge != undefined ? item.packUpcharge : 0}, 
-          ${item.tpc != undefined ? item.tpc : 0}, 
-          ${item.offlineDiscount != undefined ? item.offlineDiscount : 0}, 
-          ${item.netNSR != undefined ? item.netNSR : 0}, 
-          ${item.oldNetNSR != undefined ? item.oldNetNSR : 0});`;
+    // console.log(requestId);
+
+    for (const item of req.body.priceTable) {
+      // console.log(item);
+      await pool
+        .request()
+        .input("reqId", sql.VarChar, `${requestId}`)
+        .input("grade", sql.VarChar, item.grade)
+        .input("gradeType", sql.VarChar, item.gradeType)
+        .input("gsmFrom", sql.VarChar, item.gsmFrom)
+        .input("gsmTo", sql.VarChar, item.gsmTo)
+        .input("agreedPrice", sql.VarChar, `${item.agreedPrice}`)
+        .input("specialDiscount", sql.VarChar, `'${item.specialDiscount}'`)
+        .input("reelDiscount", sql.VarChar, `'${item.reelDiscount}'`)
+        .input("packUpcharge", sql.VarChar, `'${item.packUpCharge}'`)
+        .input("tpc", sql.VarChar, `'${item.tpc}'`)
+        .input("offlineDiscount", sql.VarChar, `'${item.offlineDiscount}'`)
+        .input("netNSR", sql.VarChar, `'${item.netNSR}'`)
+        .input("oldNetNSR", sql.VarChar, `'${item.oldNetNSR}'`)
+        .query(`INSERT INTO price_approval_requests_price_table (req_id, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, reel_discount, pack_upcharge, tpc, offline_discount, net_nsr, old_net_nsr) 
+                VALUES (@reqId, @grade, @gradeType, @gsmFrom, @gsmTo, @agreedPrice, @specialDiscount, @reelDiscount, @packUpcharge, @tpc, @offlineDiscount, @netNSR, @oldNetNSR)`);
     }
-    const time = format(Date(), "yyyy-MM-dd HH:mm:ss");
-    const query = `
-    INSERT INTO report_status (report_id,status, status_updated_by_id , created_at, last_updated_at) 
-    VALUES (
-        ${requestId},
-        ${1},
-        ${1},
-        '${time}',
-        '${time}')`;
 
-    console.log(query);
-
-    // Execute the query with parameters
-    await pool.request().query(query);
-
-    console.log("Data inserted successfully.");
+    // Additional insert operations here, following the same pattern
 
     res.status(200).send("Data added successfully");
   } catch (err) {
@@ -613,7 +610,7 @@ app.post("/api/add_price_request", async (req, res) => {
   }
 });
 
-app.get("/api/price-requests", async (req, res) => {
+app.get("/api/price_requests", async (req, res) => {
   let pool = null;
   try {
     pool = await sql.connect(config);
@@ -643,8 +640,7 @@ LEFT JOIN
   LEFT JOIN
       report_status rs ON pra.req_id = rs.report_id
 WHERE 
-    pra.req_id = ${req_id} and
-    rs.status = 1
+    pra.req_id = ${req_id}
     `);
 
     const formattedResult = result.recordset.reduce((acc, row) => {

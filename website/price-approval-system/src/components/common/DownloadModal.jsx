@@ -49,6 +49,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { PDFViewer } from "@react-pdf/renderer";
 import MyDocument from "./PriceRequestPDF";
 import axios from "axios";
+import { backend_url } from "../../util";
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -60,7 +61,7 @@ function FullScreenDialog({ open, onClose, id }) {
     // Replace 'id=6' with dynamic ID if needed
     console.log(id);
     axios
-      .get(`http://localhost:3000/api/price-requests?id=63`)
+      .get(`${backend_url}api/price_requests?id=63`)
       .then((response) => {
         // Assuming the response data is directly the array you want to use
         setPriceRequests(response.data);

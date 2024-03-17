@@ -29,11 +29,12 @@ import {
 import ViewIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DownloadIcon from "@mui/icons-material/GetApp";
-
+import SupervisedUserCircleIcon from "@mui/icons-material/SupervisedUserCircle";
 import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
 import DownloadModal from "./DownloadModal";
-function DynamicTable({ url }) {
+import ViewModal from "../../Role_Approvers_RM/Components/ViewModal";
+function DynamicTable({ url, onCustomViewFunction, isCustomEnabled }) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -109,6 +110,13 @@ function DynamicTable({ url }) {
       return 0;
     });
   };
+  // const [open, setOpen] = useState(false);
+  const handleOpen = (id) => {
+    setOpen(true);
+    setId(id);
+  };
+
+  // const handleClose = () => setOpen(false);
 
   const handleSort = (key) => {
     const direction =
@@ -263,15 +271,33 @@ function DynamicTable({ url }) {
                       </TableCell>
                     ))}
                   <TableCell>
-                    <IconButton onClick={() => handleView(row["req_id"])}>
-                      <ViewIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleEdit(row.id)}>
+                    {isCustomEnabled ? (
+                      // <IconButton onClick={() => onCustomViewFunction(row.id)}>
+                      //   <SupervisedUserCircleIcon />
+
+                      // </IconButton>
+                      <span>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          onClick={() => {
+                            handleOpen(id);
+                          }}
+                        >
+                          Show Request Details
+                        </Button>
+                      </span>
+                    ) : (
+                      <IconButton onClick={() => handleView(row["req_id"])}>
+                        <ViewIcon />
+                      </IconButton>
+                    )}
+                    {/* <IconButton onClick={() => handleEdit(row.id)}>
                       <EditIcon />
                     </IconButton>
                     <IconButton onClick={() => handleDownload(row.id)}>
                       <DownloadIcon />
-                    </IconButton>
+                    </IconButton> */}
                   </TableCell>
                 </TableRow>
               ))}
@@ -287,9 +313,9 @@ function DynamicTable({ url }) {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-
+      <ViewModal open={open} onClose={handleClose} id={id} />
       {/* <DownloadModal open={open} handleClose={handleClose} setOpen={setOpen} /> */}
-      <DownloadModal open={open} onClose={handleClose} id={id} />
+      {/* <DownloadModal open={open} onClose={handleClose} id={id} /> */}
     </Paper>
   );
 }
