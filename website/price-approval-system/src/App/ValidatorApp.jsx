@@ -13,28 +13,17 @@ import {
   Divider,
   TextField,
 } from "@mui/material";
-import Dashboard from "./Role_AM/Screens/Dashboard";
-import PriceChangeRequests from "./Role_AM/Screens/PriceChangeRequests";
-import RequestsHistory from "./Role_AM/Screens/RequestHistory";
-import ReportsAndAnalysis from "./Role_AM/Screens/ReportsAndAnalysis";
-
 const drawerWidth = 240;
-
+import PriceRequest from "../Role_Validator/Screens/PriceRequest";
 function ResponsiveDrawer({ changeScreen }) {
   const [activePane, setActivePane] = useState("Dashboard");
 
-  const drawerItems = [
-    { text: "Dashboard", component: <Dashboard /> },
-    { text: "Price Requests", component: <PriceChangeRequests /> },
-    { text: "Requests History", component: <RequestsHistory /> },
-    { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
-  ];
+  const drawerItems = [{ text: "Price Requests", component: <PriceRequest /> }];
 
   const [inputValue, setInputValue] = useState("");
 
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
-    console.log(event.target.value);
     changeScreen(event.target.value);
   };
 

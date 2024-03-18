@@ -13,28 +13,21 @@ import {
   Divider,
   TextField,
 } from "@mui/material";
-import Dashboard from "../src/Role_Business_Admin/Screens/Dashboard";
-import RuleAssignment from "./Role_Business_Admin/Screens/RuleAssignment";
-import EmployeeManagement from "../src/Role_Business_Admin/Screens/EmployeeManagement";
-import SetPriceRange from "../src/Role_Business_Admin/Screens/SetPriceRange";
-import PriceRequest from "../src/Role_Business_Admin/Screens/PriceRequest";
-import RequestHistory from "../src/Role_Business_Admin/Screens/RequestHistory";
-import ReportsAndAnalysis from "../src/Role_Business_Admin/Screens/ReportsAndAnalysis";
-import Master from "../src/Role_Business_Admin/Screens/Master";
+import Dashboard from "../Role_AM/Screens/Dashboard";
+import PriceChangeRequests from "../Role_AM/Screens/PriceChangeRequests";
+import RequestsHistory from "../Role_AM/Screens/RequestHistory";
+import ReportsAndAnalysis from "../Role_AM/Screens/ReportsAndAnalysis";
+
 const drawerWidth = 240;
 
-function BusinessAdminApp({ changeScreen }) {
+function ResponsiveDrawer({ changeScreen }) {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
     { text: "Dashboard", component: <Dashboard /> },
-    { text: "Role assignment", component: <RuleAssignment /> },
-    { text: "Employee Management", component: <EmployeeManagement /> },
-    { text: "Set Price Range", component: <SetPriceRange /> },
-    { text: "Price Requests", component: <PriceRequest /> },
-    { text: "Request History", component: <RequestHistory /> },
+    { text: "Price Requests", component: <PriceChangeRequests /> },
+    { text: "Requests History", component: <RequestsHistory /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
-    { text: "Master", component: <Master /> },
   ];
 
   const [inputValue, setInputValue] = useState("");
@@ -95,13 +88,10 @@ function BusinessAdminApp({ changeScreen }) {
         }}
       >
         <Toolbar />
-        <Typography variant="h6" gutterBottom>
-          {activePane}
-        </Typography>
         {drawerItems.find((item) => item.text === activePane)?.component}
       </Box>
     </Box>
   );
 }
 
-export default BusinessAdminApp;
+export default ResponsiveDrawer;
