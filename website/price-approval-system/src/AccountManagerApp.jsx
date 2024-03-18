@@ -11,6 +11,7 @@ import {
   Box,
   CssBaseline,
   Divider,
+  TextField,
 } from "@mui/material";
 import Dashboard from "./Role_AM/Screens/Dashboard";
 import PriceChangeRequests from "./Role_AM/Screens/PriceChangeRequests";
@@ -19,7 +20,7 @@ import ReportsAndAnalysis from "./Role_AM/Screens/ReportsAndAnalysis";
 
 const drawerWidth = 240;
 
-function ResponsiveDrawer() {
+function ResponsiveDrawer({ changeScreen }) {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
@@ -28,6 +29,14 @@ function ResponsiveDrawer() {
     { text: "Requests History", component: <RequestsHistory /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
   ];
+
+  const [inputValue, setInputValue] = useState("");
+
+  const handleInputChange = (event) => {
+    setInputValue(event.target.value);
+    console.log(event.target.value);
+    changeScreen(event.target.value);
+  };
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -40,6 +49,12 @@ function ResponsiveDrawer() {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
+          <TextField
+            label="Enter id"
+            variant="outlined"
+            value={inputValue}
+            onChange={handleInputChange}
+          />
           <Button color="inherit">Login</Button>
         </Toolbar>
       </AppBar>

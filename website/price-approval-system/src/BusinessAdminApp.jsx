@@ -11,6 +11,7 @@ import {
   Box,
   CssBaseline,
   Divider,
+  TextField,
 } from "@mui/material";
 import Dashboard from "../src/Role_Business_Admin/Screens/Dashboard";
 import RuleAssignment from "./Role_Business_Admin/Screens/RuleAssignment";
@@ -22,7 +23,7 @@ import ReportsAndAnalysis from "../src/Role_Business_Admin/Screens/ReportsAndAna
 import Master from "../src/Role_Business_Admin/Screens/Master";
 const drawerWidth = 240;
 
-function BusinessAdminApp() {
+function BusinessAdminApp({ changeScreen }) {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
@@ -36,6 +37,14 @@ function BusinessAdminApp() {
     { text: "Master", component: <Master /> },
   ];
 
+  const [inputValue, setInputValue] = useState("");
+
+  const handleInputChange = (event) => {
+    setInputValue(event.target.value);
+    console.log(event.target.value);
+    changeScreen(event.target.value);
+  };
+
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
@@ -47,6 +56,12 @@ function BusinessAdminApp() {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
+          <TextField
+            label="Enter id"
+            variant="outlined"
+            value={inputValue}
+            onChange={handleInputChange}
+          />
           <Button color="inherit">Login</Button>
         </Toolbar>
       </AppBar>
