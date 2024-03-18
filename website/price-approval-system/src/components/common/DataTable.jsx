@@ -34,7 +34,16 @@ import "react-datepicker/dist/react-datepicker.css";
 import DatePicker from "react-datepicker";
 import DownloadModal from "./DownloadModal";
 import ViewModal from "../../Role_Approvers_RM/Components/ViewModal";
-function DynamicTable({ url, onCustomViewFunction, isCustomEnabled }) {
+import axios from "axios";
+import { backend_url } from "../../util";
+import RuleModal from "../../Role_Business_Admin/Components/RuleModal";
+import RuleEditModal from "../../Role_Business_Admin/Components/RuleEditModal";
+function DynamicTable({
+  url,
+  onCustomViewFunction,
+  isCustomEnabled,
+  action_id,
+}) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -46,6 +55,10 @@ function DynamicTable({ url, onCustomViewFunction, isCustomEnabled }) {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [id, setId] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [rule, setRule] = useState(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -158,7 +171,7 @@ function DynamicTable({ url, onCustomViewFunction, isCustomEnabled }) {
   // Function to handle actions (as examples):
   const handleView = (id) => {
     console.log(`View action for ${id}`);
-    setOpen(true);
+    // setOpen(true);
     setId(id);
     // Implement view logic here
   };
@@ -175,6 +188,59 @@ function DynamicTable({ url, onCustomViewFunction, isCustomEnabled }) {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  useEffect(() => {
+    const fetchRule = async () => {
+      try {
+        const response = await axios.get(`${backend_url}api/fetch_rules`);
+        // Assuming the API returns the first rule or a specific rule in the response.
+        // Adjust this according to the actual API response structure.
+        setRule(response.data[0]);
+      } catch (error) {
+        console.error("Error fetching rule data:", error);
+      }
+    };
+
+    fetchRule();
+  }, [modalOpen]);
+
+  const handleRuleUpdate = (updatedRule) => {
+    setRule(updatedRule);
+  };
+
+  const Actions = ({ id, req_id }) => {
+    /**
+     *  id = 1 for rules / buisness admin
+     */
+    if (id == 1) {
+      return (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={() => {
+              handleView(req_id);
+              setModalOpen(true);
+            }}
+          >
+            <ViewIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              setEditModalOpen(true);
+              handleEdit(req_id);
+            }}
+          >
+            <EditIcon />
+          </IconButton>
+        </div>
+      );
+    } else {
+      return (
+        <IconButton onClick={() => handleView(req_id)}>
+          <ViewIcon />
+        </IconButton>
+      );
+    }
   };
 
   return (
@@ -271,7 +337,8 @@ function DynamicTable({ url, onCustomViewFunction, isCustomEnabled }) {
                       </TableCell>
                     ))}
                   <TableCell>
-                    {isCustomEnabled ? (
+                    <Actions id={action_id} req_id={row.id} />
+                    {/* {isCustomEnabled ? (
                       // <IconButton onClick={() => onCustomViewFunction(row.id)}>
                       //   <SupervisedUserCircleIcon />
 
@@ -288,13 +355,9 @@ function DynamicTable({ url, onCustomViewFunction, isCustomEnabled }) {
                         </Button>
                       </span>
                     ) : (
-                      <IconButton onClick={() => handleView(row["req_id"])}>
-                        <ViewIcon />
-                      </IconButton>
-                    )}
-                    {/* <IconButton onClick={() => handleEdit(row.id)}>
-                      <EditIcon />
-                    </IconButton>
+                      
+                    )} */}
+                    {/* 
                     <IconButton onClick={() => handleDownload(row.id)}>
                       <DownloadIcon />
                     </IconButton> */}
@@ -304,7 +367,21 @@ function DynamicTable({ url, onCustomViewFunction, isCustomEnabled }) {
           </TableBody>
         </Table>
       </TableContainer>
-
+      {rule && (
+        <>
+          <RuleModal
+            open={modalOpen}
+            handleClose={() => setModalOpen(false)}
+            rule={rule}
+          />
+          <RuleEditModal
+            open={editModalOpen}
+            handleClose={() => setEditModalOpen(false)}
+            rule={rule}
+            onRuleUpdated={handleRuleUpdate}
+          />
+        </>
+      )}
       <TablePagination
         component="div"
         count={data.length}

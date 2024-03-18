@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Checkbox, FormControlLabel } from "@mui/material";
 
-function CustomCheckbox() {
-  const [checked, setChecked] = useState(false);
+function CustomCheckbox({ isSelcted }) {
+  const [checked, setChecked] = useState(isSelcted == 1 ? true : false);
 
   const handleChange = (event) => {
     setChecked(event.target.checked);

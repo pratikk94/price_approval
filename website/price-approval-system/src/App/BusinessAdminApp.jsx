@@ -28,7 +28,7 @@ function BusinessAdminApp({ changeScreen }) {
 
   const drawerItems = [
     { text: "Dashboard", component: <Dashboard /> },
-    { text: "Role assignment", component: <RuleAssignment /> },
+    { text: "Rule assignment", component: <RuleAssignment /> },
     { text: "Employee Management", component: <EmployeeManagement /> },
     { text: "Set Price Range", component: <SetPriceRange /> },
     { text: "Price Requests", component: <PriceRequest /> },

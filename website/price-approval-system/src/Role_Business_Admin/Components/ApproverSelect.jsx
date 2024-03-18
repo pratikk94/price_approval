@@ -3,22 +3,33 @@ import Select, { components } from "react-select";
 import { backend_url } from "../../util";
 import { checkboxClasses } from "@mui/material";
 
-const ApproverSelect = ({ name, setApprover }) => {
+const ApproverSelect = ({ name, setApprover, prevSetApprovers }) => {
   const [customers, setCustomers] = useState([]);
-  const [selectedCustomers, setSelectedCustomers] = useState([]);
+  const [selectedCustomers, setSelectedCustomers] = useState([
+    prevSetApprovers,
+  ]);
 
   // Function to fetch customers from the API
   const fetchCustomers = async () => {
+    console.log(prevSetApprovers);
     try {
       const response = await fetch(`${backend_url}api/get_approver`);
       const data = await response.json();
       console.log(data);
       const customerOptions = data.map((employee) => ({
         value: employee.employee_id,
+        name: employee.employee_name,
         label: `${employee.role} - ${employee.employee_name}`,
       }));
       console.log(customerOptions);
+
+      // Assuming prevSetApprovers contains labels `${role} - ${name}`
+      const preSelectedCustomers = customerOptions.filter((option) =>
+        prevSetApprovers.includes(option.name)
+      );
+
       setCustomers(customerOptions);
+      setSelectedCustomers(preSelectedCustomers); // Pre-select matching customers
     } catch (error) {
       console.error("Error fetching customer data:", error);
     }
