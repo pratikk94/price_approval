@@ -6,7 +6,7 @@ export default function RuleAssignment() {
   return (
     <div style={{ width: "80vw", height: "80vh" }}>
       <CreateRuleModel />
-      <DataTable url={`${backend_url}api/fetch_rules`} action_id={1} />
+      <DataTable url={`${backend_url}api/fetch_rules`} action_id={"B1"} />
     </div>
   );
 }

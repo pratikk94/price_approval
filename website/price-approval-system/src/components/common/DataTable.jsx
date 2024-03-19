@@ -41,6 +41,7 @@ import RuleEditModal from "../../Role_Business_Admin/Components/RuleEditModal";
 import EmployeeManagement from "../../Role_Business_Admin/Screens/EmployeeManagement";
 import EmployeeDetailsModal from "../../Role_Business_Admin/Components/EmployeeManagementModal";
 import HistoryModal from "../../Role_Business_Admin/Components/RequestHistoryModal";
+import PriceViewModal from "../../Role_Approvers_RM/Components/ViewModal";
 function DynamicTable({ url, action_id }) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
@@ -61,6 +62,8 @@ function DynamicTable({ url, action_id }) {
   const [empId, setEmpId] = useState(0);
   const [history, setHistory] = useState(null);
   const [historyId, setHistoryId] = useState(0);
+  const [aprm, setAprm] = useState(null);
+  const [aprm_id, setAprmId] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -229,9 +232,22 @@ function DynamicTable({ url, action_id }) {
       }
     };
 
-    if (action_id == 1) fetchRule();
-    else if (action_id == 2) fetchEmployeeData();
-    else if (action_id == 3) fetchRequestHistoryData();
+    const fetchAPRMData = async () => {
+      try {
+        const response = await axios.get(
+          `${backend_url}api/price_requests?id=${aprm_id}`
+        );
+        console.log(response.data[0]);
+        setAprm(response.data[0]);
+      } catch (error) {
+        console.error("Error fetching rule data:", error);
+      }
+    };
+
+    if (action_id == "B1") fetchRule();
+    else if (action_id == "B2") fetchEmployeeData();
+    else if (action_id == "B3") fetchRequestHistoryData();
+    else if (action_id == "AP_RM") fetchAPRMData();
   }, [modalOpen]);
 
   const handleRuleUpdate = (updatedRule) => {
@@ -239,7 +255,7 @@ function DynamicTable({ url, action_id }) {
   };
 
   const Actions = ({ id, req_id }) => {
-    if (id == 1) {
+    if (id == "B1") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
@@ -261,7 +277,7 @@ function DynamicTable({ url, action_id }) {
           </IconButton>
         </div>
       );
-    } else if (id == 2) {
+    } else if (id == "B2") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
@@ -275,7 +291,7 @@ function DynamicTable({ url, action_id }) {
           </IconButton>
         </div>
       );
-    } else if (id == 3) {
+    } else if (id == "B3") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
@@ -283,6 +299,22 @@ function DynamicTable({ url, action_id }) {
               handleView(req_id);
               setModalOpen(true);
               setHistoryId(req_id);
+            }}
+          >
+            <ViewIcon />
+          </IconButton>
+        </div>
+      );
+    } else if (id == "AP_RM") {
+      console.log("APRM");
+      return (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={() => {
+              handleView(req_id);
+              setModalOpen(true);
+              setAprmId(req_id);
+              console.log(req_id);
             }}
           >
             <ViewIcon />
@@ -392,7 +424,7 @@ function DynamicTable({ url, action_id }) {
                       </TableCell>
                     ))}
                   <TableCell>
-                    <Actions id={action_id} req_id={row.id} />
+                    <Actions id={action_id} req_id={row.req_id} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -426,6 +458,14 @@ function DynamicTable({ url, action_id }) {
           open={modalOpen}
           handleClose={() => setModalOpen(false)}
           history={history}
+        />
+      )}
+      {aprm && (
+        <PriceViewModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          id={aprm_id}
+          data={aprm}
         />
       )}
 

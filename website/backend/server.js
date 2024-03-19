@@ -791,6 +791,35 @@ WHERE
   }
 });
 
+app.put("/api/update-report-status", async (req, res) => {
+  const { reportId, statusUpdatedById, newStatus } = req.body;
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    const result = await pool.request()
+      .query`UPDATE report_status SET status = ${newStatus}, status_updated_by_id = ${statusUpdatedById}, last_updated_at = GETDATE() WHERE report_id = ${reportId}`;
+    console.log(
+      `UPDATE report_status SET status = ${newStatus}, status_updated_by_id = ${statusUpdatedById} ,last_updated_at = GETDATE() WHERE report_id = ${reportId}`
+    );
+    if (result.rowsAffected[0] > 0) {
+      res.json({ message: "Report status updated successfully." });
+    } else {
+      res.status(404).json({ message: "Report not found or no changes made." });
+    }
+  } catch (err) {
+    console.error("Database operation failed:", err);
+    res.status(500).send("Failed to update report status");
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

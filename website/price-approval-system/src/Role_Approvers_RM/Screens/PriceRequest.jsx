@@ -10,8 +10,7 @@ export default function PriceRequest() {
       PriceRequest
       <DataTable
         url={`${backend_url}api/fetch_price_requests`}
-        isCustomEnabled={true}
-        onCustomViewFunction={viewClicked}
+        action_id={"AP_RM"}
       />
     </div>
   );
