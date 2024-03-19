@@ -367,7 +367,7 @@ app.get("/api/fetch_roles_data_by_id", async (req, res) => {
 // Api to fetch grade.
 app.get("/api/fetch_price_requests", async (req, res) => {
   let pool = null;
-  const fsc = req.query.fsc == 1 ? "Y" : "N";
+  const status = req.query.status;
   try {
     // Establish a connection to the database
     pool = await sql.connect(config);
@@ -396,9 +396,7 @@ app.get("/api/fetch_price_requests", async (req, res) => {
       report_status rs ON pra.req_id = rs.report_id
   LEFT JOIN 
       price_approval_requests_price_table prt ON pra.req_id = prt.req_id
-      
-      `;
-    // WHERE rs.status = 1
+      WHERE rs.status = ${status}`;
     // Send the results as a response
 
     const transformedData = result.recordset.map((item) => ({

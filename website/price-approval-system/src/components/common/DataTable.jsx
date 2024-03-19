@@ -90,7 +90,7 @@ function DynamicTable({ url, action_id }) {
       }
     };
     fetchData();
-  }, []);
+  }, [url]);
 
   // Sort and filter data whenever the data, sortConfig, or searchQuery changes
   useEffect(() => {

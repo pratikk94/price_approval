@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Typography,
   Button,
@@ -30,7 +30,7 @@ import {
 } from "@mui/icons-material";
 import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
 import DataTable from "./DataTable";
-import { backend_url } from "../../util";
+import { backend_url, statusFilters } from "../../util";
 
 // Initial dummy data with status
 const initialData = [
@@ -77,9 +77,11 @@ const modalStyle = {
 };
 
 // Status filter action items
-const statusFilters = ["Draft", "Pending", "Rejected", "Approved", "Rework"];
 
 function PriceChangeRequest() {
+  const statusFiltersValues = Array.from(statusFilters.values());
+  const [filterdId, setFilterdId] = useState();
+
   const [data, setData] = useState(initialData);
   const [selectedColumns, setSelectedColumns] = useState(
     initialColumns.filter((col) => !col.alwaysVisible).map((col) => col.id)
@@ -104,8 +106,9 @@ function PriceChangeRequest() {
     setSelectedColumns(typeof value === "string" ? value.split(",") : value);
   };
 
-  const handleFilterClick = (filter) => {
-    setActiveFilter(activeFilter === filter ? "" : filter); // Toggle filter
+  const handleFilterClick = (filter, newfilterdId) => {
+    setActiveFilter(activeFilter === filter ? "" : filter);
+    setFilterdId(newfilterdId); // Toggle filter
   };
 
   // Apply both status filter and search term
@@ -145,6 +148,43 @@ function PriceChangeRequest() {
   const handleOpenModal = () => setModalOpen(true);
   const handleCloseModal = () => setModalOpen(false);
 
+  useEffect(() => {
+    ReturnDataTable();
+  }, [filterdId]);
+
+  const ReturnDataTable = () => {
+    // console.log(`Filterred ID is ${filterdId} `);
+    if (filterdId == 0) {
+      // console.log("Filterred ID is 0");
+      return (
+        <DataTable url={backend_url + "api/fetch_price_requests?status=0"} />
+      );
+    } else if (filterdId == 1) {
+      // console.log("Filterred ID is 1");
+      return (
+        <DataTable url={backend_url + "api/fetch_price_requests?status=1"} />
+      );
+    }
+    if (filterdId == 2) {
+      // console.log("Filterred ID is 2");
+      return (
+        <DataTable url={backend_url + "api/fetch_price_requests?status=2"} />
+      );
+    }
+    if (filterdId == 3) {
+      // console.log("Filterred ID is 3");
+      return (
+        <DataTable url={backend_url + "api/fetch_price_requests?status=3"} />
+      );
+    }
+    if (filterdId == 4) {
+      // console.log("Filterred ID is 4");
+      return (
+        <DataTable url={backend_url + "api/fetch_price_requests?status=4"} />
+      );
+    }
+  };
+
   return (
     <div style={{ width: "80vw", height: "96vh" }}>
       <Typography variant="h4" gutterBottom>
@@ -163,11 +203,11 @@ function PriceChangeRequest() {
         }}
       >
         <span>
-          {statusFilters.map((filter, index) => (
+          {statusFiltersValues.map((filter, index) => (
             <Button
               key={filter}
               variant={activeFilter === filter ? "contained" : "outlined"}
-              onClick={() => handleFilterClick(filter)}
+              onClick={() => handleFilterClick(filter, index)}
               style={{ marginRight: "2vw" }}
               sx={{ mb: 1, ...(filter === "Rework" && { mr: 2 }) }} // Add space after "Rework"
             >
@@ -185,7 +225,7 @@ function PriceChangeRequest() {
         </Button>
         <CreateRequestModal open={modalOpen} handleClose={handleCloseModal} />
       </Box>
-      <DataTable url={`${backend_url}api/fetch_price_requests`} />
+      {ReturnDataTable()}
     </div>
   );
 }
