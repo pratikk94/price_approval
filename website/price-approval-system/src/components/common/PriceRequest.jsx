@@ -80,7 +80,7 @@ const modalStyle = {
 
 function PriceChangeRequest() {
   const statusFiltersValues = Array.from(statusFilters.values());
-  const [filterdId, setFilterdId] = useState();
+  const [filterdId, setFilterdId] = useState(1);
 
   const [data, setData] = useState(initialData);
   const [selectedColumns, setSelectedColumns] = useState(
