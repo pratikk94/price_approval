@@ -18,6 +18,7 @@ import { backend_url } from "../../util";
 import axios from "axios";
 import ReactModal from "react-modal";
 import { IconButton } from "@mui/material";
+import RemarkBox from "../../components/common/RemarkBox";
 
 function PriceTable({ price }) {
   console.log(price);
@@ -137,8 +138,7 @@ function PriceViewModal({ open, onClose, id, data }) {
             </Typography>
           </div>
           <PriceTable price={data.price} />
-
-          <button onClick={onClose}>Close</button>
+          <RemarkBox />
 
           <IconButton>
             <DoneIcon
@@ -161,6 +161,8 @@ function PriceViewModal({ open, onClose, id, data }) {
           >
             <ReplayIcon />
           </IconButton>
+          <br />
+          <button onClick={onClose}>Close</button>
         </>
       ) : null}
     </ReactModal>
