@@ -254,15 +254,15 @@ function DynamicTable({ url, action_id }) {
     setRule(updatedRule);
   };
 
-  const Actions = ({ id, req_id }) => {
+  const Actions = ({ id, row_id, req_id }) => {
     if (id == "B1") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              handleView(req_id);
+              handleView(row_id);
               setModalOpen(true);
-              setRuleId(req_id);
+              setRuleId(row_id);
             }}
           >
             <ViewIcon />
@@ -270,7 +270,7 @@ function DynamicTable({ url, action_id }) {
           <IconButton
             onClick={() => {
               setEditModalOpen(true);
-              handleEdit(req_id);
+              handleEdit(row_id);
             }}
           >
             <EditIcon />
@@ -282,9 +282,9 @@ function DynamicTable({ url, action_id }) {
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              handleView(req_id);
+              handleView(row_id);
               setModalOpen(true);
-              setEmpId(req_id);
+              setEmpId(row_id);
             }}
           >
             <ViewIcon />
@@ -296,9 +296,9 @@ function DynamicTable({ url, action_id }) {
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              handleView(req_id);
+              handleView(row_id);
               setModalOpen(true);
-              setHistoryId(req_id);
+              setHistoryId(row_id);
             }}
           >
             <ViewIcon />
@@ -424,7 +424,11 @@ function DynamicTable({ url, action_id }) {
                       </TableCell>
                     ))}
                   <TableCell>
-                    <Actions id={action_id} req_id={row.req_id} />
+                    <Actions
+                      id={action_id}
+                      row_id={row.id}
+                      req_id={row.req_id}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
