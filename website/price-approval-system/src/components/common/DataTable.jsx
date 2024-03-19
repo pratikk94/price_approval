@@ -38,12 +38,9 @@ import axios from "axios";
 import { backend_url } from "../../util";
 import RuleModal from "../../Role_Business_Admin/Components/RuleModal";
 import RuleEditModal from "../../Role_Business_Admin/Components/RuleEditModal";
-function DynamicTable({
-  url,
-  onCustomViewFunction,
-  isCustomEnabled,
-  action_id,
-}) {
+import EmployeeManagement from "../../Role_Business_Admin/Screens/EmployeeManagement";
+import EmployeeDetailsModal from "../../Role_Business_Admin/Components/EmployeeManagementModal";
+function DynamicTable({ url, action_id }) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -58,7 +55,9 @@ function DynamicTable({
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [rule, setRule] = useState(null);
-
+  const [rule_id, setRuleId] = useState(0);
+  const [employeeManagement, setEmployeeManagement] = useState(null);
+  const [empId, setEmpId] = useState(0);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -193,16 +192,29 @@ function DynamicTable({
   useEffect(() => {
     const fetchRule = async () => {
       try {
-        const response = await axios.get(`${backend_url}api/fetch_rules`);
-        // Assuming the API returns the first rule or a specific rule in the response.
-        // Adjust this according to the actual API response structure.
+        const response = await axios.get(
+          `${backend_url}api/fetch_rules_by_id?id=${rule_id}`
+        );
         setRule(response.data[0]);
       } catch (error) {
         console.error("Error fetching rule data:", error);
       }
     };
 
-    fetchRule();
+    const fetchEmployeeData = async () => {
+      try {
+        const response = await axios.get(
+          `${backend_url}api/fetch_roles_data_by_id?id=${empId}`
+        );
+        console.log(response.data[0]);
+        setEmployeeManagement(response.data[0]);
+      } catch (error) {
+        console.error("Error fetching rule data:", error);
+      }
+    };
+
+    if (action_id == 1) fetchRule();
+    else if (action_id == 2) fetchEmployeeData();
   }, [modalOpen]);
 
   const handleRuleUpdate = (updatedRule) => {
@@ -210,9 +222,6 @@ function DynamicTable({
   };
 
   const Actions = ({ id, req_id }) => {
-    /**
-     *  id = 1 for rules / buisness admin
-     */
     if (id == 1) {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
@@ -220,6 +229,7 @@ function DynamicTable({
             onClick={() => {
               handleView(req_id);
               setModalOpen(true);
+              setRuleId(req_id);
             }}
           >
             <ViewIcon />
@@ -232,6 +242,29 @@ function DynamicTable({
           >
             <EditIcon />
           </IconButton>
+        </div>
+      );
+    }
+    if (id == 2) {
+      return (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={() => {
+              handleView(req_id);
+              setModalOpen(true);
+              setEmpId(req_id);
+            }}
+          >
+            <ViewIcon />
+          </IconButton>
+          {/* <IconButton
+            onClick={() => {
+              setEditModalOpen(true);
+              handleEdit(req_id);
+            }}
+          >
+            <EditIcon />
+          </IconButton> */}
         </div>
       );
     } else {
@@ -382,6 +415,14 @@ function DynamicTable({
           />
         </>
       )}
+      {employeeManagement && (
+        <EmployeeDetailsModal
+          open={modalOpen}
+          handleClose={() => setModalOpen(false)}
+          employeeData={employeeManagement}
+        />
+      )}
+
       <TablePagination
         component="div"
         count={data.length}

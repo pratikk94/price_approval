@@ -336,6 +336,34 @@ app.get("/api/fetch_roles_data", async (req, res) => {
     }
   }
 });
+
+app.get("/api/fetch_roles_data_by_id", async (req, res) => {
+  let pool = null;
+  try {
+    // Connect to the database
+    pool = await sql.connect(config);
+    const id = req.query.id;
+    // Query to fetch all values from the 'define' table
+    const result = await pool.request()
+      .query`SELECT * FROM define_roles where id =${id}`;
+
+    // Send the query results as a response
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    res.status(500).send("Failed to fetch data.");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
 // Api to fetch grade.
 app.get("/api/fetch_price_requests", async (req, res) => {
   let pool = null;
@@ -502,6 +530,41 @@ app.get("/api/fetch_rules", async (req, res) => {
     JOIN define_roles dr ON dr.employee_id = s.value 
     WHERE r.status = 1
     -- TRY_CAST(s.value AS INT)
+    GROUP BY r.name,r.id,r.region
+          ,r.profit_center
+          ,r.valid_from
+          ,r.valid_to
+          ,r.approvers
+          ,r.status
+          ,r.created_by
+    ,r.created_date;`;
+    const result = await pool.request().query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching customers");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.get("/api/fetch_rules_by_id", async (req, res) => {
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    const id = req.query.id;
+    const query = `SELECT r.*, STRING_AGG(dr.employee_name, ', ') AS approver_names
+    FROM rules r
+    CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(r.approvers, '[', ''), ']', ''), ',') AS s
+    JOIN define_roles dr ON dr.employee_id = s.value 
+    WHERE r.status = 1 and r.id = ${id}
     GROUP BY r.name,r.id,r.region
           ,r.profit_center
           ,r.valid_from

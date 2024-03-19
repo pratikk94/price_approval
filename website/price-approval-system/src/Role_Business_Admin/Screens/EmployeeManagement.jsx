@@ -6,7 +6,7 @@ export default function EmployeeManagement() {
   return (
     <div style={{ width: "80vw", height: "100vh" }}>
       <SelectModal />
-      <DataTable url={`${backend_url}api/fetch_roles_data`} />
+      <DataTable url={`${backend_url}api/fetch_roles_data`} action_id={2} />
     </div>
   );
 }
