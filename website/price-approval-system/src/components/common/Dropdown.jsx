@@ -6,7 +6,7 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 
-function Dropdown({ selectedItem, onChange, url }) {
+function Dropdown({ selectedItem, onChange, url, name }) {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ function Dropdown({ selectedItem, onChange, url }) {
 
   return (
     <FormControl fullWidth>
-      <InputLabel id="dropdown-label">Item</InputLabel>
+      <InputLabel id="dropdown-label">{name}</InputLabel>
       <Select
         labelId="dropdown-label"
         id="dropdown-select"

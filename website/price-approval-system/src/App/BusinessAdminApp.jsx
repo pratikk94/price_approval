@@ -17,10 +17,10 @@ import Dashboard from "../Role_Business_Admin/Screens/Dashboard";
 import RuleAssignment from "../Role_Business_Admin/Screens/RuleAssignment";
 import EmployeeManagement from "../Role_Business_Admin/Screens/EmployeeManagement";
 import SetPriceRange from "../Role_Business_Admin/Screens/SetPriceRange";
-import PriceRequest from "../Role_Business_Admin/Screens/PriceRequest";
 import RequestHistory from "../Role_Business_Admin/Screens/RequestHistory";
 import ReportsAndAnalysis from "../Role_Business_Admin/Screens/ReportsAndAnalysis";
 import Master from "../Role_Business_Admin/Screens/Master";
+import PriceChangeRequest from "../components/common/PriceRequest";
 const drawerWidth = 240;
 
 function BusinessAdminApp({ changeScreen }) {
@@ -31,7 +31,7 @@ function BusinessAdminApp({ changeScreen }) {
     { text: "Rule assignment", component: <RuleAssignment /> },
     { text: "Employee Management", component: <EmployeeManagement /> },
     { text: "Set Price Range", component: <SetPriceRange /> },
-    { text: "Price Requests", component: <PriceRequest /> },
+    { text: "Price Requests", component: <PriceChangeRequest /> },
     { text: "Request History", component: <RequestHistory /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
     { text: "Master", component: <Master /> },

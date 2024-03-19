@@ -1,7 +1,8 @@
 import React from "react";
-import SelectModal from "../Components/EmployeeManagementModal";
+
 import DataTable from "../../components/common/DataTable";
 import { backend_url } from "../../util";
+import SelectModal from "../Components/AddEmployeeManagementModal";
 export default function EmployeeManagement() {
   return (
     <div style={{ width: "80vw", height: "100vh" }}>

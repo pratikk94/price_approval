@@ -40,6 +40,7 @@ import RuleModal from "../../Role_Business_Admin/Components/RuleModal";
 import RuleEditModal from "../../Role_Business_Admin/Components/RuleEditModal";
 import EmployeeManagement from "../../Role_Business_Admin/Screens/EmployeeManagement";
 import EmployeeDetailsModal from "../../Role_Business_Admin/Components/EmployeeManagementModal";
+import HistoryModal from "../../Role_Business_Admin/Components/RequestHistoryModal";
 function DynamicTable({ url, action_id }) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
@@ -58,6 +59,9 @@ function DynamicTable({ url, action_id }) {
   const [rule_id, setRuleId] = useState(0);
   const [employeeManagement, setEmployeeManagement] = useState(null);
   const [empId, setEmpId] = useState(0);
+  const [history, setHistory] = useState(null);
+  const [historyId, setHistoryId] = useState(0);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -213,8 +217,21 @@ function DynamicTable({ url, action_id }) {
       }
     };
 
+    const fetchRequestHistoryData = async () => {
+      try {
+        const response = await axios.get(
+          `${backend_url}api/fetch_report_status_by_id?id=${historyId}`
+        );
+        console.log(response.data[0]);
+        setHistory(response.data[0]);
+      } catch (error) {
+        console.error("Error fetching rule data:", error);
+      }
+    };
+
     if (action_id == 1) fetchRule();
     else if (action_id == 2) fetchEmployeeData();
+    else if (action_id == 3) fetchRequestHistoryData();
   }, [modalOpen]);
 
   const handleRuleUpdate = (updatedRule) => {
@@ -244,8 +261,7 @@ function DynamicTable({ url, action_id }) {
           </IconButton>
         </div>
       );
-    }
-    if (id == 2) {
+    } else if (id == 2) {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
@@ -257,14 +273,20 @@ function DynamicTable({ url, action_id }) {
           >
             <ViewIcon />
           </IconButton>
-          {/* <IconButton
+        </div>
+      );
+    } else if (id == 3) {
+      return (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <IconButton
             onClick={() => {
-              setEditModalOpen(true);
-              handleEdit(req_id);
+              handleView(req_id);
+              setModalOpen(true);
+              setHistoryId(req_id);
             }}
           >
-            <EditIcon />
-          </IconButton> */}
+            <ViewIcon />
+          </IconButton>
         </div>
       );
     } else {
@@ -371,29 +393,6 @@ function DynamicTable({ url, action_id }) {
                     ))}
                   <TableCell>
                     <Actions id={action_id} req_id={row.id} />
-                    {/* {isCustomEnabled ? (
-                      // <IconButton onClick={() => onCustomViewFunction(row.id)}>
-                      //   <SupervisedUserCircleIcon />
-
-                      // </IconButton>
-                      <span>
-                        <Button
-                          variant="outlined"
-                          color="primary"
-                          onClick={() => {
-                            handleOpen(id);
-                          }}
-                        >
-                          Show Request Details
-                        </Button>
-                      </span>
-                    ) : (
-                      
-                    )} */}
-                    {/* 
-                    <IconButton onClick={() => handleDownload(row.id)}>
-                      <DownloadIcon />
-                    </IconButton> */}
                   </TableCell>
                 </TableRow>
               ))}
@@ -420,6 +419,13 @@ function DynamicTable({ url, action_id }) {
           open={modalOpen}
           handleClose={() => setModalOpen(false)}
           employeeData={employeeManagement}
+        />
+      )}
+      {history && (
+        <HistoryModal
+          open={modalOpen}
+          handleClose={() => setModalOpen(false)}
+          history={history}
         />
       )}
 

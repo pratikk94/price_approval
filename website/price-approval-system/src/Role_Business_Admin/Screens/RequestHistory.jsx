@@ -5,7 +5,7 @@ export default function RequestHistory() {
   return (
     <div style={{ width: "80vw", height: "80vh" }}>
       Request History
-      <DataTable url={`${backend_url}api/fetch_report_status`} />
+      <DataTable url={`${backend_url}api/fetch_report_status`} action_id={3} />
     </div>
   );
 }

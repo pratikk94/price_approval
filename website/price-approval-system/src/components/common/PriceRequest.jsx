@@ -28,9 +28,9 @@ import {
   ContentCopy,
   Delete,
 } from "@mui/icons-material";
-import CreateRequestModal from "./RequestModal";
-import DataTable from "../../../components/common/DataTable";
-import { backend_url } from "../../../util";
+import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
+import DataTable from "./DataTable";
+import { backend_url } from "../../util";
 
 // Initial dummy data with status
 const initialData = [

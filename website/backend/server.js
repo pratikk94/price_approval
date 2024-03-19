@@ -612,6 +612,29 @@ app.get("/api/fetch_report_status", async (req, res) => {
   }
 });
 
+app.get("/api/fetch_report_status_by_id", async (req, res) => {
+  let pool = null;
+  try {
+    const id = req.query.id;
+    pool = await sql.connect(config);
+    const query = `SELECT  * from report_status WHERE id = ${id}`;
+    const result = await pool.request().query(query);
+    res.json(result.recordset);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching customers");
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
 app.post("/api/add_price_request", async (req, res) => {
   let pool = null;
   try {

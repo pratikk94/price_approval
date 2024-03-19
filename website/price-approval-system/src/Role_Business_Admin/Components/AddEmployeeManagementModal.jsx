@@ -6,6 +6,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Dropdown from "../../components/common/Dropdown";
+import Checkbox from "../../Role_Business_Admin/Components/Checkbox";
 import { backend_url } from "../../util";
 import SpacingWrapper from "../../components/util/SpacingWrapper";
 function SelectModal() {
@@ -71,26 +72,30 @@ function SelectModal() {
           },
         }}
       >
-        <DialogTitle>Select an Item</DialogTitle>
+        <DialogTitle>Select an Employee</DialogTitle>
         <DialogContent>
           <SpacingWrapper space="12px" />
           <Dropdown
+            name="Employee"
             selectedItem={selectedName}
             onChange={handleChangeName}
             url={`${backend_url}api/fetch_employees`}
           />
           <SpacingWrapper space="12px" />
           <Dropdown
+            name="Role"
             selectedItem={selectedRole}
             onChange={handleChangRole}
             url={`${backend_url}api/fetch_roles`}
           />
           <SpacingWrapper space="12px" />
           <Dropdown
+            name="Region"
             selectedItem={selectedRegion}
             onChange={handleChangeRegion}
             url={`${backend_url}api/fetch_region`}
           />
+          <Checkbox />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>

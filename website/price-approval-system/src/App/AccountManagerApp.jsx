@@ -14,7 +14,7 @@ import {
   TextField,
 } from "@mui/material";
 import Dashboard from "../Role_AM/Screens/Dashboard";
-import PriceChangeRequests from "../Role_AM/Screens/PriceChangeRequests";
+import PriceChangeRequests from "../components/common/PriceRequest";
 import RequestsHistory from "../Role_AM/Screens/RequestHistory";
 import ReportsAndAnalysis from "../Role_AM/Screens/ReportsAndAnalysis";
 
