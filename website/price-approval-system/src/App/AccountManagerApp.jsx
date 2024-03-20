@@ -25,7 +25,10 @@ function ResponsiveDrawer({ changeScreen }) {
 
   const drawerItems = [
     { text: "Dashboard", component: <Dashboard /> },
-    { text: "Price Requests", component: <PriceChangeRequests role={"AM"} /> },
+    {
+      text: "Price Requests",
+      component: <PriceChangeRequests role={"AM"} isAM={true} />,
+    },
     { text: "Requests History", component: <RequestsHistory /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
   ];

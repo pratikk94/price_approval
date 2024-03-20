@@ -78,16 +78,19 @@ const modalStyle = {
 
 // Status filter action items
 
-function PriceChangeRequest({ role }) {
-  const statusFiltersValues = Array.from(statusFilters.values());
-  const [filterdId, setFilterdId] = useState(0);
+function PriceChangeRequest({ role, isAM }) {
+  let statusFiltersValues = Array.from(statusFilters.values());
+  if (isAM == undefined) {
+    statusFiltersValues = Array.from(statusFilters.values()).slice(1, 5);
+  }
+  const [filterdId, setFilterdId] = useState(1);
 
   const [data, setData] = useState(initialData);
   const [selectedColumns, setSelectedColumns] = useState(
     initialColumns.filter((col) => !col.alwaysVisible).map((col) => col.id)
   );
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState("Draft");
+  const [activeFilter, setActiveFilter] = useState("Pending");
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
