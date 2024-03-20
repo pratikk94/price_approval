@@ -635,6 +635,7 @@ app.get("/api/fetch_report_status_by_id", async (req, res) => {
 
 app.post("/api/add_price_request", async (req, res) => {
   let pool = null;
+
   try {
     pool = await sql.connect(config);
     const mainResult = await pool
@@ -676,8 +677,19 @@ app.post("/api/add_price_request", async (req, res) => {
         .query(`INSERT INTO price_approval_requests_price_table (req_id, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, reel_discount, pack_upcharge, tpc, offline_discount, net_nsr, old_net_nsr) 
                 VALUES (@reqId, @grade, @gradeType, @gsmFrom, @gsmTo, @agreedPrice, @specialDiscount, @reelDiscount, @packUpcharge, @tpc, @offlineDiscount, @netNSR, @oldNetNSR)`);
     }
-
+    const query = `
+    INSERT INTO report_status (report_id, status, status_updated_by_id, created_at, last_updated_at)
+    VALUES (@report_id, @status, @status_updated_by_id, GETDATE(), GETDATE());
+  `;
     // Additional insert operations here, following the same pattern
+    let status = "1";
+    if (req.body.isDraft) status = "0";
+    await pool
+      .request()
+      .input("report_id", sql.VarChar, `${requestId}`)
+      .input("status", sql.VarChar, status)
+      .input("status_updated_by_id", sql.VarChar, "1")
+      .query(query);
 
     res.status(200).send("Data added successfully");
   } catch (err) {

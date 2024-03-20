@@ -43,6 +43,7 @@ import EmployeeDetailsModal from "../../Role_Business_Admin/Components/EmployeeM
 import HistoryModal from "../../Role_Business_Admin/Components/RequestHistoryModal";
 import PriceViewModal from "../../Role_Approvers_RM/Components/ViewModal";
 function DynamicTable({ url, action_id }) {
+  console.log(action_id);
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -233,21 +234,23 @@ function DynamicTable({ url, action_id }) {
     };
 
     const fetchAPRMData = async () => {
-      try {
-        const response = await axios.get(
-          `${backend_url}api/price_requests?id=${aprm_id}`
-        );
-        console.log(response.data[0]);
-        setAprm(response.data[0]);
-      } catch (error) {
-        console.error("Error fetching rule data:", error);
+      if (aprm_id != 0) {
+        try {
+          const response = await axios.get(
+            `${backend_url}api/price_requests?id=${aprm_id}`
+          );
+          console.log(response.data[0]);
+          setAprm(response.data[0]);
+        } catch (error) {
+          console.error("Error fetching rule data:", error);
+        }
       }
     };
 
     if (action_id == "B1") fetchRule();
     else if (action_id == "B2") fetchEmployeeData();
     else if (action_id == "B3") fetchRequestHistoryData();
-    else if (action_id == "AP_RM") fetchAPRMData();
+    else if (action_id == "AP_RM" || action_id == "AM") fetchAPRMData();
   }, [modalOpen]);
 
   const handleRuleUpdate = (updatedRule) => {
@@ -305,13 +308,12 @@ function DynamicTable({ url, action_id }) {
           </IconButton>
         </div>
       );
-    } else if (id == "AP_RM") {
-      console.log("APRM");
+    } else if (id == "AP_RM" || id == "AM") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              handleView(req_id);
+              handleView(row_id);
               setModalOpen(true);
               setAprmId(req_id);
               console.log(req_id);
@@ -470,6 +472,7 @@ function DynamicTable({ url, action_id }) {
           onClose={() => setModalOpen(false)}
           id={aprm_id}
           data={aprm}
+          isEditable={action_id == "AP_RM"}
         />
       )}
 

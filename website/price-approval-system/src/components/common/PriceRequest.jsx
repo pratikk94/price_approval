@@ -78,16 +78,17 @@ const modalStyle = {
 
 // Status filter action items
 
-function PriceChangeRequest() {
+function PriceChangeRequest({ role }) {
   const statusFiltersValues = Array.from(statusFilters.values());
-  const [filterdId, setFilterdId] = useState(1);
+  const [filterdId, setFilterdId] = useState(0);
 
   const [data, setData] = useState(initialData);
   const [selectedColumns, setSelectedColumns] = useState(
     initialColumns.filter((col) => !col.alwaysVisible).map((col) => col.id)
   );
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState("");
+  const [activeFilter, setActiveFilter] = useState("Draft");
+
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
   };
@@ -124,29 +125,13 @@ function PriceChangeRequest() {
         )
   );
 
-  const renderActionIcons = () => (
-    <>
-      <IconButton>
-        <Download />
-      </IconButton>
-      <IconButton>
-        <Visibility />
-      </IconButton>
-      <IconButton>
-        <Edit />
-      </IconButton>
-      <IconButton>
-        <ContentCopy />
-      </IconButton>
-      <IconButton>
-        <Delete />
-      </IconButton>
-    </>
-  );
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleOpenModal = () => setModalOpen(true);
-  const handleCloseModal = () => setModalOpen(false);
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    window.location.reload();
+  };
 
   useEffect(() => {
     ReturnDataTable();
@@ -157,30 +142,45 @@ function PriceChangeRequest() {
     if (filterdId == 0) {
       // console.log("Filterred ID is 0");
       return (
-        <DataTable url={backend_url + "api/fetch_price_requests?status=0"} />
+        <DataTable
+          url={backend_url + "api/fetch_price_requests?status=0"}
+          action_id={role}
+        />
       );
     } else if (filterdId == 1) {
       // console.log("Filterred ID is 1");
       return (
-        <DataTable url={backend_url + "api/fetch_price_requests?status=1"} />
+        <DataTable
+          action_id={role}
+          url={backend_url + "api/fetch_price_requests?status=1"}
+        />
       );
     }
     if (filterdId == 2) {
       // console.log("Filterred ID is 2");
       return (
-        <DataTable url={backend_url + "api/fetch_price_requests?status=2"} />
+        <DataTable
+          action_id={role}
+          url={backend_url + "api/fetch_price_requests?status=2"}
+        />
       );
     }
     if (filterdId == 3) {
       // console.log("Filterred ID is 3");
       return (
-        <DataTable url={backend_url + "api/fetch_price_requests?status=3"} />
+        <DataTable
+          // action_id={role}
+          url={backend_url + "api/fetch_price_requests?status=3"}
+        />
       );
     }
     if (filterdId == 4) {
       // console.log("Filterred ID is 4");
       return (
-        <DataTable url={backend_url + "api/fetch_price_requests?status=4"} />
+        <DataTable
+          action_id={role}
+          url={backend_url + "api/fetch_price_requests?status=4"}
+        />
       );
     }
   };

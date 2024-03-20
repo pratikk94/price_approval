@@ -45,7 +45,7 @@ const CreateRequestModal = ({ open, handleClose }) => {
   const [remarks, setRemarks] = useState([]);
   const [checkBoxEnabled, setCheckBoxEnabled] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-
+  const [isDraft, setIsDraft] = useState(false);
   const [tableRowsData, setTableRowsData] = useState([]);
   const formData = {};
   const handleSubmit = (event) => {
@@ -69,6 +69,7 @@ const CreateRequestModal = ({ open, handleClose }) => {
     formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
     formData["fsc"] = 1;
     formData["priceTable"] = tableRowsData;
+    formData["isDraft"] = isDraft;
     console.log(formData.length);
     const val = JSON.stringify(formData);
     console.log(val);
@@ -76,9 +77,9 @@ const CreateRequestModal = ({ open, handleClose }) => {
     setSelectedConsignees([]);
     setSelectedCustomers([]);
 
-    handleClose(); // Close modal after submission, you might want to do this after successful submission
+    handleClose();
     if (checkBoxEnabled && isChecked) {
-      oneToManyMapping(selectedCustomers, selectedConsignees);
+      oneToOneMapping(selectedCustomers, selectedConsignees);
     } else {
       oneToManyMapping(selectedCustomers, selectedConsignees);
     }
@@ -103,7 +104,6 @@ const CreateRequestModal = ({ open, handleClose }) => {
       if (response.status === 200) console.log("Success", responseData);
     } catch (error) {
       console.error("Failed to send data:", error);
-      //setResponse(error.message);
     }
   };
 
@@ -141,9 +141,6 @@ const CreateRequestModal = ({ open, handleClose }) => {
       array1[i],
       array2[i],
     ]);
-
-    console.log(mappedArray);
-    console.log(tableRowsData);
   };
 
   const setTableRowsDataFunction = (data) => {
@@ -228,8 +225,6 @@ const CreateRequestModal = ({ open, handleClose }) => {
             <SpacingWrapper space="12px" />
 
             <SpacingWrapper space="61.5px" />
-
-            {/* Additional inputs and layout for column 2 */}
           </Grid>
         </Grid>
 
@@ -245,14 +240,20 @@ const CreateRequestModal = ({ open, handleClose }) => {
           <Button onClick={handleClose} color="primary">
             Close
           </Button>
+          <Button
+            onClick={(e) => {
+              setIsDraft(true);
+              handleSubmit(e);
+            }}
+            color="primary"
+          >
+            Save as draft
+          </Button>
         </Box>
         <Box textAlign="center" marginTop={2}>
           <Button type="submit" variant="contained">
             Submit
           </Button>
-          {/* <IconButton onClick={handleAddRow}>
-            <AddCircleIcon />
-          </IconButton> */}
         </Box>
       </Box>
     </Modal>

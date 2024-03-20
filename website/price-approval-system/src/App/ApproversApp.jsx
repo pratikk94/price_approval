@@ -15,14 +15,17 @@ import {
 } from "@mui/material";
 const drawerWidth = 240;
 import Dashboard from "../Role_Approvers_RM/Screens/Dashboard";
-import PriceRequest from "../Role_Approvers_RM/Screens/PriceRequest";
 import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
+import PriceChangeRequest from "../components/common/PriceRequest";
 function ResponsiveDrawer({ changeScreen }) {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
     { text: "Dashboard", component: <Dashboard /> },
-    { text: "Price Requests", component: <PriceRequest /> },
+    {
+      text: "Price Requests",
+      component: <PriceChangeRequest role={"AP_RM"} />,
+    },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
   ];
 

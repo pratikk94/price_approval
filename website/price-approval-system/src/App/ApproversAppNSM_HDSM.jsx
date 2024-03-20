@@ -13,20 +13,19 @@ import {
   Divider,
   TextField,
 } from "@mui/material";
-import Dashboard from "../Role_AM/Screens/Dashboard";
-import PriceChangeRequests from "../components/common/PriceRequest";
-import RequestsHistory from "../Role_AM/Screens/RequestHistory";
-import ReportsAndAnalysis from "../Role_AM/Screens/ReportsAndAnalysis";
-
 const drawerWidth = 240;
-
+import Dashboard from "../Role_Approvers_RM/Screens/Dashboard";
+import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
+import PriceChangeRequest from "../components/common/PriceRequest";
 function ResponsiveDrawer({ changeScreen }) {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
     { text: "Dashboard", component: <Dashboard /> },
-    { text: "Price Requests", component: <PriceChangeRequests role={"AM"} /> },
-    { text: "Requests History", component: <RequestsHistory /> },
+    {
+      text: "Price Requests",
+      component: <PriceChangeRequest role={"AP_NSM_HDSM"} />,
+    },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
   ];
 
@@ -34,7 +33,6 @@ function ResponsiveDrawer({ changeScreen }) {
 
   const handleInputChange = (event) => {
     setInputValue(event.target.value);
-    console.log(event.target.value);
     changeScreen(event.target.value);
   };
 

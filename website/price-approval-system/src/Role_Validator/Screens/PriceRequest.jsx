@@ -9,7 +9,7 @@ export default function PriceRequest() {
     <div style={{ width: "80vw", height: "80vh" }}>
       PriceRequest
       <DataTable
-        url={`${backend_url}api/fetch_price_requests`}
+        url={`${backend_url}api/fetch_price_requests?status=2`}
         isCustomEnabled={true}
         onCustomViewFunction={viewClicked}
       />
