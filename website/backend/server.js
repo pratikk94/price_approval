@@ -185,7 +185,7 @@ app.get("/api/fetch_grade", async (req, res) => {
   }
 });
 
-// A simple API endpoint that fetches employee data
+// API endpoint that fetches employee data
 app.get("/api/fetch_employees", async (req, res) => {
   let pool = null;
   try {
@@ -213,7 +213,7 @@ app.get("/api/fetch_employees", async (req, res) => {
   }
 });
 
-// A simple API endpoint that fetches roles
+// API endpoint that fetches roles
 app.get("/api/fetch_roles", async (req, res) => {
   let pool = null;
   try {
@@ -240,7 +240,7 @@ app.get("/api/fetch_roles", async (req, res) => {
   }
 });
 
-// A simple API endpoint that fetches region
+// API endpoint that fetches region
 app.get("/api/fetch_region", async (req, res) => {
   let pool = null;
   try {
@@ -267,6 +267,7 @@ app.get("/api/fetch_region", async (req, res) => {
   }
 });
 
+// API endpoint that fetch emplotyee role
 app.post("/api/add_employee_role", async (req, res) => {
   const { employee_id, employee_name, role, region, created_date } = req.body;
   const user_id = 1; // Hardcoded as per requirement
@@ -310,7 +311,7 @@ app.post("/api/add_employee_role", async (req, res) => {
   }
 });
 
-//fetch data from roles table
+// API endpoint that fetch data from roles table
 app.get("/api/fetch_roles_data", async (req, res) => {
   let pool = null;
   try {
@@ -337,6 +338,7 @@ app.get("/api/fetch_roles_data", async (req, res) => {
   }
 });
 
+// API endpint that fetches data from roles table by id
 app.get("/api/fetch_roles_data_by_id", async (req, res) => {
   let pool = null;
   try {
@@ -364,7 +366,7 @@ app.get("/api/fetch_roles_data_by_id", async (req, res) => {
   }
 });
 
-// Api to fetch grade.
+// API endpoiubt that fetches price request data
 app.get("/api/fetch_price_requests", async (req, res) => {
   let pool = null;
   const status = req.query.status;
@@ -420,6 +422,7 @@ app.get("/api/fetch_price_requests", async (req, res) => {
   }
 });
 
+// API endpoint that fetches appovers by role and region
 app.get("/api/fetch_approvers", async (req, res) => {
   const { role, region } = req.query;
   let pool = null;
@@ -445,8 +448,8 @@ app.get("/api/fetch_approvers", async (req, res) => {
   }
 });
 
+// API endpoint that fetches profit centers
 app.get("/api/fetch_profit_centers", async (req, res) => {
-  const { role, region } = req.query;
   let pool = null;
   try {
     pool = await sql.connect(config);
@@ -470,31 +473,7 @@ app.get("/api/fetch_profit_centers", async (req, res) => {
   }
 });
 
-app.get("/api/fetch_profit_centers", async (req, res) => {
-  const { role, region } = req.query;
-  let pool = null;
-  try {
-    pool = await sql.connect(config);
-    const query = `SELECT  [id], [name]
-    FROM [PriceApprovalSystem].[dbo].[profit_center]
-    ORDER BY name ASC`;
-    const result = await pool.request().query(query);
-    res.json(result.recordset);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching customers");
-  } finally {
-    // Close the database connection
-    if (pool) {
-      try {
-        await pool.close();
-      } catch (err) {
-        console.error("Failed to close the pool:", err);
-      }
-    }
-  }
-});
-
+// API endpoint that fetches all roles
 app.get("/api/get_approver", async (req, res) => {
   const { role, region } = req.query;
   let pool = null;
@@ -518,6 +497,7 @@ app.get("/api/get_approver", async (req, res) => {
   }
 });
 
+// API endpoint that fetches all rules
 app.get("/api/fetch_rules", async (req, res) => {
   let pool = null;
   try {
@@ -553,6 +533,7 @@ app.get("/api/fetch_rules", async (req, res) => {
   }
 });
 
+// API endpoint that fetches rules by id
 app.get("/api/fetch_rules_by_id", async (req, res) => {
   let pool = null;
   try {
@@ -588,6 +569,7 @@ app.get("/api/fetch_rules_by_id", async (req, res) => {
   }
 });
 
+// API endpoint that fetches all report status
 app.get("/api/fetch_report_status", async (req, res) => {
   let pool = null;
   try {
@@ -610,6 +592,7 @@ app.get("/api/fetch_report_status", async (req, res) => {
   }
 });
 
+//API endpoint that fetches report status by id
 app.get("/api/fetch_report_status_by_id", async (req, res) => {
   let pool = null;
   try {
@@ -633,6 +616,7 @@ app.get("/api/fetch_report_status_by_id", async (req, res) => {
   }
 });
 
+// API endpoint that adds price approval requests
 app.post("/api/add_price_request", async (req, res) => {
   let pool = null;
 
@@ -706,6 +690,7 @@ app.post("/api/add_price_request", async (req, res) => {
   }
 });
 
+// API endpoint that fetches price approval requests by id
 app.get("/api/price_requests", async (req, res) => {
   let pool = null;
   try {
@@ -801,6 +786,7 @@ WHERE
   }
 });
 
+// API endpoint that updates price approval requests
 app.put("/api/update-report-status", async (req, res) => {
   const { reportId, statusUpdatedById, newStatus } = req.body;
   let pool = null;
