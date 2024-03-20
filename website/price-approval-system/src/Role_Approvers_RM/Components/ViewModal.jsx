@@ -70,7 +70,7 @@ function PriceViewModal({ open, onClose, id, data, isEditable }) {
     };
 
     fetch(apiUrl, {
-      method: "PUT",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },

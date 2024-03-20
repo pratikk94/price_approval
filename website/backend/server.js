@@ -9,11 +9,12 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  password: "SayaliK20311",
-  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "12345",
+  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  port:1433,
   database: "PriceApprovalSystem",
   options: {
-    encrypt: true, // Use this if you're on Windows Azure
+    // encrypt: false, // Use this if you're on Windows Azure
     trustServerCertificate: true, // Use this if you're on a local development environment
   },
 };
@@ -70,14 +71,11 @@ app.get("/api/fetch_customers", async (req, res) => {
     // Query the database
     let result;
     if (type == 3) {
-      result = await pool.request()
-        .query`SELECT code, name FROM customer where category IN ('END-USE')`;
+      result = await pool.request().query`EXEC GetAllCustomersEndUse`;
     } else if (type == 2) {
-      result = await pool.request()
-        .query`SELECT code, name FROM customer where category IN ('DOM-CONS','EXP-CONS')`;
+      result = await pool.request().query`EXEC GetAllCustomersConsignee`;
     } else {
-      result = await pool.request()
-        .query`SELECT code, name FROM customer WHERE category IN ('DOM_CUST', 'EXP_CUST', 'INTERDIV_CUST')`;
+      result = await pool.request().query`EXEC GetAllCustomers`;
     }
     // Send the results as a response
     res.json(result.recordset);
@@ -106,7 +104,7 @@ app.get("/api/fetch_payment_terms", async (req, res) => {
 
     // Query the database
     const result = await pool.request()
-      .query`SELECT terms as name, payment_terms_id as code FROM payment_terms`;
+      .query`EXEC GetPaymentTerms`;
 
     // Send the results as a response
     res.json(result.recordset);
@@ -134,8 +132,7 @@ app.get("/api/fetch_plants", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query the database
-    const result = await pool.request()
-      .query`SELECT name, id as code FROM plant`;
+    const result = await pool.request().query`EXEC GetPlants`;
 
     // Send the results as a response
     res.json(result.recordset);
@@ -164,8 +161,7 @@ app.get("/api/fetch_grade", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query the database
-    const result = await pool.request()
-      .query`SELECT grade as name , id as code FROM material where fsc = ${fsc}`;
+    const result = await pool.request().query`EXEC GetMaterialsByFSC @fsc=${fsc}`;
 
     // Send the results as a response
     res.json(result.recordset);
@@ -193,8 +189,7 @@ app.get("/api/fetch_employees", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query to select employee_name and employee_id
-    const result = await pool.request()
-      .query`SELECT employee_name as name, employee_id as id FROM user_master`;
+    const result = await pool.request().query`EXEC FetchEmployees`;
 
     // Send query results as a response
     res.json(result.recordset);
@@ -221,7 +216,7 @@ app.get("/api/fetch_roles", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query to select employee_name and employee_id
-    const result = await pool.request().query`SELECT * FROM roles`;
+    const result = await pool.request().query`EXEC FetchRoles`;
 
     // Send query results as a response
     res.json(result.recordset);
@@ -248,7 +243,7 @@ app.get("/api/fetch_region", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query to select employee_name and employee_id
-    const result = await pool.request().query`SELECT * from region`;
+    const result = await pool.request().query`EXEC FetchRegion`;
 
     // Send query results as a response
     res.json(result.recordset);
@@ -269,33 +264,14 @@ app.get("/api/fetch_region", async (req, res) => {
 
 // API endpoint that fetch emplotyee role
 app.post("/api/add_employee_role", async (req, res) => {
-  const { employee_id, employee_name, role, region, created_date } = req.body;
+  let { employee_id, employee_name, role, region, created_date,active } = req.body;
   const user_id = 1; // Hardcoded as per requirement
   const created_by = "backend_user"; // This can also be fetched dynamically if needed
   let pool = null; // Initialize the pool variable
   try {
     pool = await sql.connect(config);
-
-    const query = `
-          INSERT INTO define_roles (employee_id, employee_name, role, region, created_by, created_date,active ) 
-          VALUES (@employee_id, @employee_name, @role, @region, @created_by, @created_date, @active);
-      `;
-
-    const request = new sql.Request(pool);
-    request.input("employee_id", sql.VarChar, employee_id);
-    request.input("employee_name", sql.VarChar, employee_name);
-    request.input("role", sql.VarChar, role);
-    request.input("region", sql.VarChar, region);
-    request.input("created_by", sql.VarChar, created_by);
-    request.input("active", 1);
-    request.input(
-      "created_date",
-      sql.DateTime,
-      created_date ? new Date(created_date) : new Date()
-    ); // Use provided date or current date
-
-    await request.query(query);
-
+    created_date = created_date ? new Date(created_date) : new Date()
+    await pool.request().query`EXEC InsertEmployeeRole @employee_id=${employee_id}, @employee_name=${employee_name}, @role=${role}, @region=${region}, @created_by=${created_by}, @created_date=${created_date}, @active=${active}`;
     res.status(200).send("Role and employee details added successfully.");
   } catch (err) {
     console.error("Database operation failed:", err);
@@ -319,7 +295,7 @@ app.get("/api/fetch_roles_data", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query to fetch all values from the 'define' table
-    const result = await pool.request().query`SELECT * FROM define_roles`;
+    const result = await pool.request().query`EXEC FetchDefinedRoles`;
 
     // Send the query results as a response
     res.json(result.recordset);
@@ -346,8 +322,7 @@ app.get("/api/fetch_roles_data_by_id", async (req, res) => {
     pool = await sql.connect(config);
     const id = req.query.id;
     // Query to fetch all values from the 'define' table
-    const result = await pool.request()
-      .query`SELECT * FROM define_roles where id =${id}`;
+    const result = await pool.request().query`EXEC FetchDefinedRoleById @id=${id}`;
 
     // Send the query results as a response
     res.json(result.recordset);
@@ -375,30 +350,7 @@ app.get("/api/fetch_price_requests", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query the database
-    const result = await pool.request().query`SELECT 
-      pra.req_id,
-      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
-          FROM customer c
-          JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
-      ) AS CustomerNames,
-      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
-          FROM customer c
-          JOIN STRING_SPLIT(pra.consignee_id, ',') AS splitConsigneeIds ON c.code = TRY_CAST(splitConsigneeIds.value AS INT)
-      ) AS ConsigneeNames,
-      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
-          FROM customer c
-          JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
-      ) AS EndUseNames,
-      pra.*,
-      prt.*,
-      rs.created_at as created_on,rs.last_updated_at as updated_on,rs.status_updated_by_id as created_by
-  FROM 
-      price_approval_requests pra
-  LEFT JOIN
-      report_status rs ON pra.req_id = rs.report_id
-  LEFT JOIN 
-      price_approval_requests_price_table prt ON pra.req_id = prt.req_id
-      WHERE rs.status = ${status}`;
+    const result = await pool.request().query`EXEC FetchPriceRequest @status=${status}`;
     // Send the results as a response
 
     const transformedData = result.recordset.map((item) => ({
@@ -428,10 +380,7 @@ app.get("/api/fetch_approvers", async (req, res) => {
   let pool = null;
   try {
     pool = await sql.connect(config);
-    const query = `SELECT * FROM define_roles WHERE role like '%${
-      role ?? ""
-    }%' AND region like '%${region ?? ""}%'`;
-    const result = await pool.request().query(query);
+    const result = await pool.request().query`EXEC SearchDefineRoles @role=${role || ''}, @region=${region || ''}`;
     res.json(result.recordset);
   } catch (err) {
     console.error(err);
@@ -453,9 +402,7 @@ app.get("/api/fetch_profit_centers", async (req, res) => {
   let pool = null;
   try {
     pool = await sql.connect(config);
-    const query = `SELECT  [id], [name]
-    FROM [PriceApprovalSystem].[dbo].[profit_center]
-    ORDER BY name ASC;`;
+    const query = `EXEC FetchProfitCenters`;
     const result = await pool.request().query(query);
     res.json(result.recordset);
   } catch (err) {
@@ -475,11 +422,10 @@ app.get("/api/fetch_profit_centers", async (req, res) => {
 
 // API endpoint that fetches all roles
 app.get("/api/get_approver", async (req, res) => {
-  const { role, region } = req.query;
   let pool = null;
   try {
     pool = await sql.connect(config);
-    const query = `SELECT  * from define_roles`;
+    const query = `EXEC FetchAllDefinedRoles`;
     const result = await pool.request().query(query);
     res.json(result.recordset);
   } catch (err) {
@@ -502,21 +448,7 @@ app.get("/api/fetch_rules", async (req, res) => {
   let pool = null;
   try {
     pool = await sql.connect(config);
-    const query = `SELECT r.*, STRING_AGG(dr.employee_name, ', ') AS approver_names
-    FROM rules r
-    CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(r.approvers, '[', ''), ']', ''), ',') AS s
-    JOIN define_roles dr ON dr.employee_id = s.value 
-    WHERE r.status = 1
-    -- TRY_CAST(s.value AS INT)
-    GROUP BY r.name,r.id,r.region
-          ,r.profit_center
-          ,r.valid_from
-          ,r.valid_to
-          ,r.approvers
-          ,r.status
-          ,r.created_by
-    ,r.created_date;`;
-    const result = await pool.request().query(query);
+    const result = await pool.request().query`EXEC FetchRules`;
     res.json(result.recordset);
   } catch (err) {
     console.error(err);
@@ -539,20 +471,8 @@ app.get("/api/fetch_rules_by_id", async (req, res) => {
   try {
     pool = await sql.connect(config);
     const id = req.query.id;
-    const query = `SELECT r.*, STRING_AGG(dr.employee_name, ', ') AS approver_names
-    FROM rules r
-    CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(r.approvers, '[', ''), ']', ''), ',') AS s
-    JOIN define_roles dr ON dr.employee_id = s.value 
-    WHERE r.status = 1 and r.id = ${id}
-    GROUP BY r.name,r.id,r.region
-          ,r.profit_center
-          ,r.valid_from
-          ,r.valid_to
-          ,r.approvers
-          ,r.status
-          ,r.created_by
-    ,r.created_date;`;
-    const result = await pool.request().query(query);
+    
+    const result = await pool.request().query`EXEC FetchRuleById @id=${id}`;
     res.json(result.recordset);
   } catch (err) {
     console.error(err);
@@ -574,7 +494,7 @@ app.get("/api/fetch_report_status", async (req, res) => {
   let pool = null;
   try {
     pool = await sql.connect(config);
-    const query = `SELECT  * from report_status`;
+    const query = `EXEC FetchReportStatus`;
     const result = await pool.request().query(query);
     res.json(result.recordset);
   } catch (err) {
@@ -598,8 +518,7 @@ app.get("/api/fetch_report_status_by_id", async (req, res) => {
   try {
     const id = req.query.id;
     pool = await sql.connect(config);
-    const query = `SELECT  * from report_status WHERE id = ${id}`;
-    const result = await pool.request().query(query);
+    const result = await pool.request().query`EXEC FetchReportStatusById @id=${id}`;
     res.json(result.recordset);
   } catch (err) {
     console.error(err);
@@ -622,58 +541,62 @@ app.post("/api/add_price_request", async (req, res) => {
 
   try {
     pool = await sql.connect(config);
-    const mainResult = await pool
-      .request()
-      .input("customerIds", sql.VarChar, req.body.customerIds)
-      .input("consigneeIds", sql.VarChar, req.body.consigneeIds)
-      .input("plants", sql.VarChar, req.body.plants)
-      .input("endUseIds", sql.VarChar, req.body.endUseIds)
-      .input("endUseSegmentIds", sql.VarChar, req.body.endUseSegmentIds)
-      .input("paymentTermsId", sql.VarChar, req.body.paymentTermsId)
-      .input("validFrom", sql.DateTime, new Date(req.body.validFrom))
-      .input("validTo", sql.DateTime, new Date(req.body.validTo))
-      .input("fsc", sql.Int, req.body.fsc)
-      .input("mappint_type", sql.Int, req.body.mappingType)
-      .query(`INSERT INTO price_approval_requests (customer_id, consignee_id, plant, end_use_id, end_use_segment_id, payment_terms_id, valid_from, valid_to, fsc, mappint_type) 
-              VALUES (@customerIds, @consigneeIds, @plants, @endUseIds, @endUseSegmentIds, @paymentTermsId, @validFrom, @validTo, @fsc, @mappint_type);
-              SELECT SCOPE_IDENTITY() AS id;`);
+    let { customerIds, consigneeIds, plants, endUseIds, endUseSegmentIds, paymentTermsId, validFrom, validTo, fsc, mappint_type,statusUpdatedById } = req.body;
+    mappint_type != undefined ? mappint_type = 2 : mappint_type =1;
+        const result = await pool.request().query`
+            EXEC InsertPriceApprovalRequest 
+                @customerIds=${customerIds}, 
+                @consigneeIds=${consigneeIds}, 
+                @plants=${plants}, 
+                @endUseIds=${endUseIds}, 
+                @endUseSegmentIds=${endUseSegmentIds}, 
+                @paymentTermsId=${paymentTermsId}, 
+                @validFrom=${validFrom}, 
+                @validTo=${validTo}, 
+                @fsc=${fsc}, 
+                @mappint_type=${mappint_type}`;
 
-    const requestId = mainResult.recordset[0].id;
+    const requestId = result.recordset[0].id;
     // console.log(requestId);
 
     for (const item of req.body.priceTable) {
       // console.log(item);
-      await pool
-        .request()
-        .input("reqId", sql.VarChar, `${requestId}`)
-        .input("grade", sql.VarChar, item.grade)
-        .input("gradeType", sql.VarChar, item.gradeType)
-        .input("gsmFrom", sql.VarChar, item.gsmFrom)
-        .input("gsmTo", sql.VarChar, item.gsmTo)
-        .input("agreedPrice", sql.VarChar, `${item.agreedPrice}`)
-        .input("specialDiscount", sql.VarChar, `'${item.specialDiscount}'`)
-        .input("reelDiscount", sql.VarChar, `'${item.reelDiscount}'`)
-        .input("packUpcharge", sql.VarChar, `'${item.packUpCharge}'`)
-        .input("tpc", sql.VarChar, `'${item.tpc}'`)
-        .input("offlineDiscount", sql.VarChar, `'${item.offlineDiscount}'`)
-        .input("netNSR", sql.VarChar, `'${item.netNSR}'`)
-        .input("oldNetNSR", sql.VarChar, `'${item.oldNetNSR}'`)
-        .query(`INSERT INTO price_approval_requests_price_table (req_id, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, reel_discount, pack_upcharge, tpc, offline_discount, net_nsr, old_net_nsr) 
-                VALUES (@reqId, @grade, @gradeType, @gsmFrom, @gsmTo, @agreedPrice, @specialDiscount, @reelDiscount, @packUpcharge, @tpc, @offlineDiscount, @netNSR, @oldNetNSR)`);
+
+      const reqId = requestId;
+      const grade = item.grade;
+      const gradeType = item.gradeType;
+      const gsmFrom = item.gsmFrom;
+      const gsmTo = item.gsmTo;
+      const agreedPrice = item.agreedPrice;
+      const specialDiscount = item.specialDiscount; 
+      const reelDiscount = item.reelDiscount;
+      const packUpcharge = item.packUpCharge;
+      const tpc = item.tpc;
+      const offlineDiscount = item.offlineDiscount;
+      const netNSR = item.netNSR;
+      const oldNetNSR = item.oldNetNSR; 
+      const result = await sql.query`
+            EXEC InsertPriceApprovalRequestPriceTable 
+                @reqId=${reqId}, 
+                @grade=${grade}, 
+                @gradeType=${gradeType}, 
+                @gsmFrom=${gsmFrom}, 
+                @gsmTo=${gsmTo}, 
+                @agreedPrice=${agreedPrice}, 
+                @specialDiscount=${specialDiscount}, 
+                @reelDiscount=${reelDiscount}, 
+                @packUpcharge=${packUpcharge}, 
+                @tpc=${tpc}, 
+                @offlineDiscount=${offlineDiscount}, 
+                @netNSR=${netNSR}, 
+                @oldNetNSR=${oldNetNSR}`;
     }
-    const query = `
-    INSERT INTO report_status (report_id, status, status_updated_by_id, created_at, last_updated_at)
-    VALUES (@report_id, @status, @status_updated_by_id, GETDATE(), GETDATE());
-  `;
+    
     // Additional insert operations here, following the same pattern
     let status = "1";
     if (req.body.isDraft) status = "0";
-    await pool
-      .request()
-      .input("report_id", sql.VarChar, `${requestId}`)
-      .input("status", sql.VarChar, status)
-      .input("status_updated_by_id", sql.VarChar, "1")
-      .query(query);
+    
+    const final_result = await sql.query`EXEC InsertReportStatus @report_id=${requestId}, @status=${status}, @status_updated_by_id=${statusUpdatedById}`;
 
     res.status(200).send("Data added successfully");
   } catch (err) {
@@ -697,32 +620,7 @@ app.get("/api/price_requests", async (req, res) => {
     pool = await sql.connect(config);
     const req_id = req.query.id;
     console.log(req_id);
-    const result = await sql.query(`
-    SELECT 
-    pra.*,
-    prt.*,
-    rs.created_at,rs.last_updated_at,rs.status_updated_by_id,
-    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
-        FROM customer c
-        JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
-    ) AS CustomerNames,
-    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
-        FROM customer c
-        JOIN STRING_SPLIT(pra.consignee_id, ',') AS splitConsigneeIds ON c.code = TRY_CAST(splitConsigneeIds.value AS INT)
-    ) AS ConsigneeNames,
-    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
-        FROM customer c
-        JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
-    ) AS EndUseNames
-FROM 
-    price_approval_requests pra
-LEFT JOIN 
-    price_approval_requests_price_table prt ON pra.req_id = prt.req_id
-  LEFT JOIN
-      report_status rs ON pra.req_id = rs.report_id
-WHERE 
-    pra.req_id = ${req_id}
-    `);
+    const result = await sql.query(`EXEC FetchPriceRequestById @reqId=${req_id}`);
 
     const formattedResult = result.recordset.reduce((acc, row) => {
       if (!acc[row.req_id]) {
@@ -787,21 +685,14 @@ WHERE
 });
 
 // API endpoint that updates price approval requests
-app.put("/api/update-report-status", async (req, res) => {
+app.post("/api/update-report-status", async (req, res) => {
   const { reportId, statusUpdatedById, newStatus } = req.body;
   let pool = null;
   try {
     pool = await sql.connect(config);
-    const result = await pool.request()
-      .query`UPDATE report_status SET status = ${newStatus}, status_updated_by_id = ${statusUpdatedById}, last_updated_at = GETDATE() WHERE report_id = ${reportId}`;
-    console.log(
-      `UPDATE report_status SET status = ${newStatus}, status_updated_by_id = ${statusUpdatedById} ,last_updated_at = GETDATE() WHERE report_id = ${reportId}`
-    );
-    if (result.rowsAffected[0] > 0) {
-      res.json({ message: "Report status updated successfully." });
-    } else {
-      res.status(404).json({ message: "Report not found or no changes made." });
-    }
+    const result = await pool.request().query`EXEC UpdateReportStatus @reportId=${reportId}, @newStatus=${newStatus}, @statusUpdatedById=${statusUpdatedById}`;
+    console.log(result)
+    res.status(200).json({ message: 'Report status updated successfully' });
   } catch (err) {
     console.error("Database operation failed:", err);
     res.status(500).send("Failed to update report status");
