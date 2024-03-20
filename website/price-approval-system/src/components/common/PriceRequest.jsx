@@ -218,14 +218,16 @@ function PriceChangeRequest({ role, isAM }) {
             </Button>
           ))}
         </span>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleOpenModal}
-          sx={{ mb: 1 }}
-        >
-          Create Request
-        </Button>
+        {isAM != undefined ? (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleOpenModal}
+            sx={{ mb: 1 }}
+          >
+            Create Request
+          </Button>
+        ) : null}
         <CreateRequestModal open={modalOpen} handleClose={handleCloseModal} />
       </Box>
       {ReturnDataTable()}
