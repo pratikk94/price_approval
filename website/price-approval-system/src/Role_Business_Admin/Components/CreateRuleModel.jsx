@@ -71,7 +71,7 @@ function ModalComponent() {
   return (
     <div>
       <Button variant="outlined" onClick={handleOpen}>
-        Open Modal
+        Set rule
       </Button>
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
         <DialogTitle>Create rule</DialogTitle>

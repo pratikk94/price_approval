@@ -43,7 +43,6 @@ import EmployeeDetailsModal from "../../Role_Business_Admin/Components/EmployeeM
 import HistoryModal from "../../Role_Business_Admin/Components/RequestHistoryModal";
 import PriceViewModal from "../../Role_Approvers_RM/Components/ViewModal";
 function DynamicTable({ url, action_id }) {
-  console.log(action_id);
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -185,7 +184,7 @@ function DynamicTable({ url, action_id }) {
 
   const handleEdit = (id) => {
     console.log(`Edit action for ${id}`);
-    // Implement edit logic here
+    setId(id);
   };
 
   const handleDownload = (id) => {
