@@ -38,14 +38,6 @@ function ModalComponent() {
     setRole(event.target.value);
   };
 
-  const fetchCustomers = async () => {
-    const response = await fetch(
-      `${backend_url}api/fetch_approvers?region=${selectedRegion}`
-    );
-    const data = await response.json();
-    setCustomers(data);
-  };
-
   useEffect(() => {
     const fetchRegions = async () => {
       const response = await fetch(`${backend_url}api/fetch_region`);
@@ -130,8 +122,8 @@ function ModalComponent() {
                     value={selectedRegion}
                     onChange={(e) => {
                       setSelectedRegion(e.target.value);
-                      setCustomers([]);
-                      setSelectedCustomers([]); // Clear customers on region change
+                      console.log("Clicked");
+                      // fetchCustomers(e.target.value); // Clear customers on region change
                     }}
                     label="Region"
                   >
@@ -172,6 +164,8 @@ function ModalComponent() {
                 <ApproverSelect
                   name={"approver"}
                   setApprover={setSelectedCustomers}
+                  prevSetApprovers={customers}
+                  region={selectedRegion}
                 />
                 <SpacingWrapper space="30px" />
               </Grid>

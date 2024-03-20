@@ -3,44 +3,41 @@ import Select, { components } from "react-select";
 import { backend_url } from "../../util";
 import { checkboxClasses } from "@mui/material";
 
-const ApproverSelect = ({ name, setApprover, prevSetApprovers }) => {
+const ApproverSelect = ({ name, setApprover, prevSetApprovers, region }) => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomers, setSelectedCustomers] = useState([
     prevSetApprovers,
   ]);
 
-  // Function to fetch customers from the API
-  const fetchCustomers = async () => {
-    console.log(prevSetApprovers);
-    try {
-      const response = await fetch(`${backend_url}api/get_approver`);
+  // console.log(prevSetApprovers);
+
+  useEffect(() => {
+    const fetchCustomers = async (region) => {
+      // console.log(region);
+      const response = await fetch(
+        `${backend_url}api/fetch_approvers?region=${region}`
+      );
       const data = await response.json();
-      console.log(data);
+
       const customerOptions = data.map((employee) => ({
         value: employee.employee_id,
         name: employee.employee_name,
         label: `${employee.role} - ${employee.employee_name}`,
       }));
-      console.log(customerOptions);
-
-      // Assuming prevSetApprovers contains labels `${role} - ${name}`
-      const preSelectedCustomers = customerOptions.filter((option) =>
-        prevSetApprovers.includes(option.name)
-      );
-
+      // console.log(customerOptions);
       setCustomers(customerOptions);
-      setSelectedCustomers(preSelectedCustomers); // Pre-select matching customers
-    } catch (error) {
-      console.error("Error fetching customer data:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
+      if (prevSetApprovers) {
+        const preSelectedCustomers = customerOptions.filter((option) =>
+          prevSetApprovers.includes(option.name)
+        );
+        setSelectedCustomers(preSelectedCustomers);
+      }
+    };
+    fetchCustomers(region);
+  }, [region]);
 
   const handleChange = (selectedOptions) => {
-    console.log(selectedOptions);
+    // console.log(selectedOptions);
     setSelectedCustomers(selectedOptions);
     setApprover(selectedOptions);
   };
