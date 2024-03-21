@@ -40,7 +40,7 @@ END;
 CREATE PROCEDURE FetchEmployees
 AS
 BEGIN
-	SELECT employee_name as name, employee_id as id FROM user_master
+	SELECT employee_name as name, id as id FROM user_master
 END;
 
 CREATE PROCEDURE FetchRoles
@@ -146,20 +146,20 @@ END
 CREATE PROCEDURE FetchRules
 AS
 BEGIN
-SELECT r.*, STRING_AGG(dr.employee_name, ', ') AS approver_names
-    FROM rules r
-    CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(r.approvers, '[', ''), ']', ''), ',') AS s
-    JOIN define_roles dr ON dr.employee_id = s.value 
-    WHERE r.status = 1
-    -- TRY_CAST(s.value AS INT)
-    GROUP BY r.name,r.id,r.region
-          ,r.profit_center
-          ,r.valid_from
-          ,r.valid_to
-          ,r.approvers
-          ,r.status
-          ,r.created_by
-    ,r.created_date
+    SELECT r.*, STRING_AGG(dr.employee_name, ', ') AS approver_names
+        FROM rules r
+        CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(r.approvers, '[', ''), ']', ''), ',') AS s
+        JOIN define_roles dr ON dr.employee_id = s.value 
+        WHERE r.status = 1
+        -- TRY_CAST(s.value AS INT)
+        GROUP BY r.name,r.id,r.region
+            ,r.profit_center
+            ,r.valid_from
+            ,r.valid_to
+            ,r.approvers
+            ,r.status
+            ,r.created_by
+        ,r.created_date
 END;
 
 

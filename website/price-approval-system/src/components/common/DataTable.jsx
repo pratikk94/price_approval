@@ -203,6 +203,7 @@ function DynamicTable({ url, action_id }) {
           `${backend_url}api/fetch_rules_by_id?id=${rule_id}`
         );
         setRule(response.data[0]);
+        console.log("Rule set");
       } catch (error) {
         console.error("Error fetching rule data:", error);
       }
@@ -246,13 +247,16 @@ function DynamicTable({ url, action_id }) {
       }
     };
 
-    if (action_id == "B1") fetchRule();
-    else if (action_id == "B2") fetchEmployeeData();
+    if (action_id == "B1") {
+      fetchRule();
+      console.log("Fetch rule");
+    } else if (action_id == "B2") fetchEmployeeData();
     else if (action_id == "B3") fetchRequestHistoryData();
     else if (action_id == "AP_RM" || action_id == "AM") fetchAPRMData();
-  }, [modalOpen]);
+  }, [modalOpen, editModalOpen]);
 
   const handleRuleUpdate = (updatedRule) => {
+    console.log(updatedRule);
     setRule(updatedRule);
   };
 
@@ -273,6 +277,7 @@ function DynamicTable({ url, action_id }) {
             onClick={() => {
               setEditModalOpen(true);
               handleEdit(row_id);
+              setRuleId(row_id);
             }}
           >
             <EditIcon />

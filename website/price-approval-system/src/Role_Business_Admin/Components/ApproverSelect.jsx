@@ -5,12 +5,9 @@ import { checkboxClasses } from "@mui/material";
 
 const ApproverSelect = ({ name, setApprover, prevSetApprovers, region }) => {
   const [customers, setCustomers] = useState([]);
-  const [selectedCustomers, setSelectedCustomers] = useState([
-    prevSetApprovers,
-  ]);
+  const [selectedCustomers, setSelectedCustomers] = useState();
 
-  // console.log(prevSetApprovers);
-
+  console.log(region);
   useEffect(() => {
     const fetchCustomers = async (region) => {
       // console.log(region);
@@ -26,13 +23,9 @@ const ApproverSelect = ({ name, setApprover, prevSetApprovers, region }) => {
       }));
       // console.log(customerOptions);
       setCustomers(customerOptions);
-      if (prevSetApprovers) {
-        const preSelectedCustomers = customerOptions.filter((option) =>
-          prevSetApprovers.includes(option.name)
-        );
-        setSelectedCustomers(preSelectedCustomers);
-      }
     };
+
+    console.log(region);
     fetchCustomers(region);
   }, [region]);
 

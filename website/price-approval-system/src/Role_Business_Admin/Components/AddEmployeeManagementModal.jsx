@@ -12,6 +12,7 @@ import SpacingWrapper from "../../components/util/SpacingWrapper";
 function SelectModal() {
   const [open, setOpen] = useState(false);
   const [selectedName, setSelectedName] = useState("");
+  const [empId, setEmpID] = useState(0);
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const handleChangeName = (event) => {
@@ -29,8 +30,9 @@ function SelectModal() {
     let formData = {
       employee_name: selectedName.split("-")[1],
       employee_id: selectedName.split("-")[0],
-      role: selectedRole,
-      region: selectedRegion,
+      role: selectedRole.split("-")[1],
+      region: selectedRegion.split("-")[1],
+      active: 1,
     };
     console.log(selectedName);
     console.log(formData);

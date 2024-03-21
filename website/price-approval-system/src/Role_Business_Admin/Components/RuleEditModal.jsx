@@ -1,35 +1,110 @@
-import React, { useState } from "react";
-import { Modal, Box, Typography, TextField, Button } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import {
+  Modal,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+} from "@mui/material";
 import axios from "axios";
 import ApproverSelect from "./ApproverSelect";
 import { Check } from "@mui/icons-material";
 import CustomCheckbox from "./Checkbox";
-
+import { backend_url } from "../../util";
+import DateSelector from "../../components/common/DateSelector";
 function RuleEditModal({ open, handleClose, rule, onRuleUpdated }) {
   const [editedRule, setEditedRule] = useState({ ...rule });
+
+  const [regions, setRegions] = useState([]);
+  const [profitCenter, setProfitCenter] = useState([]);
+  const [validFrom, setValidFrom] = useState([]);
+  const [validTo, setValidTo] = useState([]);
+
+  const [selectedRegion, setSelectedRegion] = useState("");
+  const [selectedProfitCenter, setSelectedProfitCenter] = useState([]);
+
   const [selectedCustomers, setSelectedCustomers] = useState([
     rule.approver_names,
   ]);
-
+  const handleChangeRegion = (event) => {
+    setSelectedRegion(event.target.value);
+  };
   const handleInputChange = (event) => {
     const { name, value } = event.target;
+    console.log(event.target);
     setEditedRule((prevRule) => ({
       ...prevRule,
       [name]: value,
     }));
   };
+  useEffect(() => {
+    const fetchRegions = async () => {
+      const response = await fetch(`${backend_url}api/fetch_region`);
+      const data = await response.json();
+      setRegions(data);
+    };
+
+    const fetchProfitCenters = async () => {
+      const response = await fetch(`${backend_url}api/fetch_profit_centers`);
+      const data = await response.json();
+      setProfitCenter(data);
+    };
+
+    fetchRegions();
+    fetchProfitCenters();
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    // try {
+    //   console.log(editedRule);
+    //   await axios.put(
+    //     `${backend_url}api/update_rule/${editedRule.id}`,
+    //     editedRule
+    //   );
+    //   onRuleUpdated(editedRule); // Callback to inform parent component about the update
+    //   handleClose();
+    // } catch (error) {
+    //   console.error("Error updating rule:", error);
+    // }
+
     try {
-      await axios.put(
-        `http://localhost:3000/api/update_rule/${editedRule.id}`,
-        editedRule
+      console.log(typeof selectedCustomers);
+      console.log(selectedCustomers);
+      editedRule.approvers = selectedCustomers.map((item) =>
+        parseInt(item.value)
       );
-      onRuleUpdated(editedRule); // Callback to inform parent component about the update
+      editedRule.valid_from = validFrom;
+      editedRule.valid_to = validTo;
+      console.log(editedRule);
+
+      const response = await fetch(
+        `${backend_url}api/update-rule/${editedRule.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editedRule),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(result);
+      alert("Rule updated successfully:", result);
       handleClose();
     } catch (error) {
-      console.error("Error updating rule:", error);
+      console.error("Failed to update rule:", error);
+      alert("Failed to update rule");
     }
   };
 
@@ -54,25 +129,55 @@ function RuleEditModal({ open, handleClose, rule, onRuleUpdated }) {
             value={editedRule.name}
             onChange={handleInputChange}
           />
-          <TextField
-            margin="normal"
-            fullWidth
-            name="name"
-            label="Region"
-            type="text"
-            value={editedRule.region}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="normal"
-            fullWidth
-            name="name"
-            label="Profit center"
-            type="text"
-            value={editedRule.profit_center}
-            onChange={handleInputChange}
-          />
-          <TextField
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Profit Center</InputLabel>
+            <Select
+              label="Profit center"
+              value={selectedProfitCenter}
+              multiple
+              name="profit_center"
+              onChange={(e) => {
+                setSelectedProfitCenter(e.target.value);
+                handleInputChange(e);
+                // Clear customers on region change
+              }}
+            >
+              {profitCenter.map((role) => (
+                <MenuItem key={role.id} value={role.name}>
+                  {role.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Region</InputLabel>
+            <Select
+              value={selectedRegion}
+              name="region"
+              onChange={(e) => {
+                setSelectedRegion(e.target.value);
+                handleInputChange(e);
+                console.log(e.target.value);
+                // fetchCustomers(e.target.value); // Clear customers on region change
+              }}
+              label="Region"
+            >
+              {regions.map((region) => (
+                <MenuItem key={region.id} value={region.name}>
+                  {region.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <DateSelector name={"valid from"} setSelection={setValidFrom} />
+            </Grid>
+            <Grid item xs={6}>
+              <DateSelector name={"valid to"} setSelection={setValidTo} />
+            </Grid>
+          </Grid>
+          {/* <TextField
             margin="normal"
             fullWidth
             name="name"
@@ -89,11 +194,12 @@ function RuleEditModal({ open, handleClose, rule, onRuleUpdated }) {
             type="text"
             value={editedRule.valid_to}
             onChange={handleInputChange}
-          />
+          /> */}
           <ApproverSelect
             name={"approver"}
             setApprover={setSelectedCustomers}
-            prevSetApprovers={editedRule.approver_names}
+            prevSetApprovers={selectedCustomers}
+            region={selectedRegion}
           />
           <CustomCheckbox isSelcted={editedRule.status} />
           <div></div>

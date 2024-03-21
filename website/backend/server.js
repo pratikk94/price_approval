@@ -9,12 +9,11 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  password: "12345",
-  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  port:1433,
+  password: "SayaliK20311",
+  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
   database: "PriceApprovalSystem",
   options: {
-    // encrypt: false, // Use this if you're on Windows Azure
+    encrypt: true, // Use this if you're on Windows Azure
     trustServerCertificate: true, // Use this if you're on a local development environment
   },
 };
@@ -103,8 +102,7 @@ app.get("/api/fetch_payment_terms", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query the database
-    const result = await pool.request()
-      .query`EXEC GetPaymentTerms`;
+    const result = await pool.request().query`EXEC GetPaymentTerms`;
 
     // Send the results as a response
     res.json(result.recordset);
@@ -161,7 +159,8 @@ app.get("/api/fetch_grade", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query the database
-    const result = await pool.request().query`EXEC GetMaterialsByFSC @fsc=${fsc}`;
+    const result = await pool.request()
+      .query`EXEC GetMaterialsByFSC @fsc=${fsc}`;
 
     // Send the results as a response
     res.json(result.recordset);
@@ -264,14 +263,16 @@ app.get("/api/fetch_region", async (req, res) => {
 
 // API endpoint that fetch emplotyee role
 app.post("/api/add_employee_role", async (req, res) => {
-  let { employee_id, employee_name, role, region, created_date,active } = req.body;
+  let { employee_id, employee_name, role, region, created_date, active } =
+    req.body;
   const user_id = 1; // Hardcoded as per requirement
   const created_by = "backend_user"; // This can also be fetched dynamically if needed
   let pool = null; // Initialize the pool variable
   try {
     pool = await sql.connect(config);
-    created_date = created_date ? new Date(created_date) : new Date()
-    await pool.request().query`EXEC InsertEmployeeRole @employee_id=${employee_id}, @employee_name=${employee_name}, @role=${role}, @region=${region}, @created_by=${created_by}, @created_date=${created_date}, @active=${active}`;
+    created_date = created_date ? new Date(created_date) : new Date();
+    await pool.request()
+      .query`EXEC InsertEmployeeRole @employee_id=${employee_id}, @employee_name=${employee_name}, @role=${role}, @region=${region}, @created_by=${created_by}, @created_date=${created_date}, @active=${active}`;
     res.status(200).send("Role and employee details added successfully.");
   } catch (err) {
     console.error("Database operation failed:", err);
@@ -322,7 +323,8 @@ app.get("/api/fetch_roles_data_by_id", async (req, res) => {
     pool = await sql.connect(config);
     const id = req.query.id;
     // Query to fetch all values from the 'define' table
-    const result = await pool.request().query`EXEC FetchDefinedRoleById @id=${id}`;
+    const result = await pool.request()
+      .query`EXEC FetchDefinedRoleById @id=${id}`;
 
     // Send the query results as a response
     res.json(result.recordset);
@@ -350,7 +352,8 @@ app.get("/api/fetch_price_requests", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query the database
-    const result = await pool.request().query`EXEC FetchPriceRequest @status=${status}`;
+    const result = await pool.request()
+      .query`EXEC FetchPriceRequest @status=${status}`;
     // Send the results as a response
 
     const transformedData = result.recordset.map((item) => ({
@@ -380,7 +383,9 @@ app.get("/api/fetch_approvers", async (req, res) => {
   let pool = null;
   try {
     pool = await sql.connect(config);
-    const result = await pool.request().query`EXEC SearchDefineRoles @role=${role || ''}, @region=${region || ''}`;
+    const result = await pool.request().query`EXEC SearchDefineRoles @role=${
+      role || ""
+    }, @region=${region || ""}`;
     res.json(result.recordset);
   } catch (err) {
     console.error(err);
@@ -471,7 +476,7 @@ app.get("/api/fetch_rules_by_id", async (req, res) => {
   try {
     pool = await sql.connect(config);
     const id = req.query.id;
-    
+
     const result = await pool.request().query`EXEC FetchRuleById @id=${id}`;
     res.json(result.recordset);
   } catch (err) {
@@ -518,7 +523,8 @@ app.get("/api/fetch_report_status_by_id", async (req, res) => {
   try {
     const id = req.query.id;
     pool = await sql.connect(config);
-    const result = await pool.request().query`EXEC FetchReportStatusById @id=${id}`;
+    const result = await pool.request()
+      .query`EXEC FetchReportStatusById @id=${id}`;
     res.json(result.recordset);
   } catch (err) {
     console.error(err);
@@ -541,9 +547,21 @@ app.post("/api/add_price_request", async (req, res) => {
 
   try {
     pool = await sql.connect(config);
-    let { customerIds, consigneeIds, plants, endUseIds, endUseSegmentIds, paymentTermsId, validFrom, validTo, fsc, mappint_type,statusUpdatedById } = req.body;
-    mappint_type != undefined ? mappint_type = 2 : mappint_type =1;
-        const result = await pool.request().query`
+    let {
+      customerIds,
+      consigneeIds,
+      plants,
+      endUseIds,
+      endUseSegmentIds,
+      paymentTermsId,
+      validFrom,
+      validTo,
+      fsc,
+      mappint_type,
+      statusUpdatedById,
+    } = req.body;
+    mappint_type != undefined ? (mappint_type = 2) : (mappint_type = 1);
+    const result = await pool.request().query`
             EXEC InsertPriceApprovalRequest 
                 @customerIds=${customerIds}, 
                 @consigneeIds=${consigneeIds}, 
@@ -568,13 +586,13 @@ app.post("/api/add_price_request", async (req, res) => {
       const gsmFrom = item.gsmFrom;
       const gsmTo = item.gsmTo;
       const agreedPrice = item.agreedPrice;
-      const specialDiscount = item.specialDiscount; 
+      const specialDiscount = item.specialDiscount;
       const reelDiscount = item.reelDiscount;
       const packUpcharge = item.packUpCharge;
       const tpc = item.tpc;
       const offlineDiscount = item.offlineDiscount;
       const netNSR = item.netNSR;
-      const oldNetNSR = item.oldNetNSR; 
+      const oldNetNSR = item.oldNetNSR;
       const result = await sql.query`
             EXEC InsertPriceApprovalRequestPriceTable 
                 @reqId=${reqId}, 
@@ -591,12 +609,13 @@ app.post("/api/add_price_request", async (req, res) => {
                 @netNSR=${netNSR}, 
                 @oldNetNSR=${oldNetNSR}`;
     }
-    
+
     // Additional insert operations here, following the same pattern
     let status = "1";
     if (req.body.isDraft) status = "0";
-    
-    const final_result = await sql.query`EXEC InsertReportStatus @report_id=${requestId}, @status=${status}, @status_updated_by_id=${statusUpdatedById}`;
+
+    const final_result =
+      await sql.query`EXEC InsertReportStatus @report_id=${requestId}, @status=${status}, @status_updated_by_id=${statusUpdatedById}`;
 
     res.status(200).send("Data added successfully");
   } catch (err) {
@@ -620,7 +639,9 @@ app.get("/api/price_requests", async (req, res) => {
     pool = await sql.connect(config);
     const req_id = req.query.id;
     console.log(req_id);
-    const result = await sql.query(`EXEC FetchPriceRequestById @reqId=${req_id}`);
+    const result = await sql.query(
+      `EXEC FetchPriceRequestById @reqId=${req_id}`
+    );
 
     const formattedResult = result.recordset.reduce((acc, row) => {
       if (!acc[row.req_id]) {
@@ -690,9 +711,56 @@ app.post("/api/update-report-status", async (req, res) => {
   let pool = null;
   try {
     pool = await sql.connect(config);
-    const result = await pool.request().query`EXEC UpdateReportStatus @reportId=${reportId}, @newStatus=${newStatus}, @statusUpdatedById=${statusUpdatedById}`;
-    console.log(result)
-    res.status(200).json({ message: 'Report status updated successfully' });
+    const result = await pool.request()
+      .query`EXEC UpdateReportStatus @reportId=${reportId}, @newStatus=${newStatus}, @statusUpdatedById=${statusUpdatedById}`;
+    console.log(result);
+    res.status(200).json({ message: "Report status updated successfully" });
+  } catch (err) {
+    console.error("Database operation failed:", err);
+    res.status(500).send("Failed to update report status");
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+// Endpoint to update a rule
+app.put("/api/update-rule/:id", async (req, res) => {
+  let pool = null;
+
+  try {
+    pool = await sql.connect(config);
+
+    const { id } = req.params;
+    const {
+      name,
+      region,
+      profit_center,
+      valid_from,
+      valid_to,
+      approvers,
+      status,
+    } = req.body;
+    console.log(req.body);
+    const result = await pool
+      .request()
+      .input("id", sql.Int, id)
+      .input("name", sql.NVarChar, name)
+      .input("region", sql.NVarChar, region)
+      .input("profit_center", sql.NVarChar, JSON.stringify(profit_center)) // assuming JSON storage for array
+      .input("valid_from", sql.Date, valid_from)
+      .input("valid_to", sql.Date, valid_to)
+      .input("approvers", sql.NVarChar, JSON.stringify(approvers)) // assuming JSON storage for array
+      .input("status", sql.Int, status)
+      .execute("UpdateRule"); // Stored Procedure Name
+
+    console.log(result);
+    res.json({ message: "Rule updated successfully." });
   } catch (err) {
     console.error("Database operation failed:", err);
     res.status(500).send("Failed to update report status");
