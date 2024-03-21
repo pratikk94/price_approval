@@ -42,6 +42,7 @@ import EmployeeManagement from "../../Role_Business_Admin/Screens/EmployeeManage
 import EmployeeDetailsModal from "../../Role_Business_Admin/Components/EmployeeManagementModal";
 import HistoryModal from "../../Role_Business_Admin/Components/RequestHistoryModal";
 import PriceViewModal from "../../Role_Approvers_RM/Components/ViewModal";
+import EmployeeEditModal from "../../Role_Business_Admin/Components/EmployeeEditModal";
 function DynamicTable({ url, action_id }) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
@@ -216,6 +217,8 @@ function DynamicTable({ url, action_id }) {
         );
         console.log(response.data[0]);
         setEmployeeManagement(response.data[0]);
+
+        console.log("Employee management set");
       } catch (error) {
         console.error("Error fetching rule data:", error);
       }
@@ -247,10 +250,8 @@ function DynamicTable({ url, action_id }) {
       }
     };
 
-    if (action_id == "B1") {
-      fetchRule();
-      console.log("Fetch rule");
-    } else if (action_id == "B2") fetchEmployeeData();
+    if (action_id == "B1") fetchRule();
+    else if (action_id == "B2") fetchEmployeeData();
     else if (action_id == "B3") fetchRequestHistoryData();
     else if (action_id == "AP_RM" || action_id == "AM") fetchAPRMData();
   }, [modalOpen, editModalOpen]);
@@ -258,6 +259,11 @@ function DynamicTable({ url, action_id }) {
   const handleRuleUpdate = (updatedRule) => {
     console.log(updatedRule);
     setRule(updatedRule);
+  };
+
+  const handleEmployeeUpdate = (updatedRule) => {
+    console.log(updatedRule);
+    setEmployeeManagement(updatedRule);
   };
 
   const Actions = ({ id, row_id, req_id }) => {
@@ -295,6 +301,15 @@ function DynamicTable({ url, action_id }) {
             }}
           >
             <ViewIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              setEditModalOpen(true);
+              handleEdit(row_id);
+              setEmpId(row_id);
+            }}
+          >
+            <EditIcon />
           </IconButton>
         </div>
       );
@@ -445,23 +460,43 @@ function DynamicTable({ url, action_id }) {
         <>
           <RuleModal
             open={modalOpen}
-            handleClose={() => setModalOpen(false)}
+            handleClose={() => {
+              setModalOpen(false);
+              window.location.reload();
+            }}
             rule={rule}
           />
           <RuleEditModal
             open={editModalOpen}
-            handleClose={() => setEditModalOpen(false)}
+            handleClose={() => {
+              setEditModalOpen(false);
+              window.location.reload();
+            }}
             rule={rule}
             onRuleUpdated={handleRuleUpdate}
           />
         </>
       )}
       {employeeManagement && (
-        <EmployeeDetailsModal
-          open={modalOpen}
-          handleClose={() => setModalOpen(false)}
-          employeeData={employeeManagement}
-        />
+        <>
+          <EmployeeDetailsModal
+            open={modalOpen}
+            handleClose={() => {
+              setModalOpen(false);
+              window.location.reload();
+            }}
+            employeeData={employeeManagement}
+          />
+          <EmployeeEditModal
+            open={editModalOpen}
+            handleClose={() => {
+              setEditModalOpen(false);
+              window.location.reload();
+            }}
+            employeeData={employeeManagement}
+            onEmployeeUpdated={handleRuleUpdate}
+          />
+        </>
       )}
       {history && (
         <HistoryModal

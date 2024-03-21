@@ -297,3 +297,16 @@ BEGIN
     WHERE report_id = @reportId;
 END
 
+CREATE PROCEDURE UpdateEmployeeRole
+        @employeeId INT,
+        @newName NVARCHAR(255),
+        @newRole NVARCHAR(255),
+        @newRegion NVARCHAR(255)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE define_roles
+    SET employee_name = @newName, role = @newRole, region = @newRegion
+    WHERE employee_id = @employeeId
+END;
+

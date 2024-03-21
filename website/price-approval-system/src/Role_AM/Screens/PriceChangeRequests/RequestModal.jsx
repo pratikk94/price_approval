@@ -60,7 +60,7 @@ const CreateRequestModal = ({ open, handleClose }) => {
     formData["endUseIds"] = endUse
       .map((item) => item.value.toString())
       .toString();
-    formData["endUseSegmentIds"] = ["seg1", "seg2"].toString();
+    formData["endUseSegmentIds"] = ["seg1"].toString();
     formData["plants"] = plant.map((item) => item.value.toString()).toString();
     formData["paymentTermsId"] = paymentTerms["value"].toString();
     formData["validFrom"] = validFrom;

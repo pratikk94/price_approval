@@ -775,6 +775,35 @@ app.put("/api/update-rule/:id", async (req, res) => {
   }
 });
 
+app.post("/api/update-employee-role", async (req, res) => {
+  const { employee_id, employee_name, role, region } = req.body;
+  let pool = null;
+
+  try {
+    pool = await sql.connect(config);
+    const result = await pool
+      .request()
+      .input("employeeId", sql.Int, employee_id)
+      .input("newName", sql.NVarChar(255), employee_name)
+      .input("newRole", sql.NVarChar(255), role)
+      .input("newRegion", sql.NVarChar(255), region)
+      .execute("UpdateEmployeeRole");
+
+    res.json({ message: "Employee role updated successfully", result });
+  } catch (err) {
+    console.error("Error executing stored procedure:", err);
+    res.status(500).send("Failed to update employee role");
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
