@@ -1,22 +1,42 @@
 const express = require("express");
+const session = require('express-session');
+const bodyParser = require('body-parser');
 const sql = require("mssql");
 const cors = require("cors");
+const corsOptions = {
+  origin: 'http://localhost:5173', // or the specific origin you want to allow
+  credentials: true, // allowing credentials (cookies, session)
+};
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const { format } = require("date-fns");
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  password: "SayaliK20311",
-  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "12345",
+  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  port:1433,
   database: "PriceApprovalSystem",
   options: {
     encrypt: true, // Use this if you're on Windows Azure
+    // encrypt: false, // Use this if you're on Windows Azure
     trustServerCertificate: true, // Use this if you're on a local development environment
   },
 };
+
+app.use(session({
+  secret: 'pratik', // Replace 'your_secret_key' with a real secret key
+  resave: false,
+    saveUninitialized: false,
+    cookie: { 
+        secure: false, // Set to true if using HTTPS
+        maxAge: 10000 // 60000 milliseconds = 1 minute
+    }
+}));
 
 async function getCustomerNamesByIds(customerIds) {
   let pool = null;
@@ -59,6 +79,65 @@ async function getCustomerNamesByIds(customerIds) {
     }
   }
 }
+
+app.post('/api/login', async (req, res) => {
+  
+  const employee_id = req.body.employee_id;
+  
+  
+  let pool = null;
+  try {
+      // Connect to database
+      pool = await sql.connect(config);
+      // Query database for user role
+
+      console.log(`SELECT role FROM define_roles WHERE employee_id = ${employee_id}`);
+      const result = await pool.request().query`SELECT role FROM define_roles WHERE employee_id = ${employee_id}`;
+
+      if (result.recordset.length > 0 && req.session) {
+          // Set session
+          console.log('Employee ID:', employee_id);
+          console.log(result);
+          req.session.employee_id = employee_id;
+          req.session.role = result.recordset[0].role;
+
+          res.json({ loggedIn: true, role: result.recordset[0].role });
+      } else {
+          res.status(401).json({ loggedIn: false, message: 'Invalid employee ID' });
+      }
+  } catch (err) {
+      console.error('SQL error', err);
+      res.status(500).json({ message: 'Internal Server Error' });
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+
+// Check Session API
+app.get('/api/session', (req, res) => {
+  if (req.session.employee_id && req.session.role) {
+      res.json({ loggedIn: true, role: req.session.role });
+  } else {
+      res.json({ loggedIn: false });
+  }
+});
+
+// Logout API
+app.get('/api/logout', (req, res) => {
+  req.session.destroy(err => {
+      if (err) throw err;
+      res.json({ loggedOut: true });
+  });
+});
+
 
 // Api to fetch customers. based upon ids which are currently hardcoded.
 app.get("/api/fetch_customers", async (req, res) => {
