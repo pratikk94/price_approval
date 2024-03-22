@@ -34,9 +34,10 @@ app.use(session({
     saveUninitialized: false,
     cookie: { 
         secure: false, // Set to true if using HTTPS
-        maxAge: 10000 // 60000 milliseconds = 1 minute
-    }
-}));
+        maxAge: 30 * 60 * 1000, // 30 minutes
+    },
+  }
+));
 
 async function getCustomerNamesByIds(customerIds) {
   let pool = null;
