@@ -23,7 +23,7 @@ import Master from "../Role_Business_Admin/Screens/Master";
 import PriceChangeRequest from "../components/common/PriceRequest";
 const drawerWidth = 240;
 
-function BusinessAdminApp({ changeScreen }) {
+function BusinessAdminApp() {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
@@ -39,11 +39,7 @@ function BusinessAdminApp({ changeScreen }) {
 
   const [inputValue, setInputValue] = useState("");
 
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-    console.log(event.target.value);
-    changeScreen(event.target.value);
-  };
+  
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -56,12 +52,7 @@ function BusinessAdminApp({ changeScreen }) {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
-          <TextField
-            label="Enter id"
-            variant="outlined"
-            value={inputValue}
-            onChange={handleInputChange}
-          />
+          
           <Button color="inherit">Login</Button>
         </Toolbar>
       </AppBar>

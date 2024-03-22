@@ -17,7 +17,7 @@ const drawerWidth = 240;
 import Dashboard from "../Role_Approvers_RM/Screens/Dashboard";
 import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
 import PriceChangeRequest from "../components/common/PriceRequest";
-function ResponsiveDrawer({ changeScreen }) {
+function ResponsiveDrawer() {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
@@ -31,10 +31,7 @@ function ResponsiveDrawer({ changeScreen }) {
 
   const [inputValue, setInputValue] = useState("");
 
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-    changeScreen(event.target.value);
-  };
+  
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -47,13 +44,8 @@ function ResponsiveDrawer({ changeScreen }) {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
-          <TextField
-            label="Enter id"
-            variant="outlined"
-            value={inputValue}
-            onChange={handleInputChange}
-          />
-          <Button color="inherit">Login</Button>
+          
+          <Button color="inherit">Logout</Button>
         </Toolbar>
       </AppBar>
       <Drawer

@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 const drawerWidth = 240;
 import PriceRequest from "../Role_Validator/Screens/PriceRequest";
-function ResponsiveDrawer({ changeScreen }) {
+function ResponsiveDrawer() {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [{ text: "Price Requests", component: <PriceRequest /> }];
@@ -38,13 +38,8 @@ function ResponsiveDrawer({ changeScreen }) {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
-          <TextField
-            label="Enter id"
-            variant="outlined"
-            value={inputValue}
-            onChange={handleInputChange}
-          />
-          <Button color="inherit">Login</Button>
+          
+          <Button color="inherit">Logout</Button>
         </Toolbar>
       </AppBar>
       <Drawer

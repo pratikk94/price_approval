@@ -1,6 +1,5 @@
-// ProtectedRoute.js
+// RoleBasedComponent.js
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
 import { useSession } from './SessionContext';
 import AppAM from '../App/AccountManagerApp'; // Your component for users with the AM role
 import AppBM from '../App/BusinessAdminApp'; // Your component for users with the BM role
@@ -8,20 +7,9 @@ import AppRM from '../App/ApproversApp'; // Your component for users with the RM
 import AppNSM from '../App/ApproversAppNSM_HDSM'
 import AppValidator from '../App/ValidatorApp';
 
-const ProtectedRoute = () => {
+const RoleBasedComponent = () => {
     const { session } = useSession();
 
-    if (session.loading) {
-        return <div>Loading...</div>; // Or some loading component
-    }
-
-    if (!session.loggedIn) {
-        return <Navigate to="/login" replace />;
-    }
-
-    console.log(session.role);
-
-    // Render different apps based on the role
     switch (session.role) {
         case 'AM':
             return <AppAM />;
@@ -42,4 +30,4 @@ const ProtectedRoute = () => {
     }
 };
 
-export default ProtectedRoute;
+export default RoleBasedComponent;

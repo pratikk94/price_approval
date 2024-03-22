@@ -21,7 +21,7 @@ export const SessionProvider = ({ children }) => {
                     setTimeout(() => {
                         setSession({ loading: false, loggedIn: false });
                         alert('Your session has expired. Please log in again.');
-                    }, 10000); // 60000 milliseconds = 1 minute
+                    }, 10000); // 10000 milliseconds = 10 seconds
                 } else {
                     setSession({ loading: false, loggedIn: false });
                 }
