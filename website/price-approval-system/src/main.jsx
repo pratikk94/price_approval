@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./App/index.css";
-import App from "./Login_Controller/App";
+import App from "./Login_Controller/LoginApp";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     {/* <BusinessAdminApp /> */}
