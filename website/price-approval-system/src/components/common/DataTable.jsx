@@ -462,7 +462,6 @@ function DynamicTable({ url, action_id }) {
             open={modalOpen}
             handleClose={() => {
               setModalOpen(false);
-              window.location.reload();
             }}
             rule={rule}
           />

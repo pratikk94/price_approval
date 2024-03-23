@@ -48,6 +48,7 @@ const CreateRequestModal = ({ open, handleClose }) => {
   const [isDraft, setIsDraft] = useState(false);
   const [tableRowsData, setTableRowsData] = useState([]);
   const formData = {};
+  const [disableSubmit, setDisableSubmit] = useState(false);
   const handleSubmit = (event) => {
     event.preventDefault();
     //console.log("Form data", { tableRows });
@@ -233,6 +234,7 @@ const CreateRequestModal = ({ open, handleClose }) => {
         <TableWithInputs
           setTableRowsDataFunction={setTableRowsDataFunction}
           setFSCCode={setFSC}
+          disableSubmit={setDisableSubmit}
         />
         <SpacingWrapper space="24px" />
         <RemarkBox />
@@ -251,7 +253,7 @@ const CreateRequestModal = ({ open, handleClose }) => {
           </Button>
         </Box>
         <Box textAlign="center" marginTop={2}>
-          <Button type="submit" variant="contained">
+          <Button type="submit" variant="contained" disabled={disableSubmit}>
             Submit
           </Button>
         </Box>

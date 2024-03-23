@@ -927,6 +927,50 @@ app.post("/api/add_defined_rule", async (req, res) => {
   }
 });
 
+app.get("/api/fetch_defined_rule", async (req, res) => {
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    const result = await pool.request().query`SELECT * FROM defined_rules`;
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("SQL error", err);
+    res.status(500).json({ message: "Error inserting data", err });
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.get("/api/fetch_grade_with_pc", async (req, res) => {
+  let pool = null;
+  const fsc = req.query.fsc;
+  try {
+    pool = await sql.connect(config);
+    const result = await pool.request()
+      .query`SELECT id as code,grade as name,FSC_Y_N,Grade_Description,Profit_Centre as profitCenter FROM grade where status = 1 and FSC_Y_N = ${fsc}`;
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("SQL error", err);
+    res.status(500).json({ message: "Error fetching data", err });
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

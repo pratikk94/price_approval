@@ -6,12 +6,17 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Select from "react-select";
 import { backend_url } from "../../util";
-function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
+function TableWithInputs({
+  setTableRowsDataFunction,
+  setFSCCode,
+  disableSubmit,
+}) {
   const [grades, setGrades] = useState([]);
+  const [selectedGrade, setSelectedGrade] = useState("");
   const [rows, setRows] = useState([
     {
       id: Date.now(),
-      grade: "A",
+      grade: "",
       gradeType: "",
       gsmFrom: "",
       gsmTo: "",
@@ -23,6 +28,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
       offlineDiscount: 0,
       netNSR: 0,
       oldNetNSR: 0,
+      profitCenter: "",
     },
   ]);
 
@@ -43,14 +49,18 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
 
   const fetch_grades = async (code) => {
     try {
-      console.log(fscCode);
-      const response = await fetch(`${backend_url}api/fetch_grade?fsc=${code}`); // Adjust the API path as needed
+      // console.log(fscCode);
+      const response = await fetch(
+        `${backend_url}api/fetch_grade_with_pc?fsc=${code}`
+      ); // Adjust the API path as needed
       const data = await response.json();
-      console.log(data);
+      // console.log(data);
       const customerOptions = data.map((customer) => ({
-        label: `${customer.code} -   ${customer.name}`,
+        label: customer.name,
         value: customer.code,
+        profitCenter: customer.profitCenter,
       }));
+      // console.log(customerOptions);
       setGrades(customerOptions);
     } catch (error) {
       console.error("Error fetching customer data:", error);
@@ -67,12 +77,14 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
   // };
 
   // Update row field values and calculate netNSR dynamically
-  const handleRowChange = (id, field, value) => {
+  const handleRowChange = (id, field, value, profit_center) => {
     setRows((prevRows) =>
       prevRows.map((row) => {
+        // console.log(row);
         if (row.id === id) {
           const updatedRow = { ...row, [field]: value };
-
+          if (field === "grade") updatedRow.profitCenter = profit_center;
+          // console.log(updatedRow);
           // If the fields to calculate netNSR are updated, recalculate it
           if (
             [
@@ -105,6 +117,9 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
             }
           }
           // setNetNSR(updatedRow.netNSR);
+
+          console.log("Recalculating GRADE" + id);
+
           return updatedRow;
         }
         return row;
@@ -121,7 +136,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
   const addRow = () => {
     const newRow = {
       id: Date.now(),
-      grade: "A",
+      grade: "",
       gradeType: "",
       gsmFrom: "",
       gsmTo: "",
@@ -133,6 +148,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
       offlineDiscount: 0,
       netNSR: 0,
       oldNetNSR: 0,
+      profitCenter: "",
     };
     setRows((prevRows) => [...prevRows, newRow]);
   };
@@ -152,9 +168,15 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
     });
   }
 
-  function handleGradeChange(e) {
-    console.log(e);
-    setGrades(e.label);
+  function isMixPresent(rowData) {
+    const firstDigits = rowData.map((item) => String(item.profitCenter)[0]); // Get first digit of each profitCenter
+
+    // Check presence of each category
+    const has234 = ["2", "3", "4"].some((digit) => firstDigits.includes(digit));
+    const has5 = firstDigits.includes("5");
+
+    // Return false if both groups, [2, 3, 4] and [5], are found
+    return !(has234 && has5);
   }
 
   return (
@@ -189,21 +211,30 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
       <table>
         <thead>
           <tr>
-            <th>Grade</th>
-            <th>Grade Type</th>
-            {<th>GSM From</th>}
-            {<th>GSM To</th>}
+            <th className="tColumn">Grade</th>
+            <th className="tColumn">Grade Type</th>
+            <th className="tColumn">GSM From</th>
+            <th className="tColumn">GSM To</th>
             {/* Other conditional headers based on checkboxState */}
-            {checkboxState["AgreedPrice"] && <th>Agreed Price</th>}
-            {checkboxState["SpecialDiscount"] && <th>Special Discount</th>}
-            {checkboxState["ReelDiscount"] && <th>Reel discount</th>}
-            {checkboxState["PackUpCharge"] && <th>PackUp charge</th>}
-            {checkboxState["TPC"] && <th>TPC</th>}
-            {checkboxState["OfflineDisc"] && <th>Offine Discount</th>}
-
-            <th>Net Nsr</th>
-            <th>Old net NSR</th>
-            <th>Actions</th>
+            {checkboxState["AgreedPrice"] && (
+              <th className="tColumn">Agreed Price</th>
+            )}
+            {checkboxState["SpecialDiscount"] && (
+              <th className="tColumn">Special Discount</th>
+            )}
+            {checkboxState["ReelDiscount"] && (
+              <th className="tColumn">Reel discount</th>
+            )}
+            {checkboxState["PackUpCharge"] && (
+              <th className="tColumn">PackUp charge</th>
+            )}
+            {checkboxState["TPC"] && <th className="tColumn">TPC</th>}
+            {checkboxState["OfflineDisc"] && (
+              <th className="tColumn">Offline Discount</th>
+            )}
+            <th className="tColumn">Net Nsr</th>
+            <th className="tColumn">Old net NSR</th>
+            <th className="tColumn">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -211,20 +242,36 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
             <tr key={index}>
               <td>
                 <Select
-                  value={row.grade}
-                  style={{ margintop: "10px" }}
+                  value={grades.find((grade) => grade.label === row.grade)} // Find the option that matches the row's grade
+                  style={{ marginTop: "10px" }} // Corrected casing for marginTop
                   name="customers"
                   options={grades}
-                  className="basic-multi-select"
+                  className="basic-multi-select tColumn"
                   classNamePrefix="select"
-                  // onChange={handleFSCChange}
-                  onChange={(e) => handleRowChange(row.id, "grade", e.label)}
-                  placeholder={`Select grade`}
+                  onChange={(e) => {
+                    console.log(row); // Debugging
+                    handleRowChange(row.id, "grade", e.label, e.profitCenter);
+                    console.log("Handling row change");
+                    row.grade = e.label;
+                    row.profitCenter = e.profitCenter;
+                    console.log(rows);
+                    const result = isMixPresent(rows);
+                    console.log(result);
+                    if (!result) {
+                      alert("Invalid mix of profit centers");
+                      disableSubmit(true);
+                    } else {
+                      disableSubmit(false);
+                    } // Assuming e contains the selected option
+                    setSelectedGrade(e); // Assuming e is the option object
+                    console.log(e.label, e.profitCenter); // Debugging
+                  }}
                 />
               </td>
               <td>
                 <input
                   type="text"
+                  className="tColumn"
                   value={row.gradeType}
                   onChange={(e) =>
                     handleRowChange(row.id, "gradeType", e.target.value)
@@ -236,6 +283,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
                 <td>
                   <input
                     type="number"
+                    className="tColumn"
                     value={row.gsmFrom}
                     onChange={(e) => {
                       // setGSMFrom(e.target.value);
@@ -248,6 +296,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
                 <td>
                   <input
                     type="text"
+                    className="tColumn"
                     value={row.gsmTo}
                     onChange={(e) => {
                       // setGSMFrom(e.target.value);
@@ -261,6 +310,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
                 <td>
                   <input
                     type="number"
+                    className="tColumn"
                     value={row.agreedPrice}
                     onChange={(e) =>
                       handleRowChange(row.id, "agreedPrice", e.target.value)
@@ -272,6 +322,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
                 <td>
                   <input
                     type="number"
+                    className="tColumn"
                     value={row.specialDiscount}
                     onChange={(e) =>
                       handleRowChange(row.id, "specialDiscount", e.target.value)
@@ -283,6 +334,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
                 <td>
                   <input
                     type="number"
+                    className="tColumn"
                     value={row.reelDiscount}
                     onChange={(e) =>
                       handleRowChange(row.id, "reelDiscount", e.target.value)
@@ -294,6 +346,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
                 <td>
                   <input
                     type="number"
+                    className="tColumn"
                     value={row.packUpCharge}
                     onChange={(e) =>
                       handleRowChange(row.id, "packUpCharge", e.target.value)
@@ -305,6 +358,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
                 <td>
                   <input
                     type="number"
+                    className="tColumn"
                     value={row.tpc}
                     onChange={(e) =>
                       handleRowChange(row.id, "tpc", e.target.value)
@@ -316,6 +370,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
                 <td>
                   <input
                     type="number"
+                    className="tColumn"
                     value={row.offlineDiscount}
                     onChange={(e) =>
                       handleRowChange(row.id, "offlineDiscount", e.target.value)
@@ -329,6 +384,7 @@ function TableWithInputs({ setTableRowsDataFunction, setFSCCode }) {
               <td>
                 <input
                   type="text"
+                  className="tColumn"
                   value={row.oldNetNSR}
                   onChange={(e) =>
                     handleRowChange(row.id, "oldNetNSR", e.target.value)

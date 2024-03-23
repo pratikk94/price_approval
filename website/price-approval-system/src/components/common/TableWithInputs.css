@@ -38,3 +38,7 @@ button:hover {
   display: flex;
   justify-content: flex-end;
 }
+
+.tColumn {
+  width: 120px;
+}
