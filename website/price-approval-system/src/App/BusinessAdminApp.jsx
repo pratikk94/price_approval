@@ -23,7 +23,7 @@ import Master from "../Role_Business_Admin/Screens/Master";
 import PriceChangeRequest from "../components/common/PriceRequest";
 const drawerWidth = 240;
 
-function BusinessAdminApp() {
+const BusinessAdminApp = ({ logout }) => {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
@@ -37,10 +37,6 @@ function BusinessAdminApp() {
     { text: "Master", component: <Master /> },
   ];
 
-  const [inputValue, setInputValue] = useState("");
-
-  
-
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
@@ -52,8 +48,16 @@ function BusinessAdminApp() {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
-          
-          <Button color="inherit">Login</Button>
+
+          <Button
+            color="inherit"
+            onClick={() => {
+              console.log("called");
+              logout();
+            }}
+          >
+            Logout
+          </Button>
         </Toolbar>
       </AppBar>
       <Drawer
@@ -93,6 +97,6 @@ function BusinessAdminApp() {
       </Box>
     </Box>
   );
-}
+};
 
 export default BusinessAdminApp;

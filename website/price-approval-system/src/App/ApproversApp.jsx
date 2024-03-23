@@ -17,7 +17,7 @@ const drawerWidth = 240;
 import Dashboard from "../Role_Approvers_RM/Screens/Dashboard";
 import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
 import PriceChangeRequest from "../components/common/PriceRequest";
-function ResponsiveDrawer() {
+function ResponsiveDrawer({logout}) {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
@@ -29,9 +29,6 @@ function ResponsiveDrawer() {
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
   ];
 
-  const [inputValue, setInputValue] = useState("");
-
-  
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -45,7 +42,7 @@ function ResponsiveDrawer() {
             Logo
           </Typography>
           
-          <Button color="inherit">Logout</Button>
+          <Button color="inherit"  onClick={()=>{logout();}}>Logout</Button>
         </Toolbar>
       </AppBar>
       <Drawer

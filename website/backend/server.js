@@ -1,13 +1,12 @@
 const express = require("express");
-const session = require('express-session');
-const bodyParser = require('body-parser');
+const session = require("express-session");
+const bodyParser = require("body-parser");
 const sql = require("mssql");
 const cors = require("cors");
 const corsOptions = {
-  origin: 'http://localhost:5173', // or the specific origin you want to allow
+  origin: "http://localhost:5173", // or the specific origin you want to allow
   credentials: true, // allowing credentials (cookies, session)
 };
-
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,7 +18,7 @@ const config = {
   user: "sa",
   password: "12345",
   server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  port:1433,
+  port: 1433,
   database: "PriceApprovalSystem",
   options: {
     encrypt: true, // Use this if you're on Windows Azure
@@ -28,16 +27,17 @@ const config = {
   },
 };
 
-app.use(session({
-  secret: 'pratik', // Replace 'your_secret_key' with a real secret key
-  resave: false,
+app.use(
+  session({
+    secret: "pratik", // Replace 'your_secret_key' with a real secret key
+    resave: false,
     saveUninitialized: false,
-    cookie: { 
-        secure: false, // Set to true if using HTTPS
-        maxAge: 30 * 60 * 1000, // 30 minutes
+    cookie: {
+      secure: false, // Set to true if using HTTPS
+      maxAge: 30 * 60 * 1000, // 30 minutes
     },
-  }
-));
+  })
+);
 
 async function getCustomerNamesByIds(customerIds) {
   let pool = null;
@@ -81,34 +81,35 @@ async function getCustomerNamesByIds(customerIds) {
   }
 }
 
-app.post('/api/login', async (req, res) => {
-  
+app.post("/api/login", async (req, res) => {
   const employee_id = req.body.employee_id;
-  
-  
+
   let pool = null;
   try {
-      // Connect to database
-      pool = await sql.connect(config);
-      // Query database for user role
+    // Connect to database
+    pool = await sql.connect(config);
+    // Query database for user role
 
-      console.log(`SELECT role FROM define_roles WHERE employee_id = ${employee_id}`);
-      const result = await pool.request().query`SELECT role FROM define_roles WHERE employee_id = ${employee_id}`;
+    console.log(
+      `SELECT role FROM define_roles WHERE employee_id = ${employee_id}`
+    );
+    const result = await pool.request()
+      .query`SELECT role FROM define_roles WHERE employee_id = ${employee_id}`;
 
-      if (result.recordset.length > 0 && req.session) {
-          // Set session
-          console.log('Employee ID:', employee_id);
-          console.log(result);
-          req.session.employee_id = employee_id;
-          req.session.role = result.recordset[0].role;
+    if (result.recordset.length > 0 && req.session) {
+      // Set session
+      console.log("Employee ID:", employee_id);
+      console.log(result);
+      req.session.employee_id = employee_id;
+      req.session.role = result.recordset[0].role;
 
-          res.json({ loggedIn: true, role: result.recordset[0].role });
-      } else {
-          res.status(401).json({ loggedIn: false, message: 'Invalid employee ID' });
-      }
+      res.json({ loggedIn: true, role: result.recordset[0].role });
+    } else {
+      res.status(401).json({ loggedIn: false, message: "Invalid employee ID" });
+    }
   } catch (err) {
-      console.error('SQL error', err);
-      res.status(500).json({ message: 'Internal Server Error' });
+    console.error("SQL error", err);
+    res.status(500).json({ message: "Internal Server Error" });
   } finally {
     // Close the database connection
     if (pool) {
@@ -121,24 +122,22 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-
 // Check Session API
-app.get('/api/session', (req, res) => {
+app.get("/api/session", (req, res) => {
   if (req.session.employee_id && req.session.role) {
-      res.json({ loggedIn: true, role: req.session.role });
+    res.json({ loggedIn: true, role: req.session.role });
   } else {
-      res.json({ loggedIn: false });
+    res.json({ loggedIn: false });
   }
 });
 
 // Logout API
-app.get('/api/logout', (req, res) => {
-  req.session.destroy(err => {
-      if (err) throw err;
-      res.json({ loggedOut: true });
+app.get("/api/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) throw err;
+    res.json({ loggedOut: true });
   });
 });
-
 
 // Api to fetch customers. based upon ids which are currently hardcoded.
 app.get("/api/fetch_customers", async (req, res) => {
@@ -873,6 +872,50 @@ app.post("/api/update-employee-role", async (req, res) => {
   } catch (err) {
     console.error("Error executing stored procedure:", err);
     res.status(500).send("Failed to update employee role");
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+//NEW
+//api to add to defined rules
+app.post("/api/add_defined_rule", async (req, res) => {
+  let pool = null;
+  try {
+    await sql.connect(config);
+    const {
+      rule_name,
+      profit_center,
+      region,
+      valid_from,
+      valid_to,
+      active,
+      rm,
+      nsm,
+      hdsm,
+      validator,
+      created_at,
+    } = req.body;
+
+    // Assuming profit_center is an array, convert it to a string to store in the database.
+    // If your database design is different, you might need a different approach.
+    const profitCenterString = profit_center.join(","); // Convert array to string if needed
+    pool = await sql.connect(config);
+    const result = await pool.request().query`
+          INSERT INTO defined_rules (rule_name, profit_center, region, valid_from, valid_to, active, rm, nsm, hdsm, validator, created_at)
+          VALUES (${rule_name}, ${profitCenterString}, ${region}, ${valid_from}, ${valid_to}, ${active}, ${rm}, ${nsm}, ${hdsm}, ${validator}, ${created_at})
+      `;
+
+    res.json({ message: "Insert successful", result });
+  } catch (err) {
+    console.error("SQL error", err);
+    res.status(500).json({ message: "Error inserting data", err });
   } finally {
     if (pool) {
       try {

@@ -15,17 +15,10 @@ import {
 } from "@mui/material";
 const drawerWidth = 240;
 import PriceRequest from "../Role_Validator/Screens/PriceRequest";
-function ResponsiveDrawer() {
+function ResponsiveDrawer({logout}) {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [{ text: "Price Requests", component: <PriceRequest /> }];
-
-  const [inputValue, setInputValue] = useState("");
-
-  const handleInputChange = (event) => {
-    setInputValue(event.target.value);
-    changeScreen(event.target.value);
-  };
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -39,7 +32,7 @@ function ResponsiveDrawer() {
             Logo
           </Typography>
           
-          <Button color="inherit">Logout</Button>
+          <Button color="inherit" onClick={()=>{logout();}}>Logout</Button>
         </Toolbar>
       </AppBar>
       <Drawer
