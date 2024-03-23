@@ -95,7 +95,7 @@ function SelectModal() {
             name="Region"
             selectedItem={selectedRegion}
             onChange={handleChangeRegion}
-            url={`${backend_url}api/fetch_region`}
+            url={`${backend_url}api/fetch_sales_regions`}
           />
           <Checkbox />
         </DialogContent>

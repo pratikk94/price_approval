@@ -32,7 +32,7 @@ function EmployeeEditModal({ open, handleClose, employeeData }) {
 
   useEffect(() => {
     const fetchRegions = async () => {
-      const response = await fetch(`${backend_url}api/fetch_region`);
+      const response = await fetch(`${backend_url}api/fetch_sales_regions`);
       const data = await response.json();
       console.log(data);
       setRegions(data);

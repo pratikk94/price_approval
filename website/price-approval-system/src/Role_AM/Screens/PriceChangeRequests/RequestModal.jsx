@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   Box,
   Typography,
@@ -18,7 +18,7 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import RemarkBox from "../../../components/common/RemarkBox";
 import { backend_url } from "../../../util";
-
+import { useSession } from "../../../Login_Controller/SessionContext";
 const modalStyle = {
   position: "absolute",
   top: "50%",
@@ -49,6 +49,9 @@ const CreateRequestModal = ({ open, handleClose }) => {
   const [tableRowsData, setTableRowsData] = useState([]);
   const formData = {};
   const [disableSubmit, setDisableSubmit] = useState(false);
+  const { session } = useSession();
+  const employee_id = session.employee_id;
+  // const { employee_id } = useContext(SessionProvider).session.employee_id;
   const handleSubmit = (event) => {
     event.preventDefault();
     //console.log("Form data", { tableRows });
@@ -71,6 +74,8 @@ const CreateRequestModal = ({ open, handleClose }) => {
     formData["fsc"] = 1;
     formData["priceTable"] = tableRowsData;
     formData["isDraft"] = isDraft;
+    formData["am_id"] = employee_id;
+    console.log(employee_id);
     console.log(formData.length);
     const val = JSON.stringify(formData);
     console.log(val);

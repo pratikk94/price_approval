@@ -125,7 +125,11 @@ app.post("/api/login", async (req, res) => {
 // Check Session API
 app.get("/api/session", (req, res) => {
   if (req.session.employee_id && req.session.role) {
-    res.json({ loggedIn: true, role: req.session.role });
+    res.json({
+      loggedIn: true,
+      role: req.session.role,
+      employee_id: req.session.employee_id,
+    });
   } else {
     res.json({ loggedIn: false });
   }
@@ -621,95 +625,95 @@ app.get("/api/fetch_report_status_by_id", async (req, res) => {
 });
 
 // API endpoint that adds price approval requests
-app.post("/api/add_price_request", async (req, res) => {
-  let pool = null;
+// app.post("/api/add_price_request", async (req, res) => {
+//   let pool = null;
 
-  try {
-    pool = await sql.connect(config);
-    let {
-      customerIds,
-      consigneeIds,
-      plants,
-      endUseIds,
-      endUseSegmentIds,
-      paymentTermsId,
-      validFrom,
-      validTo,
-      fsc,
-      mappint_type,
-      statusUpdatedById,
-    } = req.body;
-    mappint_type != undefined ? (mappint_type = 2) : (mappint_type = 1);
-    const result = await pool.request().query`
-            EXEC InsertPriceApprovalRequest 
-                @customerIds=${customerIds}, 
-                @consigneeIds=${consigneeIds}, 
-                @plants=${plants}, 
-                @endUseIds=${endUseIds}, 
-                @endUseSegmentIds=${endUseSegmentIds}, 
-                @paymentTermsId=${paymentTermsId}, 
-                @validFrom=${validFrom}, 
-                @validTo=${validTo}, 
-                @fsc=${fsc}, 
-                @mappint_type=${mappint_type}`;
+//   try {
+//     pool = await sql.connect(config);
+//     let {
+//       customerIds,
+//       consigneeIds,
+//       plants,
+//       endUseIds,
+//       endUseSegmentIds,
+//       paymentTermsId,
+//       validFrom,
+//       validTo,
+//       fsc,
+//       mappint_type,
+//       statusUpdatedById,
+//     } = req.body;
+//     mappint_type != undefined ? (mappint_type = 2) : (mappint_type = 1);
+//     const result = await pool.request().query`
+//             EXEC InsertPriceApprovalRequest
+//                 @customerIds=${customerIds},
+//                 @consigneeIds=${consigneeIds},
+//                 @plants=${plants},
+//                 @endUseIds=${endUseIds},
+//                 @endUseSegmentIds=${endUseSegmentIds},
+//                 @paymentTermsId=${paymentTermsId},
+//                 @validFrom=${validFrom},
+//                 @validTo=${validTo},
+//                 @fsc=${fsc},
+//                 @mappint_type=${mappint_type}`;
 
-    const requestId = result.recordset[0].id;
-    // console.log(requestId);
+//     const requestId = result.recordset[0].id;
+//     // console.log(requestId);
 
-    for (const item of req.body.priceTable) {
-      // console.log(item);
+//     for (const item of req.body.priceTable) {
+//       // console.log(item);
 
-      const reqId = requestId;
-      const grade = item.grade;
-      const gradeType = item.gradeType;
-      const gsmFrom = item.gsmFrom;
-      const gsmTo = item.gsmTo;
-      const agreedPrice = item.agreedPrice;
-      const specialDiscount = item.specialDiscount;
-      const reelDiscount = item.reelDiscount;
-      const packUpcharge = item.packUpCharge;
-      const tpc = item.tpc;
-      const offlineDiscount = item.offlineDiscount;
-      const netNSR = item.netNSR;
-      const oldNetNSR = item.oldNetNSR;
-      const result = await sql.query`
-            EXEC InsertPriceApprovalRequestPriceTable 
-                @reqId=${reqId}, 
-                @grade=${grade}, 
-                @gradeType=${gradeType}, 
-                @gsmFrom=${gsmFrom}, 
-                @gsmTo=${gsmTo}, 
-                @agreedPrice=${agreedPrice}, 
-                @specialDiscount=${specialDiscount}, 
-                @reelDiscount=${reelDiscount}, 
-                @packUpcharge=${packUpcharge}, 
-                @tpc=${tpc}, 
-                @offlineDiscount=${offlineDiscount}, 
-                @netNSR=${netNSR}, 
-                @oldNetNSR=${oldNetNSR}`;
-    }
+//       const reqId = requestId;
+//       const grade = item.grade;
+//       const gradeType = item.gradeType;
+//       const gsmFrom = item.gsmFrom;
+//       const gsmTo = item.gsmTo;
+//       const agreedPrice = item.agreedPrice;
+//       const specialDiscount = item.specialDiscount;
+//       const reelDiscount = item.reelDiscount;
+//       const packUpcharge = item.packUpCharge;
+//       const tpc = item.tpc;
+//       const offlineDiscount = item.offlineDiscount;
+//       const netNSR = item.netNSR;
+//       const oldNetNSR = item.oldNetNSR;
+//       const result = await sql.query`
+//             EXEC InsertPriceApprovalRequestPriceTable
+//                 @reqId=${reqId},
+//                 @grade=${grade},
+//                 @gradeType=${gradeType},
+//                 @gsmFrom=${gsmFrom},
+//                 @gsmTo=${gsmTo},
+//                 @agreedPrice=${agreedPrice},
+//                 @specialDiscount=${specialDiscount},
+//                 @reelDiscount=${reelDiscount},
+//                 @packUpcharge=${packUpcharge},
+//                 @tpc=${tpc},
+//                 @offlineDiscount=${offlineDiscount},
+//                 @netNSR=${netNSR},
+//                 @oldNetNSR=${oldNetNSR}`;
+//     }
 
-    // Additional insert operations here, following the same pattern
-    let status = "1";
-    if (req.body.isDraft) status = "0";
+//     // Additional insert operations here, following the same pattern
+//     let status = "1";
+//     if (req.body.isDraft) status = "0";
 
-    const final_result =
-      await sql.query`EXEC InsertReportStatus @report_id=${requestId}, @status=${status}, @status_updated_by_id=${statusUpdatedById}`;
+//     const final_result =
+//       await sql.query`EXEC InsertReportStatus @report_id=${requestId}, @status=${status}, @status_updated_by_id=${statusUpdatedById}`;
 
-    res.status(200).send("Data added successfully");
-  } catch (err) {
-    console.error("Database operation failed:", err);
-    res.status(500).send("Failed to add data");
-  } finally {
-    if (pool) {
-      try {
-        await pool.close();
-      } catch (err) {
-        console.error("Failed to close the pool:", err);
-      }
-    }
-  }
-});
+//     res.status(200).send("Data added successfully");
+//   } catch (err) {
+//     console.error("Database operation failed:", err);
+//     res.status(500).send("Failed to add data");
+//   } finally {
+//     if (pool) {
+//       try {
+//         await pool.close();
+//       } catch (err) {
+//         console.error("Failed to close the pool:", err);
+//       }
+//     }
+//   }
+// });
 
 // API endpoint that fetches price approval requests by id
 app.get("/api/price_requests", async (req, res) => {
@@ -955,6 +959,126 @@ app.get("/api/fetch_grade_with_pc", async (req, res) => {
     pool = await sql.connect(config);
     const result = await pool.request()
       .query`SELECT id as code,grade as name,FSC_Y_N,Grade_Description,Profit_Centre as profitCenter FROM grade where status = 1 and FSC_Y_N = ${fsc}`;
+
+    res.json(result.recordset);
+  } catch (err) {
+    console.error("SQL error", err);
+    res.status(500).json({ message: "Error fetching data", err });
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.post("/api/add_price_request", async (req, res) => {
+  let pool = null;
+
+  try {
+    pool = await sql.connect(config);
+    let {
+      customerIds,
+      consigneeIds,
+      plants,
+      endUseIds,
+      endUseSegmentIds,
+      paymentTermsId,
+      validFrom,
+      validTo,
+      fsc,
+      mappint_type,
+      statusUpdatedById,
+    } = req.body;
+    mappint_type != undefined ? (mappint_type = 2) : (mappint_type = 1);
+    console.log(req.body);
+    const mainResult = await pool
+      .request()
+      .input("customerIds", sql.VarChar, req.body.customerIds)
+      .input("consigneeIds", sql.VarChar, req.body.consigneeIds)
+      .input("plants", sql.VarChar, req.body.plants)
+      .input("endUseIds", sql.VarChar, req.body.endUseIds)
+      .input("endUseSegmentIds", sql.VarChar, req.body.endUseSegmentIds)
+      .input("paymentTermsId", sql.VarChar, req.body.paymentTermsId)
+      .input("validFrom", sql.DateTime, new Date(req.body.validFrom))
+      .input("validTo", sql.DateTime, new Date(req.body.validTo))
+      .input("fsc", sql.Int, req.body.fsc)
+      .input("mappint_type", sql.Int, req.body.mappingType)
+      .input("am_id", sql.VarChar, req.body.am_id)
+      .query(`INSERT INTO price_approval_requests (customer_id, consignee_id, plant, end_use_id, end_use_segment_id, payment_terms_id, valid_from, valid_to, fsc, mappint_type,am_id) 
+              VALUES (@customerIds, @consigneeIds, @plants, @endUseIds, @endUseSegmentIds, @paymentTermsId, @validFrom, @validTo, @fsc, @mappint_type,@am_id);
+              SELECT SCOPE_IDENTITY() AS id;`);
+
+    const requestId = mainResult.recordset[0].id;
+    // console.log(requestId);
+    pool = await sql.connect(config);
+    for (const item of req.body.priceTable) {
+      // console.log(item);
+
+      const reqId = requestId;
+      const grade = item.grade;
+      const gradeType = item.gradeType;
+      const gsmFrom = item.gsmFrom;
+      const gsmTo = item.gsmTo;
+      const agreedPrice = item.agreedPrice;
+      const specialDiscount = item.specialDiscount;
+      const reelDiscount = item.reelDiscount;
+      const packUpcharge = item.packUpCharge;
+      const tpc = item.tpc;
+      const offlineDiscount = item.offlineDiscount;
+      const netNSR = item.netNSR;
+      const oldNetNSR = item.oldNetNSR;
+      const result = await pool.request().query`
+                EXEC InsertPriceApprovalRequestPriceTable 
+                    @reqId=${reqId}, 
+                    @grade=${grade}, 
+                    @gradeType=${gradeType}, 
+                    @gsmFrom=${gsmFrom}, 
+                    @gsmTo=${gsmTo}, 
+                    @agreedPrice=${agreedPrice}, 
+                    @specialDiscount=${specialDiscount}, 
+                    @reelDiscount=${reelDiscount}, 
+                    @packUpcharge=${packUpcharge}, 
+                    @tpc=${tpc}, 
+                    @offlineDiscount=${offlineDiscount}, 
+                    @netNSR=${netNSR}, 
+                    @oldNetNSR=${oldNetNSR}`;
+      console.log(result);
+    }
+
+    // Additional insert operations here, following the same pattern
+    let status = "1";
+    if (req.body.isDraft) status = "0";
+
+    const final_result = await pool.request()
+      .query`INSERT INTO report_status (report_id, status, status_updated_by_id, created_at, last_updated_at)
+    VALUES (${requestId}, ${status},${req.body.am_id}, GETDATE(), GETDATE());`;
+
+    res.status(200).send("Data added successfully");
+  } catch (err) {
+    console.error("Database operation failed:", err);
+    res.status(500).send("Failed to add data");
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.get("/api/fetch_sales_regions", async (req, res) => {
+  let pool = null;
+  const fsc = req.query.fsc;
+  try {
+    pool = await sql.connect(config);
+    const result = await pool.request()
+      .query`SELECT [id] as id,[desc] as name from sales_office`;
 
     res.json(result.recordset);
   } catch (err) {

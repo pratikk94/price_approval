@@ -1,26 +1,30 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSession } from './SessionContext';
-import { backend_url } from '../util';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSession } from "./SessionContext";
+import { backend_url } from "../util";
 
 const LoginScreen = () => {
-  const [employeeId, setEmployeeId] = useState('');
+  const [employeeId, setEmployeeId] = useState("");
   const { setSession } = useSession();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
     const response = await fetch(`${backend_url}api/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ employee_id: employeeId }),
-      credentials: 'include',
+      credentials: "include",
     });
     const data = await response.json();
     if (data.loggedIn) {
-      setSession({ loggedIn: true, role: data.role });
-      navigate('/'); // Navigate to the home page
+      setSession({
+        loggedIn: true,
+        role: data.role,
+        employee_id: employeeId,
+      });
+      navigate("/"); // Navigate to the home page
     } else {
-      alert('Login failed. Please try again.');
+      alert("Login failed. Please try again.");
     }
   };
 

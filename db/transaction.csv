@@ -1,0 +1,2 @@
+﻿request id,rule id,region,am,am_status,am_status_updated_at,am_id,rm,rm_status,rm_status_updated_at,rm_id,nsm_status,nsm_status_updated_at,nsm_id,hdsm_status,hdsm_status_updated_at,hdsm_id,validator_status,validator_status_updated_at,validator_id
+1,1,Sales office North,0,1,2024-03-01-14:00:00,1,2,1,2024-03-01-14:00:00,2,1,2024-03-01-14:00:00,3,1,2024-03-01-14:00:00,4,1,2024-03-01-14:00:00,5

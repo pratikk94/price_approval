@@ -44,7 +44,7 @@ function RuleEditModal({ open, handleClose, rule, onRuleUpdated }) {
   };
   useEffect(() => {
     const fetchRegions = async () => {
-      const response = await fetch(`${backend_url}api/fetch_region`);
+      const response = await fetch(`${backend_url}api/fetch_sales_regions`);
       const data = await response.json();
       setRegions(data);
     };
