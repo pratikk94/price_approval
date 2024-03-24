@@ -250,10 +250,25 @@ function DynamicTable({ url, action_id }) {
       }
     };
 
+    const fetchAMData = async () => {
+      if (aprm_id != 0) {
+        try {
+          const response = await axios.get(
+            `${backend_url}api/price_requests?id=${aprm_id}`
+          );
+          console.log(response.data[0]);
+          setAprm(response.data[0]);
+        } catch (error) {
+          console.error("Error fetching rule data:", error);
+        }
+      }
+    };
+
     if (action_id == "B1") fetchRule();
     else if (action_id == "B2") fetchEmployeeData();
     else if (action_id == "B3") fetchRequestHistoryData();
-    else if (action_id == "AP_RM" || action_id == "AM") fetchAPRMData();
+    else if (action_id == "AP_RM") fetchAPRMData();
+    else if (action_id == "AM") fetchAMData();
   }, [modalOpen, editModalOpen]);
 
   const handleRuleUpdate = (updatedRule) => {
@@ -327,7 +342,7 @@ function DynamicTable({ url, action_id }) {
           </IconButton>
         </div>
       );
-    } else if (id == "AP_RM" || id == "AM") {
+    } else if (id == "AP_RM") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton

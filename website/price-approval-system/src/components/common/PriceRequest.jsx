@@ -31,6 +31,7 @@ import {
 import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
 import DataTable from "./DataTable";
 import { backend_url, statusFilters } from "../../util";
+import { useSession } from "../../Login_Controller/SessionContext";
 
 // Initial dummy data with status
 const initialData = [
@@ -84,7 +85,8 @@ function PriceChangeRequest({ role, isAM }) {
     statusFiltersValues = Array.from(statusFilters.values()).slice(1, 5);
   }
   const [filterdId, setFilterdId] = useState(1);
-
+  const { session } = useSession();
+  const employee_id = session.employee_id;
   const [data, setData] = useState(initialData);
   const [selectedColumns, setSelectedColumns] = useState(
     initialColumns.filter((col) => !col.alwaysVisible).map((col) => col.id)
@@ -142,49 +144,109 @@ function PriceChangeRequest({ role, isAM }) {
 
   const ReturnDataTable = () => {
     // console.log(`Filterred ID is ${filterdId} `);
-    if (filterdId == 0) {
-      // console.log("Filterred ID is 0");
-      return (
-        <DataTable
-          url={backend_url + "api/fetch_price_requests?status=0"}
-          action_id={role}
-        />
-      );
-    } else if (filterdId == 1) {
-      // console.log("Filterred ID is 1");
-      return (
-        <DataTable
-          action_id={role}
-          url={backend_url + "api/fetch_price_requests?status=1"}
-        />
-      );
+    console.log(role);
+    console.log(filterdId);
+    console.log(employee_id);
+    if (role == "AP_RM") {
+      if (filterdId == 1) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=1`
+            }
+          />
+        );
+      }
+      if (filterdId == 2) {
+        // console.log("Filterred ID is 2");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=2`
+            }
+          />
+        );
+      }
+      if (filterdId == 3) {
+        // console.log("Filterred ID is 3");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=3`
+            }
+          />
+        );
+      }
+      if (filterdId == 4) {
+        // console.log("Filterred ID is 4");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=4`
+            }
+          />
+        );
+      }
     }
-    if (filterdId == 2) {
-      // console.log("Filterred ID is 2");
-      return (
-        <DataTable
-          action_id={role}
-          url={backend_url + "api/fetch_price_requests?status=2"}
-        />
-      );
-    }
-    if (filterdId == 3) {
-      // console.log("Filterred ID is 3");
-      return (
-        <DataTable
-          // action_id={role}
-          url={backend_url + "api/fetch_price_requests?status=3"}
-        />
-      );
-    }
-    if (filterdId == 4) {
-      // console.log("Filterred ID is 4");
-      return (
-        <DataTable
-          action_id={role}
-          url={backend_url + "api/fetch_price_requests?status=4"}
-        />
-      );
+
+    if (role == "AM") {
+      if (filterdId == 1) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=0`
+            }
+          />
+        );
+      }
+      if (filterdId == 2) {
+        // console.log("Filterred ID is 2");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=1`
+            }
+          />
+        );
+      }
+      if (filterdId == 3) {
+        // console.log("Filterred ID is 3");
+        return (
+          <DataTable
+            // action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=2`
+            }
+          />
+        );
+      }
+      if (filterdId == 4) {
+        // console.log("Filterred ID is 4");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=3`
+            }
+          />
+        );
+      }
     }
   };
 

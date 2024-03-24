@@ -83,7 +83,7 @@ const CreateRequestModal = ({ open, handleClose }) => {
     setSelectedConsignees([]);
     setSelectedCustomers([]);
 
-    handleClose();
+    //handleClose();
     if (checkBoxEnabled && isChecked) {
       oneToOneMapping(selectedCustomers, selectedConsignees);
     } else {

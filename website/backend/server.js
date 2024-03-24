@@ -81,6 +81,332 @@ async function getCustomerNamesByIds(customerIds) {
   }
 }
 
+async function fetchAndProcessRules(requestId, employeeId) {
+  let pool = null;
+  try {
+    // Establish a connection
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+    console.log("Processing rules for employee ID:", employeeId);
+
+    const roleResults = await pool
+      .request()
+      .input("employeeId", sql.NVarChar, employeeId)
+      .query("SELECT region FROM define_roles WHERE employee_id = @employeeId");
+
+    if (roleResults.recordset.length === 0) {
+      throw new Error("No region found for this employee.");
+    }
+    const { region } = roleResults.recordset[0];
+    console.log("Region:", region);
+
+    // 2 & 4. Fetch active rules for that region and check their validity
+    const currentDate = new Date();
+    const rulesResults = await pool.request().query(`
+      SELECT * FROM defined_rules 
+      WHERE region = '${region}' 
+      AND active = 1 
+      AND valid_from <= '${currentDate.toISOString()}' 
+      AND valid_to >= '${currentDate.toISOString()}'
+    `);
+
+    if (rulesResults.recordset.length === 0) {
+      throw new Error("No active or valid rules found for this region.");
+    }
+    console.log(rulesResults.recordset);
+    // 5. Extract values of rm, nsm, hdsm, and validator for active and valid rules
+    for (const rule of rulesResults.recordset) {
+      const insertQuery = `
+            INSERT INTO [transaction] (
+                request_id, rule_id, region, am, am_status, am_status_updated_at,
+                am_id, rm, nsm, hdsm, validator,timestamp,
+                rm_status, rm_status_updated_at, rm_id,
+                nsm_status, nsm_status_updated_at, nsm_id,
+                hdsm_status, hdsm_status_updated_at, hdsm_id
+            )
+            OUTPUT INSERTED.request_id
+            VALUES (
+                ${requestId}, @ruleId, @region, 0, 0, GETDATE(), @employeeId,
+                @rm, @nsm, @hdsm, @validator,GETDATE(),
+                CASE WHEN @rm = 0 THEN -1 ELSE 0 END,
+                CASE WHEN @rm = 0 THEN GETDATE() ELSE NULL END,
+                CASE WHEN @rm = 0 THEN -1 ELSE NULL END,
+                CASE WHEN @nsm = 0 THEN -1 ELSE 0 END,
+                CASE WHEN @nsm = 0 THEN GETDATE() ELSE NULL END,
+                CASE WHEN @nsm = 0 THEN -1 ELSE NULL END,
+                CASE WHEN @hdsm = 0 THEN -1 ELSE 0 END,
+                CASE WHEN @hdsm = 0 THEN GETDATE() ELSE NULL END,
+                CASE WHEN @hdsm = 0 THEN -1 ELSE NULL END
+            )`;
+
+      const result = await pool
+        .request()
+        .input("ruleId", sql.NVarChar, rule.rule_name)
+        .input("region", sql.NVarChar, region)
+        .input("employeeId", sql.NVarChar, employeeId)
+        .input("rm", sql.Int, rule.rm)
+        .input("nsm", sql.Int, rule.nsm)
+        .input("hdsm", sql.Int, rule.hdsm)
+        .input("validator", sql.Int, rule.validator)
+        .query(insertQuery);
+
+      // Assuming there will be one record inserted at a time, so taking the first one
+      if (result.recordset.length > 0) {
+        return result.recordset[0].request_id; // Returns the inserted request_id
+      } else {
+        throw new Error("No request_id returned after insert.");
+      }
+    }
+    console.log("Rules processed successfully.");
+  } catch (err) {
+    console.error("Error during database operations:", err);
+    throw err; // Or handle error as needed
+  } finally {
+    // Close the database connection
+    if (pool) {
+      pool.close();
+    }
+  }
+}
+
+async function FetchAMDataWithStatus(employeeId, status, res) {
+  let pool = null;
+  console.log(employeeId, status);
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+
+    // 1. Fetch region from 'define_role' for a given 'employee_id'
+    // Replace with actual employee ID
+    console.log(
+      `SELECT region FROM define_roles WHERE employee_id =${employeeId}`
+    );
+    const regionResult = await pool
+      .request()
+      .input("employeeId", sql.NVarChar, employeeId)
+      .query("SELECT region FROM define_roles WHERE employee_id = @employeeId");
+
+    if (regionResult.recordset.length === 0) {
+      throw new Error("No region found for this employee.");
+    }
+
+    const region = regionResult.recordset[0].region;
+    console.log("Region:", region);
+
+    // 2. Fetch all ids where 'rm' is greater than 0
+    const idsResult = await pool
+      .request()
+      .input("region", sql.VarChar, region)
+      .input("status", sql.VarChar, status) // Correctly setting the parameter
+      .query(
+        `WITH RankedTransactions AS (
+          SELECT 
+              *,
+              ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY [id] DESC) AS rn
+          FROM 
+              [transaction]
+      )
+      SELECT * 
+      FROM RankedTransactions
+      WHERE rn = 1 AND am_status = @status and region =@region; `
+      );
+    console.log(idsResult);
+    // Assuming you're using these IDs to fetch related price requests...
+    const ids = idsResult.recordset.map((row) => row.request_id);
+    const details = await fetchPriceApprovalDetails(
+      ids,
+      region,
+      employeeId,
+      status
+    );
+    details.forEach((detail) => {
+      if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
+        detail.req_id = detail.req_id[0]; // Convert array to single value
+      }
+      // Add any additional transformations needed
+    });
+
+    res.json(details);
+  } catch (err) {
+    console.error("Error during database operations:", err);
+  } finally {
+    if (pool) {
+      await pool.close();
+    }
+  }
+}
+
+async function FetchRMDataWithStatus(employeeId, status, res) {
+  let pool = null;
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+
+    // 1. Fetch region from 'define_role' for a given 'employee_id'
+    // Replace with actual employee ID
+    console.log(
+      `SELECT region FROM define_roles WHERE employee_id =${employeeId}`
+    );
+    const regionResult = await pool
+      .request()
+      .input("employeeId", sql.NVarChar, employeeId)
+      .query("SELECT region FROM define_roles WHERE employee_id = @employeeId");
+
+    if (regionResult.recordset.length === 0) {
+      throw new Error("No region found for this employee.");
+    }
+
+    const region = regionResult.recordset[0].region;
+    console.log("Region:", region);
+
+    // 2. Fetch all ids where 'rm' is greater than 0
+    const idsResult = await pool
+      .request()
+      .input("region", sql.VarChar, region)
+      .input("status", sql.VarChar, status) // Correctly setting the parameter
+      .query(
+        `WITH RankedTransactions AS (
+          SELECT 
+              *,
+              ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY [id] DESC) AS rn
+          FROM 
+              [transaction]
+      )
+      SELECT * 
+      FROM RankedTransactions
+      WHERE rn = 1 AND rm_status = @status and region =@region  AND rm <> 0;`
+      );
+
+    console.log(idsResult);
+    // Assuming you're using these IDs to fetch related price requests...
+    const ids = idsResult.recordset.map((row) => row.request_id);
+    console.log("IDs:", ids);
+    const details = await fetchPriceApprovalDetails(
+      [...new Set(ids)],
+      region,
+      employeeId,
+      status
+    );
+
+    res.json(details);
+  } catch (err) {
+    console.error("Error during database operations:", err);
+  } finally {
+    if (pool) {
+      await pool.close();
+    }
+  }
+}
+
+async function fetchPriceApprovalDetails(reqIds, region, employeeId, status) {
+  let pool = null;
+  let consolidatedResults = [];
+
+  try {
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+    console.log(
+      "Fetching details for request IDs:",
+      reqIds,
+      employeeId,
+      region,
+      status
+    );
+    for (let reqId of reqIds) {
+      const result = await pool.request().input("reqId", sql.Int, reqId).query(`
+        SELECT 
+    pra.*,
+    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+        FROM customer c
+        JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
+    ) AS CustomerNames,
+    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+        FROM customer c
+        JOIN STRING_SPLIT(pra.consignee_id, ',') AS splitConsigneeIds ON c.code = TRY_CAST(splitConsigneeIds.value AS INT)
+    ) AS ConsigneeNames,
+    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+        FROM customer c
+        JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
+    ) AS EndUseNames
+FROM 
+    price_approval_requests pra
+
+WHERE 
+    pra.req_id = @reqId
+    
+ `);
+
+      if (result.recordset.length > 0) {
+        consolidatedResults.push(result.recordset[0]); // Assuming you expect one record per reqId, adjust if necessary
+      }
+    }
+
+    return consolidatedResults; // This will be an array of objects
+  } catch (err) {
+    console.error("Error during database operations:", err);
+    throw err;
+  } finally {
+    if (pool) {
+      await pool.close();
+    }
+  }
+}
+
+async function fetchPriceApprovalStatus(reqId) {
+  let pool = null;
+  try {
+    // Connect to database
+    pool = await sql.connect(config);
+    // Query database for user role
+
+    const result = await pool.request().input("reqId", sql.NVarChar, reqId)
+      .query`SELECT TOP 1 CASE 
+        WHEN RM_status = 0 THEN 'Pending with RM'
+        WHEN RM_status = 1 THEN 
+            CASE 
+                WHEN NSM_status = 0 THEN 'Pending with NSM'
+                WHEN NSM_status = 1 THEN 
+                    CASE 
+                        WHEN HDSM_status = 0 THEN 'Pending with HDSM'
+                        WHEN HDSM_status = 1 THEN 
+                            CASE 
+                                WHEN Validator_status = 0 THEN 'Pending with Validator'
+                                WHEN Validator_status = 1 THEN 'Approved by Validator'
+                                WHEN Validator_status = 2 THEN 'Validator is reworking'
+                                WHEN Validator_status = 3 THEN 'Validator is rejected'
+                            END
+                        WHEN HDSM_status = 2 THEN 'HDSM is reworking'
+                        WHEN HDSM_status = 3 THEN 'HDSM is rejected'
+                    END
+                WHEN NSM_status = 2 THEN 'NSM is reworking'
+                WHEN NSM_status = 3 THEN 'NSM is rejected'
+            END
+        WHEN RM_status = 2 THEN 'RM is reworking'
+        WHEN RM_status = 3 THEN 'RM is rejected'
+        ELSE 'Status unclear or not started'
+    END AS Current_Status
+FROM
+    [transaction] where request_id = @reqid
+	ORDER BY timestamp desc`;
+    const resultStatus = result.recordset[0].current_status;
+    return resultStatus;
+  } catch (err) {
+    console.error("SQL error", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  } finally {
+    // Close the database connection
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+}
+
 app.post("/api/login", async (req, res) => {
   const employee_id = req.body.employee_id;
 
@@ -624,97 +950,6 @@ app.get("/api/fetch_report_status_by_id", async (req, res) => {
   }
 });
 
-// API endpoint that adds price approval requests
-// app.post("/api/add_price_request", async (req, res) => {
-//   let pool = null;
-
-//   try {
-//     pool = await sql.connect(config);
-//     let {
-//       customerIds,
-//       consigneeIds,
-//       plants,
-//       endUseIds,
-//       endUseSegmentIds,
-//       paymentTermsId,
-//       validFrom,
-//       validTo,
-//       fsc,
-//       mappint_type,
-//       statusUpdatedById,
-//     } = req.body;
-//     mappint_type != undefined ? (mappint_type = 2) : (mappint_type = 1);
-//     const result = await pool.request().query`
-//             EXEC InsertPriceApprovalRequest
-//                 @customerIds=${customerIds},
-//                 @consigneeIds=${consigneeIds},
-//                 @plants=${plants},
-//                 @endUseIds=${endUseIds},
-//                 @endUseSegmentIds=${endUseSegmentIds},
-//                 @paymentTermsId=${paymentTermsId},
-//                 @validFrom=${validFrom},
-//                 @validTo=${validTo},
-//                 @fsc=${fsc},
-//                 @mappint_type=${mappint_type}`;
-
-//     const requestId = result.recordset[0].id;
-//     // console.log(requestId);
-
-//     for (const item of req.body.priceTable) {
-//       // console.log(item);
-
-//       const reqId = requestId;
-//       const grade = item.grade;
-//       const gradeType = item.gradeType;
-//       const gsmFrom = item.gsmFrom;
-//       const gsmTo = item.gsmTo;
-//       const agreedPrice = item.agreedPrice;
-//       const specialDiscount = item.specialDiscount;
-//       const reelDiscount = item.reelDiscount;
-//       const packUpcharge = item.packUpCharge;
-//       const tpc = item.tpc;
-//       const offlineDiscount = item.offlineDiscount;
-//       const netNSR = item.netNSR;
-//       const oldNetNSR = item.oldNetNSR;
-//       const result = await sql.query`
-//             EXEC InsertPriceApprovalRequestPriceTable
-//                 @reqId=${reqId},
-//                 @grade=${grade},
-//                 @gradeType=${gradeType},
-//                 @gsmFrom=${gsmFrom},
-//                 @gsmTo=${gsmTo},
-//                 @agreedPrice=${agreedPrice},
-//                 @specialDiscount=${specialDiscount},
-//                 @reelDiscount=${reelDiscount},
-//                 @packUpcharge=${packUpcharge},
-//                 @tpc=${tpc},
-//                 @offlineDiscount=${offlineDiscount},
-//                 @netNSR=${netNSR},
-//                 @oldNetNSR=${oldNetNSR}`;
-//     }
-
-//     // Additional insert operations here, following the same pattern
-//     let status = "1";
-//     if (req.body.isDraft) status = "0";
-
-//     const final_result =
-//       await sql.query`EXEC InsertReportStatus @report_id=${requestId}, @status=${status}, @status_updated_by_id=${statusUpdatedById}`;
-
-//     res.status(200).send("Data added successfully");
-//   } catch (err) {
-//     console.error("Database operation failed:", err);
-//     res.status(500).send("Failed to add data");
-//   } finally {
-//     if (pool) {
-//       try {
-//         await pool.close();
-//       } catch (err) {
-//         console.error("Failed to close the pool:", err);
-//       }
-//     }
-//   }
-// });
-
 // API endpoint that fetches price approval requests by id
 app.get("/api/price_requests", async (req, res) => {
   let pool = null;
@@ -1049,26 +1284,14 @@ app.post("/api/add_price_request", async (req, res) => {
       console.log(result);
     }
 
-    // Additional insert operations here, following the same pattern
-    let status = "1";
-    if (req.body.isDraft) status = "0";
-
-    const final_result = await pool.request()
-      .query`INSERT INTO report_status (report_id, status, status_updated_by_id, created_at, last_updated_at)
-    VALUES (${requestId}, ${status},${req.body.am_id}, GETDATE(), GETDATE());`;
+    fetchAndProcessRules(requestId, req.body.am_id)
+      .then(() => console.log("Finished processing."))
+      .catch((err) => console.error(err));
 
     res.status(200).send("Data added successfully");
   } catch (err) {
     console.error("Database operation failed:", err);
     res.status(500).send("Failed to add data");
-  } finally {
-    if (pool) {
-      try {
-        await pool.close();
-      } catch (err) {
-        console.error("Failed to close the pool:", err);
-      }
-    }
   }
 });
 
@@ -1092,6 +1315,119 @@ app.get("/api/fetch_sales_regions", async (req, res) => {
         console.error("Failed to close the pool:", err);
       }
     }
+  }
+});
+
+app.get("/api/fetch_request_am_with_status", async (req, res) => {
+  FetchAMDataWithStatus(req.query.employeeId, req.query.status, res);
+});
+
+app.get("/api/fetch_request_rm_with_status", async (req, res) => {
+  FetchRMDataWithStatus(req.query.employeeId, req.query.status, res);
+});
+
+app.get("/api/approve_price_approval_rm", async (req, res) => {});
+
+// API endpoint for handling the request and updating the database
+app.post("/api/update_request_status_rm", async (req, res) => {
+  const { id, action, employee_id, request_id } = req.body;
+
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+
+    // Fetch the latest row for the given requestId
+    const fetchQuery = `
+          SELECT TOP 1 *
+          FROM [transaction]
+          WHERE request_id = @requestId
+          ORDER BY timestamp DESC, id DESC`;
+
+    const latestRowResult = await pool
+      .request()
+      .input("requestId", sql.Int, request_id)
+      .query(fetchQuery);
+
+    if (latestRowResult.recordset.length === 0) {
+      throw new Error("No existing rows found for this request ID.");
+    }
+
+    const latestRow = latestRowResult.recordset[0];
+    console.log("Latest row for the request ID:", latestRow);
+
+    // Replace column_names and column_values with actual fields from latestRow and the values you want to insert.
+    const insertQuery = `
+    INSERT INTO [transaction] (
+        request_id, rule_id, region, am, am_status, am_status_updated_at, am_id,
+        rm, rm_status, rm_status_updated_at, rm_id,
+        nsm, nsm_status, nsm_status_updated_at, nsm_id,
+        hdsm, hdsm_status, hdsm_status_updated_at, hdsm_id,
+        validator, validator_status, validator_status_updated_at, validator_id,
+        timestamp
+    )
+    VALUES (
+        @requestId, @ruleId, @region, @am, @amStatus, @amStatusUpdatedAt, @amId,
+        @rm, @rmStatus, @rmStatusUpdatedAt, @rmId,
+        @nsm, @nsmStatus, @nsmStatusUpdatedAt, @nsmId,
+        @hdsm, @hdsmStatus, @hdsmStatusUpdatedAt, @hdsmId,
+        @validator, @validatorStatus, @validatorStatusUpdatedAt, @validatorId,
+        @timestamp
+    );
+    SELECT SCOPE_IDENTITY() AS newId;`;
+
+    const newRecordResult = await pool
+      .request()
+      .input("requestId", sql.VarChar, latestRow.request_id)
+      .input("ruleId", sql.VarChar, latestRow.rule_id)
+      .input("region", sql.VarChar, latestRow.region)
+      // Continue for each input parameter, ensuring they match those in your table
+      .input("am", sql.VarChar, latestRow.am) // Assuming 'am' is varchar; change data types accordingly
+      .input("amStatus", sql.Int, action)
+      .input("amStatusUpdatedAt", sql.VarChar, latestRow.am_status_updated_at)
+      .input("amId", sql.VarChar, latestRow.am_id)
+      // Continue with all the parameters as per your database fields and data types
+      // RM-related fields (change types as needed)
+      .input("rm", sql.VarChar, latestRow.rm)
+      .input("rmStatus", sql.Int, action) // Example based on your action logic
+      .input("rmStatusUpdatedAt", sql.VarChar, new Date().toISOString()) // Setting to current time
+      .input("rmId", sql.VarChar, employee_id) // Assuming action requires setting this to the employeeId
+      // Continue setting inputs for nsm, hdsm, and validator similarly
+      .input("nsm", sql.VarChar, latestRow.nsm)
+      .input("nsmStatus", sql.VarChar, latestRow.nsmStatus)
+      .input("nsmStatusUpdatedAt", sql.VarChar, latestRow.nsmStatusUpdatedAt)
+      .input("nsmId", sql.VarChar, latestRow.nsmId)
+      .input("hdsm", sql.VarChar, latestRow.hdsm)
+      .input("hdsmStatus", sql.VarChar, latestRow.hdsmStatus)
+      .input("hdsmStatusUpdatedAt", sql.VarChar, latestRow.hdsmStatusUpdatedAt)
+      .input("hdsmId", sql.VarChar, latestRow.hdsmId)
+      .input("validator", sql.VarChar, latestRow.validator)
+      .input("validatorStatus", sql.VarChar, latestRow.validatorStatus)
+      .input(
+        "validatorStatusUpdatedAt",
+        sql.DateTime,
+        latestRow.validatorStatusUpdatedAt
+      )
+      .input("validatorId", sql.VarChar, latestRow.validatorId)
+      .input("timestamp", sql.DateTime, new Date())
+      .query(insertQuery);
+
+    // Assuming the new row is inserted successfully
+    const newRequestId = newRecordResult.recordset[0].newId;
+    console.log(
+      "New row added based on the latest existing row for the request ID:",
+      newRequestId
+    );
+
+    res.json({
+      newRequestId,
+      message: "Request updated and duplicated successfully",
+    });
+  } catch (err) {
+    console.error("Error during database operations:", err);
+    throw err;
+  } finally {
+    if (pool) await pool.close();
   }
 });
 

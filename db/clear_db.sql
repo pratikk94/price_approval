@@ -6,7 +6,7 @@ TRUNCATE TABLE [define_roles];
 TRUNCATE TABLE [defined_rules];
 TRUNCATE TABLE [price_approval_requests];
 TRUNCATE TABLE [price_approval_requests_price_table];
-TRUNCATE TABLE [transactions];
+TRUNCATE TABLE [transaction];
 /*
 Redundat tables
 category
@@ -16,3 +16,7 @@ profit_center
 region
 rules
 */
+
+UPDATE  [transaction]
+SET rm = '1'
+WHERE id = 12;

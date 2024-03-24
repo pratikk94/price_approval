@@ -1,2 +1,0 @@
-region -> Sales office
-grade type reel/sheet/bobbins

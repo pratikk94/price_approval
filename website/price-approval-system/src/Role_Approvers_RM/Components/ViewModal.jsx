@@ -19,6 +19,7 @@ import axios from "axios";
 import ReactModal from "react-modal";
 import { IconButton } from "@mui/material";
 import RemarkBox from "../../components/common/RemarkBox";
+import { useSession } from "../../Login_Controller/SessionContext";
 
 function PriceTable({ price }) {
   console.log(price);
@@ -61,12 +62,14 @@ function PriceTable({ price }) {
 }
 
 function PriceViewModal({ open, onClose, id, data, isEditable }) {
+  const { session } = useSession();
+  const employee_id = session.employee_id;
   const updateStatus = (newStatus) => {
-    const apiUrl = `${backend_url}api/update-report-status`;
+    const apiUrl = `${backend_url}api/update_request_status_rm`;
     const reportData = {
-      reportId: id, // Example reportId
-      statusUpdatedById: 0, // Example statusUpdatedById
-      newStatus: newStatus, // Example new status
+      request_id: id, // Example reportId
+      employee_id: employee_id, // Example statusUpdatedById
+      action: newStatus, // Example new status
     };
 
     fetch(apiUrl, {
@@ -144,20 +147,20 @@ function PriceViewModal({ open, onClose, id, data, isEditable }) {
               <IconButton>
                 <DoneIcon
                   onClick={() => {
-                    updateStatus(2);
+                    updateStatus(1);
                   }}
                 />
               </IconButton>
               <IconButton
                 onClick={() => {
-                  updateStatus(3);
+                  updateStatus(2);
                 }}
               >
                 <CloseIcon />
               </IconButton>
               <IconButton
                 onClick={() => {
-                  updateStatus(4);
+                  updateStatus(3);
                 }}
               >
                 <ReplayIcon />
