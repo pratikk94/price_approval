@@ -39,6 +39,63 @@ app.use(
   })
 );
 
+function transformData(rawData) {
+  // Assuming rawData is an array of your items, similar to those in the 'price' array
+  // Start by grouping data by req_id (if rawData comes varied by req_id)
+  const groupedByReqId = rawData.reduce((acc, item) => {
+    const {
+      req_id,
+      customer_id,
+      consignee_id,
+      plant,
+      end_use_id,
+      end_use_segment_id,
+      payment_terms_id,
+      valid_from,
+      valid_to,
+      fsc,
+      mappint_type,
+    } = item; // Extract these common properties
+
+    // Initialize or update the group
+    if (!acc[req_id]) {
+      acc[req_id] = {
+        req_id,
+        customer_id,
+        consignee_id,
+        plant,
+        end_use_id,
+        end_use_segment_id,
+        payment_terms_id,
+        valid_from,
+        valid_to,
+        fsc,
+        mappint_type,
+        price: [], // Prepare to hold all 'grade' related data
+      };
+    }
+
+    // Add the grade-specific information
+    acc[req_id].price.push({
+      grade: item.grade,
+      grade_type: item.grade_type,
+      gsm_range_from: item.gsm_range_from,
+      gsm_range_to: item.gsm_range_to,
+      agreed_price: item.agreed_price,
+      special_discount: item.special_discount,
+      reel_discount: item.reel_discount,
+      tpc: item.tpc,
+      offline_discount: item.offline_discount,
+      net_nsr: item.net_nsr,
+      old_net_nsr: item.old_net_nsr,
+    });
+
+    return acc;
+  }, {});
+
+  // Convert the grouped object back into an array
+  return Object.values(groupedByReqId);
+}
 async function getCustomerNamesByIds(customerIds) {
   let pool = null;
   try {
@@ -169,6 +226,40 @@ async function fetchAndProcessRules(requestId, employeeId) {
   }
 }
 
+async function insertRequest(isNewRequest, reqId, parentReqId) {
+  let pool = null;
+
+  try {
+    pool = await sql.connect(config);
+    const requestType = isNewRequest ? "N" : "U";
+    const parentReqIdValue = isNewRequest ? reqId : parentReqId;
+    console.log(
+      "Inserting request with type:",
+      requestType,
+      "and parent ID:",
+      parentReqIdValue,
+      "for request ID:",
+      reqId
+    );
+    // Prepare the SQL query using template literals
+    const query = `
+          INSERT INTO request_status (status, req_id, parent_req_id)
+          VALUES (@requestType, @reqId, @parentReqIdValue)
+      `;
+
+    // Execute the query with input parameters
+    await pool
+      .request()
+      .input("requestType", sql.VarChar, requestType)
+      .input("reqId", sql.Int, reqId)
+      .input("parentReqIdValue", sql.Int, parentReqIdValue)
+      .query(query);
+
+    console.log("Request inserted successfully.");
+  } catch (err) {
+    console.error("SQL error", err);
+  }
+}
 async function FetchAMDataWithStatus(employeeId, status, res) {
   let pool = null;
   console.log(employeeId, status);
@@ -202,14 +293,80 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       .query(
         `WITH RankedTransactions AS (
           SELECT 
-              *,
-              ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY [id] DESC) AS rn
+              request_id,
+              ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY id DESC) AS rn,
+          region,
+          rule_id,
+          am,
+          am_status,
+          am_status_updated_at,
+          am_id,
+          rm,
+          rm_status,
+              rm_status_updated_at,
+              rm_id,
+              nsm_status,
+              nsm_status_updated_at,
+              nsm_id,
+              hdsm_status,
+              hdsm_status_updated_at,
+              hdsm_id,
+              validator_status,
+              validator_status_updated_at,
+              validator_id,
+              id,
+              hdsm,
+              validator,
+              nsm,
+              timestamp
           FROM 
               [transaction]
+          WHERE 
+              am_status = @status AND 
+              region = @region
+      ), MaxReqIDs AS (
+          SELECT 
+              parent_req_id, 
+              MAX(req_id) AS HighestID
+          FROM 
+              [request_status]
+          GROUP BY 
+              parent_req_id
       )
-      SELECT * 
-      FROM RankedTransactions
-      WHERE rn = 1 AND am_status = @status and region =@region; `
+      SELECT 
+          rt.request_id,
+          rt.region,
+          rt.rule_id,
+          rt.am,
+          rt.am_status,
+          rt.am_status_updated_at,
+          rt.am_id,
+          rt.rm,
+          rt.rm_status,
+          rt.rm_status_updated_at,
+          rt.rm_id,
+          rt.nsm_status,
+          rt.nsm_status_updated_at,
+          rt.nsm_id,
+          rt.hdsm_status,
+          rt.hdsm_status_updated_at,
+          rt.hdsm_id,
+          rt.validator_status,
+          rt.validator_status_updated_at,
+          rt.validator_id,
+          rt.id,
+          rt.hdsm,
+          rt.validator,
+          rt.nsm,
+          rt.timestamp,
+          mri.HighestID
+      FROM 
+          RankedTransactions rt
+      LEFT JOIN 
+          MaxReqIDs mri ON rt.request_id = mri.parent_req_id
+      WHERE 
+          rt.rn = 1 AND mri.HighestID IS NOT NULL;
+       `
       );
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
@@ -269,28 +426,98 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
       .query(
         `WITH RankedTransactions AS (
           SELECT 
-              *,
-              ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY [id] DESC) AS rn
+              request_id,
+              ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY id DESC) AS rn,
+          region,
+          rule_id,
+          am,
+          am_status,
+          am_status_updated_at,
+          am_id,
+          rm,
+          rm_status,
+              rm_status_updated_at,
+              rm_id,
+              nsm_status,
+              nsm_status_updated_at,
+              nsm_id,
+              hdsm_status,
+              hdsm_status_updated_at,
+              hdsm_id,
+              validator_status,
+              validator_status_updated_at,
+              validator_id,
+              id,
+              hdsm,
+              validator,
+              nsm,
+              timestamp
           FROM 
               [transaction]
+          WHERE 
+              rm_status = @status AND 
+              region = @region AND
+              rm <> 0
+      ), MaxReqIDs AS (
+          SELECT 
+              parent_req_id, 
+              MAX(req_id) AS HighestID
+          FROM 
+              [request_status]
+          GROUP BY 
+              parent_req_id
       )
-      SELECT * 
-      FROM RankedTransactions
-      WHERE rn = 1 AND rm_status = @status and region =@region  AND rm <> 0;`
+      SELECT 
+          rt.request_id,
+          rt.region,
+          rt.rule_id,
+          rt.am,
+          rt.am_status,
+          rt.am_status_updated_at,
+          rt.am_id,
+          rt.rm,
+          rt.rm_status,
+          rt.rm_status_updated_at,
+          rt.rm_id,
+          rt.nsm_status,
+          rt.nsm_status_updated_at,
+          rt.nsm_id,
+          rt.hdsm_status,
+          rt.hdsm_status_updated_at,
+          rt.hdsm_id,
+          rt.validator_status,
+          rt.validator_status_updated_at,
+          rt.validator_id,
+          rt.id,
+          rt.hdsm,
+          rt.validator,
+          rt.nsm,
+          rt.timestamp,
+          mri.HighestID
+      FROM 
+          RankedTransactions rt
+      LEFT JOIN 
+          MaxReqIDs mri ON rt.request_id = mri.parent_req_id
+      WHERE 
+          rt.rn = 1 AND mri.HighestID IS NOT NULL;`
       );
 
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
     console.log("IDs:", ids);
-    const details = await fetchPriceApprovalDetails(
-      [...new Set(ids)],
-      region,
-      employeeId,
-      status
-    );
+    if (ids.length > 0) {
+      const details = await fetchPriceApprovalDetails(
+        [...new Set(ids)],
+        region,
+        employeeId,
+        status
+      );
 
-    res.json(details);
+      res.json(details);
+    } else {
+      res.json([]);
+    }
   } catch (err) {
     console.error("Error during database operations:", err);
   } finally {
@@ -307,15 +534,19 @@ async function fetchPriceApprovalDetails(reqIds, region, employeeId, status) {
   try {
     pool = await sql.connect(config);
     console.log("Connected to the database.");
-    console.log(
-      "Fetching details for request IDs:",
-      reqIds,
-      employeeId,
-      region,
-      status
-    );
-    for (let reqId of reqIds) {
-      const result = await pool.request().input("reqId", sql.Int, reqId).query(`
+
+    if (reqIds.length > 0) {
+      console.log(
+        "Fetching details for request IDs:",
+        reqIds,
+        employeeId,
+        region,
+        status
+      );
+      console.log("Request IDs:", reqIds);
+      for (let reqId of reqIds) {
+        const result = await pool.request().input("reqId", sql.Int, reqId)
+          .query(`
         SELECT 
     pra.*,
     (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
@@ -338,12 +569,13 @@ WHERE
     
  `);
 
-      if (result.recordset.length > 0) {
-        consolidatedResults.push(result.recordset[0]); // Assuming you expect one record per reqId, adjust if necessary
+        if (result.recordset.length > 0) {
+          consolidatedResults.push(result.recordset[0]); // Assuming you expect one record per reqId, adjust if necessary
+        }
       }
-    }
 
-    return consolidatedResults; // This will be an array of objects
+      return consolidatedResults;
+    }
   } catch (err) {
     console.error("Error during database operations:", err);
     throw err;
@@ -1248,7 +1480,7 @@ app.post("/api/add_price_request", async (req, res) => {
               SELECT SCOPE_IDENTITY() AS id;`);
 
     const requestId = mainResult.recordset[0].id;
-    // console.log(requestId);
+    console.log(requestId);
     pool = await sql.connect(config);
     for (const item of req.body.priceTable) {
       // console.log(item);
@@ -1283,6 +1515,24 @@ app.post("/api/add_price_request", async (req, res) => {
                     @oldNetNSR=${oldNetNSR}`;
       console.log(result);
     }
+    const status = await pool
+      .request()
+      .input("customerIds", sql.VarChar, req.body.customerIds)
+      .input("consigneeIds", sql.VarChar, req.body.consigneeIds)
+      .input("plants", sql.VarChar, req.body.plants)
+      .input("endUseIds", sql.VarChar, req.body.endUseIds)
+      .input("endUseSegmentIds", sql.VarChar, req.body.endUseSegmentIds)
+      .input("paymentTermsId", sql.VarChar, req.body.paymentTermsId)
+      .input("validFrom", sql.DateTime, new Date(req.body.validFrom))
+      .input("validTo", sql.DateTime, new Date(req.body.validTo))
+      .input("fsc", sql.Int, req.body.fsc)
+      .input("mappint_type", sql.Int, req.body.mappingType)
+      .input("am_id", sql.VarChar, req.body.am_id)
+      .query(`INSERT INTO price_approval_requests (customer_id, consignee_id, plant, end_use_id, end_use_segment_id, payment_terms_id, valid_from, valid_to, fsc, mappint_type,am_id) 
+            VALUES (@customerIds, @consigneeIds, @plants, @endUseIds, @endUseSegmentIds, @paymentTermsId, @validFrom, @validTo, @fsc, @mappint_type,@am_id);
+            SELECT SCOPE_IDENTITY() AS id;`);
+
+    insertRequest(req.body.isNew, requestId, req.body.parentReqId);
 
     fetchAndProcessRules(requestId, req.body.am_id)
       .then(() => console.log("Finished processing."))
@@ -1425,6 +1675,41 @@ app.post("/api/update_request_status_rm", async (req, res) => {
     });
   } catch (err) {
     console.error("Error during database operations:", err);
+    throw err;
+  } finally {
+    if (pool) await pool.close();
+  }
+});
+
+app.get("/api/fetch_price_request_by_id", async (req, res) => {
+  let pool = null;
+  try {
+    // Ensure a connection is established
+    pool = await sql.connect(config);
+    const id = req.query.id;
+    console.log(id);
+    // Perform the query
+    const result = await pool.request().query`
+      SELECT 
+          par.*, 
+          part.*
+      FROM 
+          price_approval_requests AS par
+      LEFT JOIN 
+          price_approval_requests_price_table AS part
+      ON 
+          par.req_id = part.req_id
+      WHERE par.req_id = ${id}; 
+  `;
+
+    // Log or return the results
+    const transformedData = transformData(result.recordset);
+    console.log(transformedData);
+    console.log(JSON.stringify(transformedData, null, 2));
+    res.json(JSON.stringify(transformedData, null, 2));
+  } catch (err) {
+    // Log and throw any error that occurs
+    console.error("SQL error", err.message);
     throw err;
   } finally {
     if (pool) await pool.close();

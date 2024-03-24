@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -33,7 +33,7 @@ const modalStyle = {
   overflowY: "auto", // In case of overflow
 };
 
-const CreateRequestModal = ({ open, handleClose }) => {
+const CreateRequestModal = ({ open, handleClose, editData }) => {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [selectedConsignees, setSelectedConsignees] = useState([]);
   const [endUse, setEndUse] = useState([]);
@@ -42,28 +42,31 @@ const CreateRequestModal = ({ open, handleClose }) => {
   const [validFrom, setValidFrom] = useState([]);
   const [validTo, setValidTo] = useState([]);
   const [fsc, setFSC] = useState([]);
+  const [priceDetails, setPriceDetails] = useState([]); // Assuming this is an array of objects with the structure { price: number, ...
   const [remarks, setRemarks] = useState([]);
   const [checkBoxEnabled, setCheckBoxEnabled] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [isDraft, setIsDraft] = useState(false);
   const [tableRowsData, setTableRowsData] = useState([]);
   const formData = {};
+  const [reqId, setReqId] = useState(0);
   const [disableSubmit, setDisableSubmit] = useState(false);
   const { session } = useSession();
   const employee_id = session.employee_id;
+  const [selectedCustomerrIDs, setSelectedCustomerIDs] = useState([]);
+  const [selectedConsigneeIDs, setSelectedConsigneeIDs] = useState([]);
+  const [selectedEndUseIDs, setSelectedEndUseIDs] = useState([]);
   // const { employee_id } = useContext(SessionProvider).session.employee_id;
   const handleSubmit = (event) => {
     event.preventDefault();
     //console.log("Form data", { tableRows });
     formData["customerIds"] = selectedCustomers
-      .map((item) => item.value.toString())
-      .toString();
+      .map((item) => item.value)
+      .join(",");
     formData["consigneeIds"] = selectedConsignees
-      .map((item) => item.value.toString())
-      .toString();
-    formData["endUseIds"] = endUse
-      .map((item) => item.value.toString())
-      .toString();
+      .map((item) => item.value)
+      .join(",");
+    formData["endUseIds"] = endUse.map((item) => item.value).join(",");
     formData["endUseSegmentIds"] = ["seg1"].toString();
     formData["plants"] = plant.map((item) => item.value.toString()).toString();
     formData["paymentTermsId"] = paymentTerms["value"].toString();
@@ -78,7 +81,7 @@ const CreateRequestModal = ({ open, handleClose }) => {
     console.log(employee_id);
     console.log(formData.length);
     const val = JSON.stringify(formData);
-    console.log(val);
+    //console.log(val);
     submitData(formData);
     setSelectedConsignees([]);
     setSelectedCustomers([]);
@@ -90,10 +93,47 @@ const CreateRequestModal = ({ open, handleClose }) => {
       oneToManyMapping(selectedCustomers, selectedConsignees);
     }
   };
+  console.log(editData);
+  useEffect(() => {
+    if (editData != undefined && editData.length > 0) {
+      const [data] = editData; // Assuming editData is the array provided, and you're using the first item.
+      console.log(data);
+      setReqId(data.req_id[0]);
+      // Assuming these fields are comma-separated strings that need to be split into arrays
+      const customerIds = data.customer_id
+        .split(",")
+        .map((id) => ({ value: id, label: id })); // Replace label with actual label if available
+      const consigneeIds = data.consignee_id
+        .split(",")
+        .map((id) => ({ value: id, label: id })); // Replace label with actual label if available
 
+      // Update states
+      setSelectedCustomerIDs(data.customer_id);
+      setSelectedConsigneeIDs(data.consignee_id);
+      setSelectedEndUseIDs(data.end_use_id);
+      // Assumption: plant, paymentTermsId are singular values, not lists
+      setPlant([{ value: data.plant, label: `Plant ${data.plant}` }]);
+      setPaymentTerms({
+        value: data.payment_terms_id,
+        label: `Terms ${data.payment_terms_id}`,
+      });
+      setValidFrom(data.valid_from);
+      setValidTo(data.valid_to);
+      setFSC(data.fsc);
+      console.log(data.fsc);
+      //setMap(data.mappint_type);
+      setPriceDetails(data.price); // Assuming this directly maps to your price details state structure
+    }
+  }, [editData]); //
   const submitData = async (formData) => {
     try {
-      console.log(JSON.stringify(formData));
+      //console.log(JSON.stringify(formData));
+      formData["isNew"] = true;
+      if (editData) {
+        formData["parentReqId"] = reqId;
+        formData["isNew"] = false;
+      }
+      console.log(formData);
       const response = await fetch(`${backend_url}api/add_price_request`, {
         method: "POST",
         headers: {
@@ -179,6 +219,8 @@ const CreateRequestModal = ({ open, handleClose }) => {
               consigneeState={setSelectedConsignees}
               endUseState={setEndUse}
               checkCheckBox={CheckCheckBox}
+              isEditing={editData != undefined}
+              selectedCustomersToEdit={selectedCustomerrIDs}
             />
             <SpacingWrapper space="12px" />
             <FormControlLabel
@@ -201,18 +243,31 @@ const CreateRequestModal = ({ open, handleClose }) => {
               consigneeState={setSelectedConsignees}
               endUseState={setEndUse}
               checkCheckBox={CheckCheckBox}
+              isEditing={editData != undefined}
+              selectedCustomersToEdit={selectedEndUseIDs}
             />
             <SpacingWrapper space="12px" />
-            <Plant setSelection={setPlant} />
+            <Plant setSelection={setPlant} editedData={plant} />
             <SpacingWrapper space="12px" />
-            <PaymentTerms setSelection={setPaymentTerms} />
+            <PaymentTerms
+              setSelection={setPaymentTerms}
+              editedData={paymentTerms}
+            />
             <SpacingWrapper space="12px" />
             <Grid container spacing={2}>
               <Grid item xs={6}>
-                <DateSelector name={"valid from"} setSelection={setValidFrom} />
+                <DateSelector
+                  name={"valid from"}
+                  setSelection={setValidFrom}
+                  editedData={validFrom}
+                />
               </Grid>
               <Grid item xs={6}>
-                <DateSelector name={"valid to"} setSelection={setValidTo} />
+                <DateSelector
+                  name={"valid to"}
+                  setSelection={setValidTo}
+                  editedData={validTo}
+                />
               </Grid>
             </Grid>
             <SpacingWrapper space="12px" />
@@ -226,6 +281,8 @@ const CreateRequestModal = ({ open, handleClose }) => {
               consigneeState={setSelectedConsignees}
               endUseState={setEndUse}
               checkCheckBox={CheckCheckBox}
+              isEditing={editData != undefined}
+              selectedCustomersToEdit={selectedConsigneeIDs}
             />
 
             <SpacingWrapper space="12px" />
@@ -240,6 +297,8 @@ const CreateRequestModal = ({ open, handleClose }) => {
           setTableRowsDataFunction={setTableRowsDataFunction}
           setFSCCode={setFSC}
           disableSubmit={setDisableSubmit}
+          prices={priceDetails}
+          fscCode={fsc}
         />
         <SpacingWrapper space="24px" />
         <RemarkBox />

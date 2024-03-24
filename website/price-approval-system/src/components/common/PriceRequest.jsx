@@ -144,10 +144,22 @@ function PriceChangeRequest({ role, isAM }) {
 
   const ReturnDataTable = () => {
     // console.log(`Filterred ID is ${filterdId} `);
-    console.log(role);
-    console.log(filterdId);
-    console.log(employee_id);
+    //console.log(role);
+    //console.log(filterdId);
+    // console.log(employee_id);
     if (role == "AP_RM") {
+      if (filterdId == 0) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=0`
+            }
+          />
+        );
+      }
       if (filterdId == 1) {
         // console.log("Filterred ID is 1");
         return (

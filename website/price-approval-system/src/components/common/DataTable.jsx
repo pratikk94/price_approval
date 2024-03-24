@@ -43,6 +43,7 @@ import EmployeeDetailsModal from "../../Role_Business_Admin/Components/EmployeeM
 import HistoryModal from "../../Role_Business_Admin/Components/RequestHistoryModal";
 import PriceViewModal from "../../Role_Approvers_RM/Components/ViewModal";
 import EmployeeEditModal from "../../Role_Business_Admin/Components/EmployeeEditModal";
+import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
 function DynamicTable({ url, action_id }) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
@@ -65,6 +66,8 @@ function DynamicTable({ url, action_id }) {
   const [historyId, setHistoryId] = useState(0);
   const [aprm, setAprm] = useState(null);
   const [aprm_id, setAprmId] = useState(0);
+  const [rowId, setRowId] = useState(0);
+  const [editData, setEditData] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -184,12 +187,12 @@ function DynamicTable({ url, action_id }) {
   };
 
   const handleEdit = (id) => {
-    console.log(`Edit action for ${id}`);
+    //console.log(`Edit action for ${id}`);
     setId(id);
   };
 
   const handleDownload = (id) => {
-    console.log(`Download action for ${id}`);
+    //console.log(`Download action for ${id}`);
     // Implement download logic here
   };
 
@@ -269,7 +272,25 @@ function DynamicTable({ url, action_id }) {
     else if (action_id == "B3") fetchRequestHistoryData();
     else if (action_id == "AP_RM") fetchAPRMData();
     else if (action_id == "AM") fetchAMData();
-  }, [modalOpen, editModalOpen]);
+  }, [modalOpen]);
+
+  useEffect(() => {
+    if (id != 0) {
+      const fetchForEdit = async () => {
+        try {
+          const response = await axios.get(
+            `${backend_url}api/fetch_price_request_by_id?id=${id}`
+          );
+          console.log(JSON.parse(response.data));
+          setEditData(JSON.parse(response.data));
+        } catch (error) {
+          console.error("Error fetching rule data:", error);
+        }
+      };
+
+      fetchForEdit();
+    }
+  }, [editModalOpen]);
 
   const handleRuleUpdate = (updatedRule) => {
     console.log(updatedRule);
@@ -354,6 +375,17 @@ function DynamicTable({ url, action_id }) {
             }}
           >
             <ViewIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              setEditModalOpen(true);
+              handleEdit(req_id);
+              //handleView(req_id);
+              console.log(req_id);
+              setRuleId(row_id);
+            }}
+          >
+            <EditIcon />
           </IconButton>
         </div>
       );
@@ -538,6 +570,14 @@ function DynamicTable({ url, action_id }) {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
       <ViewModal open={open} onClose={handleClose} id={id} />
+      <CreateRequestModal
+        open={editModalOpen}
+        handleClose={() => {
+          setEditModalOpen(false);
+        }}
+        req_id={id}
+        editData={editData}
+      />
       {/* <DownloadModal open={open} handleClose={handleClose} setOpen={setOpen} /> */}
       {/* <DownloadModal open={open} onClose={handleClose} id={id} /> */}
     </Paper>

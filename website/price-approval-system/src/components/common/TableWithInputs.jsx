@@ -6,13 +6,48 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Select from "react-select";
 import { backend_url } from "../../util";
+import { SellOutlined } from "@mui/icons-material";
 function TableWithInputs({
   setTableRowsDataFunction,
+  fscCode,
   setFSCCode,
   disableSubmit,
+  prices,
 }) {
   const [grades, setGrades] = useState([]);
   const [selectedGrade, setSelectedGrade] = useState("");
+  const [fsc, setFSC] = useState(fscCode);
+  useEffect(() => {
+    fetch_grades();
+  }, [fscCode]);
+  useEffect(() => {
+    // Set rows based on incoming prices data
+    console.log(prices);
+    if (prices && prices.length > 0 && grades.length > 0) {
+      const newRows = prices.map((price, index) => ({
+        id: Date.now() + index, // Ensure unique id
+        grade:
+          gradeMapper(price.grade)[0] != undefined
+            ? gradeMapper(price.grade)[0].label
+            : gradeMapper(price.grade),
+        gradeType: price.grade_type,
+        gsmFrom: price.gsm_range_from,
+        gsmTo: price.gsm_range_to,
+        agreedPrice: price.agreed_price,
+        specialDiscount: price.special_discount,
+        reelDiscount: price.reel_discount,
+        packUpCharge: price.pack_upcharge,
+        tpc: price.tpc,
+        offlineDiscount: price.offline_discount,
+        netNSR: price.net_nsr,
+        oldNetNSR: price.old_net_nsr,
+        profitCenter: "", // Add any additional fields here
+      }));
+      //console.log(newRows);
+      setRows(newRows);
+    }
+  }, [prices, grades]);
+
   const [rows, setRows] = useState([
     {
       id: Date.now(),
@@ -47,11 +82,23 @@ function TableWithInputs({
     setCheckboxState((prev) => ({ ...prev, [name]: checked }));
   };
 
-  const fetch_grades = async (code) => {
+  const gradeMapper = (gradeLabel) => {
+    console.log(gradeLabel);
+    console.log(grades);
+    if (gradeLabel && grades.length > 0) {
+      const foundCustomer = grades.find((c) => c.label === gradeLabel);
+      console.log(foundCustomer);
+      // Return the found customer in an array format, or an empty array if not found
+      return foundCustomer ? [foundCustomer] : [];
+    }
+    return []; // Return an empty array by default if conditions are not met
+  };
+
+  const fetch_grades = async () => {
     try {
-      // console.log(fscCode);
+      console.log(fscCode);
       const response = await fetch(
-        `${backend_url}api/fetch_grade_with_pc?fsc=${code}`
+        `${backend_url}api/fetch_grade_with_pc?fsc=${fscCode}`
       ); // Adjust the API path as needed
       const data = await response.json();
       // console.log(data);
@@ -129,7 +176,6 @@ function TableWithInputs({
 
   useEffect(() => {
     setTableRowsDataFunction(rows);
-    fetch_grades(fscCode);
   }, [rows, setTableRowsDataFunction]);
 
   // Add a new row
@@ -157,7 +203,6 @@ function TableWithInputs({
   const deleteRow = (id) => {
     setRows((prevRows) => prevRows.filter((row) => row.id !== id));
   };
-  const [fscCode, setFSC] = useState(0);
 
   function handleFSCChange(e) {
     // setGrades(e.target.checked ? 1 : 0);
@@ -184,7 +229,7 @@ function TableWithInputs({
       <FormControlLabel
         control={
           <Checkbox
-            checked={fscCode == 1 ? true : false}
+            checked={fsc == 1 ? true : false}
             onChange={handleFSCChange}
             icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
             checkedIcon={<CheckBoxIcon fontSize="medium" />}

@@ -2,10 +2,17 @@ import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { backend_url } from "../../util";
 
-const PaymentTerms = ({ setSelection }) => {
+const PaymentTerms = ({ setSelection, editedData }) => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
-
+  useEffect(() => {
+    // Map selectedCustomersToEdit to the format { label, value } if customers are loaded
+    console.log(editedData);
+    if ([editedData]) {
+      setSelectedCustomers(editedData);
+    }
+    // console.log(customers[editedData]);
+  }, [editedData, customers]);
   // Function to fetch customers from the API
   const fetchCustomers = async () => {
     try {
@@ -37,6 +44,7 @@ const PaymentTerms = ({ setSelection }) => {
       style={{ margintop: "10px" }}
       name="customers"
       options={customers}
+      value={selectedCustomers}
       className="basic-multi-select"
       classNamePrefix="select"
       onChange={handleChange}

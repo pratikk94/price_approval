@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-function CustomDatePicker({ name, setSelection }) {
+function CustomDatePicker({ name, setSelection, editedData }) {
   const [startDate, setStartDate] = useState(new Date());
 
   return (
