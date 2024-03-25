@@ -7,7 +7,6 @@ const corsOptions = {
   origin: "http://localhost:5173", // or the specific origin you want to allow
   credentials: true, // allowing credentials (cookies, session)
 };
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 const { format } = require("date-fns");
@@ -139,6 +138,34 @@ async function getCustomerNamesByIds(customerIds) {
   }
 }
 
+async function sendMail() {
+  // Create a transporter using Mailgun SMTP settings
+  // let transporter = nodemailer.createTransport({
+  //   host: "smtp.mailgun.org", // Mailgun SMTP server
+  //   port: 587, // SMTP port (587 is typically used for STARTTLS)
+  //   secure: false, // true for 465, false for other ports
+  //   auth: {
+  //     user: "pratik.khanapurkar.20@gmail.com", // Your Mailgun SMTP username
+  //     pass: "A452731D6E455CEAB1DE48EF5797E6597849", // Your Mailgun SMTP password
+  //   },
+  // });
+  // // Email options
+  // let mailOptions = {
+  //   from: "pratik.khanapurkar.20@gmail.com", // Sender address
+  //   to: "khanapurkarpratik@gmail.com", // List of recipients
+  //   subject: "Hello from Mailgun with Nodemailer", // Subject line
+  //   text: "This is a test email sent from Node.js using Mailgun and Nodemailer.", // Plain text body
+  //   html: "<b>This is a test email sent from Node.js using Mailgun and Nodemailer.</b>", // HTML body
+  // };
+  // // Send the email
+  // transporter.sendMail(mailOptions, (error, info) => {
+  //   if (error) {
+  //     return console.log(error);
+  //   }
+  //   console.log("Message sent: %s", info.messageId);
+  // });
+}
+
 async function fetchAndProcessRules(requestId, employeeId) {
   let pool = null;
   try {
@@ -232,6 +259,7 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
 
   try {
     pool = await sql.connect(config);
+    console.log("STATUS" + isNewRequest);
     const requestType = isNewRequest ? "N" : "U";
     const parentReqIdValue = isNewRequest ? reqId : parentReqId;
     console.log(
@@ -378,12 +406,14 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       employeeId,
       status
     );
-    details.forEach((detail) => {
-      if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
-        detail.req_id = detail.req_id[0]; // Convert array to single value
-      }
-      // Add any additional transformations needed
-    });
+    if (details != undefined && details.length > 0) {
+      details.forEach((detail) => {
+        if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
+          detail.req_id = detail.req_id[0]; // Convert array to single value
+        }
+        // Add any additional transformations needed
+      });
+    }
 
     res.json(details);
   } catch (err) {
@@ -1820,7 +1850,12 @@ app.post("/api/add_price_request", async (req, res) => {
       .query(`INSERT INTO price_approval_requests (customer_id, consignee_id, plant, end_use_id, end_use_segment_id, payment_terms_id, valid_from, valid_to, fsc, mappint_type,am_id) 
             VALUES (@customerIds, @consigneeIds, @plants, @endUseIds, @endUseSegmentIds, @paymentTermsId, @validFrom, @validTo, @fsc, @mappint_type,@am_id);
             SELECT SCOPE_IDENTITY() AS id;`);
-
+    console.log("REQUEST_ID", req.body.parentReqId);
+    insertRequest(
+      req.body.parentReqId == undefined,
+      requestId,
+      req.body.parentReqId != undefined ? req.body.parentReqId : requestId
+    );
     fetchAndProcessRules(requestId, req.body.am_id)
       .then(() => console.log("Finished processing."))
       .catch((err) => console.error(err));
@@ -1869,109 +1904,6 @@ app.get("/api/fetch_request_manager_with_status", async (req, res) => {
     FetchNSMDataWithStatus(req.query.employeeId, req.query.status, res);
   } else if (role === "HDSM") {
     FetchHDSMDataWithStatus(req.query.employeeId, req.query.status, res);
-  }
-});
-
-// API endpoint for handling the request and updating the database
-app.post("/api/update_request_status_rm", async (req, res) => {
-  const { id, action, employee_id, request_id } = req.body;
-
-  let pool = null;
-  try {
-    pool = await sql.connect(config);
-    console.log("Connected to the database.");
-
-    // Fetch the latest row for the given requestId
-    const fetchQuery = `
-          SELECT TOP 1 *
-          FROM [transaction]
-          WHERE request_id = @requestId
-          ORDER BY timestamp DESC, id DESC`;
-
-    const latestRowResult = await pool
-      .request()
-      .input("requestId", sql.Int, request_id)
-      .query(fetchQuery);
-
-    if (latestRowResult.recordset.length === 0) {
-      throw new Error("No existing rows found for this request ID.");
-    }
-
-    const latestRow = latestRowResult.recordset[0];
-    console.log("Latest row for the request ID:", latestRow);
-
-    // Replace column_names and column_values with actual fields from latestRow and the values you want to insert.
-    const insertQuery = `
-    INSERT INTO [transaction] (
-        request_id, rule_id, region, am, am_status, am_status_updated_at, am_id,
-        rm, rm_status, rm_status_updated_at, rm_id,
-        nsm, nsm_status, nsm_status_updated_at, nsm_id,
-        hdsm, hdsm_status, hdsm_status_updated_at, hdsm_id,
-        validator, validator_status, validator_status_updated_at, validator_id,
-        timestamp
-    )
-    VALUES (
-        @requestId, @ruleId, @region, @am, @amStatus, @amStatusUpdatedAt, @amId,
-        @rm, @rmStatus, @rmStatusUpdatedAt, @rmId,
-        @nsm, @nsmStatus, @nsmStatusUpdatedAt, @nsmId,
-        @hdsm, @hdsmStatus, @hdsmStatusUpdatedAt, @hdsmId,
-        @validator, @validatorStatus, @validatorStatusUpdatedAt, @validatorId,
-        @timestamp
-    );
-    SELECT SCOPE_IDENTITY() AS newId;`;
-    console.log(latestRow);
-    const newRecordResult = await pool
-      .request()
-      .input("requestId", sql.VarChar, latestRow.request_id)
-      .input("ruleId", sql.VarChar, latestRow.rule_id)
-      .input("region", sql.VarChar, latestRow.region)
-      // Continue for each input parameter, ensuring they match those in your table
-      .input("am", sql.VarChar, latestRow.am) // Assuming 'am' is varchar; change data types accordingly
-      .input("amStatus", sql.Int, latestRow.am_status)
-      .input("amStatusUpdatedAt", sql.VarChar, latestRow.am_status_updated_at)
-      .input("amId", sql.VarChar, action)
-      // Continue with all the parameters as per your database fields and data types
-      // RM-related fields (change types as needed)
-      .input("rm", sql.VarChar, latestRow.rm)
-      .input("rmStatus", sql.Int, action) // Example based on your action logic
-      .input("rmStatusUpdatedAt", sql.VarChar, new Date().toISOString()) // Setting to current time
-      .input("rmId", sql.VarChar, employee_id) // Assuming action requires setting this to the employeeId
-      // Continue setting inputs for nsm, hdsm, and validator similarly
-      .input("nsm", sql.VarChar, latestRow.nsm)
-      .input("nsmStatus", sql.VarChar, latestRow.nsmStatus)
-      .input("nsmStatusUpdatedAt", sql.VarChar, latestRow.nsmStatusUpdatedAt)
-      .input("nsmId", sql.VarChar, latestRow.nsmId)
-      .input("hdsm", sql.VarChar, latestRow.hdsm)
-      .input("hdsmStatus", sql.VarChar, latestRow.hdsmStatus)
-      .input("hdsmStatusUpdatedAt", sql.VarChar, latestRow.hdsmStatusUpdatedAt)
-      .input("hdsmId", sql.VarChar, latestRow.hdsmId)
-      .input("validator", sql.VarChar, latestRow.validator)
-      .input("validatorStatus", sql.VarChar, latestRow.validatorStatus)
-      .input(
-        "validatorStatusUpdatedAt",
-        sql.DateTime,
-        latestRow.validatorStatusUpdatedAt
-      )
-      .input("validatorId", sql.VarChar, latestRow.validatorId)
-      .input("timestamp", sql.DateTime, new Date())
-      .query(insertQuery);
-
-    // Assuming the new row is inserted successfully
-    const newRequestId = newRecordResult.recordset[0].newId;
-    console.log(
-      "New row added based on the latest existing row for the request ID:",
-      newRequestId
-    );
-
-    res.json({
-      newRequestId,
-      message: "Request updated and duplicated successfully",
-    });
-  } catch (err) {
-    console.error("Error during database operations:", err);
-    throw err;
-  } finally {
-    if (pool) await pool.close();
   }
 });
 
@@ -2053,13 +1985,13 @@ app.post("/api/update_request_status_manager", async (req, res) => {
       newHdsmStatus,
       newValidatorStatus,
     ] = statusV;
-
-    amStatus = newAmStatus ?? latestRow.am_status;
-    rmStatus = newRmStatus ?? latestRow.rm_status;
-    nsmStatus = newNsmStatus ?? latestRow.nsm_status;
-    hdsmStatus = newHdsmStatus ?? latestRow.hdsm_status;
-    validatorStatus = newValidatorStatus ?? latestRow.validator_status;
-    console.log("NSM Status", nsmStatus);
+    amStatus = rmIndex == 0 ? action : newAmStatus ?? latestRow.am_status;
+    rmStatus = rmIndex == 1 ? action : newRmStatus ?? latestRow.rm_status;
+    nsmStatus = rmIndex == 2 ? action : newNsmStatus ?? latestRow.nsm_status;
+    hdsmStatus = rmIndex == 3 ? action : newHdsmStatus ?? latestRow.hdsm_status;
+    validatorStatus =
+      rmIndex == 4 ? action : newValidatorStatus ?? latestRow.validator_status;
+    console.log("HDSM Status", hdsmStatus);
     console.log(latestRow.hdsm_status_updated_at);
     console.log("Latest", latestRow);
 
@@ -2096,10 +2028,14 @@ app.post("/api/update_request_status_manager", async (req, res) => {
       .input(
         "rmStatus",
         sql.Int,
-        rmStatus != undefined ? rmStatus : latestRow.rm_status
+        rmStatus.toString() // Assuming status is an integer
       ) // Example based on your action logic
-      .input("rmStatusUpdatedAt", sql.VarChar, latestRow.rm_status_updated_at) // Setting to current time
-      .input("rmId", sql.VarChar, latestRow.rm_id) // Assuming action requires setting this to the employeeId
+      .input(
+        "rmStatusUpdatedAt",
+        sql.VarChar,
+        rmIndex == 1 ? new Date().toISOString() : latestRow.rm_status_updated_at
+      ) // Setting to current time
+      .input("rmId", sql.VarChar, rmIndex == 1 ? employee_id : latestRow.rm_id) // Assuming action requires setting this to the employeeId
       // Continue setting inputs for nsm, hdsm, and validator similarly
       .input("nsm", sql.VarChar, latestRow.nsm)
       .input("nsmStatus", sql.VarChar, nsmStatus.toString())
@@ -2208,8 +2144,136 @@ app.get("/api/fetch_price_request_by_id", async (req, res) => {
   }
 });
 
-app.get("/api/approve_price_approval_rm", async (req, res) => {});
+async function getAllUpdatersWithLatestUpdateAndRoleHandlingInvalidDate(
+  requestId
+) {
+  try {
+    await sql.connect(config);
 
+    const query = `
+        SELECT id, am_id, am_status_updated_at, am_status,
+               rm_id, rm_status_updated_at, rm_status,
+               nsm_id, nsm_status_updated_at, nsm_status,
+               hdsm_id, hdsm_status_updated_at, hdsm_status,
+               validator_id, validator_status_updated_at, validator_status
+        FROM [transaction]
+        WHERE request_id = ${requestId}
+    `;
+
+    const result = await sql.query(query);
+    if (result.recordset.length === 0) {
+      console.log("No updates found.");
+      return "No updates found.";
+    }
+
+    const messagesPromises = result.recordset.map(async (row) => {
+      const id = row.id;
+      const userResults = await Promise.all([
+        getUserInfo(row.am_id),
+        getUserInfo(row.rm_id),
+        getUserInfo(row.nsm_id),
+        getUserInfo(row.hdsm_id),
+        getUserInfo(row.validator_id),
+      ]);
+
+      const updatesSet = new Set();
+
+      for (let i = 0; i < userResults.length; i++) {
+        const userInfo = userResults[i];
+        if (userInfo != null) {
+          const statusField = `${userInfo.role}_status`;
+          const timestampField = `${userInfo.role}_status_updated_at`;
+
+          if (row[userInfo.idField] !== "-1" && row[timestampField]) {
+            const formattedTimestamp = row[timestampField];
+            const status = getStatus(row[statusField]);
+            const update = `${id}: ${userInfo.role.toUpperCase()} update (${status}). Updated by ${
+              userInfo.name
+            } at ${formattedTimestamp}`;
+            updatesSet.add(update); // Add the update to the Set
+          }
+        }
+      }
+
+      return Array.from(updatesSet); // Return unique updates as an array
+    });
+
+    const messagesArrays = await Promise.all(messagesPromises); // Array of arrays
+    const messages = messagesArrays.flat(); // Flatten the array of arrays
+
+    if (messages.length > 0) {
+      console.log(messages);
+      return messages;
+    } else {
+      console.log("No valid updates found.");
+      return "No valid updates found.";
+    }
+  } catch (err) {
+    console.error("An error occurred:", err);
+    return "Error fetching updaters with latest updates and roles.";
+  } finally {
+    await sql.close();
+  }
+}
+
+async function getUserInfo(id) {
+  const userResult =
+    await sql.query`SELECT um.employee_name as employee_name, dr.role as role FROM user_master um LEFT JOIN define_roles dr ON um.employee_id = dr.employee_id WHERE dr.employee_id  = ${id}`;
+  if (userResult.recordset.length > 0) {
+    const userInfo = userResult.recordset[0];
+
+    return {
+      name: userInfo.employee_name,
+      role: userInfo.role.toLowerCase(),
+      idField: `${userInfo.role.toLowerCase()}_id`,
+    };
+  } else {
+    return null;
+  }
+}
+
+function getStatus(status) {
+  switch (status) {
+    case 1:
+      return "Approved";
+    case 2:
+      return "Rejected";
+    case 3:
+      return "Rework";
+    case 0:
+      return "Pending";
+    default:
+      return "Unknown";
+  }
+}
+
+app.get("/api/get_history_of_price_request", async (req, res) => {
+  const messages =
+    await getAllUpdatersWithLatestUpdateAndRoleHandlingInvalidDate(
+      req.query.id
+    );
+
+  const messagesById = {};
+  for (const message of messages) {
+    const id = message.split(": ")[0];
+    const content = message.split(": ")[1];
+    if (!messagesById[id]) {
+      messagesById[id] = [content];
+    } else {
+      messagesById[id].push(content);
+    }
+  }
+
+  const uniqueMessages = Object.values(messagesById);
+
+  const result = uniqueMessages.map(
+    (idMessages) => idMessages[idMessages.length - 1]
+  );
+  console.log(result);
+  res.json(result);
+});
+
+//sendMail();
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

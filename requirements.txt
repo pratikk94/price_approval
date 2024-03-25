@@ -33,3 +33,46 @@ Assign status.
 11. Change value of array status[m] to 2.   
 12. if action = 3, and index equals n, then status[n] will be 3 and traverse forward in array role[] and ignore -1 till you get 0 or positive integer whose id is say q.
 13. Change value of array status[q] to 0.
+
+
+Audit trails:
+1. Fetch all entries from transactaion table for a request id.
+2. Check timestamp of am_status_updated_at, rm_status_updated_at, nsm_status_updated_at, hdsm_status_updated_at, validator_status_updated_at and find the latest timestamp.
+3. Fetch the id of the person who updated the status at that timestamp.
+4. Fetch the name of the person from user table using the id.
+5. Id is in am_id, rm_id, nsm_id, hdsm_id, validator_id.
+Write sql query for the same.   
+
+ AM update (Pending). Updated by Aiden at Mar 26 2024  1:35AM',
+=[
+  '4: AM update (Pending). Updated by Aiden at Mar 26 2024  1:35AM',
+  '5: AM update (Pending). Updated by Aiden at Mar 26 2024  1:35AM',
+  '5: RM update (Approved). Updated by Sophia at 2024-03-25T20:06:34.165Z',
+  '6: AM update (Pending). Updated by Aiden at Mar 26 2024  1:35AM',
+  '6: RM update (Approved). Updated by Sophia at 2024-03-25T20:06:34.165Z',
+  '6: HDSM update (Approved). Updated by Ava at 2024-03-25T20:07:43.506Z',
+  '7: AM update (Pending). Updated by Aiden at Mar 26 2024  1:35AM',
+  '7: RM update (Approved). Updated by Sophia at 2024-03-25T20:06:34.165Z',
+  '7: HDSM update (Approved). Updated by Ava at 2024-03-25T20:07:59.672Z',
+  '8: AM update (Pending). Updated by Aiden at Mar 26 2024  1:35AM',
+  '8: RM update (Approved). Updated by Sophia at 2024-03-25T20:06:34.165Z',
+  '8: HDSM update (Approved). Updated by Ava at 2024-03-25T20:23:39.524Z',
+  '9: AM update (Pending). Updated by Aiden at Mar 26 2024  1:35AM',
+  '9: RM update (Approved). Updated by Sophia at 2024-03-25T20:06:34.165Z',
+  '9: HDSM update (Approved). Updated by Ava at 2024-03-25T20:26:01.366Z',
+  '10: AM update (Pending). Updated by Aiden at Mar 26 2024  1:35AM',
+  '10: RM update (Approved). Updated by Sophia at 2024-03-25T20:06:34.165Z',
+  '10: HDSM update (Rework). Updated by Ava at 2024-03-25T20:34:35.730Z'
+]
+
+There is 1 entry for 4 give that entry.
+There are 2 entries for 5 give 2nd entry
+There are 3 entries for 6 give 3rd entry
+There are 3  entries for 7 give 3rd entry
+There are 3 entries for 8 give 3rd entry
+There are 3 entries for 9 give 3rd entry
+There are 3 entries for 10 give 3rd entry
+
+
+Idea being if there are n entries for a request id, then give the nth entry. 
+''' 

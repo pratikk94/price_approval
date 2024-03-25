@@ -20,6 +20,7 @@ import ReactModal from "react-modal";
 import { IconButton } from "@mui/material";
 import RemarkBox from "../../components/common/RemarkBox";
 import { useSession } from "../../Login_Controller/SessionContext";
+import HistoryModal from "../../components/common/History";
 
 function PriceTable({ price }) {
   console.log(price);
@@ -65,17 +66,17 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role }) {
   const { session } = useSession();
   const employee_id = session.employee_id;
   const updateStatus = (newStatus) => {
-    let apiUrl = `${backend_url}api/update_request_status_rm`;
     let reportData = {
       request_id: id, // Example reportId
       employee_id: employee_id, // Example statusUpdatedById
       action: newStatus, // Example new status
     };
-    if (role === "AP_NSM_HDSM") {
-      apiUrl = `${backend_url}api/update_request_status_manager`;
-      reportData["role"] = session.role;
-    }
+
+    const apiUrl = `${backend_url}api/update_request_status_manager`;
+    reportData["role"] = session.role;
+
     console.log(reportData);
+    console.log(apiUrl);
     fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -171,6 +172,7 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role }) {
               </IconButton>
             </>
           ) : null}
+          <HistoryModal reqId={id} />
           <br />
           <button onClick={onClose}>Close</button>
         </>

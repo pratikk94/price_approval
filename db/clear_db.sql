@@ -7,6 +7,8 @@ TRUNCATE TABLE [defined_rules];
 TRUNCATE TABLE [price_approval_requests];
 TRUNCATE TABLE [price_approval_requests_price_table];
 TRUNCATE TABLE [transaction];
+TRUNCATE TABLE [request_status];
+
 /*
 Redundat tables
 category

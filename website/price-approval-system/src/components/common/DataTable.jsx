@@ -358,7 +358,9 @@ function DynamicTable({ url, action_id }) {
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              handleView(row_id);
+              console.log("ROW id is ", req_id);
+              handleView(req_id);
+              setId(req_id);
               setModalOpen(true);
               setAprmId(req_id);
               console.log(req_id);
@@ -368,8 +370,10 @@ function DynamicTable({ url, action_id }) {
           </IconButton>
           <IconButton
             onClick={() => {
+              console.log("ROW id is ", req_id);
               setEditModalOpen(true);
               handleEdit(req_id);
+              setId(req_id);
               //handleView(req_id);
               console.log(req_id);
               setRuleId(row_id);
@@ -384,7 +388,9 @@ function DynamicTable({ url, action_id }) {
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              handleView(row_id);
+              console.log("ROW id is ", req_id);
+              handleView(req_id);
+              setId(req_id);
               setModalOpen(true);
               setAprmId(req_id);
               console.log(req_id);
@@ -394,8 +400,10 @@ function DynamicTable({ url, action_id }) {
           </IconButton>
           <IconButton
             onClick={() => {
+              console.log("ROW id is ", req_id);
               setEditModalOpen(true);
               handleEdit(req_id);
+              setId(req_id);
               //handleView(req_id);
               console.log(req_id);
               setRuleId(row_id);
@@ -573,7 +581,11 @@ function DynamicTable({ url, action_id }) {
           onClose={() => setModalOpen(false)}
           id={aprm_id}
           data={aprm}
-          isEditable={action_id == "AP_RM" || action_id == "AP_NSM_HDSM"}
+          isEditable={
+            action_id == "AP_RM" ||
+            action_id == "AP_NSM_HDSM" ||
+            action_id == "AM"
+          }
           role={action_id}
         />
       )}

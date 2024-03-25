@@ -19,6 +19,7 @@ import axios from "axios";
 import ReactModal from "react-modal";
 import { IconButton } from "@mui/material";
 import RemarkBox from "../../components/common/RemarkBox";
+import HistoryModal from "../../Role_Business_Admin/Components/RequestHistoryModal";
 
 function PriceTable({ price }) {
   console.log(price);
@@ -165,6 +166,7 @@ function PriceViewModal({ open, onClose, id, data, isEditable }) {
             </>
           ) : null}
           <br />
+          <HistoryModal />
           <button onClick={onClose}>Close</button>
         </>
       ) : null}
