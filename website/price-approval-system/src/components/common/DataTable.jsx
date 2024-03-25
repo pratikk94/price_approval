@@ -239,20 +239,6 @@ function DynamicTable({ url, action_id }) {
       }
     };
 
-    const fetchAPRMData = async () => {
-      if (aprm_id != 0) {
-        try {
-          const response = await axios.get(
-            `${backend_url}api/price_requests?id=${aprm_id}`
-          );
-          console.log(response.data[0]);
-          setAprm(response.data[0]);
-        } catch (error) {
-          console.error("Error fetching rule data:", error);
-        }
-      }
-    };
-
     const fetchAMData = async () => {
       if (aprm_id != 0) {
         try {
@@ -270,8 +256,12 @@ function DynamicTable({ url, action_id }) {
     if (action_id == "B1") fetchRule();
     else if (action_id == "B2") fetchEmployeeData();
     else if (action_id == "B3") fetchRequestHistoryData();
-    else if (action_id == "AP_RM") fetchAPRMData();
-    else if (action_id == "AM") fetchAMData();
+    else if (
+      action_id == "AM" ||
+      action_id == "AP_RM" ||
+      action_id == "AP_NSM_HDSM"
+    )
+      fetchAMData();
   }, [modalOpen]);
 
   useEffect(() => {
@@ -364,6 +354,32 @@ function DynamicTable({ url, action_id }) {
         </div>
       );
     } else if (id == "AP_RM") {
+      return (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={() => {
+              handleView(row_id);
+              setModalOpen(true);
+              setAprmId(req_id);
+              console.log(req_id);
+            }}
+          >
+            <ViewIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              setEditModalOpen(true);
+              handleEdit(req_id);
+              //handleView(req_id);
+              console.log(req_id);
+              setRuleId(row_id);
+            }}
+          >
+            <EditIcon />
+          </IconButton>
+        </div>
+      );
+    } else if (id == "AP_NSM_HDSM") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
@@ -557,7 +573,8 @@ function DynamicTable({ url, action_id }) {
           onClose={() => setModalOpen(false)}
           id={aprm_id}
           data={aprm}
-          isEditable={action_id == "AP_RM"}
+          isEditable={action_id == "AP_RM" || action_id == "AP_NSM_HDSM"}
+          role={action_id}
         />
       )}
 
@@ -575,7 +592,7 @@ function DynamicTable({ url, action_id }) {
         handleClose={() => {
           setEditModalOpen(false);
         }}
-        req_id={id}
+        req
         editData={editData}
       />
       {/* <DownloadModal open={open} handleClose={handleClose} setOpen={setOpen} /> */}

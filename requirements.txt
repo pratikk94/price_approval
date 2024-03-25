@@ -18,100 +18,18 @@ Date : 24/3/2024
 
 
 Date : 25/3/2024
-FLOW INSERT:
-
-1. Fetch region and from employee_id from table define role. 
-2. From region fetched, go and fetch rules from table rules for that region. Schema of the following is rules_id, region, rm, nsm, hdsm, validator, valid_from, valid_to, active flag.
-4. Check if the rules are active or not and if they are active, then check if the valid_from and valid_to dates are valid or not.
-5. If the rules are active and valid, then fetch the values of rm, nsm, hdsm and validator from the table rules.
-6. If the rules are not active or not valid, then throw error.
-7. Add values request_id,rule_id,region,am as 0,am_status as 0 , am_status updated as to current time, am_id as employee_id, rm,nsm,hdsm and valuidator as fetched from 5  
-8. If i skip rm or nsm or hdsm values assigened to -1.
-
-Status
-
-Check for hierarchy and assign the status accordingly.
-IF validator is 1 RM is 2 and nsm is 3 and hdsm is 4
-RM_status is 0 : Pending with RM
-RM_status is 1 : Approved by RM
-RM_status is 2 : RM is reworking
-RM_status is 3 : RM is rejected
-Afetr RM approval, request goes to NSM
-NSM_status is 0 : Pending with NSM
-NSM_status is 1 : Approved by NSM
-NSM_status is 2 : NSM is reworking
-NSM_status is 3 : NSM is rejected
-After NSM approval, request goes to HDSM
-HDSM_status is 0 : Pending with HDSM
-HDSM_status is 1 : Approved by HDSM
-HDSM_status is 2 : HDSM is reworking
-HDSM_status is 3 : HDSM is rejected
-After HDSM approval, request goes to Validator
-Validator_status is 0 : Pending with Validator
-Validator_status is 1 : Approved by Validator
-Validator_status is 2 : Validator is reworking
-Validator_status is 3 : Validator is rejected
-
-Case 2 : If RM is 0 NSM is 1 HDSM is 2 and Validator is 3
-RM_status is null and 
-NSM_status is 0 : Pending with NSM
-NSM_status is 1 : Approved by NSM
-NSM_status is 2 : NSM is reworking
-NSM_status is 3 : NSM is rejected
-After NSM approval, request goes to HDSM
-HDSM_status is 0 : Pending with HDSM
-HDSM_status is 1 : Approved by HDSM
-HDSM_status is 2 : HDSM is reworking
-HDSM_status is 3 : HDSM is rejected
-After HDSM approval, request goes to Validator
-Validator_status is 0 : Pending with Validator
-Validator_status is 1 : Approved by Validator
-Validator_status is 2 : Validator is reworking
-Validator_status is 3 : Validator is rejected
-
-Case 3 : If RM is 0 NSM is 1 HDSM is 1 and Validator is 2
-RM_status is null and 
-NSM_status is 0 : Pending with NSM and HDSM
-NSM_status is 1 : Approved by NSM and HDSM
-NSM_status is 2 : NSM and HDSM is reworking
-NSM_status is 3 : NSM and HDSM is rejected
-After NSM approval, request goes to Validator
-Validator_status is 0 : Pending with Validator
-Validator_status is 1 : Approved by Validator
-Validator_status is 2 : Validator is reworking
-Validator_status is 3 : Validator is rejected
-
-Case 4 : If RM is 0 NSM is 1 HDSM is 1 and Validator is 1
-RM_status is null and
-NSM_status is 0 : Pending with NSM and HDSM and Validator
-NSM_status is 1 : Approved by NSM and HDSM and Validator
-NSM_status is 2 : NSM and HDSM and Validator is reworking
-NSM_status is 3 : NSM and HDSM and Validator is rejected
-
-
-FLOW FETCH:
-AM 
-1. Fetch region and from employee_id from table define role.
-2. Fetch all ids where am_id is equal to than employee_id.
-
-AM EDIT
-
-FLOW FETCH: 
-RM
- 1. Fetch region and from employee_id from table define role.
- 2. Fetch all ids where rm is greater than 0.
- 3. Fetch all price requests alotted for that ids.
- 4. Join all price requests for sql QUERY and fetch the data.
-
- FLOW Approve:
- RM
-    1. Fetch id for request. 
-    2. Fetch action from api id query
-    2. Insert the result from instruction 1 as is and 
-        update the rm_status of the request to 1 if request is approved
-        update the rm_status to 2, if rework
-        update the rm_status to 3, if rejecetd
-        update rm_status_updated_at to current time 
-        update rm_id to employee_id
-
-RM EDIT
+LOGIC:
+Assign status.
+1.  Write function Fetch rule values from rule table using region
+2.  Check if todays date is between  valid from and valid to. 
+3.  Fetch values for rm nsm hdsm validator and organise it in an array role[]. if value is 0 for index n put -1 in role[n].
+4.  Maintain 4 more variables as rm status nsm status hdsm status and validator status as arry staus[]
+5.  2 more parameters passed to funciton are role and action.
+6.  role will give index of array.
+7.  index are 0 for rm, 1 for nsm, 2 for hdsm, 3 for validator.
+8.  if action = 1, and index equals n, then status[n] will be 1 and traverse forward in array role[] and ignore -1 till you get 0 or positive integer whose id is say p.
+9.  Change value of array status[p] to 0.
+10. if action = 2, and index equals n, then traverse back in array role[] and ignore -1 till you get 0 or positive integer whose id is say m. 
+11. Change value of array status[m] to 2.   
+12. if action = 3, and index equals n, then status[n] will be 3 and traverse forward in array role[] and ignore -1 till you get 0 or positive integer whose id is say q.
+13. Change value of array status[q] to 0.

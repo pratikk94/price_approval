@@ -96,6 +96,7 @@ function transformData(rawData) {
   // Convert the grouped object back into an array
   return Object.values(groupedByReqId);
 }
+
 async function getCustomerNamesByIds(customerIds) {
   let pool = null;
   try {
@@ -457,7 +458,7 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
           WHERE 
               rm_status = @status AND 
               region = @region AND
-              rm <> 0
+              rm > -1 
       ), MaxReqIDs AS (
           SELECT 
               parent_req_id, 
@@ -500,6 +501,294 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
           MaxReqIDs mri ON rt.request_id = mri.parent_req_id
       WHERE 
           rt.rn = 1 AND mri.HighestID IS NOT NULL;`
+      );
+
+    console.log(idsResult);
+    // Assuming you're using these IDs to fetch related price requests...
+    const ids = idsResult.recordset.map((row) => row.request_id);
+    console.log("IDs:", ids);
+    if (ids.length > 0) {
+      const details = await fetchPriceApprovalDetails(
+        [...new Set(ids)],
+        region,
+        employeeId,
+        status
+      );
+
+      res.json(details);
+    } else {
+      res.json([]);
+    }
+  } catch (err) {
+    console.error("Error during database operations:", err);
+  } finally {
+    if (pool) {
+      await pool.close();
+    }
+  }
+}
+
+async function AssignStatus(region, roleIndex, action) {
+  let pool = null;
+  try {
+    // Open connection to the database
+    pool = await sql.connect(config);
+
+    // Fetch rule values from the rule table using region
+    const result = await pool.request()
+      .query`SELECT * FROM defined_rules WHERE region = ${region}`;
+    const rules = result.recordset[0]; // assuming only one record matches
+    console.log("Rules:", rules);
+    // Check if today's date is between validFrom and validTo
+    const today = new Date().setHours(0, 0, 0, 0);
+    const validFrom = new Date(rules.valid_from);
+    const validTo = new Date(rules.valid_to);
+    console.log("Today:", today);
+    console.log("Valid From:", validFrom.setHours(0, 0, 0, 0));
+    console.log("Valid To:", validTo.setHours(0, 0, 0, 0));
+    if (today >= validFrom && today <= validTo) {
+      // Initialise statuses and roles from the database values
+      const statuses = [
+        0,
+        rules.rm_status,
+        rules.nsm_status,
+        rules.hdsm_status,
+        rules.validator_status,
+      ];
+      const roles = [0, rules.rm, rules.nsm, rules.hdsm, rules.validator];
+
+      // Adjust the roles as per your logic
+      for (let i = 0; i < roles.length; i++) {
+        if (roles[i] === 0) roles[i] = -1;
+      }
+
+      // Process action based on the provided action and roleIndex
+      if (action === 1 && roles[roleIndex] > -1) {
+        statuses[roleIndex] = 1;
+        // Find the next positive role and set its status to 0
+        for (let i = roleIndex + 1; i < roles.length; i++) {
+          if (roles[i] > -1) {
+            statuses[i] = 0;
+            break;
+          }
+        }
+      } else if (action === 2 && roles[roleIndex] > -1) {
+        // Find the previous positive role and set its status to 2
+        for (let i = roleIndex - 1; i >= 0; i--) {
+          if (roles[i] > -1) {
+            statuses[i] = 2;
+            break;
+          }
+        }
+      } else if (action === 3 && roles[roleIndex] > -1) {
+        statuses[roleIndex] = 3;
+        // Find the next positive role and set its status to 0
+        for (let i = roleIndex + 1; i < roles.length; i++) {
+          if (roles[i] > -1) {
+            statuses[i] = 0;
+            break;
+          }
+        }
+      }
+
+      // Return or update the data as needed
+      console.log("Roles:", roles);
+      console.log("Statuses:", statuses);
+      return statuses;
+    } else {
+      console.log("Date is not within the valid range.");
+    }
+  } catch (err) {
+    console.error("SQL error", err);
+  }
+}
+
+async function FetchNSMDataWithStatus(employeeId, status, res) {
+  let pool = null;
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+
+    // 1. Fetch region from 'define_role' for a given 'employee_id'
+    // Replace with actual employee ID
+    console.log(
+      `SELECT region FROM define_roles WHERE employee_id =${employeeId}`
+    );
+    const regionResult = await pool
+      .request()
+      .input("employeeId", sql.NVarChar, employeeId)
+      .query("SELECT region FROM define_roles WHERE employee_id = @employeeId");
+
+    if (regionResult.recordset.length === 0) {
+      throw new Error("No region found for this employee.");
+    }
+
+    const region = regionResult.recordset[0].region;
+    console.log("Region:", region);
+    console.log("Status:", status);
+
+    // 2. Fetch all ids where 'rm' is greater than 0
+    const idsResult = await pool
+      .request()
+      .input("region", sql.VarChar, region)
+      .input("status", sql.VarChar, status) // Correctly setting the parameter
+      .query(
+        `WITH LatestTransactionPerRequest AS (
+          SELECT 
+              request_id,
+              MAX(id) AS MaxId
+          FROM 
+              [transaction]
+          GROUP BY 
+              request_id
+      )
+      , DetailedTransactions AS (
+          SELECT 
+              t.*,
+              lt.MaxId as LatestTransactionId
+          FROM 
+              [transaction] t
+          INNER JOIN 
+              LatestTransactionPerRequest lt ON t.id = lt.MaxId
+      )
+      SELECT 
+          dt.request_id,
+          dt.region,
+          dt.rule_id,
+          dt.am,
+          dt.am_status,
+          dt.am_status_updated_at,
+          dt.am_id,
+          dt.rm,
+          dt.rm_status,
+          dt.rm_status_updated_at,
+          dt.rm_id,
+          dt.nsm_status,
+          dt.nsm_status_updated_at,
+          dt.nsm_id,
+          dt.hdsm_status,
+          dt.hdsm_status_updated_at,
+          dt.hdsm_id,
+          dt.validator_status,
+          dt.validator_status_updated_at,
+          dt.validator_id,
+          dt.id,
+          dt.hdsm,
+          dt.validator,
+          dt.nsm,
+          dt.timestamp
+      FROM 
+          DetailedTransactions dt
+      WHERE 
+          dt.nsm_status = @status ;
+      `
+      );
+
+    console.log(idsResult);
+    // Assuming you're using these IDs to fetch related price requests...
+    const ids = idsResult.recordset.map((row) => row.request_id);
+    console.log("IDs:", ids);
+    if (ids.length > 0) {
+      const details = await fetchPriceApprovalDetails(
+        [...new Set(ids)],
+        region,
+        employeeId,
+        status
+      );
+
+      res.json(details);
+    } else {
+      res.json([]);
+    }
+  } catch (err) {
+    console.error("Error during database operations:", err);
+  } finally {
+    if (pool) {
+      await pool.close();
+    }
+  }
+}
+//TO-D0: WORK
+async function FetchHDSMDataWithStatus(employeeId, status, res) {
+  let pool = null;
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+
+    // 1. Fetch region from 'define_role' for a given 'employee_id'
+    // Replace with actual employee ID
+    console.log(
+      `SELECT region FROM define_roles WHERE employee_id =${employeeId}`
+    );
+    const regionResult = await pool
+      .request()
+      .input("employeeId", sql.NVarChar, employeeId)
+      .query("SELECT region FROM define_roles WHERE employee_id = @employeeId");
+
+    if (regionResult.recordset.length === 0) {
+      throw new Error("No region found for this employee.");
+    }
+
+    const region = regionResult.recordset[0].region;
+    console.log("Region:", region);
+
+    // 2. Fetch all ids where 'rm' is greater than 0
+    const idsResult = await pool
+      .request()
+      .input("region", sql.VarChar, region)
+      .input("status", sql.VarChar, status) // Correctly setting the parameter
+      .query(
+        `WITH LatestTransactionPerRequest AS (
+            SELECT 
+                request_id,
+                MAX(id) AS MaxId
+            FROM 
+                [transaction]
+            GROUP BY 
+                request_id
+        )
+        , DetailedTransactions AS (
+            SELECT 
+                t.*,
+                lt.MaxId as LatestTransactionId
+            FROM 
+                [transaction] t
+            INNER JOIN 
+                LatestTransactionPerRequest lt ON t.id = lt.MaxId
+        )
+        SELECT 
+            dt.request_id,
+            dt.region,
+            dt.rule_id,
+            dt.am,
+            dt.am_status,
+            dt.am_status_updated_at,
+            dt.am_id,
+            dt.rm,
+            dt.rm_status,
+            dt.rm_status_updated_at,
+            dt.rm_id,
+            dt.nsm_status,
+            dt.nsm_status_updated_at,
+            dt.nsm_id,
+            dt.hdsm_status,
+            dt.hdsm_status_updated_at,
+            dt.hdsm_id,
+            dt.validator_status,
+            dt.validator_status_updated_at,
+            dt.validator_id,
+            dt.id,
+            dt.hdsm,
+            dt.validator,
+            dt.nsm,
+            dt.timestamp
+        FROM 
+            DetailedTransactions dt
+        WHERE 
+            dt.hdsm_status = @status AND dt.nsm > 0
+                 `
       );
 
     console.log(idsResult);
@@ -1532,8 +1821,6 @@ app.post("/api/add_price_request", async (req, res) => {
             VALUES (@customerIds, @consigneeIds, @plants, @endUseIds, @endUseSegmentIds, @paymentTermsId, @validFrom, @validTo, @fsc, @mappint_type,@am_id);
             SELECT SCOPE_IDENTITY() AS id;`);
 
-    insertRequest(req.body.isNew, requestId, req.body.parentReqId);
-
     fetchAndProcessRules(requestId, req.body.am_id)
       .then(() => console.log("Finished processing."))
       .catch((err) => console.error(err));
@@ -1576,7 +1863,14 @@ app.get("/api/fetch_request_rm_with_status", async (req, res) => {
   FetchRMDataWithStatus(req.query.employeeId, req.query.status, res);
 });
 
-app.get("/api/approve_price_approval_rm", async (req, res) => {});
+app.get("/api/fetch_request_manager_with_status", async (req, res) => {
+  const role = req.query.role;
+  if (role === "NSM") {
+    FetchNSMDataWithStatus(req.query.employeeId, req.query.status, res);
+  } else if (role === "HDSM") {
+    FetchHDSMDataWithStatus(req.query.employeeId, req.query.status, res);
+  }
+});
 
 // API endpoint for handling the request and updating the database
 app.post("/api/update_request_status_rm", async (req, res) => {
@@ -1625,7 +1919,7 @@ app.post("/api/update_request_status_rm", async (req, res) => {
         @timestamp
     );
     SELECT SCOPE_IDENTITY() AS newId;`;
-
+    console.log(latestRow);
     const newRecordResult = await pool
       .request()
       .input("requestId", sql.VarChar, latestRow.request_id)
@@ -1633,9 +1927,9 @@ app.post("/api/update_request_status_rm", async (req, res) => {
       .input("region", sql.VarChar, latestRow.region)
       // Continue for each input parameter, ensuring they match those in your table
       .input("am", sql.VarChar, latestRow.am) // Assuming 'am' is varchar; change data types accordingly
-      .input("amStatus", sql.Int, action)
+      .input("amStatus", sql.Int, latestRow.am_status)
       .input("amStatusUpdatedAt", sql.VarChar, latestRow.am_status_updated_at)
-      .input("amId", sql.VarChar, latestRow.am_id)
+      .input("amId", sql.VarChar, action)
       // Continue with all the parameters as per your database fields and data types
       // RM-related fields (change types as needed)
       .input("rm", sql.VarChar, latestRow.rm)
@@ -1659,6 +1953,204 @@ app.post("/api/update_request_status_rm", async (req, res) => {
         latestRow.validatorStatusUpdatedAt
       )
       .input("validatorId", sql.VarChar, latestRow.validatorId)
+      .input("timestamp", sql.DateTime, new Date())
+      .query(insertQuery);
+
+    // Assuming the new row is inserted successfully
+    const newRequestId = newRecordResult.recordset[0].newId;
+    console.log(
+      "New row added based on the latest existing row for the request ID:",
+      newRequestId
+    );
+
+    res.json({
+      newRequestId,
+      message: "Request updated and duplicated successfully",
+    });
+  } catch (err) {
+    console.error("Error during database operations:", err);
+    throw err;
+  } finally {
+    if (pool) await pool.close();
+  }
+});
+
+app.post("/api/update_request_status_manager", async (req, res) => {
+  const { id, action, employee_id, request_id } = req.body;
+  const role = req.body.role;
+
+  console.log(req.body);
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+
+    // Fetch the latest row for the given requestId
+    const fetchQuery = `
+          SELECT TOP 1 *
+          FROM [transaction]
+          WHERE request_id = @requestId
+          ORDER BY id DESC`;
+
+    const latestRowResult = await pool
+      .request()
+      .input("requestId", sql.Int, request_id)
+      .query(fetchQuery);
+
+    if (latestRowResult.recordset.length === 0) {
+      throw new Error("No existing rows found for this request ID.");
+    }
+
+    const latestRow = latestRowResult.recordset[0];
+    console.log("Latest row for the request ID:", latestRow);
+
+    // Replace column_names and column_values with actual fields from latestRow and the values you want to insert.
+    const insertQuery = `
+    INSERT INTO [transaction] (
+        request_id, rule_id, region, am, am_status, am_status_updated_at, am_id,
+        rm, rm_status, rm_status_updated_at, rm_id,
+        nsm, nsm_status, nsm_status_updated_at, nsm_id,
+        hdsm, hdsm_status, hdsm_status_updated_at, hdsm_id,
+        validator, validator_status, validator_status_updated_at, validator_id,
+        timestamp
+    )
+    VALUES (
+        @requestId, @ruleId, @region, @am, @amStatus, @amStatusUpdatedAt, @amId,
+        @rm, @rmStatus, @rmStatusUpdatedAt, @rmId,
+        @nsm, @nsmStatus, @nsmStatusUpdatedAt, @nsmId,
+        @hdsm, @hdsmStatus, @hdsmStatusUpdatedAt, @hdsmId,
+        @validator, @validatorStatus, @validatorStatusUpdatedAt, @validatorId,
+        @timestamp
+    );
+    SELECT SCOPE_IDENTITY() AS newId;`;
+    console.log(latestRow);
+    // if (role == "NSM") {
+    //   console.log("In NSM");
+    //   nsm_id = employee_id;
+    //   nsmStatus = action;
+    //   if (action > 1) {
+    //     rm_status = action;
+    //   }
+    // } else if (role == "HDSM") {
+    //   console.log("In HDSM");
+    //   hdsm_id = employee_id;
+    //   hdsmStatus = action;
+    //   if (action > 1) {
+    //     nsmStatus = action;
+    //   }
+    //   console.log(hdsm_id);
+    // }
+
+    const roles = ["AM", "RM", "NSM", "HDSM", "Validator"];
+    const rmIndex = roles.indexOf(role);
+    const statusV = await AssignStatus(latestRow.region, rmIndex, action);
+    console.log(typeof statusV);
+    console.log(statusV);
+    let [
+      newAmStatus,
+      newRmStatus,
+      newNsmStatus,
+      newHdsmStatus,
+      newValidatorStatus,
+    ] = statusV;
+
+    amStatus = newAmStatus ?? latestRow.am_status;
+    rmStatus = newRmStatus ?? latestRow.rm_status;
+    nsmStatus = newNsmStatus ?? latestRow.nsm_status;
+    hdsmStatus = newHdsmStatus ?? latestRow.hdsm_status;
+    validatorStatus = newValidatorStatus ?? latestRow.validator_status;
+    console.log("NSM Status", nsmStatus);
+    console.log(latestRow.hdsm_status_updated_at);
+    console.log("Latest", latestRow);
+
+    nsmId = latestRow.nsm_id;
+    hdsmId = latestRow.hdsm_id;
+    validatorId = latestRow.validator_id;
+    if (rmIndex == 1) {
+      nsmId = employee_id;
+    }
+    if (rmIndex == 2) {
+      hdsmId = employee_id;
+    }
+    if (rmIndex == 3) {
+      validatorId = employee_id;
+    }
+
+    const newRecordResult = await pool
+      .request()
+      .input("requestId", sql.VarChar, latestRow.request_id)
+      .input("ruleId", sql.VarChar, latestRow.rule_id)
+      .input("region", sql.VarChar, latestRow.region)
+      // Continue for each input parameter, ensuring they match those in your table
+      .input("am", sql.VarChar, latestRow.am) // Assuming 'am' is varchar; change data types accordingly
+      .input(
+        "amStatus",
+        sql.Int,
+        amStatus != undefined ? amStatus : latestRow.am_status
+      )
+      .input("amStatusUpdatedAt", sql.VarChar, latestRow.am_status_updated_at)
+      .input("amId", sql.VarChar, latestRow.am_id)
+      // Continue with all the parameters as per your database fields and data types
+      // RM-related fields (change types as needed)
+      .input("rm", sql.VarChar, latestRow.rm)
+      .input(
+        "rmStatus",
+        sql.Int,
+        rmStatus != undefined ? rmStatus : latestRow.rm_status
+      ) // Example based on your action logic
+      .input("rmStatusUpdatedAt", sql.VarChar, latestRow.rm_status_updated_at) // Setting to current time
+      .input("rmId", sql.VarChar, latestRow.rm_id) // Assuming action requires setting this to the employeeId
+      // Continue setting inputs for nsm, hdsm, and validator similarly
+      .input("nsm", sql.VarChar, latestRow.nsm)
+      .input("nsmStatus", sql.VarChar, nsmStatus.toString())
+      .input(
+        "nsmStatusUpdatedAt",
+        sql.VarChar,
+        rmIndex == 2
+          ? new Date().toISOString()
+          : latestRow.nsm_status_updated_at
+      )
+      .input(
+        "nsmId",
+        sql.VarChar,
+        rmIndex == 2 ? employee_id : latestRow.nsm_id
+      )
+      .input("hdsm", sql.VarChar, latestRow.hdsm)
+      .input("hdsmStatus", sql.VarChar, hdsmStatus.toString())
+      .input(
+        "hdsmStatusUpdatedAt",
+        sql.VarChar,
+        rmIndex == 3
+          ? new Date().toISOString()
+          : latestRow.hdsm_status_updated_at != null
+          ? latestRow.hdsm_status_updated_at
+          : ""
+      )
+      .input(
+        "hdsmId",
+        sql.VarChar,
+        rmIndex == 3 ? employee_id : latestRow.hdsm_id
+      )
+      .input("validator", sql.VarChar, latestRow.validator)
+      .input(
+        "validatorStatus",
+        sql.VarChar,
+        validatorStatus != null ? validatorStatus.toString() : ""
+      )
+      .input(
+        "validatorStatusUpdatedAt",
+        sql.VarChar,
+        rmIndex == 4
+          ? new Date().toISOString()
+          : latestRow.validator_status_updated_at != null
+          ? latestRow.validator_status_updated_at
+          : ""
+      )
+      .input(
+        "validatorId",
+        sql.VarChar,
+        rmIndex == 4 ? employee_id : latestRow.validator_id
+      )
       .input("timestamp", sql.DateTime, new Date())
       .query(insertQuery);
 
@@ -1715,6 +2207,8 @@ app.get("/api/fetch_price_request_by_id", async (req, res) => {
     if (pool) await pool.close();
   }
 });
+
+app.get("/api/approve_price_approval_rm", async (req, res) => {});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

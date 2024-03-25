@@ -61,17 +61,21 @@ function PriceTable({ price }) {
   ) : null;
 }
 
-function PriceViewModal({ open, onClose, id, data, isEditable }) {
+function PriceViewModal({ open, onClose, id, data, isEditable, role }) {
   const { session } = useSession();
   const employee_id = session.employee_id;
   const updateStatus = (newStatus) => {
-    const apiUrl = `${backend_url}api/update_request_status_rm`;
-    const reportData = {
+    let apiUrl = `${backend_url}api/update_request_status_rm`;
+    let reportData = {
       request_id: id, // Example reportId
       employee_id: employee_id, // Example statusUpdatedById
       action: newStatus, // Example new status
     };
-
+    if (role === "AP_NSM_HDSM") {
+      apiUrl = `${backend_url}api/update_request_status_manager`;
+      reportData["role"] = session.role;
+    }
+    console.log(reportData);
     fetch(apiUrl, {
       method: "POST",
       headers: {

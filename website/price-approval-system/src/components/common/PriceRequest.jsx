@@ -84,7 +84,7 @@ function PriceChangeRequest({ role, isAM }) {
   if (isAM == undefined) {
     statusFiltersValues = Array.from(statusFilters.values()).slice(1, 5);
   }
-  const [filterdId, setFilterdId] = useState(1);
+  const [filterdId, setFilterdId] = useState(0);
   const { session } = useSession();
   const employee_id = session.employee_id;
   const [data, setData] = useState(initialData);
@@ -147,6 +147,7 @@ function PriceChangeRequest({ role, isAM }) {
     //console.log(role);
     //console.log(filterdId);
     // console.log(employee_id);
+    console.log(session.role);
     if (role == "AP_RM") {
       if (filterdId == 0) {
         // console.log("Filterred ID is 1");
@@ -208,9 +209,69 @@ function PriceChangeRequest({ role, isAM }) {
           />
         );
       }
-    }
-
-    if (role == "AM") {
+    } else if (role == "AP_NSM_HDSM") {
+      console.log(role);
+      if (filterdId == 0) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=0&role=${session.role}`
+            }
+          />
+        );
+      }
+      if (filterdId == 1) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=1&role=${session.role}`
+            }
+          />
+        );
+      }
+      if (filterdId == 2) {
+        // console.log("Filterred ID is 2");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=2&role=${session.role}`
+            }
+          />
+        );
+      }
+      if (filterdId == 3) {
+        // console.log("Filterred ID is 3");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=3&role=${session.role}`
+            }
+          />
+        );
+      }
+      if (filterdId == 4) {
+        // console.log("Filterred ID is 4");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=4&role=${session.role}`
+            }
+          />
+        );
+      }
+    } else if (role == "AM") {
       if (filterdId == 1) {
         // console.log("Filterred ID is 1");
         return (
