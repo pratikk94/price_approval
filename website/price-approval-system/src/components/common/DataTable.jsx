@@ -415,7 +415,17 @@ function DynamicTable({ url, action_id }) {
       );
     } else {
       return (
-        <IconButton onClick={() => handleView(req_id)}>
+        <IconButton
+          onClick={() => {
+            console.log("ROW id is ", req_id);
+            handleView(req_id);
+            setId(req_id);
+            setModalOpen(true);
+            setAprmId(req_id);
+
+            console.log(req_id);
+          }}
+        >
           <ViewIcon />
         </IconButton>
       );

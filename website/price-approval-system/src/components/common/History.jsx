@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Typography, Paper } from "@mui/material";
 import axios from "axios";
-
+import { backend_url } from "../../util";
 const MessagesComponent = ({ reqId }) => {
   const [messages, setMessages] = useState([]);
 
@@ -9,7 +9,7 @@ const MessagesComponent = ({ reqId }) => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3000/api/get_history_of_price_request?id=${reqId}`
+          `${backend_url}api/get_history_of_price_request?id=${reqId}`
         );
         setMessages(response.data);
 
