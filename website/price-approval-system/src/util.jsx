@@ -1,4 +1,4 @@
-export let backend_url = "http://localhost:3000/";
+export let backend_url = "http://localhost:3001/";
 export const statusFilters = new Map([
   [0, "Draft"],
   [1, "Pending"],

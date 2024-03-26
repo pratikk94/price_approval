@@ -8,20 +8,18 @@ const corsOptions = {
   credentials: true, // allowing credentials (cookies, session)
 };
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const { format } = require("date-fns");
 app.use(cors(corsOptions));
 app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  password: "12345",
-  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  port: 1433,
+  password: "SayaliK20311",
+  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
   database: "PriceApprovalSystem",
   options: {
     encrypt: true, // Use this if you're on Windows Azure
-    // encrypt: false, // Use this if you're on Windows Azure
     trustServerCertificate: true, // Use this if you're on a local development environment
   },
 };
@@ -313,6 +311,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
 
     const region = regionResult.recordset[0].region;
     console.log("Region:", region);
+    console.log("Status:", status);
 
     // 2. Fetch all ids where 'rm' is greater than 0
     const idsResult = await pool
@@ -320,82 +319,54 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       .input("region", sql.VarChar, region)
       .input("status", sql.VarChar, status) // Correctly setting the parameter
       .query(
-        `WITH RankedTransactions AS (
+        `WITH LatestTransactionPerRequest AS (
           SELECT 
               request_id,
-              ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY id DESC) AS rn,
-          region,
-          rule_id,
-          am,
-          am_status,
-          am_status_updated_at,
-          am_id,
-          rm,
-          rm_status,
-              rm_status_updated_at,
-              rm_id,
-              nsm_status,
-              nsm_status_updated_at,
-              nsm_id,
-              hdsm_status,
-              hdsm_status_updated_at,
-              hdsm_id,
-              validator_status,
-              validator_status_updated_at,
-              validator_id,
-              id,
-              hdsm,
-              validator,
-              nsm,
-              timestamp
+              MAX(id) AS MaxId
           FROM 
               [transaction]
-          WHERE 
-              am_status = @status AND 
-              region = @region
-      ), MaxReqIDs AS (
-          SELECT 
-              parent_req_id, 
-              MAX(req_id) AS HighestID
-          FROM 
-              [request_status]
           GROUP BY 
-              parent_req_id
+              request_id
+      )
+      , DetailedTransactions AS (
+          SELECT 
+              t.*,
+              lt.MaxId as LatestTransactionId
+          FROM 
+              [transaction] t
+          INNER JOIN 
+              LatestTransactionPerRequest lt ON t.id = lt.MaxId
       )
       SELECT 
-          rt.request_id,
-          rt.region,
-          rt.rule_id,
-          rt.am,
-          rt.am_status,
-          rt.am_status_updated_at,
-          rt.am_id,
-          rt.rm,
-          rt.rm_status,
-          rt.rm_status_updated_at,
-          rt.rm_id,
-          rt.nsm_status,
-          rt.nsm_status_updated_at,
-          rt.nsm_id,
-          rt.hdsm_status,
-          rt.hdsm_status_updated_at,
-          rt.hdsm_id,
-          rt.validator_status,
-          rt.validator_status_updated_at,
-          rt.validator_id,
-          rt.id,
-          rt.hdsm,
-          rt.validator,
-          rt.nsm,
-          rt.timestamp,
-          mri.HighestID
+          dt.request_id,
+          dt.region,
+          dt.rule_id,
+          dt.am,
+          dt.am_status,
+          dt.am_status_updated_at,
+          dt.am_id,
+          dt.rm,
+          dt.rm_status,
+          dt.rm_status_updated_at,
+          dt.rm_id,
+          dt.nsm_status,
+          dt.nsm_status_updated_at,
+          dt.nsm_id,
+          dt.hdsm_status,
+          dt.hdsm_status_updated_at,
+          dt.hdsm_id,
+          dt.validator_status,
+          dt.validator_status_updated_at,
+          dt.validator_id,
+          dt.id,
+          dt.hdsm,
+          dt.validator,
+          dt.nsm,
+          dt.timestamp
       FROM 
-          RankedTransactions rt
-      LEFT JOIN 
-          MaxReqIDs mri ON rt.request_id = mri.parent_req_id
+          DetailedTransactions dt
       WHERE 
-          rt.rn = 1 AND mri.HighestID IS NOT NULL;
-       `
+          dt.am_status = @status and dt.region = @region ;`
       );
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
@@ -413,9 +384,8 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
         }
         // Add any additional transformations needed
       });
-    }
-
-    res.json(details);
+      res.json("Details", details);
+    } else res.json([]);
   } catch (err) {
     console.error("Error during database operations:", err);
   } finally {
@@ -455,82 +425,54 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
       .input("region", sql.VarChar, region)
       .input("status", sql.VarChar, status) // Correctly setting the parameter
       .query(
-        `WITH RankedTransactions AS (
+        `WITH LatestTransactionPerRequest AS (
           SELECT 
               request_id,
-              ROW_NUMBER() OVER (PARTITION BY request_id ORDER BY id DESC) AS rn,
-          region,
-          rule_id,
-          am,
-          am_status,
-          am_status_updated_at,
-          am_id,
-          rm,
-          rm_status,
-              rm_status_updated_at,
-              rm_id,
-              nsm_status,
-              nsm_status_updated_at,
-              nsm_id,
-              hdsm_status,
-              hdsm_status_updated_at,
-              hdsm_id,
-              validator_status,
-              validator_status_updated_at,
-              validator_id,
-              id,
-              hdsm,
-              validator,
-              nsm,
-              timestamp
+              MAX(id) AS MaxId
           FROM 
               [transaction]
-          WHERE 
-              rm_status = @status AND 
-              region = @region AND
-              rm > -1 
-      ), MaxReqIDs AS (
-          SELECT 
-              parent_req_id, 
-              MAX(req_id) AS HighestID
-          FROM 
-              [request_status]
           GROUP BY 
-              parent_req_id
+              request_id
+      )
+      , DetailedTransactions AS (
+          SELECT 
+              t.*,
+              lt.MaxId as LatestTransactionId
+          FROM 
+              [transaction] t
+          INNER JOIN 
+              LatestTransactionPerRequest lt ON t.id = lt.MaxId
       )
       SELECT 
-          rt.request_id,
-          rt.region,
-          rt.rule_id,
-          rt.am,
-          rt.am_status,
-          rt.am_status_updated_at,
-          rt.am_id,
-          rt.rm,
-          rt.rm_status,
-          rt.rm_status_updated_at,
-          rt.rm_id,
-          rt.nsm_status,
-          rt.nsm_status_updated_at,
-          rt.nsm_id,
-          rt.hdsm_status,
-          rt.hdsm_status_updated_at,
-          rt.hdsm_id,
-          rt.validator_status,
-          rt.validator_status_updated_at,
-          rt.validator_id,
-          rt.id,
-          rt.hdsm,
-          rt.validator,
-          rt.nsm,
-          rt.timestamp,
-          mri.HighestID
+          dt.request_id,
+          dt.region,
+          dt.rule_id,
+          dt.am,
+          dt.am_status,
+          dt.am_status_updated_at,
+          dt.am_id,
+          dt.rm,
+          dt.rm_status,
+          dt.rm_status_updated_at,
+          dt.rm_id,
+          dt.nsm_status,
+          dt.nsm_status_updated_at,
+          dt.nsm_id,
+          dt.hdsm_status,
+          dt.hdsm_status_updated_at,
+          dt.hdsm_id,
+          dt.validator_status,
+          dt.validator_status_updated_at,
+          dt.validator_id,
+          dt.id,
+          dt.hdsm,
+          dt.validator,
+          dt.nsm,
+          dt.timestamp
       FROM 
-          RankedTransactions rt
-      LEFT JOIN 
-          MaxReqIDs mri ON rt.request_id = mri.parent_req_id
+          DetailedTransactions dt
       WHERE 
-          rt.rn = 1 AND mri.HighestID IS NOT NULL;`
+          dt.rm_status = @status and dt.region = @region ;`
       );
 
     console.log(idsResult);
@@ -588,7 +530,7 @@ async function AssignStatus(region, roleIndex, action) {
       const roles = [0, rules.rm, rules.nsm, rules.hdsm, rules.validator];
 
       // Adjust the roles as per your logic
-      for (let i = 0; i < roles.length; i++) {
+      for (let i = 1; i < roles.length; i++) {
         if (roles[i] === 0) roles[i] = -1;
       }
 
@@ -604,19 +546,23 @@ async function AssignStatus(region, roleIndex, action) {
         }
       } else if (action === 2 && roles[roleIndex] > -1) {
         // Find the previous positive role and set its status to 2
-        for (let i = roleIndex - 1; i >= 0; i--) {
-          if (roles[i] > -1) {
+        for (let i = roleIndex - 1; i > 0; i--) {
+          if (roles[i] > -1 && roles[i] != roles[roleIndex]) {
             statuses[i] = 2;
             break;
+          } else if (roles[i] == roles[roleIndex]) {
+            statuses[i] = 2;
           }
         }
       } else if (action === 3 && roles[roleIndex] > -1) {
         statuses[roleIndex] = 3;
         // Find the next positive role and set its status to 0
-        for (let i = roleIndex + 1; i < roles.length; i++) {
-          if (roles[i] > -1) {
+        for (let i = roleIndex; i < roles.length; i++) {
+          if (roles[i] > -1 && roles[i] != roles[roleIndex]) {
             statuses[i] = 0;
             break;
+          } else if (roles[i] == roles[roleIndex]) {
+            statuses[i] = 3;
           }
         }
       }
@@ -1148,7 +1094,8 @@ app.get("/api/fetch_employees", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query to select employee_name and employee_id
-    const result = await pool.request().query`EXEC FetchEmployees`;
+    const result = await pool.request()
+      .query`Select employee_name as name, employee_id as id from user_master`;
 
     // Send query results as a response
     res.json(result.recordset);
@@ -1224,10 +1171,10 @@ app.get("/api/fetch_region", async (req, res) => {
 // API endpoint that fetch emplotyee role
 app.post("/api/add_employee_role", async (req, res) => {
   let { employee_id, employee_name, role, region, created_date, active } =
-    req.body;
-  const user_id = 1; // Hardcoded as per requirement
+    req.body; // Hardcoded as per requirement
   const created_by = "backend_user"; // This can also be fetched dynamically if needed
   let pool = null; // Initialize the pool variable
+  console.log(employee_id);
   try {
     pool = await sql.connect(config);
     created_date = created_date ? new Date(created_date) : new Date();
@@ -1744,7 +1691,7 @@ app.get("/api/fetch_grade_with_pc", async (req, res) => {
   try {
     pool = await sql.connect(config);
     const result = await pool.request()
-      .query`SELECT id as code,grade as name,FSC_Y_N,Grade_Description,Profit_Centre as profitCenter FROM grade where status = 1 and FSC_Y_N = ${fsc}`;
+      .query`SELECT id as code,grade as name,FSC_Y_N,Grade_Description,Profit_Centre as profitCenter FROM profit_center where status = 1 and FSC_Y_N = ${fsc}`;
 
     res.json(result.recordset);
   } catch (err) {
@@ -1891,6 +1838,7 @@ app.get("/api/fetch_sales_regions", async (req, res) => {
 });
 
 app.get("/api/fetch_request_am_with_status", async (req, res) => {
+  console.log("CALLEDD...");
   FetchAMDataWithStatus(req.query.employeeId, req.query.status, res);
 });
 
@@ -2177,16 +2125,17 @@ async function getAllUpdatersWithLatestUpdateAndRoleHandlingInvalidDate(
       ]);
 
       const updatesSet = new Set();
-
+      console.log(row);
       for (let i = 0; i < userResults.length; i++) {
         const userInfo = userResults[i];
+        console.log(userInfo);
         if (userInfo != null) {
           const statusField = `${userInfo.role}_status`;
           const timestampField = `${userInfo.role}_status_updated_at`;
 
           if (row[userInfo.idField] !== "-1" && row[timestampField]) {
             const formattedTimestamp = row[timestampField];
-            const status = getStatus(row[statusField]);
+            const status = getStatus(row[statusField.toLowerCase()]);
             const update = `${id}: ${userInfo.role.toUpperCase()} update (${status}). Updated by ${
               userInfo.name
             } at ${formattedTimestamp}`;
@@ -2233,14 +2182,15 @@ async function getUserInfo(id) {
 }
 
 function getStatus(status) {
+  console.log(status);
   switch (status) {
-    case 1:
+    case "1":
       return "Approved";
-    case 2:
+    case "2":
       return "Rejected";
-    case 3:
+    case "3":
       return "Rework";
-    case 0:
+    case "0":
       return "Pending";
     default:
       return "Unknown";

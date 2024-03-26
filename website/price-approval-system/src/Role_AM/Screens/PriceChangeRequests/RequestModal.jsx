@@ -41,7 +41,7 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
   const [paymentTerms, setPaymentTerms] = useState([]);
   const [validFrom, setValidFrom] = useState([]);
   const [validTo, setValidTo] = useState([]);
-  const [fsc, setFSC] = useState([]);
+  const [fsc, setFSC] = useState("");
   const [priceDetails, setPriceDetails] = useState([]); // Assuming this is an array of objects with the structure { price: number, ...
   const [remarks, setRemarks] = useState([]);
   const [checkBoxEnabled, setCheckBoxEnabled] = useState(false);

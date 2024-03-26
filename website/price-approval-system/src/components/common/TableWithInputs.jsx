@@ -96,9 +96,12 @@ function TableWithInputs({
 
   const fetch_grades = async () => {
     try {
-      console.log(fscCode);
+      console.log("FSC_Code", fscCode.length == 0 ? "N" : "Y");
+
       const response = await fetch(
-        `${backend_url}api/fetch_grade_with_pc?fsc=${fscCode}`
+        `${backend_url}api/fetch_grade_with_pc?fsc=${
+          fscCode.length == 0 ? "N" : "Y"
+        }`
       ); // Adjust the API path as needed
       const data = await response.json();
       // console.log(data);
@@ -208,7 +211,7 @@ function TableWithInputs({
     // setGrades(e.target.checked ? 1 : 0);
     setFSC((e) => {
       fetch_grades(e ? 0 : 1);
-      setFSCCode(e ? 0 : 1);
+      setFSCCode(e ? "N" : "Y");
       return e ? 0 : 1;
     });
   }

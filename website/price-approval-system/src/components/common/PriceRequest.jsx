@@ -148,6 +148,7 @@ function PriceChangeRequest({ role, isAM }) {
     //console.log(filterdId);
     // console.log(employee_id);
     console.log(session.role);
+    console.log(role);
     if (role == "AP_RM") {
       if (filterdId == 0) {
         // console.log("Filterred ID is 1");
