@@ -835,6 +835,7 @@ function DynamicTable({ url, action_id, isAM, sendMode, mode }) {
             action_id == "AM"
           }
           role={action_id}
+          mode={mode}
         />
       )}
 

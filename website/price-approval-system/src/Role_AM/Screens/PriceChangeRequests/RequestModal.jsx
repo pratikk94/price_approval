@@ -83,8 +83,8 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     const val = JSON.stringify(formData);
     //console.log(val);
     submitData(formData);
-    setSelectedConsignees([]);
-    setSelectedCustomers([]);
+    // setSelectedConsignees([]);
+    // setSelectedCustomers([]);
 
     //handleClose();
     if (checkBoxEnabled && isChecked) {
@@ -99,17 +99,11 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       const [data] = editData; // Assuming editData is the array provided, and you're using the first item.
       console.log(data);
       setReqId(data.req_id[0]);
-      // Assuming these fields are comma-separated strings that need to be split into arrays
-      const customerIds = data.customer_id
-        .split(",")
-        .map((id) => ({ value: id, label: id })); // Replace label with actual label if available
-      const consigneeIds = data.consignee_id
-        .split(",")
-        .map((id) => ({ value: id, label: id })); // Replace label with actual label if available
-
+     
       // Update states
-      setSelectedCustomerIDs(data.customer_id);
-      setSelectedConsigneeIDs(data.consignee_id);
+      setSelectedConsigneeIDs(data.customer_id);
+      setSelectedCustomerIDs(data.consignee_id);
+      console.log(data.consignee_id);
       setSelectedEndUseIDs(data.end_use_id);
       // Assumption: plant, paymentTermsId are singular values, not lists
       setPlant([{ value: data.plant, label: `Plant ${data.plant}` }]);

@@ -140,6 +140,7 @@ function PriceChangeRequest({ role, isAM }) {
         return (
           <DataTable
             action_id={role}
+            mode={mode}
             url={
               backend_url +
               `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=0`
@@ -152,6 +153,7 @@ function PriceChangeRequest({ role, isAM }) {
         return (
           <DataTable
             action_id={role}
+            mode={mode}
             url={
               backend_url +
               `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=1`
@@ -164,6 +166,7 @@ function PriceChangeRequest({ role, isAM }) {
         return (
           <DataTable
             action_id={role}
+            mode={mode}
             url={
               backend_url +
               `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=2`
@@ -176,6 +179,7 @@ function PriceChangeRequest({ role, isAM }) {
         return (
           <DataTable
             action_id={role}
+            mode={mode}
             url={
               backend_url +
               `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=3`
@@ -188,6 +192,7 @@ function PriceChangeRequest({ role, isAM }) {
         return (
           <DataTable
             action_id={role}
+            mode={mode}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=4`
@@ -200,6 +205,7 @@ function PriceChangeRequest({ role, isAM }) {
         return (
           <DataTable
             action_id={role}
+            mode={mode}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
@@ -218,6 +224,7 @@ function PriceChangeRequest({ role, isAM }) {
               backend_url +
               `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=0&role=${session.role}`
             }
+            mode={mode}
           />
         );
       }
@@ -230,6 +237,7 @@ function PriceChangeRequest({ role, isAM }) {
               backend_url +
               `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=1&role=${session.role}`
             }
+            mode={mode}
           />
         );
       }
@@ -242,6 +250,7 @@ function PriceChangeRequest({ role, isAM }) {
               backend_url +
               `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=2&role=${session.role}`
             }
+            mode={mode}
           />
         );
       }
@@ -254,6 +263,7 @@ function PriceChangeRequest({ role, isAM }) {
               backend_url +
               `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=3&role=${session.role}`
             }
+            mode={mode}
           />
         );
       }
@@ -266,6 +276,7 @@ function PriceChangeRequest({ role, isAM }) {
               backend_url +
               `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=4&role=${session.role}`
             }
+            mode={mode}
           />
         );
       }
@@ -278,6 +289,7 @@ function PriceChangeRequest({ role, isAM }) {
               backend_url +
               `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=5&role=${session.role}`
             }
+            mode={mode}
           />
         );
       }

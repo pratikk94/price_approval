@@ -15,11 +15,15 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  password: "SayaliK20311",
-  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  //password: "SayaliK20311",
+  //server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "12345",
+  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  port: 1433,
   database: "PriceApprovalSystem",
   options: {
     encrypt: true, // Use this if you're on Windows Azure
+    // encrypt: false, // Use this if you're on Windows Azure
     trustServerCertificate: true, // Use this if you're on a local development environment
   },
 };
@@ -884,18 +888,22 @@ async function AssignStatus(region, roleIndex, action) {
       }
 
       console.log("Status", statuses);
-
+      console.log("Action", action);
+      console.log("Row Index", roleIndex);
       // Process action based on the provided action and roleIndex
-      if ((action === 1 || action === 5) && roles[roleIndex] > -1) {
-        statuses[roleIndex] = action;
+      if ((action == "1" || action == "5") && roles[roleIndex] > -1) {
+        statuses[roleIndex] = parseInt(action);
         // Find the next positive role and set its status to 0
+
         for (let i = roleIndex + 1; i < roles.length; i++) {
           if (roles[i] > -1) {
             statuses[i] = 0;
+          }
+          if (roles[i] != roles[i + 1]) {
             break;
           }
         }
-      } else if ((action === 2 || action == 3) && roles[roleIndex] > -1) {
+      } else if ((action == "2" || action == "3") && roles[roleIndex] > -1) {
         // Find the previous positive role and set its status to 2
         console.log(roleIndex);
         for (let i = roleIndex; i >= 0; i--) {
@@ -1996,9 +2004,9 @@ app.get("/api/fetch_request_manager_with_status", async (req, res) => {
 });
 
 app.post("/api/update_request_status_manager", async (req, res) => {
-  const { id, action, employee_id, request_id } = req.body;
+  let { id, action, employee_id, request_id } = req.body;
   const role = req.body.role;
-
+  action = action == 0 ? "1" : action;
   console.log(req.body);
   let pool = null;
   try {

@@ -63,6 +63,7 @@ function PriceTable({ price }) {
 }
 
 function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
+  console.log("Mode: ", mode);
   const { session } = useSession();
   const employee_id = session.employee_id;
   const updateStatus = (newStatus) => {
@@ -71,7 +72,7 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
       employee_id: employee_id, // Example statusUpdatedById
       action: newStatus, // Example new status
     };
-
+    console.log("New Status: ", newStatus);
     const apiUrl = `${backend_url}api/update_request_status_manager`;
     reportData["role"] = session.role;
 
