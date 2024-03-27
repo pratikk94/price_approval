@@ -384,7 +384,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
         }
         // Add any additional transformations needed
       });
-      res.json("Details", details);
+      res.json(details);
     } else res.json([]);
   } catch (err) {
     console.error("Error during database operations:", err);
@@ -520,6 +520,7 @@ async function AssignStatus(region, roleIndex, action) {
     console.log("Valid To:", validTo.setHours(0, 0, 0, 0));
     if (today >= validFrom && today <= validTo) {
       // Initialise statuses and roles from the database values
+      console.log("Rules", rules);
       const statuses = [
         0,
         rules.rm_status,
@@ -534,6 +535,8 @@ async function AssignStatus(region, roleIndex, action) {
         if (roles[i] === 0) roles[i] = -1;
       }
 
+      console.log("Status", statuses);
+
       // Process action based on the provided action and roleIndex
       if (action === 1 && roles[roleIndex] > -1) {
         statuses[roleIndex] = 1;
@@ -544,25 +547,21 @@ async function AssignStatus(region, roleIndex, action) {
             break;
           }
         }
-      } else if (action === 2 && roles[roleIndex] > -1) {
+      } else if ((action === 2 || action == 3) && roles[roleIndex] > -1) {
         // Find the previous positive role and set its status to 2
-        for (let i = roleIndex - 1; i > 0; i--) {
-          if (roles[i] > -1 && roles[i] != roles[roleIndex]) {
-            statuses[i] = 2;
-            break;
-          } else if (roles[i] == roles[roleIndex]) {
-            statuses[i] = 2;
+        console.log(roleIndex);
+        for (let i = roleIndex; i >= 0; i--) {
+          if (roles[i] > -1) {
+            statuses[i] = action;
           }
         }
-      } else if (action === 3 && roles[roleIndex] > -1) {
-        statuses[roleIndex] = 3;
-        // Find the next positive role and set its status to 0
         for (let i = roleIndex; i < roles.length; i++) {
-          if (roles[i] > -1 && roles[i] != roles[roleIndex]) {
-            statuses[i] = 0;
-            break;
-          } else if (roles[i] == roles[roleIndex]) {
-            statuses[i] = 3;
+          if (roles[i] == roles[i + 1] && roles[i] != undefined) {
+            statuses[i + 1] = action;
+            console.log(statuses);
+            i++;
+          } else if (roles[i] > -1) {
+            statuses[i] = undefined;
           }
         }
       }

@@ -68,6 +68,8 @@ function DynamicTable({ url, action_id }) {
   const [aprm_id, setAprmId] = useState(0);
   const [rowId, setRowId] = useState(0);
   const [editData, setEditData] = useState([]);
+  const [selectedSearchColumns, setSelectedSearchColumns] = useState([]);
+  const [columnSearches, setColumnSearches] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -100,30 +102,48 @@ function DynamicTable({ url, action_id }) {
 
   // Sort and filter data whenever the data, sortConfig, or searchQuery changes
   useEffect(() => {
-    let sorted = sortData(data, sortConfig);
-    let filtered = sorted
-      .filter((row) => {
-        const rowDate = new Date(row.valid_from);
-        const startCheck = startDate ? rowDate >= startDate : true;
-        const endCheck = endDate ? rowDate <= endDate : true;
-        return startCheck && endCheck;
-      })
-      .filter(
-        (row) =>
-          searchQuery === "" ||
-          Object.entries(row).some(
-            ([key, value]) =>
-              columnVisibility[key] &&
-              (value
-                ? value
-                    .toString()
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase())
-                : false)
-          )
-      );
+    // Sort the data based on the configuration
+    const sorted = sortData(data, sortConfig);
+
+    // Filter the sorted data
+    const filtered = sorted.filter((row) => {
+      // Filter by date range if dates are selected
+      const rowDate = new Date(row.valid_from);
+      const startCheck = startDate ? rowDate >= startDate : true;
+      const endCheck = endDate ? rowDate <= endDate : true;
+      const dateFilter = startCheck && endCheck;
+
+      // Early return if date filter fails
+      if (!dateFilter) return false;
+
+      // If there are no column searches defined, include all rows
+      if (columnSearches.length === 0) return true;
+
+      // Column-specific search filtering
+      return columnSearches.every((search) => {
+        // If a column search is defined but the column or query is empty, skip this search
+        if (!search.column || !search.query) return true;
+
+        // Access the value in the specified column for this row
+        const value = row[search.column];
+
+        // If the value exists and matches the search query, include this row
+        return value
+          ? value.toString().toLowerCase().includes(search.query.toLowerCase())
+          : false;
+      });
+    });
+
+    // Update the state with the filtered data
     setFilteredData(filtered);
-  }, [data, sortConfig, searchQuery, columnVisibility, startDate, endDate]);
+  }, [
+    data,
+    sortConfig,
+    columnSearches, // Make sure this is correctly updated elsewhere in your component
+    startDate,
+    endDate,
+    // Removed selectedSearchColumns from dependencies since it's not used within this useEffect
+  ]);
 
   const sortData = (data, sortConfig) => {
     if (!sortConfig.key) return data;
@@ -434,8 +454,88 @@ function DynamicTable({ url, action_id }) {
     }
   };
 
+  const handleAddSearchColumn = () => {
+    // Initially, no column is selected and the search query is empty
+    setColumnSearches([...columnSearches, { column: "", query: "" }]);
+  };
+
+  const handleRemoveSearchColumn = (index) => {
+    // Create a new array without the item at the specified index
+    const newSearches = columnSearches.filter((_, i) => i !== index);
+    setColumnSearches(newSearches);
+  };
+
   return (
     <Paper style={{ width: "80vw", overflowX: "auto" }}>
+      <FormControl variant="outlined" size="small" style={{ marginRight: 8 }}>
+        <Button variant="contained" onClick={handleAddSearchColumn}>
+          Add Search Column
+        </Button>
+      </FormControl>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "start",
+          alignItems: "center",
+          margin: 10,
+        }}
+      >
+        {columnSearches.map((search, index) => (
+          <div
+            key={index}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              marginBottom: 16,
+              marginLeft: 10,
+              alignItems: "flex-start",
+            }}
+          >
+            <FormControl
+              variant="outlined"
+              size="small"
+              style={{ marginBottom: 8, width: "100%" }}
+            >
+              <InputLabel>Column</InputLabel>
+              <Select
+                value={search.column}
+                onChange={(e) => {
+                  const newSearches = [...columnSearches];
+                  newSearches[index].column = e.target.value;
+                  setColumnSearches(newSearches);
+                }}
+                label="Column"
+              >
+                {Object.keys(columnVisibility).map((column) => (
+                  <MenuItem key={column} value={column}>
+                    {column}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              label="Search"
+              variant="outlined"
+              size="small"
+              value={search.query}
+              onChange={(e) => {
+                const newSearches = [...columnSearches];
+                newSearches[index].query = e.target.value;
+                setColumnSearches(newSearches);
+              }}
+              style={{ marginBottom: 8, width: "100%" }}
+            />
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => handleRemoveSearchColumn(index)}
+              style={{ alignSelf: "center" }}
+            >
+              Remove
+            </Button>
+          </div>
+        ))}
+      </div>
       <div
         style={{
           display: "flex",
@@ -443,13 +543,6 @@ function DynamicTable({ url, action_id }) {
           alignItems: "center",
         }}
       >
-        <TextField
-          label="Search"
-          variant="outlined"
-          size="small"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
         <span>Start Date: </span>
         <DatePicker
           selected={startDate}
