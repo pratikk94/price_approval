@@ -13,6 +13,7 @@ function TableWithInputs({
   setFSCCode,
   disableSubmit,
   prices,
+  disabled,
 }) {
   const [grades, setGrades] = useState([]);
   const [selectedGrade, setSelectedGrade] = useState("");
@@ -249,6 +250,7 @@ function TableWithInputs({
                   checked={checkboxState[option]}
                   onChange={handleCheckboxChange}
                   name={option}
+                  disabled={disabled}
                 />
               }
               label={option}
@@ -296,6 +298,7 @@ function TableWithInputs({
                   options={grades}
                   className="basic-multi-select tColumn"
                   classNamePrefix="select"
+                  disabled={disabled}
                   onChange={(e) => {
                     console.log(row); // Debugging
                     handleRowChange(row.id, "grade", e.label, e.profitCenter);
@@ -320,6 +323,7 @@ function TableWithInputs({
                 <input
                   type="text"
                   className="tColumn"
+                  disabled={disabled}
                   value={row.gradeType}
                   onChange={(e) =>
                     handleRowChange(row.id, "gradeType", e.target.value)
@@ -332,6 +336,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     className="tColumn"
+                    disabled={disabled}
                     value={row.gsmFrom}
                     onChange={(e) => {
                       // setGSMFrom(e.target.value);
@@ -346,6 +351,7 @@ function TableWithInputs({
                     type="text"
                     className="tColumn"
                     value={row.gsmTo}
+                    disabled={disabled}
                     onChange={(e) => {
                       // setGSMFrom(e.target.value);
                       handleRowChange(row.id, "gsmTo", e.target.value);
@@ -359,6 +365,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     className="tColumn"
+                    disabled={disabled}
                     value={row.agreedPrice}
                     onChange={(e) =>
                       handleRowChange(row.id, "agreedPrice", e.target.value)
@@ -371,6 +378,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     className="tColumn"
+                    disabled={disabled}
                     value={row.specialDiscount}
                     onChange={(e) =>
                       handleRowChange(row.id, "specialDiscount", e.target.value)
@@ -383,6 +391,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     className="tColumn"
+                    disabled={disabled}
                     value={row.reelDiscount}
                     onChange={(e) =>
                       handleRowChange(row.id, "reelDiscount", e.target.value)
@@ -395,6 +404,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     className="tColumn"
+                    disabled={disabled}
                     value={row.packUpCharge}
                     onChange={(e) =>
                       handleRowChange(row.id, "packUpCharge", e.target.value)
@@ -408,6 +418,7 @@ function TableWithInputs({
                     type="number"
                     className="tColumn"
                     value={row.tpc}
+                    disabled={disabled}
                     onChange={(e) =>
                       handleRowChange(row.id, "tpc", e.target.value)
                     }
@@ -419,6 +430,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     className="tColumn"
+                    disabled={disabled}
                     value={row.offlineDiscount}
                     onChange={(e) =>
                       handleRowChange(row.id, "offlineDiscount", e.target.value)
@@ -433,6 +445,7 @@ function TableWithInputs({
                 <input
                   type="text"
                   className="tColumn"
+                  disabled={disabled}
                   value={row.oldNetNSR}
                   onChange={(e) =>
                     handleRowChange(row.id, "oldNetNSR", e.target.value)
@@ -456,7 +469,7 @@ function TableWithInputs({
         className="div_container"
         style={{ marginTop: "20px", textAlign: "right" }}
       >
-        <Button variant="contained" onClick={addRow}>
+        <Button variant="contained" onClick={addRow} disabled={disabled}>
           Add Row
         </Button>
       </div>

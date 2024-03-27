@@ -28,6 +28,9 @@ import {
 } from "@mui/material";
 import ViewIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import BlockIcon from "@mui/icons-material/Block";
+import MoreTimeIcon from "@mui/icons-material/MoreTime";
 import DownloadIcon from "@mui/icons-material/GetApp";
 import SupervisedUserCircleIcon from "@mui/icons-material/SupervisedUserCircle";
 import "react-datepicker/dist/react-datepicker.css";
@@ -44,7 +47,8 @@ import HistoryModal from "../../Role_Business_Admin/Components/RequestHistoryMod
 import PriceViewModal from "../../Role_Approvers_RM/Components/ViewModal";
 import EmployeeEditModal from "../../Role_Business_Admin/Components/EmployeeEditModal";
 import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
-function DynamicTable({ url, action_id }) {
+
+function DynamicTable({ url, action_id, isAM, sendMode, mode }) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -70,7 +74,8 @@ function DynamicTable({ url, action_id }) {
   const [editData, setEditData] = useState([]);
   const [selectedSearchColumns, setSelectedSearchColumns] = useState([]);
   const [columnSearches, setColumnSearches] = useState([]);
-
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [editModalId, setEditModalId] = useState(0);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -144,83 +149,6 @@ function DynamicTable({ url, action_id }) {
     endDate,
     // Removed selectedSearchColumns from dependencies since it's not used within this useEffect
   ]);
-
-  const sortData = (data, sortConfig) => {
-    if (!sortConfig.key) return data;
-    return [...data].sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key])
-        return sortConfig.direction === "asc" ? -1 : 1;
-      if (a[sortConfig.key] > b[sortConfig.key])
-        return sortConfig.direction === "asc" ? 1 : -1;
-      return 0;
-    });
-  };
-  // const [open, setOpen] = useState(false);
-  const handleOpen = (id) => {
-    setOpen(true);
-    setId(id);
-  };
-
-  // const handleClose = () => setOpen(false);
-
-  const handleSort = (key) => {
-    const direction =
-      sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
-    setSortConfig({ key, direction });
-  };
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset to the first page
-  };
-
-  const selectedColumns = Object.entries(columnVisibility)
-    .filter(([key, value]) => value)
-    .map(([key]) => key);
-
-  const handleColumnVisibilityChange = (event) => {
-    const { value } = event.target;
-    // Create a new visibility object, setting all to false initially
-    const newVisibility = Object.keys(columnVisibility).reduce(
-      (acc, column) => ({
-        ...acc,
-        [column]: false,
-      }),
-      {}
-    );
-
-    // Set selected columns to true
-    value.forEach((column) => {
-      newVisibility[column] = true;
-    });
-
-    setColumnVisibility(newVisibility);
-  };
-
-  // Function to handle actions (as examples):
-  const handleView = (id) => {
-    console.log(`View action for ${id}`);
-    // setOpen(true);
-    setId(id);
-    // Implement view logic here
-  };
-
-  const handleEdit = (id) => {
-    //console.log(`Edit action for ${id}`);
-    setId(id);
-  };
-
-  const handleDownload = (id) => {
-    //console.log(`Download action for ${id}`);
-    // Implement download logic here
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
 
   useEffect(() => {
     const fetchRule = async () => {
@@ -303,6 +231,83 @@ function DynamicTable({ url, action_id }) {
       fetchForEdit();
     }
   }, [editModalOpen]);
+
+  const sortData = (data, sortConfig) => {
+    if (!sortConfig.key) return data;
+    return [...data].sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key])
+        return sortConfig.direction === "asc" ? -1 : 1;
+      if (a[sortConfig.key] > b[sortConfig.key])
+        return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+  // const [open, setOpen] = useState(false);
+  const handleOpen = (id) => {
+    setOpen(true);
+    setId(id);
+  };
+
+  // const handleClose = () => setOpen(false);
+
+  const handleSort = (key) => {
+    const direction =
+      sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
+    setSortConfig({ key, direction });
+  };
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset to the first page
+  };
+
+  const selectedColumns = Object.entries(columnVisibility)
+    .filter(([key, value]) => value)
+    .map(([key]) => key);
+
+  const handleColumnVisibilityChange = (event) => {
+    const { value } = event.target;
+    // Create a new visibility object, setting all to false initially
+    const newVisibility = Object.keys(columnVisibility).reduce(
+      (acc, column) => ({
+        ...acc,
+        [column]: false,
+      }),
+      {}
+    );
+
+    // Set selected columns to true
+    value.forEach((column) => {
+      newVisibility[column] = true;
+    });
+
+    setColumnVisibility(newVisibility);
+  };
+
+  // Function to handle actions (as examples):
+  const handleView = (id) => {
+    console.log(`View action for ${id}`);
+    // setOpen(true);
+    setId(id);
+    // Implement view logic here
+  };
+
+  const handleEdit = (id) => {
+    //console.log(`Edit action for ${id}`);
+    setId(id);
+  };
+
+  const handleDownload = (id) => {
+    //console.log(`Download action for ${id}`);
+    // Implement download logic here
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   const handleRuleUpdate = (updatedRule) => {
     console.log(updatedRule);
@@ -420,9 +425,57 @@ function DynamicTable({ url, action_id }) {
           >
             <ViewIcon />
           </IconButton>
+        </div>
+      );
+    } else {
+      return (
+        <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
               console.log("ROW id is ", req_id);
+              handleView(req_id);
+              setId(req_id);
+              setModalOpen(true);
+              setAprmId(req_id);
+
+              console.log(req_id);
+            }}
+          >
+            <ViewIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              console.log("ROW id is ", req_id);
+              setEditModalId(0);
+              sendMode(0);
+              setEditModalOpen(true);
+              handleEdit(req_id);
+              setId(req_id);
+              console.log(req_id);
+              setRuleId(row_id);
+            }}
+          >
+            <ContentCopyIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              console.log("ROW id is ", req_id);
+              setEditModalId(1);
+              sendMode(2);
+              setEditModalOpen(true);
+              handleEdit(req_id);
+              setId(req_id);
+              console.log(req_id);
+              setRuleId(row_id);
+            }}
+          >
+            <MoreTimeIcon />
+          </IconButton>
+          <IconButton
+            onClick={() => {
+              console.log("ROW id is ", req_id);
+              setEditModalId(2);
+              sendMode(3);
               setEditModalOpen(true);
               handleEdit(req_id);
               setId(req_id);
@@ -431,25 +484,9 @@ function DynamicTable({ url, action_id }) {
               setRuleId(row_id);
             }}
           >
-            <EditIcon />
+            <BlockIcon />
           </IconButton>
         </div>
-      );
-    } else {
-      return (
-        <IconButton
-          onClick={() => {
-            console.log("ROW id is ", req_id);
-            handleView(req_id);
-            setId(req_id);
-            setModalOpen(true);
-            setAprmId(req_id);
-
-            console.log(req_id);
-          }}
-        >
-          <ViewIcon />
-        </IconButton>
       );
     }
   };
@@ -465,13 +502,97 @@ function DynamicTable({ url, action_id }) {
     setColumnSearches(newSearches);
   };
 
+  // Toggle a single row
+  const handleSelectRow = (rowId) => {
+    setSelectedRows((prev) => {
+      if (prev.includes(rowId)) {
+        return prev.filter((id) => id !== rowId); // Deselect if already selected
+      } else {
+        return [...prev, rowId]; // Select if not already selected
+      }
+    });
+  };
+
+  // Select/deselect all rows
+  const handleSelectAllRows = (event) => {
+    if (event.target.checked) {
+      // Select all rows
+      const newSelectedRows = data.map((row) => row.id); // Assuming each row has a unique 'id' field
+      setSelectedRows(newSelectedRows);
+    } else {
+      // Deselect all
+      setSelectedRows([]);
+    }
+  };
+
+  const downloadCsv = () => {
+    // Filter out deselected columns
+    const visibleColumns = Object.keys(columnVisibility).filter(
+      (key) => columnVisibility[key]
+    );
+
+    // Create CSV header
+    const csvHeader = visibleColumns.join(",") + "\n";
+
+    // Create CSV rows
+    // Assuming this is within your downloadCsv function
+    const csvRows = data
+      .map((row) => {
+        return Object.keys(row)
+          .filter((key) => columnVisibility[key]) // Ensure only visible columns are included
+          .map((key) => {
+            let cell = row[key];
+            // Ensure the cell is treated as a string
+            let cellAsString =
+              cell !== null && cell !== undefined ? cell.toString() : "";
+
+            // If the cell contains a comma, newline, or double-quote, escape those characters
+            if (
+              cellAsString.includes(",") ||
+              cellAsString.includes("\n") ||
+              cellAsString.includes('"')
+            ) {
+              cellAsString = `"${cellAsString.replace(/"/g, '""')}"`; // Escape double quotes
+            }
+            return cellAsString;
+          })
+          .join(",");
+      })
+      .join("\n");
+
+    // Combine header and rows
+    const csvString = [csvHeader, ...csvRows].join("");
+
+    // Trigger CSV download
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", "datatable_export.csv"); // Set the file name for the download
+    document.body.appendChild(link); // Required for FF
+    link.click();
+    document.body.removeChild(link); // Clean up
+  };
+
   return (
     <Paper style={{ width: "80vw", overflowX: "auto" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "end",
+          alignItems: "center",
+          margin: 10,
+        }}
+      >
+        <Button onClick={downloadCsv} variant="contained" color="primary">
+          Download CSV
+        </Button>
+      </div>
       <FormControl variant="outlined" size="small" style={{ marginRight: 8 }}>
         <Button variant="contained" onClick={handleAddSearchColumn}>
           Add Search Column
         </Button>
       </FormControl>
+
       <div
         style={{
           display: "flex",
@@ -586,6 +707,20 @@ function DynamicTable({ url, action_id }) {
         <Table>
           <TableHead>
             <TableRow>
+              {isAM && (
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    indeterminate={
+                      selectedRows.length > 0 &&
+                      selectedRows.length < data.length
+                    }
+                    checked={
+                      data.length > 0 && selectedRows.length === data.length
+                    }
+                    onChange={handleSelectAllRows}
+                  />
+                </TableCell>
+              )}
               {Object.keys(columnVisibility)
                 .filter((key) => columnVisibility[key])
                 .map((key) => (
@@ -611,6 +746,14 @@ function DynamicTable({ url, action_id }) {
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row, index) => (
                 <TableRow key={index}>
+                  {isAM && (
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedRows.includes(row.id)}
+                        onChange={() => handleSelectRow(row.id)}
+                      />
+                    </TableCell>
+                  )}
                   {Object.entries(row)
                     .filter(([key]) => columnVisibility[key])
                     .map(([key, value], idx) => (
@@ -703,7 +846,7 @@ function DynamicTable({ url, action_id }) {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      <ViewModal open={open} onClose={handleClose} id={id} />
+      <ViewModal open={open} onClose={handleClose} id={id} mode={mode} />
       <CreateRequestModal
         open={editModalOpen}
         handleClose={() => {
@@ -711,6 +854,7 @@ function DynamicTable({ url, action_id }) {
         }}
         req
         editData={editData}
+        mode={mode}
       />
       {/* <DownloadModal open={open} handleClose={handleClose} setOpen={setOpen} /> */}
       {/* <DownloadModal open={open} onClose={handleClose} id={id} /> */}

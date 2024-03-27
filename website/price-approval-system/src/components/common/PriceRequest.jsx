@@ -1,33 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
-  Typography,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TextField,
-  IconButton,
-  Box,
-  Select,
-  MenuItem,
-  Checkbox,
-  FormControl,
-  InputLabel,
-  ListItemText,
-  Modal,
-} from "@mui/material";
-import {
-  Refresh,
-  Download,
-  Visibility,
-  Edit,
-  ContentCopy,
-  Delete,
-} from "@mui/icons-material";
+import { Typography, Box, MenuItem, Button, Menu } from "@mui/material";
+
 import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
 import DataTable from "./DataTable";
 import { backend_url, statusFilters } from "../../util";
@@ -82,7 +55,7 @@ const modalStyle = {
 function PriceChangeRequest({ role, isAM }) {
   let statusFiltersValues = Array.from(statusFilters.values());
   if (isAM == undefined) {
-    statusFiltersValues = Array.from(statusFilters.values()).slice(1, 5);
+    statusFiltersValues = Array.from(statusFilters.values()).slice(1, 6);
   }
   const [filterdId, setFilterdId] = useState(0);
   const { session } = useSession();
@@ -93,6 +66,24 @@ function PriceChangeRequest({ role, isAM }) {
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("Pending");
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const [mode, setMode] = useState("0");
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  // Assuming this is the function triggered by "Create Request"
+  const handleCreateRequest = () => {
+    setModalOpen(true);
+    handleClose(); // Close the dropdown menu
+    // Your existing logic for handling a request creation
+    console.log("Create Request action triggered");
+  };
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
@@ -135,7 +126,7 @@ function PriceChangeRequest({ role, isAM }) {
   const handleOpenModal = () => setModalOpen(true);
   const handleCloseModal = () => {
     setModalOpen(false);
-    window.location.reload();
+    //window.location.reload();
   };
 
   useEffect(() => {
@@ -143,12 +134,6 @@ function PriceChangeRequest({ role, isAM }) {
   }, [filterdId]);
 
   const ReturnDataTable = () => {
-    // console.log(`Filterred ID is ${filterdId} `);
-    //console.log(role);
-    //console.log(filterdId);
-    // console.log(employee_id);
-    console.log(session.role);
-    console.log(role);
     if (role == "AP_RM") {
       if (filterdId == 0) {
         // console.log("Filterred ID is 1");
@@ -206,6 +191,18 @@ function PriceChangeRequest({ role, isAM }) {
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=4`
+            }
+          />
+        );
+      }
+      if (filterdId == 5) {
+        // console.log("Filterred ID is 4");
+        return (
+          <DataTable
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
             }
           />
         );
@@ -272,16 +269,46 @@ function PriceChangeRequest({ role, isAM }) {
           />
         );
       }
-    } else if (role == "AM") {
-      if (filterdId == 1) {
-        // console.log("Filterred ID is 1");
+      if (filterdId == 5) {
+        // console.log("Filterred ID is 4");
         return (
           <DataTable
             action_id={role}
             url={
               backend_url +
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=5&role=${session.role}`
+            }
+          />
+        );
+      }
+    } else if (role == "AM") {
+      if (filterdId == 0) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=-1`
+            }
+            sendMode={setMode}
+            mode={mode}
+          />
+        );
+      }
+      if (filterdId == 1) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            url={
+              backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=0`
             }
+            sendMode={setMode}
+            mode={mode}
           />
         );
       }
@@ -289,7 +316,10 @@ function PriceChangeRequest({ role, isAM }) {
         // console.log("Filterred ID is 2");
         return (
           <DataTable
+            isAM={true}
             action_id={role}
+            sendMode={setMode}
+            mode={mode}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=1`
@@ -301,7 +331,10 @@ function PriceChangeRequest({ role, isAM }) {
         // console.log("Filterred ID is 3");
         return (
           <DataTable
-            // action_id={role}
+            isAM={true}
+            action_id={role}
+            sendMode={setMode}
+            mode={mode}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=2`
@@ -313,7 +346,10 @@ function PriceChangeRequest({ role, isAM }) {
         // console.log("Filterred ID is 4");
         return (
           <DataTable
+            isAM={true}
             action_id={role}
+            mode={mode}
+            sendMode={setMode}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=3`
@@ -321,7 +357,41 @@ function PriceChangeRequest({ role, isAM }) {
           />
         );
       }
+      if (filterdId == 5) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            sendMode={setMode}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
+            }
+          />
+        );
+      }
     }
+  };
+
+  const handleCopyRequest = () => {
+    handleClose(); // Close the menu
+    console.log("Copy Request action triggered");
+  };
+
+  const handleMergeRequest = () => {
+    handleClose(); // Close the menu
+    console.log("Merge Request action triggered");
+  };
+
+  const handleBlockRequest = () => {
+    handleClose(); // Close the menu
+    console.log("Block Request action triggered");
+  };
+
+  const handleExtensionOrPreclosure = () => {
+    handleClose(); // Close the menu
+    console.log("Extension or Preclosure action triggered");
   };
 
   return (
@@ -355,16 +425,37 @@ function PriceChangeRequest({ role, isAM }) {
           ))}
         </span>
         {isAM != undefined ? (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleOpenModal}
-            sx={{ mb: 1 }}
-          >
-            Create Request
-          </Button>
+          <div>
+            <Button
+              aria-controls="actions-menu"
+              aria-haspopup="true"
+              onClick={handleClick}
+              variant="contained"
+            >
+              Actions
+            </Button>
+            <Menu
+              id="actions-menu"
+              anchorEl={anchorEl}
+              keepMounted
+              open={open}
+              onClose={handleClose}
+            >
+              <MenuItem onClick={handleCreateRequest}>Create Request</MenuItem>
+              {/* <MenuItem onClick={handleCopyRequest}>Copy Request</MenuItem> */}
+              <MenuItem onClick={handleMergeRequest}>Merge Request</MenuItem>
+              {/* <MenuItem onClick={handleBlockRequest}>Block Request</MenuItem> */}
+              <MenuItem onClick={handleExtensionOrPreclosure}>
+                Extension or Preclosure
+              </MenuItem>
+            </Menu>
+          </div>
         ) : null}
-        <CreateRequestModal open={modalOpen} handleClose={handleCloseModal} />
+        <CreateRequestModal
+          open={modalOpen}
+          handleClose={handleCloseModal}
+          mode={mode ?? 0}
+        />
       </Box>
       {ReturnDataTable()}
     </div>

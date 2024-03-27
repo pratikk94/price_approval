@@ -33,7 +33,7 @@ const modalStyle = {
   overflowY: "auto", // In case of overflow
 };
 
-const CreateRequestModal = ({ open, handleClose, editData }) => {
+const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [selectedConsignees, setSelectedConsignees] = useState([]);
   const [endUse, setEndUse] = useState([]);
@@ -93,7 +93,7 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
       oneToManyMapping(selectedCustomers, selectedConsignees);
     }
   };
-  console.log(editData);
+  //console.log(editData);
   useEffect(() => {
     if (editData != undefined && editData.length > 0) {
       const [data] = editData; // Assuming editData is the array provided, and you're using the first item.
@@ -124,7 +124,8 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
       //setMap(data.mappint_type);
       setPriceDetails(data.price); // Assuming this directly maps to your price details state structure
     }
-  }, [editData]); //
+  }, [editData]);
+  //
   const submitData = async (formData) => {
     try {
       //console.log(JSON.stringify(formData));
@@ -132,6 +133,7 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
       if (editData) {
         formData["parentReqId"] = reqId;
         formData["isNew"] = false;
+        formData["mode"] = mode;
       }
       console.log(formData);
       const response = await fetch(`${backend_url}api/add_price_request`, {
@@ -193,6 +195,8 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
     setTableRowsData(data);
   };
 
+  console.log(mode);
+
   return (
     <Modal
       open={open}
@@ -213,6 +217,7 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
           <Grid item xs={6}>
             <SpacingWrapper space="12px" />
             <CustomerSelect
+              disabled={mode > 1}
               id={1}
               name={"customer"}
               customerState={setSelectedCustomers}
@@ -226,7 +231,7 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
             <FormControlLabel
               control={
                 <Checkbox
-                  disabled={checkBoxEnabled ? false : true}
+                  disabled={mode > 1 ? (checkBoxEnabled ? false : true) : false}
                   icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
                   checkedIcon={<CheckBoxIcon fontSize="medium" />}
                   checked={isChecked}
@@ -238,6 +243,7 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
             <SpacingWrapper space="12px" />
             <CustomerSelect
               id={3}
+              disabled={mode > 1}
               name={"end use"}
               customerState={setSelectedCustomers}
               consigneeState={setSelectedConsignees}
@@ -247,9 +253,14 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
               selectedCustomersToEdit={selectedEndUseIDs}
             />
             <SpacingWrapper space="12px" />
-            <Plant setSelection={setPlant} editedData={plant} />
+            <Plant
+              setSelection={setPlant}
+              editedData={plant}
+              disabled={mode > 1}
+            />
             <SpacingWrapper space="12px" />
             <PaymentTerms
+              disabled={mode > 1}
               setSelection={setPaymentTerms}
               editedData={paymentTerms}
             />
@@ -257,6 +268,7 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
             <Grid container spacing={2}>
               <Grid item xs={6}>
                 <DateSelector
+                  disabled={mode > 1}
                   name={"valid from"}
                   setSelection={setValidFrom}
                   editedData={validFrom}
@@ -264,6 +276,7 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
               </Grid>
               <Grid item xs={6}>
                 <DateSelector
+                  disabled={mode > 1}
                   name={"valid to"}
                   setSelection={setValidTo}
                   editedData={validTo}
@@ -276,6 +289,7 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
             <SpacingWrapper space="12px" />
             <CustomerSelect
               id={2}
+              disabled={mode > 1}
               name={"consignee"}
               customerState={setSelectedCustomers}
               consigneeState={setSelectedConsignees}
@@ -294,6 +308,7 @@ const CreateRequestModal = ({ open, handleClose, editData }) => {
         <SpacingWrapper space="24px" />
         <Typography>Select pricing conditions</Typography>
         <TableWithInputs
+          disabled={mode > 1}
           setTableRowsDataFunction={setTableRowsDataFunction}
           setFSCCode={setFSC}
           disableSubmit={setDisableSubmit}

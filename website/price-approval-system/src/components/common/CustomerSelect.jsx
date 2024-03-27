@@ -10,20 +10,21 @@ const CustomerSelect = ({
   endUseState,
   checkCheckBox,
   selectedCustomersToEdit,
+  disabled,
 }) => {
   const [customers, setCustomers] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
 
   useEffect(() => {
+    // Fetch and set customers only if not disabled
     const fetchCustomers = async () => {
-      // Mock fetching process
       const response = await fetch(
         `${backend_url}api/fetch_customers?type=${id}`
       );
       const data = await response.json();
       const formattedData = data.map((customer) => ({
-        value: customer.code, // assuming your customer object has an id field
-        label: `${customer.name} (${customer.code})`, // assuming your customer object has a name field
+        value: customer.code,
+        label: `${customer.name} (${customer.code})`,
       }));
       setCustomers(formattedData);
 
@@ -35,21 +36,24 @@ const CustomerSelect = ({
         customerState(initialSelectedCustomers);
       }
     };
-    console.log("fetching customers", selectedCustomersToEdit);
     fetchCustomers();
-  }, [id, selectedCustomersToEdit, customerState]);
-
+  }, [disabled, id, selectedCustomersToEdit, customerState]);
   const handleChange = (selected) => {
-    setSelectedOptions(selected);
-    if (id === 1) customerState(selected);
-    if (id === 2) consigneeState(selected);
-    if (id === 3) endUseState(selected);
-    checkCheckBox();
+    // Only update if not disabled
+    if (!disabled) {
+      setSelectedOptions(selected);
+      if (id === 1) customerState(selected);
+      if (id === 2) consigneeState(selected);
+      if (id === 3) endUseState(selected);
+      checkCheckBox();
+    }
   };
 
+  console.log(disabled);
   return (
     <Select
       isMulti
+      disabled={disabled}
       name={name}
       options={customers}
       value={selectedOptions}

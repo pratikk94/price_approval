@@ -199,6 +199,7 @@ async function fetchAndProcessRules(requestId, employeeId) {
     console.log(rulesResults.recordset);
     // 5. Extract values of rm, nsm, hdsm, and validator for active and valid rules
     for (const rule of rulesResults.recordset) {
+      console.log("Processing rule:", rule);
       const insertQuery = `
             INSERT INTO [transaction] (
                 request_id, rule_id, region, am, am_status, am_status_updated_at,
@@ -214,13 +215,37 @@ async function fetchAndProcessRules(requestId, employeeId) {
                 CASE WHEN @rm = 0 THEN -1 ELSE 0 END,
                 CASE WHEN @rm = 0 THEN GETDATE() ELSE NULL END,
                 CASE WHEN @rm = 0 THEN -1 ELSE NULL END,
-                CASE WHEN @nsm = 0 THEN -1 ELSE 0 END,
-                CASE WHEN @nsm = 0 THEN GETDATE() ELSE NULL END,
-                CASE WHEN @nsm = 0 THEN -1 ELSE NULL END,
-                CASE WHEN @hdsm = 0 THEN -1 ELSE 0 END,
-                CASE WHEN @hdsm = 0 THEN GETDATE() ELSE NULL END,
-                CASE WHEN @hdsm = 0 THEN -1 ELSE NULL END
-            )`;
+                CASE 
+                  WHEN @nsm > 1 THEN NULL 
+                  WHEN @nsm = 1 THEN 0 
+                  WHEN @nsm = 0 THEN -1  
+                END,
+                CASE 
+                  WHEN @nsm > 1 THEN NULL 
+                  WHEN @nsm = 1 THEN GETDATE() 
+                  ELSE NULL 
+                END,
+                CASE 
+                  WHEN @nsm > 1 THEN NULL 
+                  WHEN @nsm = 1 THEN @employeeId 
+                  ELSE NULL 
+                END,
+                CASE 
+                  WHEN @hdsm > 1 THEN NULL 
+                  WHEN @hdsm = 1 THEN 0 
+                  WHEN @nsm = 0 THEN -1  
+                END,
+                CASE 
+                  WHEN @hdsm > 1 THEN NULL 
+                  WHEN @hdsm = 1 THEN GETDATE() 
+                  ELSE NULL 
+                END,
+                CASE 
+                  WHEN @hdsm > 1 THEN NULL 
+                  WHEN @nsm = 1 THEN @employeeId 
+                  ELSE NULL 
+                END
+                )`;
 
       const result = await pool
         .request()
@@ -258,8 +283,10 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
   try {
     pool = await sql.connect(config);
     console.log("STATUS" + isNewRequest);
-    const requestType = isNewRequest ? "N" : "U";
-    const parentReqIdValue = isNewRequest ? reqId : parentReqId;
+    if (isNewRequest === 3) requestType = "B";
+    else if (isNewRequest === 2) requestType = "E";
+    else if (isNewRequest == "N") requestType = "N";
+    const parentReqIdValue = parentReqId;
     console.log(
       "Inserting request with type:",
       requestType,
@@ -287,6 +314,7 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
     console.error("SQL error", err);
   }
 }
+
 async function FetchAMDataWithStatus(employeeId, status, res) {
   let pool = null;
   console.log(employeeId, status);
@@ -500,84 +528,6 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
   }
 }
 
-async function AssignStatus(region, roleIndex, action) {
-  let pool = null;
-  try {
-    // Open connection to the database
-    pool = await sql.connect(config);
-
-    // Fetch rule values from the rule table using region
-    const result = await pool.request()
-      .query`SELECT * FROM defined_rules WHERE region = ${region}`;
-    const rules = result.recordset[0]; // assuming only one record matches
-    console.log("Rules:", rules);
-    // Check if today's date is between validFrom and validTo
-    const today = new Date().setHours(0, 0, 0, 0);
-    const validFrom = new Date(rules.valid_from);
-    const validTo = new Date(rules.valid_to);
-    console.log("Today:", today);
-    console.log("Valid From:", validFrom.setHours(0, 0, 0, 0));
-    console.log("Valid To:", validTo.setHours(0, 0, 0, 0));
-    if (today >= validFrom && today <= validTo) {
-      // Initialise statuses and roles from the database values
-      console.log("Rules", rules);
-      const statuses = [
-        0,
-        rules.rm_status,
-        rules.nsm_status,
-        rules.hdsm_status,
-        rules.validator_status,
-      ];
-      const roles = [0, rules.rm, rules.nsm, rules.hdsm, rules.validator];
-
-      // Adjust the roles as per your logic
-      for (let i = 1; i < roles.length; i++) {
-        if (roles[i] === 0) roles[i] = -1;
-      }
-
-      console.log("Status", statuses);
-
-      // Process action based on the provided action and roleIndex
-      if (action === 1 && roles[roleIndex] > -1) {
-        statuses[roleIndex] = 1;
-        // Find the next positive role and set its status to 0
-        for (let i = roleIndex + 1; i < roles.length; i++) {
-          if (roles[i] > -1) {
-            statuses[i] = 0;
-            break;
-          }
-        }
-      } else if ((action === 2 || action == 3) && roles[roleIndex] > -1) {
-        // Find the previous positive role and set its status to 2
-        console.log(roleIndex);
-        for (let i = roleIndex; i >= 0; i--) {
-          if (roles[i] > -1) {
-            statuses[i] = action;
-          }
-        }
-        for (let i = roleIndex; i < roles.length; i++) {
-          if (roles[i] == roles[i + 1] && roles[i] != undefined) {
-            statuses[i + 1] = action;
-            console.log(statuses);
-            i++;
-          } else if (roles[i] > -1) {
-            statuses[i] = undefined;
-          }
-        }
-      }
-
-      // Return or update the data as needed
-      console.log("Roles:", roles);
-      console.log("Statuses:", statuses);
-      return statuses;
-    } else {
-      console.log("Date is not within the valid range.");
-    }
-  } catch (err) {
-    console.error("SQL error", err);
-  }
-}
-
 async function FetchNSMDataWithStatus(employeeId, status, res) {
   let pool = null;
   try {
@@ -684,7 +634,7 @@ async function FetchNSMDataWithStatus(employeeId, status, res) {
     }
   }
 }
-//TO-D0: WORK
+
 async function FetchHDSMDataWithStatus(employeeId, status, res) {
   let pool = null;
   try {
@@ -791,6 +741,191 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
   }
 }
 
+async function FetchBlockedStatus(employeeId, status, res) {
+  let pool = null;
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+
+    // 1. Fetch region from 'define_role' for a given 'employee_id'
+    // Replace with actual employee ID
+    console.log(
+      `SELECT region FROM define_roles WHERE employee_id =${employeeId}`
+    );
+    const regionResult = await pool
+      .request()
+      .input("employeeId", sql.NVarChar, employeeId)
+      .query("SELECT region FROM define_roles WHERE employee_id = @employeeId");
+
+    if (regionResult.recordset.length === 0) {
+      throw new Error("No region found for this employee.");
+    }
+
+    const region = regionResult.recordset[0].region;
+    console.log("Region:", region);
+
+    // 2. Fetch all ids where 'rm' is greater than 0
+    const idsResult = await pool
+      .request()
+      .input("region", sql.VarChar, region)
+      .input("status", sql.VarChar, status) // Correctly setting the parameter
+      .query(
+        `WITH LatestTransactionPerRequest AS (
+            SELECT 
+                request_id,
+                MAX(id) AS MaxId
+            FROM 
+                [transaction]
+            GROUP BY 
+                request_id
+        )
+        , DetailedTransactions AS (
+            SELECT 
+                t.*,
+                lt.MaxId as LatestTransactionId
+            FROM 
+                [transaction] t
+            INNER JOIN 
+                LatestTransactionPerRequest lt ON t.id = lt.MaxId
+        )
+        SELECT 
+            dt.request_id,
+            dt.region,
+            dt.rule_id,
+            dt.am,
+            dt.am_status,
+            dt.am_status_updated_at,
+            dt.am_id,
+            dt.rm,
+            dt.rm_status,
+            dt.rm_status_updated_at,
+            dt.rm_id,
+            dt.nsm_status,
+            dt.nsm_status_updated_at,
+            dt.nsm_id,
+            dt.hdsm_status,
+            dt.hdsm_status_updated_at,
+            dt.hdsm_id,
+            dt.validator_status,
+            dt.validator_status_updated_at,
+            dt.validator_id,
+            dt.id,
+            dt.hdsm,
+            dt.validator,
+            dt.nsm,
+            dt.timestamp
+        FROM 
+            DetailedTransactions dt
+          INNER JOIN request_status rs ON dt.request_id = rs.req_id
+        WHERE 
+            rs.status = @status AND dt.region = @region 
+        `
+      );
+
+    console.log(idsResult);
+    // Assuming you're using these IDs to fetch related price requests...
+    const ids = idsResult.recordset.map((row) => row.request_id);
+    console.log("IDs:", ids);
+    if (ids.length > 0) {
+      const details = await fetchPriceApprovalDetails(
+        [...new Set(ids)],
+        region,
+        employeeId,
+        status
+      );
+
+      res.json(details);
+    } else {
+      res.json([]);
+    }
+  } catch (err) {
+    console.error("Error during database operations:", err);
+  } finally {
+    if (pool) {
+      await pool.close();
+    }
+  }
+}
+
+async function AssignStatus(region, roleIndex, action) {
+  let pool = null;
+  try {
+    // Open connection to the database
+    pool = await sql.connect(config);
+
+    // Fetch rule values from the rule table using region
+    const result = await pool.request()
+      .query`SELECT * FROM defined_rules WHERE region = ${region}`;
+    const rules = result.recordset[0]; // assuming only one record matches
+    console.log("Rules:", rules);
+    // Check if today's date is between validFrom and validTo
+    const today = new Date().setHours(0, 0, 0, 0);
+    const validFrom = new Date(rules.valid_from);
+    const validTo = new Date(rules.valid_to);
+    console.log("Today:", today);
+    console.log("Valid From:", validFrom.setHours(0, 0, 0, 0));
+    console.log("Valid To:", validTo.setHours(0, 0, 0, 0));
+    if (today >= validFrom && today <= validTo) {
+      // Initialise statuses and roles from the database values
+      console.log("Rules", rules);
+      const statuses = [
+        0,
+        rules.rm_status,
+        rules.nsm_status,
+        rules.hdsm_status,
+        rules.validator_status,
+      ];
+      const roles = [0, rules.rm, rules.nsm, rules.hdsm, rules.validator];
+
+      // Adjust the roles as per your logic
+      for (let i = 1; i < roles.length; i++) {
+        if (roles[i] === 0) roles[i] = -1;
+      }
+
+      console.log("Status", statuses);
+
+      // Process action based on the provided action and roleIndex
+      if ((action === 1 || action === 5) && roles[roleIndex] > -1) {
+        statuses[roleIndex] = action;
+        // Find the next positive role and set its status to 0
+        for (let i = roleIndex + 1; i < roles.length; i++) {
+          if (roles[i] > -1) {
+            statuses[i] = 0;
+            break;
+          }
+        }
+      } else if ((action === 2 || action == 3) && roles[roleIndex] > -1) {
+        // Find the previous positive role and set its status to 2
+        console.log(roleIndex);
+        for (let i = roleIndex; i >= 0; i--) {
+          if (roles[i] > -1) {
+            statuses[i] = action;
+          }
+        }
+        for (let i = roleIndex; i < roles.length; i++) {
+          if (roles[i] == roles[i + 1] && roles[i] != undefined) {
+            statuses[i + 1] = action;
+            console.log(statuses);
+            i++;
+          } else if (roles[i] > -1) {
+            statuses[i] = undefined;
+          }
+        }
+      }
+
+      // Return or update the data as needed
+      console.log("Roles:", roles);
+      console.log("Statuses:", statuses);
+      return statuses;
+    } else {
+      console.log("Date is not within the valid range.");
+    }
+  } catch (err) {
+    console.error("SQL error", err);
+  }
+}
+
 async function fetchPriceApprovalDetails(reqIds, region, employeeId, status) {
   let pool = null;
   let consolidatedResults = [];
@@ -813,6 +948,7 @@ async function fetchPriceApprovalDetails(reqIds, region, employeeId, status) {
           .query(`
         SELECT 
     pra.*,
+    rs.status AS CurrentStatus,
     (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
         FROM customer c
         JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
@@ -824,10 +960,9 @@ async function fetchPriceApprovalDetails(reqIds, region, employeeId, status) {
     (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
         FROM customer c
         JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
-    ) AS EndUseNames
-FROM 
-    price_approval_requests pra
-
+    ) AS EndUseNames FROM price_approval_requests pra
+    
+    LEFT JOIN request_status rs ON pra.req_id = rs.req_id  
 WHERE 
     pra.req_id = @reqId
     
@@ -1709,7 +1844,7 @@ app.get("/api/fetch_grade_with_pc", async (req, res) => {
 
 app.post("/api/add_price_request", async (req, res) => {
   let pool = null;
-
+  console.log("Request Body", req.body);
   try {
     pool = await sql.connect(config);
     let {
@@ -1746,6 +1881,7 @@ app.post("/api/add_price_request", async (req, res) => {
 
     const requestId = mainResult.recordset[0].id;
     console.log(requestId);
+    console.log("Here 1");
     pool = await sql.connect(config);
     for (const item of req.body.priceTable) {
       // console.log(item);
@@ -1780,6 +1916,7 @@ app.post("/api/add_price_request", async (req, res) => {
                     @oldNetNSR=${oldNetNSR}`;
       console.log(result);
     }
+    console.log("Here 2");
     const status = await pool
       .request()
       .input("customerIds", sql.VarChar, req.body.customerIds)
@@ -1798,7 +1935,7 @@ app.post("/api/add_price_request", async (req, res) => {
             SELECT SCOPE_IDENTITY() AS id;`);
     console.log("REQUEST_ID", req.body.parentReqId);
     insertRequest(
-      req.body.parentReqId == undefined,
+      req.body.mode == undefined ? "N" : req.body.mode,
       requestId,
       req.body.parentReqId != undefined ? req.body.parentReqId : requestId
     );
@@ -1843,6 +1980,10 @@ app.get("/api/fetch_request_am_with_status", async (req, res) => {
 
 app.get("/api/fetch_request_rm_with_status", async (req, res) => {
   FetchRMDataWithStatus(req.query.employeeId, req.query.status, res);
+});
+
+app.get("/api/fetch_blocked_requests", async (req, res) => {
+  FetchBlockedStatus(req.query.employeeId, "B", res);
 });
 
 app.get("/api/fetch_request_manager_with_status", async (req, res) => {
@@ -1924,7 +2065,7 @@ app.post("/api/update_request_status_manager", async (req, res) => {
     const rmIndex = roles.indexOf(role);
     const statusV = await AssignStatus(latestRow.region, rmIndex, action);
     console.log(typeof statusV);
-    console.log(statusV);
+    console.log("STATUSV", statusV);
     let [
       newAmStatus,
       newRmStatus,
@@ -1975,7 +2116,7 @@ app.post("/api/update_request_status_manager", async (req, res) => {
       .input(
         "rmStatus",
         sql.Int,
-        rmStatus.toString() // Assuming status is an integer
+        rmStatus == undefined ? null : rmStatus.toString() // Assuming status is an integer
       ) // Example based on your action logic
       .input(
         "rmStatusUpdatedAt",
@@ -1985,7 +2126,11 @@ app.post("/api/update_request_status_manager", async (req, res) => {
       .input("rmId", sql.VarChar, rmIndex == 1 ? employee_id : latestRow.rm_id) // Assuming action requires setting this to the employeeId
       // Continue setting inputs for nsm, hdsm, and validator similarly
       .input("nsm", sql.VarChar, latestRow.nsm)
-      .input("nsmStatus", sql.VarChar, nsmStatus.toString())
+      .input(
+        "nsmStatus",
+        sql.VarChar,
+        nsmStatus == undefined ? null : nsmStatus.toString()
+      )
       .input(
         "nsmStatusUpdatedAt",
         sql.VarChar,
@@ -1999,7 +2144,11 @@ app.post("/api/update_request_status_manager", async (req, res) => {
         rmIndex == 2 ? employee_id : latestRow.nsm_id
       )
       .input("hdsm", sql.VarChar, latestRow.hdsm)
-      .input("hdsmStatus", sql.VarChar, hdsmStatus.toString())
+      .input(
+        "hdsmStatus",
+        sql.VarChar,
+        hdsmStatus == undefined ? null : hdsmStatus.toString()
+      )
       .input(
         "hdsmStatusUpdatedAt",
         sql.VarChar,
@@ -2018,7 +2167,11 @@ app.post("/api/update_request_status_manager", async (req, res) => {
       .input(
         "validatorStatus",
         sql.VarChar,
-        validatorStatus != null ? validatorStatus.toString() : ""
+        validatorStatus != null
+          ? validatorStatus == undefined
+            ? null
+            : validatorStatus.toString()
+          : ""
       )
       .input(
         "validatorStatusUpdatedAt",

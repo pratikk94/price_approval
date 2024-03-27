@@ -62,7 +62,7 @@ function PriceTable({ price }) {
   ) : null;
 }
 
-function PriceViewModal({ open, onClose, id, data, isEditable, role }) {
+function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
   const { session } = useSession();
   const employee_id = session.employee_id;
   const updateStatus = (newStatus) => {
@@ -152,7 +152,7 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role }) {
               <IconButton>
                 <DoneIcon
                   onClick={() => {
-                    updateStatus(1);
+                    updateStatus(mode);
                   }}
                 />
               </IconButton>

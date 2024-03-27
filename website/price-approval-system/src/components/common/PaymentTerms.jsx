@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { backend_url } from "../../util";
 
-const PaymentTerms = ({ setSelection, editedData }) => {
+const PaymentTerms = ({ setSelection, editedData, disabled }) => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   useEffect(() => {
@@ -34,9 +34,11 @@ const PaymentTerms = ({ setSelection, editedData }) => {
   }, []);
 
   const handleChange = (selectedOptions) => {
-    setSelectedCustomers(selectedOptions);
+    if (!disabled) {
+      setSelectedCustomers(selectedOptions);
 
-    setSelection(selectedOptions);
+      setSelection(selectedOptions);
+    }
   };
 
   return (

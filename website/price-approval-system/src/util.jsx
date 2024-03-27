@@ -5,4 +5,5 @@ export const statusFilters = new Map([
   [2, "Approved"],
   [3, "Rejected"],
   [4, "Rework"],
+  [5, "Blocked"],
 ]);

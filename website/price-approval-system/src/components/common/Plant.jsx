@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { backend_url } from "../../util";
 
-const Plant = ({ setSelection, editedData }) => {
+const Plant = ({ setSelection, editedData, disabled }) => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   //console.log(editedData);
@@ -40,15 +40,17 @@ const Plant = ({ setSelection, editedData }) => {
   }, []);
 
   const handleChange = (selectedOptions) => {
-    setSelectedCustomers(selectedOptions);
-
-    setSelection(selectedOptions);
+    if (!disabled) {
+      setSelectedCustomers(selectedOptions);
+      setSelection(selectedOptions);
+    }
   };
 
   return (
     <Select
       style={{ margintop: "10px" }}
       isMulti
+      disabled={disabled}
       name="customers"
       options={customers}
       value={selectedCustomers}
