@@ -17,8 +17,8 @@ const config = {
   user: "sa",
   //password: "SayaliK20311",
   //server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  password: "12345",
-  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "SayaliK20311",
+  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
   database: "PriceApprovalSystem",
   options: {
@@ -319,6 +319,16 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
   }
 }
 
+function filterDuplicates(details) {
+  const unique = {};
+  details.forEach((detail) => {
+    if (!unique[detail.req_id]) {
+      unique[detail.req_id] = detail;
+    }
+  });
+  return Object.values(unique);
+}
+
 async function FetchAMDataWithStatus(employeeId, status, res) {
   let pool = null;
   console.log(employeeId, status);
@@ -400,14 +410,22 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       WHERE 
           dt.am_status = @status and dt.region = @region ;`
       );
-    console.log(idsResult);
+    console.log("IDS", idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const rms = idsResult.recordset.map((row) => row.rm_status);
+    const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const validators = idsResult.recordset.map((row) => row.validator_status);
     const details = await fetchPriceApprovalDetails(
       ids,
       region,
       employeeId,
-      status
+      status,
+      rms,
+      nsms,
+      hdsm,
+      validators
     );
     if (details != undefined && details.length > 0) {
       details.forEach((detail) => {
@@ -416,7 +434,10 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
         }
         // Add any additional transformations needed
       });
-      res.json(details);
+
+      const filteredDetails = filterDuplicates(details);
+      console.log("Details->", filteredDetails);
+      res.json(filteredDetails);
     } else res.json([]);
   } catch (err) {
     console.error("Error during database operations:", err);
@@ -510,13 +531,22 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const rms = idsResult.recordset.map((row) => row.rm_status);
+    const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const validators = idsResult.recordset.map((row) => row.validator_status);
+
     console.log("IDs:", ids);
     if (ids.length > 0) {
       const details = await fetchPriceApprovalDetails(
         [...new Set(ids)],
         region,
         employeeId,
-        status
+        status,
+        rms,
+        nsms,
+        hdsm,
+        validators
       );
 
       res.json(details);
@@ -617,13 +647,22 @@ async function FetchNSMDataWithStatus(employeeId, status, res) {
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const rms = idsResult.recordset.map((row) => row.rm_status);
+    const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const validators = idsResult.recordset.map((row) => row.validator_status);
+
     console.log("IDs:", ids);
     if (ids.length > 0) {
       const details = await fetchPriceApprovalDetails(
         [...new Set(ids)],
         region,
         employeeId,
-        status
+        status,
+        rms,
+        nsms,
+        hdsm,
+        validators
       );
 
       res.json(details);
@@ -723,13 +762,22 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const rms = idsResult.recordset.map((row) => row.rm_status);
+    const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const validators = idsResult.recordset.map((row) => row.validator_status);
+
     console.log("IDs:", ids);
     if (ids.length > 0) {
       const details = await fetchPriceApprovalDetails(
         [...new Set(ids)],
         region,
         employeeId,
-        status
+        status,
+        rms,
+        nsms,
+        hdsm,
+        validators
       );
 
       res.json(details);
@@ -830,13 +878,22 @@ async function FetchBlockedStatus(employeeId, status, res) {
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const rms = idsResult.recordset.map((row) => row.rm_status);
+    const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const validators = idsResult.recordset.map((row) => row.validator_status);
+
     console.log("IDs:", ids);
     if (ids.length > 0) {
       const details = await fetchPriceApprovalDetails(
         [...new Set(ids)],
         region,
         employeeId,
-        status
+        status,
+        rms,
+        nsms,
+        hdsm,
+        validators
       );
 
       res.json(details);
@@ -896,6 +953,14 @@ async function AssignStatus(region, roleIndex, action) {
         // Find the next positive role and set its status to 0
 
         for (let i = roleIndex + 1; i < roles.length; i++) {
+          if (!roles.some((element) => element > roles[roleIndex])) {
+            for (let j = i; j < region.length; j++) {
+              if (roles[j] > -1) {
+                statuses[j] = 1;
+              }
+            }
+            break;
+          }
           if (roles[i] > -1) {
             statuses[i] = 0;
           }
@@ -934,7 +999,16 @@ async function AssignStatus(region, roleIndex, action) {
   }
 }
 
-async function fetchPriceApprovalDetails(reqIds, region, employeeId, status) {
+async function fetchPriceApprovalDetails(
+  reqIds,
+  region,
+  employeeId,
+  status,
+  rms,
+  nsms,
+  hdsms,
+  validators
+) {
   let pool = null;
   let consolidatedResults = [];
 
@@ -951,10 +1025,12 @@ async function fetchPriceApprovalDetails(reqIds, region, employeeId, status) {
         status
       );
       console.log("Request IDs:", reqIds);
-      for (let reqId of reqIds) {
-        const result = await pool.request().input("reqId", sql.Int, reqId)
+      for (let id = 0; id < reqIds.length; id++) {
+        const result = await pool.request().input("reqId", sql.Int, reqIds[0])
           .query(`
         SELECT 
+        TOP 1 
+        rs.id,
     pra.*,
     rs.status AS CurrentStatus,
     (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
@@ -970,13 +1046,35 @@ async function fetchPriceApprovalDetails(reqIds, region, employeeId, status) {
         JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
     ) AS EndUseNames FROM price_approval_requests pra
     
-    LEFT JOIN request_status rs ON pra.req_id = rs.req_id  
+    LEFT JOIN request_status rs ON pra.req_id = rs.parent_req_id  
 WHERE 
     pra.req_id = @reqId
-    
+    ORDER BY rs.id DESC  
  `);
 
         if (result.recordset.length > 0) {
+          let overallStatus = 1;
+          console.log(
+            "ResultStatus",
+            rms[id],
+            nsms[id],
+            hdsms[id],
+            validators[id]
+          );
+          if (rms[id] != null) {
+            overallStatus = overallStatus && rms[id];
+          }
+          if (nsms[id] != null) {
+            overallStatus = overallStatus && nsms[id];
+          }
+          if (hdsms[id] != null) {
+            overallStatus = overallStatus && hdsms[id];
+          }
+          if (validators[id] != null) {
+            overallStatus = overallStatus && validators[id];
+          }
+          result.recordset[0].overallStatus = overallStatus;
+          console.log("Result", result.recordset[0]);
           consolidatedResults.push(result.recordset[0]); // Assuming you expect one record per reqId, adjust if necessary
         }
       }
@@ -1409,6 +1507,7 @@ app.get("/api/fetch_price_requests", async (req, res) => {
       ...item, // Spread the rest of the properties of the object
       req_id: item.req_id[0], // Assuming all values in req_id array are the same, take the first one
     }));
+    console.log("TransformedData", transformedData);
     res.json(transformedData);
   } catch (err) {
     // If an error occurs, send an error response
