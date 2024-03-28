@@ -384,6 +384,96 @@ function PriceChangeRequest({ role, isAM }) {
           />
         );
       }
+    } else if (role == "Validator") {
+      if (filterdId == 0) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=-1`
+            }
+            sendMode={setMode}
+            mode={mode}
+          />
+        );
+      }
+      if (filterdId == 1) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=0`
+            }
+            sendMode={setMode}
+            mode={mode}
+          />
+        );
+      }
+      if (filterdId == 2) {
+        // console.log("Filterred ID is 2");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            sendMode={setMode}
+            mode={mode}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=1`
+            }
+          />
+        );
+      }
+      if (filterdId == 3) {
+        // console.log("Filterred ID is 3");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            sendMode={setMode}
+            mode={mode}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=2`
+            }
+          />
+        );
+      }
+      if (filterdId == 4) {
+        // console.log("Filterred ID is 4");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            mode={mode}
+            sendMode={setMode}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=3`
+            }
+          />
+        );
+      }
+      if (filterdId == 5) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            sendMode={setMode}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
+            }
+          />
+        );
+      }
     }
   };
 

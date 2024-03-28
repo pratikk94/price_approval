@@ -209,7 +209,8 @@ function DynamicTable({ url, action_id, isAM, sendMode, mode }) {
     else if (
       action_id == "AM" ||
       action_id == "AP_RM" ||
-      action_id == "AP_NSM_HDSM"
+      action_id == "AP_NSM_HDSM" ||
+      action_id == "Validator"
     )
       fetchAMData();
   }, [modalOpen]);

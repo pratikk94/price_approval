@@ -17,8 +17,8 @@ const config = {
   user: "sa",
   //password: "SayaliK20311",
   //server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  password: "SayaliK20311",
-  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "12345",
+  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
   database: "PriceApprovalSystem",
   options: {
@@ -784,6 +784,125 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
     } else {
       res.json([]);
     }
+  } catch (err) {
+    console.error("Error during database operations:", err);
+  } finally {
+    if (pool) {
+      await pool.close();
+    }
+  }
+}
+
+async function FetchValidatorDataWithStatus(employeeId, status, res) {
+  let pool = null;
+  console.log(employeeId, status);
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+
+    // 1. Fetch region from 'define_role' for a given 'employee_id'
+    // Replace with actual employee ID
+    console.log(
+      `SELECT region FROM define_roles WHERE employee_id =${employeeId}`
+    );
+    const regionResult = await pool
+      .request()
+      .input("employeeId", sql.NVarChar, employeeId)
+      .query("SELECT region FROM define_roles WHERE employee_id = @employeeId");
+
+    if (regionResult.recordset.length === 0) {
+      throw new Error("No region found for this employee.");
+    }
+
+    const region = regionResult.recordset[0].region;
+    console.log("Region:", region);
+    console.log("Status:", status);
+
+    // 2. Fetch all ids where 'rm' is greater than 0
+    const idsResult = await pool
+      .request()
+      .input("region", sql.VarChar, region)
+      .input("status", sql.VarChar, status) // Correctly setting the parameter
+      .query(
+        `WITH LatestTransactionPerRequest AS (
+          SELECT 
+              request_id,
+              MAX(id) AS MaxId
+          FROM 
+              [transaction]
+          GROUP BY 
+              request_id
+      )
+      , DetailedTransactions AS (
+          SELECT 
+              t.*,
+              lt.MaxId as LatestTransactionId
+          FROM 
+              [transaction] t
+          INNER JOIN 
+              LatestTransactionPerRequest lt ON t.id = lt.MaxId
+      )
+      SELECT 
+          dt.request_id,
+          dt.region,
+          dt.rule_id,
+          dt.am,
+          dt.am_status,
+          dt.am_status_updated_at,
+          dt.am_id,
+          dt.rm,
+          dt.rm_status,
+          dt.rm_status_updated_at,
+          dt.rm_id,
+          dt.nsm_status,
+          dt.nsm_status_updated_at,
+          dt.nsm_id,
+          dt.hdsm_status,
+          dt.hdsm_status_updated_at,
+          dt.hdsm_id,
+          dt.validator_status,
+          dt.validator_status_updated_at,
+          dt.validator_id,
+          dt.id,
+          dt.hdsm,
+          dt.validator,
+          dt.nsm,
+          dt.timestamp
+      FROM 
+          DetailedTransactions dt
+      WHERE 
+          dt.validator_status = @status and dt.region = @region ;`
+      );
+    console.log("IDS", idsResult);
+    // Assuming you're using these IDs to fetch related price requests...
+    const ids = idsResult.recordset.map((row) => row.request_id);
+    const rms = idsResult.recordset.map((row) => row.rm_status);
+    const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const validators = idsResult.recordset.map((row) => row.validator_status);
+    const details = await fetchPriceApprovalDetails(
+      ids,
+      region,
+      employeeId,
+      status,
+      rms,
+      nsms,
+      hdsm,
+      validators
+    );
+    if (details != undefined && details.length > 0) {
+      details.forEach((detail) => {
+        if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
+          detail.req_id = detail.req_id[0]; // Convert array to single value
+        }
+        // Add any additional transformations needed
+      });
+
+      const filteredDetails = filterDuplicates(details);
+      console.log("Details->", filteredDetails);
+      res.json(filteredDetails);
+    } else res.json([]);
   } catch (err) {
     console.error("Error during database operations:", err);
   } finally {
@@ -2086,8 +2205,11 @@ app.get("/api/fetch_sales_regions", async (req, res) => {
 });
 
 app.get("/api/fetch_request_am_with_status", async (req, res) => {
-  console.log("CALLEDD...");
   FetchAMDataWithStatus(req.query.employeeId, req.query.status, res);
+});
+
+app.get("/api/fetch_request_validator_with_status", async (req, res) => {
+  FetchValidatorDataWithStatus(req.query.employeeId, req.query.status, res);
 });
 
 app.get("/api/fetch_request_rm_with_status", async (req, res) => {

@@ -13,12 +13,25 @@ import {
   Divider,
   TextField,
 } from "@mui/material";
+import Dashboard from "../Role_AM/Screens/Dashboard";
+import PriceChangeRequests from "../components/common/PriceRequest";
+import RequestsHistory from "../Role_AM/Screens/RequestHistory";
+import ReportsAndAnalysis from "../Role_AM/Screens/ReportsAndAnalysis";
+
 const drawerWidth = 240;
-import PriceRequest from "../Role_Validator/Screens/PriceRequest";
-function ResponsiveDrawer({logout}) {
+
+function ResponsiveDrawer({ logout }) {
   const [activePane, setActivePane] = useState("Dashboard");
 
-  const drawerItems = [{ text: "Price Requests", component: <PriceRequest /> }];
+  const drawerItems = [
+    { text: "Dashboard", component: <Dashboard /> },
+    {
+      text: "Price Requests",
+      component: <PriceChangeRequests role={"Validator"} isAM={true} />,
+    },
+    { text: "Requests History", component: <RequestsHistory /> },
+    { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
+  ];
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -31,8 +44,15 @@ function ResponsiveDrawer({logout}) {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
-          
-          <Button color="inherit" onClick={()=>{logout();}}>Logout</Button>
+
+          <Button
+            color="inherit"
+            onClick={() => {
+              logout();
+            }}
+          >
+            Logout
+          </Button>
         </Toolbar>
       </AppBar>
       <Drawer
