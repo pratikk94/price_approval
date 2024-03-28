@@ -42,16 +42,24 @@ const CustomerSelect = ({
   }, [disabled, id, selectedCustomersToEdit, customerState]);
   const handleChange = (selected) => {
     // Only update if not disabled
+    console.log(disabled);
     if (!disabled) {
+      console.log(id);
+      console.log(selected);
       setSelectedOptions(selected);
       if (id === 1) customerState(selected);
       if (id === 2) consigneeState(selected);
       if (id === 3) endUseState(selected);
-      checkCheckBox();
     }
   };
 
-  console.log(disabled);
+  const handleBlur = () => {
+    console.log("Select has lost focus");
+    checkCheckBox();
+    // Run any function or logic you need here
+  };
+
+  // console.log(disabled);
   return (
     <Select
       isMulti
@@ -60,6 +68,7 @@ const CustomerSelect = ({
       options={customers}
       value={selectedOptions}
       onChange={handleChange}
+      onBlur={handleBlur}
       closeMenuOnSelect={false}
       placeholder={`Select ${name}`}
     />

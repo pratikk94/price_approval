@@ -240,8 +240,8 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     setTableRowsData(data);
   };
 
-  console.log(mode);
-
+  // console.log(mode);
+  // console.log(checkBoxEnabled);
   return (
     <Modal
       open={open}
@@ -276,7 +276,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
             <FormControlLabel
               control={
                 <Checkbox
-                  disabled={mode > 1 ? (checkBoxEnabled ? false : true) : false}
+                  disabled={mode > 1 ? false : !checkBoxEnabled}
                   icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
                   checkedIcon={<CheckBoxIcon fontSize="medium" />}
                   checked={isChecked}
