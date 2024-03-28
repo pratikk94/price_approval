@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./TableWithInputs.css"; // Make sure to create a CSS file for styles
-import { Button, Checkbox, FormControlLabel, Grid } from "@mui/material";
+import {
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Grid,
+  Typography,
+} from "@mui/material";
 
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
@@ -241,6 +247,7 @@ function TableWithInputs({
         }
         label="FSC"
       />
+      <Typography>Select pricing conditions</Typography>
       <Grid container spacing={2} sx={{ mb: 2 }}>
         {Object.keys(checkboxState).map((option) => (
           <Grid item xs={4} key={option}>

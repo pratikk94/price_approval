@@ -21,11 +21,13 @@ export const SessionProvider = ({ children }) => {
           credentials: "include",
         });
         const data = await response.json();
+        // console.log(data);
         if (data.loggedIn) {
           // Assuming 'employeeId' is part of the response when the session is valid
           setSession({
             loading: false,
             loggedIn: true,
+            region: data.region,
             employee_id: data.employee_id, // Set employeeId from session data
             role: data.role,
           });

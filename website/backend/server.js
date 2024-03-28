@@ -1153,11 +1153,8 @@ app.post("/api/login", async (req, res) => {
     pool = await sql.connect(config);
     // Query database for user role
 
-    console.log(
-      `SELECT role FROM define_roles WHERE employee_id = ${employee_id}`
-    );
     const result = await pool.request()
-      .query`SELECT role FROM define_roles WHERE employee_id = ${employee_id}`;
+      .query`SELECT role ,region FROM define_roles WHERE employee_id = ${employee_id}`;
 
     if (result.recordset.length > 0 && req.session) {
       // Set session
@@ -1165,7 +1162,7 @@ app.post("/api/login", async (req, res) => {
       console.log(result);
       req.session.employee_id = employee_id;
       req.session.role = result.recordset[0].role;
-
+      req.session.region = result.recordset[0].region;
       res.json({ loggedIn: true, role: result.recordset[0].role });
     } else {
       res.status(401).json({ loggedIn: false, message: "Invalid employee ID" });
@@ -1191,6 +1188,7 @@ app.get("/api/session", (req, res) => {
     res.json({
       loggedIn: true,
       role: req.session.role,
+      region: req.session.region,
       employee_id: req.session.employee_id,
     });
   } else {
@@ -1213,14 +1211,21 @@ app.get("/api/fetch_customers", async (req, res) => {
     // Establish a connection to the database
     pool = await sql.connect(config);
     const type = req.query.type;
+    const region = req.query.region;
     // Query the database
     let result;
+    console.log(
+      `SELECT code, name FROM customer where Sales_office = ${region} and category IN ('END-USE')`
+    );
     if (type == 3) {
-      result = await pool.request().query`EXEC GetAllCustomersEndUse`;
+      result = await pool.request()
+        .query`SELECT code, name FROM customer where Sales_office = ${region} and category IN ('END-USE')`;
     } else if (type == 2) {
-      result = await pool.request().query`EXEC GetAllCustomersConsignee`;
+      result = await pool.request()
+        .query`SELECT code, name FROM customer where Sales_office = ${region} and category IN ('DOM-CONS','EXP-CONS')`;
     } else {
-      result = await pool.request().query`EXEC GetAllCustomers`;
+      result = await pool.request()
+        .query`SELECT code, name FROM customer WHERE Sales_office = ${region} and category IN ('DOM_CUST', 'EXP_CUST', 'INTERDIV_CUST')`;
     }
     // Send the results as a response
     res.json(result.recordset);

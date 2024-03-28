@@ -59,34 +59,85 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   // const { employee_id } = useContext(SessionProvider).session.employee_id;
   const handleSubmit = (event) => {
     event.preventDefault();
-    //console.log("Form data", { tableRows });
-    formData["customerIds"] = selectedCustomers
-      .map((item) => item.value)
-      .join(",");
-    formData["consigneeIds"] = selectedConsignees
-      .map((item) => item.value)
-      .join(",");
-    formData["endUseIds"] = endUse.map((item) => item.value).join(",");
-    formData["endUseSegmentIds"] = ["seg1"].toString();
-    formData["plants"] = plant.map((item) => item.value.toString()).toString();
-    formData["paymentTermsId"] = paymentTerms["value"].toString();
-    formData["validFrom"] = validFrom;
-    formData["validTo"] = validTo;
-    formData["remarks"] = remarks;
-    formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
-    formData["fsc"] = 1;
-    formData["priceTable"] = tableRowsData;
-    formData["isDraft"] = isDraft;
-    formData["am_id"] = employee_id;
-    console.log(employee_id);
-    console.log(formData.length);
-    const val = JSON.stringify(formData);
-    //console.log(val);
-    submitData(formData);
-    // setSelectedConsignees([]);
-    // setSelectedCustomers([]);
+    console.log(validFrom != "");
+    console.log(validTo != "");
+    console.log(paymentTerms != undefined);
+    console.log(selectedCustomers.length > 0);
+    console.log(selectedConsignees.length > 0);
+    console.log(endUse.length > 0);
+    if (
+      validFrom != "" &&
+      validTo != "" &&
+      paymentTerms != undefined &&
+      selectedCustomers.length > 0 &&
+      selectedConsignees.length > 0 &&
+      endUse.length > 0
+    ) {
+      if (paymentTerms.length == 0) {
+        alert("Please select payment terms");
+      } else {
+        formData["customerIds"] = selectedCustomers
+          .map((item) => item.value)
+          .join(",");
+        formData["consigneeIds"] = selectedConsignees
+          .map((item) => item.value)
+          .join(",");
+        formData["endUseIds"] = endUse.map((item) => item.value).join(",");
+        formData["endUseSegmentIds"] = ["seg1"].toString();
+        formData["plants"] = plant
+          .map((item) => item.value.toString())
+          .toString();
+        formData["paymentTermsId"] = paymentTerms["value"].toString();
+        formData["validFrom"] = validFrom;
+        formData["validTo"] = validTo;
+        formData["remarks"] = remarks;
+        formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
+        formData["fsc"] = 1;
+        formData["priceTable"] = tableRowsData;
+        let stopExecution = false;
+        for (let i = 0; i < tableRowsData.length; i++) {
+          console.log(tableRowsData[i]);
+          if (tableRowsData[i]["grade"].length == 0) {
+            alert("Select grade for row " + (i + 1));
+            stopExecution = true;
+          } else if (tableRowsData[i]["agreedPrice"] < 1) {
+            alert("Select agreed price for row " + (i + 1));
+            stopExecution = true;
+          } else if (tableRowsData[i]["specialDiscount"] < 1) {
+            alert("Select special discount for row " + (i + 1));
+            stopExecution = true;
+          }
+        }
 
-    //handleClose();
+        formData["isDraft"] = isDraft;
+        formData["am_id"] = employee_id;
+        console.log(employee_id);
+        console.log(formData.length);
+        const val = JSON.stringify(formData);
+        console.log("In here");
+        if (!stopExecution) {
+          if (validFrom < validTo) {
+            submitData(formData);
+          } else {
+            alert("Valid to date should be greater than valid from date");
+          }
+        }
+      }
+    } else if (selectedCustomers.length == 0) {
+      alert("Please select customers");
+    } else if (selectedConsignees.length == 0) {
+      alert("Please select consignees");
+    } else if (endUse.length == 0) {
+      alert("Please select end use");
+    } else if (validFrom == "") {
+      alert("Please select valid from date");
+    } else if (validTo == "") {
+      alert("Please select valid to date");
+    } else if (paymentTerms != undefined) {
+      alert("Please select payment terms");
+    } else {
+      console.log("Here i am");
+    }
     if (checkBoxEnabled && isChecked) {
       oneToOneMapping(selectedCustomers, selectedConsignees);
     } else {
@@ -99,7 +150,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       const [data] = editData; // Assuming editData is the array provided, and you're using the first item.
       console.log(data);
       setReqId(data.req_id[0]);
-     
+
       // Update states
       setSelectedConsigneeIDs(data.customer_id);
       setSelectedCustomerIDs(data.consignee_id);
@@ -300,7 +351,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         </Grid>
 
         <SpacingWrapper space="24px" />
-        <Typography>Select pricing conditions</Typography>
+
         <TableWithInputs
           disabled={mode > 1}
           setTableRowsDataFunction={setTableRowsDataFunction}

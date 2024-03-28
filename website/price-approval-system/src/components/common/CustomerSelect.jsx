@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { backend_url } from "../../util";
+import { useSession } from "../../Login_Controller/SessionContext";
 
 const CustomerSelect = ({
   id,
@@ -14,12 +15,13 @@ const CustomerSelect = ({
 }) => {
   const [customers, setCustomers] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
-
+  const { session } = useSession();
   useEffect(() => {
     // Fetch and set customers only if not disabled
+
     const fetchCustomers = async () => {
       const response = await fetch(
-        `${backend_url}api/fetch_customers?type=${id}`
+        `${backend_url}api/fetch_customers?type=${id}&&region=${session.region}`
       );
       const data = await response.json();
       const formattedData = data.map((customer) => ({
