@@ -56,7 +56,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [selectedCustomerrIDs, setSelectedCustomerIDs] = useState([]);
   const [selectedConsigneeIDs, setSelectedConsigneeIDs] = useState([]);
   const [selectedEndUseIDs, setSelectedEndUseIDs] = useState([]);
-  // const { employee_id } = useContext(SessionProvider).session.employee_id;
+
   const handleSubmit = (event) => {
     event.preventDefault();
     console.log(validFrom != "");
@@ -144,7 +144,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       oneToManyMapping(selectedCustomers, selectedConsignees);
     }
   };
-  //console.log(editData);
+
   useEffect(() => {
     if (editData != undefined && editData.length > 0) {
       const [data] = editData; // Assuming editData is the array provided, and you're using the first item.
@@ -170,7 +170,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       setPriceDetails(data.price); // Assuming this directly maps to your price details state structure
     }
   }, [editData]);
-  //
+
   const submitData = async (formData) => {
     try {
       //console.log(JSON.stringify(formData));
@@ -194,7 +194,11 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       }
 
       const responseData = await response;
-      if (response.status === 200) console.log("Success", responseData);
+      if (response.status === 200) {
+        console.log("Success", responseData);
+        alert("Request created succesfully.");
+        window.location.reload();
+      }
     } catch (error) {
       console.error("Failed to send data:", error);
     }
@@ -240,8 +244,6 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     setTableRowsData(data);
   };
 
-  // console.log(mode);
-  // console.log(checkBoxEnabled);
   return (
     <Modal
       open={open}
