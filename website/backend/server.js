@@ -15,10 +15,10 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  //password: "SayaliK20311",
-  //server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  password: "12345",
-  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "SayaliK20311",
+  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  //password: "12345",
+  //server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
   database: "PriceApprovalSystem",
   options: {
@@ -290,6 +290,7 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
     if (isNewRequest === 3) requestType = "B";
     else if (isNewRequest === 2) requestType = "E";
     else if (isNewRequest == "N") requestType = "N";
+    else if (isNewRequest == 0) requestType = "U";
     const parentReqIdValue = parentReqId;
     console.log(
       "Inserting request with type:",
@@ -322,7 +323,12 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
 function filterDuplicates(details) {
   const unique = {};
   details.forEach((detail) => {
-    if (!unique[detail.req_id]) {
+    // If the entry doesn't exist, or it doesn't have a status of 'U',
+    // or the current detail's status is 'U', update/overwrite it.
+    if (
+      !unique[detail.req_id] ||
+      unique[detail.req_id].current_status !== "U"
+    ) {
       unique[detail.req_id] = detail;
     }
   });
@@ -539,7 +545,7 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
     console.log("IDs:", ids);
     if (ids.length > 0) {
       const details = await fetchPriceApprovalDetails(
-        [...new Set(ids)],
+        ids,
         region,
         employeeId,
         status,
@@ -549,7 +555,18 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
         validators
       );
 
-      res.json(details);
+      if (details != undefined && details.length > 0) {
+        details.forEach((detail) => {
+          if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
+            detail.req_id = detail.req_id[0]; // Convert array to single value
+          }
+          // Add any additional transformations needed
+        });
+
+        const filteredDetails = filterDuplicates(details);
+        console.log("Details->", filteredDetails);
+        res.json(filteredDetails);
+      } else res.json([]);
     } else {
       res.json([]);
     }
@@ -655,7 +672,7 @@ async function FetchNSMDataWithStatus(employeeId, status, res) {
     console.log("IDs:", ids);
     if (ids.length > 0) {
       const details = await fetchPriceApprovalDetails(
-        [...new Set(ids)],
+        ids,
         region,
         employeeId,
         status,
@@ -665,7 +682,18 @@ async function FetchNSMDataWithStatus(employeeId, status, res) {
         validators
       );
 
-      res.json(details);
+      if (details != undefined && details.length > 0) {
+        details.forEach((detail) => {
+          if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
+            detail.req_id = detail.req_id[0]; // Convert array to single value
+          }
+          // Add any additional transformations needed
+        });
+
+        const filteredDetails = filterDuplicates(details);
+        console.log("Details->", filteredDetails);
+        res.json(filteredDetails);
+      } else res.json([]);
     } else {
       res.json([]);
     }
@@ -770,7 +798,7 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
     console.log("IDs:", ids);
     if (ids.length > 0) {
       const details = await fetchPriceApprovalDetails(
-        [...new Set(ids)],
+        ids,
         region,
         employeeId,
         status,
@@ -780,7 +808,18 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
         validators
       );
 
-      res.json(details);
+      if (details != undefined && details.length > 0) {
+        details.forEach((detail) => {
+          if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
+            detail.req_id = detail.req_id[0]; // Convert array to single value
+          }
+          // Add any additional transformations needed
+        });
+
+        const filteredDetails = filterDuplicates(details);
+        console.log("Details->", filteredDetails);
+        res.json(filteredDetails);
+      } else res.json([]);
     } else {
       res.json([]);
     }
@@ -1015,7 +1054,18 @@ async function FetchBlockedStatus(employeeId, status, res) {
         validators
       );
 
-      res.json(details);
+      if (details != undefined && details.length > 0) {
+        details.forEach((detail) => {
+          if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
+            detail.req_id = detail.req_id[0]; // Convert array to single value
+          }
+          // Add any additional transformations needed
+        });
+
+        const filteredDetails = filterDuplicates(details);
+        console.log("Details->", filteredDetails);
+        res.json(filteredDetails);
+      } else res.json([]);
     } else {
       res.json([]);
     }
@@ -1145,7 +1195,7 @@ async function fetchPriceApprovalDetails(
       );
       console.log("Request IDs:", reqIds);
       for (let id = 0; id < reqIds.length; id++) {
-        const result = await pool.request().input("reqId", sql.Int, reqIds[0])
+        const result = await pool.request().input("reqId", sql.Int, reqIds[id])
           .query(`
         SELECT 
         TOP 1 
@@ -1167,9 +1217,9 @@ async function fetchPriceApprovalDetails(
     
     LEFT JOIN request_status rs ON pra.req_id = rs.parent_req_id  
 WHERE 
-    pra.req_id = @reqId
-    ORDER BY rs.id DESC  
- `);
+    pra.req_id = @reqId and rs.status IS NOT NULL    ORDER BY rs.id DESC  
+    
+  `);
 
         if (result.recordset.length > 0) {
           let overallStatus = 1;
@@ -1192,6 +1242,7 @@ WHERE
           if (validators[id] != null) {
             overallStatus = overallStatus && validators[id];
           }
+          console.log(result.recordset);
           result.recordset[0].overallStatus = overallStatus;
           console.log("Result", result.recordset[0]);
           consolidatedResults.push(result.recordset[0]); // Assuming you expect one record per reqId, adjust if necessary
@@ -1282,7 +1333,11 @@ app.post("/api/login", async (req, res) => {
       req.session.employee_id = employee_id;
       req.session.role = result.recordset[0].role;
       req.session.region = result.recordset[0].region;
-      res.json({ loggedIn: true, role: result.recordset[0].role });
+      res.json({
+        loggedIn: true,
+        role: result.recordset[0].role,
+        region: result.recordset[0].region,
+      });
     } else {
       res.status(401).json({ loggedIn: false, message: "Invalid employee ID" });
     }
@@ -2147,24 +2202,6 @@ app.post("/api/add_price_request", async (req, res) => {
                     @oldNetNSR=${oldNetNSR}`;
       console.log(result);
     }
-    console.log("Here 2");
-    const status = await pool
-      .request()
-      .input("customerIds", sql.VarChar, req.body.customerIds)
-      .input("consigneeIds", sql.VarChar, req.body.consigneeIds)
-      .input("plants", sql.VarChar, req.body.plants)
-      .input("endUseIds", sql.VarChar, req.body.endUseIds)
-      .input("endUseSegmentIds", sql.VarChar, req.body.endUseSegmentIds)
-      .input("paymentTermsId", sql.VarChar, req.body.paymentTermsId)
-      .input("validFrom", sql.DateTime, new Date(req.body.validFrom))
-      .input("validTo", sql.DateTime, new Date(req.body.validTo))
-      .input("fsc", sql.Int, req.body.fsc)
-      .input("mappint_type", sql.Int, req.body.mappingType)
-      .input("am_id", sql.VarChar, req.body.am_id)
-      .query(`INSERT INTO price_approval_requests (customer_id, consignee_id, plant, end_use_id, end_use_segment_id, payment_terms_id, valid_from, valid_to, fsc, mappint_type,am_id) 
-            VALUES (@customerIds, @consigneeIds, @plants, @endUseIds, @endUseSegmentIds, @paymentTermsId, @validFrom, @validTo, @fsc, @mappint_type,@am_id);
-            SELECT SCOPE_IDENTITY() AS id;`);
-    console.log("REQUEST_ID", req.body.parentReqId);
     insertRequest(
       req.body.mode == undefined ? "N" : req.body.mode,
       requestId,
@@ -2233,7 +2270,9 @@ app.post("/api/update_request_status_manager", async (req, res) => {
   let { id, action, employee_id, request_id } = req.body;
   const role = req.body.role;
   action = action == 0 ? "1" : action;
-  console.log(req.body);
+  console.log(
+    `   BODY-> ${req.body.request_id} ${req.body.action} ${req.body.employee_id}`
+  );
   let pool = null;
   try {
     pool = await sql.connect(config);

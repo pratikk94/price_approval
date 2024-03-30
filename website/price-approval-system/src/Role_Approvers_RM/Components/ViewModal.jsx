@@ -64,6 +64,7 @@ function PriceTable({ price }) {
 
 function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
   console.log("Mode: ", mode);
+  console.log("IDSI", id, data, isEditable, role, mode);
   const { session } = useSession();
   const employee_id = session.employee_id;
   const updateStatus = (newStatus) => {
@@ -73,6 +74,7 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
       action: newStatus, // Example new status
     };
     console.log("New Status: ", newStatus);
+    console.log(reportData);
     const apiUrl = `${backend_url}api/update_request_status_manager`;
     reportData["role"] = session.role;
 
@@ -150,12 +152,12 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
           <RemarkBox />
           {isEditable ? (
             <>
-              <IconButton>
-                <DoneIcon
-                  onClick={() => {
-                    updateStatus(mode);
-                  }}
-                />
+              <IconButton
+                onClick={() => {
+                  updateStatus(mode);
+                }}
+              >
+                <DoneIcon />
               </IconButton>
               <IconButton
                 onClick={() => {

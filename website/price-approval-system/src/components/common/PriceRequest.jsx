@@ -155,6 +155,7 @@ function PriceChangeRequest({ role, isAM }) {
           <DataTable
             action_id={role}
             mode={mode}
+            approve={true}
             url={
               backend_url +
               `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=1`
@@ -333,6 +334,7 @@ function PriceChangeRequest({ role, isAM }) {
             action_id={role}
             sendMode={setMode}
             mode={mode}
+            approve={true}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=1`

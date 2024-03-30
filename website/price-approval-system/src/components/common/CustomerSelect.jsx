@@ -31,21 +31,26 @@ const CustomerSelect = ({
       setCustomers(formattedData);
 
       if (selectedCustomersToEdit) {
-        const initialSelectedCustomers = formattedData.filter((customer) =>
-          selectedCustomersToEdit.includes(customer.value)
-        );
+        const initialSelectedCustomers = formattedData.filter((customer) => {
+          return selectedCustomersToEdit
+            .split(",")
+            .map(Number)
+            .includes(customer.value);
+        });
+        console.log(initialSelectedCustomers);
         setSelectedOptions(initialSelectedCustomers);
-        customerState(initialSelectedCustomers);
+
+        if (id === 1) customerState(initialSelectedCustomers);
+        if (id === 2) consigneeState(initialSelectedCustomers);
+        if (id === 3) endUseState(initialSelectedCustomers);
       }
     };
     fetchCustomers();
   }, [disabled, id, selectedCustomersToEdit, customerState]);
   const handleChange = (selected) => {
     // Only update if not disabled
-    console.log(disabled);
+
     if (!disabled) {
-      console.log(id);
-      console.log(selected);
       setSelectedOptions(selected);
       if (id === 1) customerState(selected);
       if (id === 2) consigneeState(selected);

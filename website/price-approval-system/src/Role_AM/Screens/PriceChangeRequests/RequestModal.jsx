@@ -148,13 +148,13 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   useEffect(() => {
     if (editData != undefined && editData.length > 0) {
       const [data] = editData; // Assuming editData is the array provided, and you're using the first item.
-      console.log(data);
+      // console.log(data);
       setReqId(data.req_id[0]);
 
       // Update states
-      setSelectedConsigneeIDs(data.customer_id);
-      setSelectedCustomerIDs(data.consignee_id);
-      console.log(data.consignee_id);
+      setSelectedConsigneeIDs(data.consignee_id);
+      setSelectedCustomerIDs(data.customer_id);
+      // con    sole.log(data.consignee_id);
       setSelectedEndUseIDs(data.end_use_id);
       // Assumption: plant, paymentTermsId are singular values, not lists
       setPlant([{ value: data.plant, label: `Plant ${data.plant}` }]);

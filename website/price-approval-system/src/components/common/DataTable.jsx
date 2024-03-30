@@ -48,7 +48,7 @@ import PriceViewModal from "../../Role_Approvers_RM/Components/ViewModal";
 import EmployeeEditModal from "../../Role_Business_Admin/Components/EmployeeEditModal";
 import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
 
-function DynamicTable({ url, action_id, isAM, sendMode, mode }) {
+function DynamicTable({ url, action_id, isAM, sendMode, mode, approve }) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -386,29 +386,78 @@ function DynamicTable({ url, action_id, isAM, sendMode, mode }) {
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              console.log("ROW id is ", req_id);
-              handleView(req_id);
-              setId(req_id);
+              console.log("ROW id is ", row_id);
+              console.log("REQ id is ", req_id);
+
+              handleView(row_id);
+              setId(row_id);
               setModalOpen(true);
-              setAprmId(req_id);
-              console.log(req_id);
+              setAprmId(row_id);
+              console.log(row_id);
             }}
           >
             <ViewIcon />
           </IconButton>
           <IconButton
             onClick={() => {
-              console.log("ROW id is ", req_id);
+              console.log("ROW id is ", row_id);
               setEditModalOpen(true);
-              handleEdit(req_id);
-              setId(req_id);
-              //handleView(req_id);
-              console.log(req_id);
+              handleEdit(row_id);
+              setId(row_id);
+              //handleView(row_id);
+              console.log(row_id);
               setRuleId(row_id);
             }}
           >
             <EditIcon />
           </IconButton>
+          {approve && (
+            <>
+              <IconButton
+                onClick={() => {
+                  console.log("ROW id is ", row_id);
+                  setEditModalId(0);
+                  sendMode(0);
+                  setEditModalOpen(true);
+                  handleEdit(row_id);
+                  setId(row_id);
+                  console.log(row_id);
+                  setRuleId(row_id);
+                }}
+              >
+                <ContentCopyIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  console.log("ROW id is ", row_id);
+                  setEditModalId(1);
+                  sendMode(2);
+                  setEditModalOpen(true);
+                  handleEdit(row_id);
+                  setId(row_id);
+                  console.log(row_id);
+                  setRuleId(row_id);
+                }}
+              >
+                <MoreTimeIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  console.log("ROW id is ", row_id);
+                  setEditModalId(2);
+                  sendMode(3);
+                  setEditModalOpen(true);
+                  handleEdit(row_id);
+                  setId(row_id);
+                  //handleView(row_id);
+                  console.log(row_id);
+                  setRuleId(row_id);
+                }}
+              >
+                <BlockIcon />
+              </IconButton>
+            </>
+          )}
         </div>
       );
     } else if (id == "AP_NSM_HDSM") {
@@ -416,12 +465,12 @@ function DynamicTable({ url, action_id, isAM, sendMode, mode }) {
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              console.log("ROW id is ", req_id);
-              handleView(req_id);
-              setId(req_id);
+              console.log("ROW id is ", row_id);
+              handleView(row_id);
+              setId(row_id);
               setModalOpen(true);
-              setAprmId(req_id);
-              console.log(req_id);
+              setAprmId(row_id);
+              console.log(row_id);
             }}
           >
             <ViewIcon />
@@ -433,60 +482,79 @@ function DynamicTable({ url, action_id, isAM, sendMode, mode }) {
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              console.log("ROW id is ", req_id);
-              handleView(req_id);
-              setId(req_id);
-              setModalOpen(true);
-              setAprmId(req_id);
+              console.log("ROW id is ", row_id);
+              console.log("REQ id is ", row_id);
 
-              console.log(req_id);
+              handleView(row_id);
+              setId(row_id);
+              setModalOpen(true);
+              setAprmId(row_id);
+
+              console.log(row_id);
             }}
           >
             <ViewIcon />
           </IconButton>
           <IconButton
             onClick={() => {
-              console.log("ROW id is ", req_id);
-              setEditModalId(0);
-              sendMode(0);
+              console.log("ROW id is ", row_id);
               setEditModalOpen(true);
-              handleEdit(req_id);
-              setId(req_id);
-              console.log(req_id);
+              handleEdit(row_id);
+              setId(row_id);
+              //handleView(row_id);
+              console.log(row_id);
               setRuleId(row_id);
             }}
           >
-            <ContentCopyIcon />
+            <EditIcon />
           </IconButton>
-          <IconButton
-            onClick={() => {
-              console.log("ROW id is ", req_id);
-              setEditModalId(1);
-              sendMode(2);
-              setEditModalOpen(true);
-              handleEdit(req_id);
-              setId(req_id);
-              console.log(req_id);
-              setRuleId(row_id);
-            }}
-          >
-            <MoreTimeIcon />
-          </IconButton>
-          <IconButton
-            onClick={() => {
-              console.log("ROW id is ", req_id);
-              setEditModalId(2);
-              sendMode(3);
-              setEditModalOpen(true);
-              handleEdit(req_id);
-              setId(req_id);
-              //handleView(req_id);
-              console.log(req_id);
-              setRuleId(row_id);
-            }}
-          >
-            <BlockIcon />
-          </IconButton>
+          {approve && (
+            <>
+              <IconButton
+                onClick={() => {
+                  console.log("ROW id is ", row_id);
+                  setEditModalId(0);
+                  sendMode(0);
+                  setEditModalOpen(true);
+                  handleEdit(row_id);
+                  setId(row_id);
+                  console.log(row_id);
+                  setRuleId(row_id);
+                }}
+              >
+                <ContentCopyIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  console.log("ROW id is ", row_id);
+                  setEditModalId(1);
+                  sendMode(2);
+                  setEditModalOpen(true);
+                  handleEdit(row_id);
+                  setId(row_id);
+                  console.log(row_id);
+                  setRuleId(row_id);
+                }}
+              >
+                <MoreTimeIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  console.log("ROW id is ", row_id);
+                  setEditModalId(2);
+                  sendMode(3);
+                  setEditModalOpen(true);
+                  handleEdit(row_id);
+                  setId(row_id);
+                  //handleView(row_id);
+                  console.log(row_id);
+                  setRuleId(row_id);
+                }}
+              >
+                <BlockIcon />
+              </IconButton>
+            </>
+          )}
         </div>
       );
     }
@@ -764,6 +832,7 @@ function DynamicTable({ url, action_id, isAM, sendMode, mode }) {
                           : value}
                       </TableCell>
                     ))}
+
                   <TableCell>
                     <Actions
                       id={action_id}

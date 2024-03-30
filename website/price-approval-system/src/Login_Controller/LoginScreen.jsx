@@ -16,10 +16,12 @@ const LoginScreen = () => {
       credentials: "include",
     });
     const data = await response.json();
+    console.log(data);
     if (data.loggedIn) {
       setSession({
         loggedIn: true,
         role: data.role,
+        region: data.region,
         employee_id: employeeId,
       });
       navigate("/"); // Navigate to the home page

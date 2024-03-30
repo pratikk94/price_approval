@@ -90,11 +90,9 @@ function TableWithInputs({
   };
 
   const gradeMapper = (gradeLabel) => {
-    console.log(gradeLabel);
-    console.log(grades);
     if (gradeLabel && grades.length > 0) {
       const foundCustomer = grades.find((c) => c.label === gradeLabel);
-      console.log(foundCustomer);
+
       // Return the found customer in an array format, or an empty array if not found
       return foundCustomer ? [foundCustomer] : [];
     }
