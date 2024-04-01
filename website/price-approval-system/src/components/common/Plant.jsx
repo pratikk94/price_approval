@@ -57,7 +57,7 @@ const Plant = ({ setSelection, editedData, disabled }) => {
       className="basic-multi-select"
       classNamePrefix="select"
       onChange={handleChange}
-      placeholder={`Select plant`}
+      placeholder={`Select Plant`}
     />
   );
 };

@@ -317,9 +317,27 @@ async function getNewRequestName(parentId, type) {
       } else if (type === "U") {
         const result = await pool.request()
           .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'UR%' ORDER BY id DESC`;
-        new_req_name =
-          result.recordset[0].request_name.substring(0, 7) +
-          (parseInt(result.recordset[0].request_name.substring(7, 11)) + 1);
+        console.log(result.recordset.length);
+        if (result.recordset.length == 0) {
+          const resultFindNR = await pool
+            .request()
+            .input("parentId", sql.Int, parentId)
+            .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
+
+          new_req_name = `UR${resultFindNR.recordset[0].request_name.substring(
+            2,
+            12
+          )}`;
+        } else {
+          console.log(result.recordset[0].request_name.toString());
+          new_req_name =
+            result.recordset[0].request_name.toString().substring(0, 7) +
+            (parseInt(result.recordset[0].request_name.substring(7, 12)) + 1)
+              .toString()
+              .padStart(4, "0");
+        }
+        console.log(`NEW_REQ_NAME->${new_req_name}`);
+        return new_req_name;
       }
     } else if (type === "N") {
       const today = new Date();
@@ -1311,20 +1329,71 @@ WHERE
             hdsms[id],
             validators[id]
           );
+          let curr_status = "";
+          let latest_status_updated_by = "";
           if (rms[id] != null) {
-            overallStatus = overallStatus && rms[id];
+            if (rms[id] == 0) {
+              curr_status = "Pending with RM";
+            } else if (rms[id] == 1) {
+              curr_status = "Approved by RM";
+              latest_status_updated_by = "RM";
+            } else if (rms[id] == 2) {
+              curr_status = "RM is reworking";
+              latest_status_updated_by = "RM";
+            } else if (rms[id] == 3) {
+              curr_status = "RM has rejected";
+              latest_status_updated_by = "RM";
+            }
+          } else {
+            curr_status = "initiated";
+            latest_status_updated_by = "AM";
           }
           if (nsms[id] != null) {
-            overallStatus = overallStatus && nsms[id];
+            if (nsms[id] == 0) {
+              curr_status = curr_status + "\nPending with NSM";
+            } else if (nsms[id] == 1) {
+              curr_status = curr_status + "\nApproved by NSM";
+              latest_status_updated_by = "NSM";
+            } else if (nsms[id] == 2) {
+              curr_status = curr_status + "\nNSM is reworking";
+              latest_status_updated_by = "NSM";
+            } else if (nsms[id] == 3) {
+              curr_status = curr_status + "\nNSM has rejected";
+              latest_status_updated_by = "NSM";
+            }
           }
+
           if (hdsms[id] != null) {
-            overallStatus = overallStatus && hdsms[id];
+            if (hdsms[id] == 0) {
+              curr_status = curr_status + "\nPending with HDSM";
+            } else if (hdsms[id] == 1) {
+              curr_status = curr_status + "\nApproved by HDSM";
+              latest_status_updated_by = "HDSM";
+            } else if (hdsms[id] == 2) {
+              curr_status = curr_status + "\nHDSM is reworking";
+              latest_status_updated_by = "HDSM";
+            } else if (hdsms[id] == 3) {
+              curr_status = curr_status + "\nHDSM has rejected";
+              latest_status_updated_by = "HDSM";
+            }
           }
           if (validators[id] != null) {
-            overallStatus = overallStatus && validators[id];
+            if (validators[id] == 0) {
+              curr_status = curr_status + "\nPending with Validator";
+            } else if (validators[id] == 1) {
+              curr_status = curr_status + "\nApproved by Validator";
+              latest_status_updated_by = "Validator";
+            } else if (validators[id] == 2) {
+              curr_status = curr_status + "\nValidator is reworking";
+              latest_status_updated_by = "Validator";
+            } else if (validators[id] == 3) {
+              curr_status = curr_status + "\nValidator has rejected";
+              latest_status_updated_by = "Validator";
+            }
           }
           console.log(result.recordset);
-          result.recordset[0].overallStatus = overallStatus;
+          result.recordset[0]["Current Status"] = curr_status;
+          result.recordset[0]["Last updated by"] = latest_status_updated_by;
           console.log("Result", result.recordset[0]);
           consolidatedResults.push(result.recordset[0]); // Assuming you expect one record per reqId, adjust if necessary
         }

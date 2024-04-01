@@ -19,6 +19,7 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import RemarkBox from "../../../components/common/RemarkBox";
 import { backend_url } from "../../../util";
 import { useSession } from "../../../Login_Controller/SessionContext";
+
 const modalStyle = {
   position: "absolute",
   top: "50%",
@@ -263,10 +264,11 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         <Grid container spacing={2}>
           <Grid item xs={6}>
             <SpacingWrapper space="12px" />
+            <Typography>Customer * </Typography>
             <CustomerSelect
               disabled={mode > 1}
               id={1}
-              name={"customer"}
+              name={"Customer"}
               customerState={setSelectedCustomers}
               consigneeState={setSelectedConsignees}
               endUseState={setEndUse}
@@ -285,13 +287,14 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
                   onChange={handleCheckboxChange}
                 />
               }
-              label="All customers for all consignees"
+              label="All Customers for all Consignees"
             />{" "}
             <SpacingWrapper space="12px" />
+            <Typography>End Use</Typography>
             <CustomerSelect
               id={3}
               disabled={mode > 1}
-              name={"end use"}
+              name={"End Use"}
               customerState={setSelectedCustomers}
               consigneeState={setSelectedConsignees}
               endUseState={setEndUse}
@@ -300,12 +303,14 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
               selectedCustomersToEdit={selectedEndUseIDs}
             />
             <SpacingWrapper space="12px" />
+            <Typography>Plant </Typography>
             <Plant
               setSelection={setPlant}
               editedData={plant}
               disabled={mode > 1}
             />
             <SpacingWrapper space="12px" />
+            <Typography>Payment Terms *</Typography>
             <PaymentTerms
               disabled={mode > 1}
               setSelection={setPaymentTerms}
@@ -316,7 +321,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
               <Grid item xs={6}>
                 <DateSelector
                   disabled={mode > 1}
-                  name={"valid from"}
+                  name={"Valid From * "}
                   setSelection={setValidFrom}
                   editedData={validFrom}
                 />
@@ -324,7 +329,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
               <Grid item xs={6}>
                 <DateSelector
                   disabled={mode > 1}
-                  name={"valid to"}
+                  name={"Valid To * "}
                   setSelection={setValidTo}
                   editedData={validTo}
                 />
@@ -334,10 +339,12 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
           </Grid>
           <Grid item xs={6}>
             <SpacingWrapper space="12px" />
+            <Typography>Consignee *</Typography>
+
             <CustomerSelect
               id={2}
               disabled={mode > 1}
-              name={"consignee"}
+              name={"Consignee"}
               customerState={setSelectedCustomers}
               consigneeState={setSelectedConsignees}
               endUseState={setEndUse}
@@ -352,7 +359,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
           </Grid>
         </Grid>
 
-        <SpacingWrapper space="24px" />
+        <SpacingWrapper space="0px" />
 
         <TableWithInputs
           disabled={mode > 1}

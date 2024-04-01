@@ -50,7 +50,7 @@ const PaymentTerms = ({ setSelection, editedData, disabled }) => {
       className="basic-multi-select"
       classNamePrefix="select"
       onChange={handleChange}
-      placeholder={`Select payment terms`}
+      placeholder={`Select Payment Terms`}
     />
   );
 };

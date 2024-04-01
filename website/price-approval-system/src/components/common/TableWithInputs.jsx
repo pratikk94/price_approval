@@ -13,6 +13,7 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Select from "react-select";
 import { backend_url } from "../../util";
 import { SellOutlined } from "@mui/icons-material";
+import SpacingWrapper from "../util/SpacingWrapper";
 function TableWithInputs({
   setTableRowsDataFunction,
   fscCode,
@@ -245,8 +246,9 @@ function TableWithInputs({
         }
         label="FSC"
       />
-      <Typography>Select pricing conditions</Typography>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <SpacingWrapper space="12px" />
+      <Typography>Select Pricing Conditions</Typography>
+      <Grid container spacing={0} sx={{ mb: 2 }}>
         {Object.keys(checkboxState).map((option) => (
           <Grid item xs={4} key={option}>
             <FormControlLabel

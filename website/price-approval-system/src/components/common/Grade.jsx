@@ -42,7 +42,7 @@ const ProductGrade = ({ fscCode }) => {
       className="basic-multi-select"
       classNamePrefix="select"
       onChange={handleChange}
-      placeholder={`Select plant`}
+      placeholder={`Select Plant`}
     />
   );
 };

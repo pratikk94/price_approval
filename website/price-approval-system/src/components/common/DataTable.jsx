@@ -48,7 +48,15 @@ import PriceViewModal from "../../Role_Approvers_RM/Components/ViewModal";
 import EmployeeEditModal from "../../Role_Business_Admin/Components/EmployeeEditModal";
 import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
 
-function DynamicTable({ url, action_id, isAM, sendMode, mode, approve }) {
+function DynamicTable({
+  url,
+  action_id,
+  isAM,
+  sendMode,
+  mode,
+  approve,
+  rework,
+}) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -398,19 +406,21 @@ function DynamicTable({ url, action_id, isAM, sendMode, mode, approve }) {
           >
             <ViewIcon />
           </IconButton>
-          <IconButton
-            onClick={() => {
-              console.log("ROW id is ", row_id);
-              setEditModalOpen(true);
-              handleEdit(row_id);
-              setId(row_id);
-              //handleView(row_id);
-              console.log(row_id);
-              setRuleId(row_id);
-            }}
-          >
-            <EditIcon />
-          </IconButton>
+          {rework && (
+            <IconButton
+              onClick={() => {
+                console.log("ROW id is ", row_id);
+                setEditModalOpen(true);
+                handleEdit(row_id);
+                setId(row_id);
+                //handleView(row_id);
+                console.log(row_id);
+                setRuleId(row_id);
+              }}
+            >
+              <EditIcon />
+            </IconButton>
+          )}
           {approve && (
             <>
               <IconButton
@@ -836,7 +846,7 @@ function DynamicTable({ url, action_id, isAM, sendMode, mode, approve }) {
                   <TableCell>
                     <Actions
                       id={action_id}
-                      row_id={row.id}
+                      row_id={row.req_id}
                       req_id={row.req_id}
                     />
                   </TableCell>
