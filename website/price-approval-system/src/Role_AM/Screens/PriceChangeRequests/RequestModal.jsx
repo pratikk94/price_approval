@@ -148,7 +148,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   useEffect(() => {
     if (editData != undefined && editData.length > 0) {
       const [data] = editData; // Assuming editData is the array provided, and you're using the first item.
-      // console.log(data);
+      console.log(`DATA-> ${data}`);
       setReqId(data.req_id[0]);
 
       // Update states

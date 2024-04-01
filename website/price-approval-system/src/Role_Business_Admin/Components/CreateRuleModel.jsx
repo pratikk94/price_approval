@@ -114,7 +114,7 @@ function ModalComponent() {
     console.log(roleData);
     if (result) {
       try {
-        const response = await fetch(`${backend_url}api/add_defined_rule`, {
+        const response = await fetch(`${backend_url}api/check_rule_exists`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -123,6 +123,22 @@ function ModalComponent() {
         });
         const responseData = await response.json();
         console.log(responseData);
+        if (responseData["add"]) {
+          const inner_response = await fetch(
+            `${backend_url}api/add_defined_rule`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(roleData),
+            }
+          );
+          const inner_responseData = await inner_response.json();
+          console.log(inner_responseData);
+        } else {
+          alert("Rule already exists with profit center-rule mapping");
+        }
       } catch (error) {
         console.error("Error submitting form:", error);
       }

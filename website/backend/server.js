@@ -281,6 +281,85 @@ async function fetchAndProcessRules(requestId, employeeId) {
   }
 }
 
+async function getNewRequestName(parentId, type) {
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    console.log(`Parent_id - ${parentId}`);
+    const o_result = await pool.request().input("parentId", sql.Int, parentId)
+      .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where [parent_req_id] = @parentId ORDER BY id DESC`;
+
+    console.log(o_result);
+    if (o_result.recordset.length != 0) {
+      const curr_req_name = o_result.recordset[0].request_name;
+      const curr_status = curr_req_name.charAt(0);
+      let new_req_name = curr_req_name.substring(2, 7);
+      let new_current_id = 0;
+
+      if (type === "B" && curr_status === "B") {
+        prepend = "BR";
+        let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
+        new_req_name = prepend + new_req_name + new_current_id;
+      } else if (type === "E" && curr_status === "E") {
+        prepend = "ER";
+        let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
+        new_req_name = prepend + new_req_name + new_current_id;
+      } else if (type === "U" && curr_status === "U") {
+        prepend = "UR";
+        let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
+        new_req_name = prepend + new_req_name + new_current_id;
+      } else if (type === "E") {
+        const result = await pool.request()
+          .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'ER%' ORDER BY id DESC`;
+        new_req_name =
+          result.recordset[0].request_name.substring(0, 7) +
+          (parseInt(result.recordset[0].request_name.substring(7, 11)) + 1);
+      } else if (type === "U") {
+        const result = await pool.request()
+          .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'UR%' ORDER BY id DESC`;
+        new_req_name =
+          result.recordset[0].request_name.substring(0, 7) +
+          (parseInt(result.recordset[0].request_name.substring(7, 11)) + 1);
+      }
+    } else if (type === "N") {
+      const today = new Date();
+
+      // Get the year, month, and date from the today object
+      const year = today.getFullYear() % 100; // Year as a four-digit number (YYYY)
+      const month = today.getMonth() + 1; // Month as a number (0-11), so add 1 to get 1-12
+      const date = today.getDate();
+
+      const result = await pool
+        .request()
+        .input(
+          "name",
+          sql.VarChar,
+          `NR${year.toString()}${month.toString().padStart(2, "0")}${date
+            .toString()
+            .padStart(2, "0")}%`
+        )
+        .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like @name ORDER BY id DESC`;
+
+      if (result.recordset.length === 0) {
+        new_req_name = `NR${year.toString()}${month
+          .toString()
+          .padStart(2, "0")}${date.toString().padStart(2, "0")}0001`;
+      } else {
+        console.log(result.recordset[0].request_name.toString());
+        new_req_name =
+          result.recordset[0].request_name.toString().substring(0, 7) +
+          (parseInt(result.recordset[0].request_name.substring(7, 12)) + 1)
+            .toString()
+            .padStart(4, "0");
+      }
+    }
+
+    return new_req_name;
+  } catch (err) {
+    console.error("Error during database operations:", err);
+  }
+}
+
 async function insertRequest(isNewRequest, reqId, parentReqId) {
   let pool = null;
 
@@ -302,16 +381,17 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
     );
     // Prepare the SQL query using template literals
     const query = `
-          INSERT INTO request_status (status, req_id, parent_req_id)
-          VALUES (@requestType, @reqId, @parentReqIdValue)
+          INSERT INTO request_status (status, req_id, parent_req_id,request_name)
+          VALUES (@requestType, @reqId, @parentReqIdValue, @requestName)
       `;
-
+    const requestName = await getNewRequestName(parentReqIdValue, requestType);
     // Execute the query with input parameters
     await pool
       .request()
       .input("requestType", sql.VarChar, requestType)
       .input("reqId", sql.Int, reqId)
       .input("parentReqIdValue", sql.Int, parentReqIdValue)
+      .input("requestName", sql.VarChar, requestName)
       .query(query);
 
     console.log("Request inserted successfully.");
@@ -1200,6 +1280,7 @@ async function fetchPriceApprovalDetails(
         SELECT 
         TOP 1 
         rs.id,
+        rs.request_name,
     pra.*,
     rs.status AS CurrentStatus,
     (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
@@ -1514,7 +1595,7 @@ app.get("/api/fetch_employees", async (req, res) => {
 
     // Query to select employee_name and employee_id
     const result = await pool.request()
-      .query`Select employee_name as name, employee_id as id FROM 
+      .query`Select um.employee_name as name, um.employee_id as id FROM 
       user_master um LEFT JOIN define_roles dr ON 
       um.employee_id = dr.employee_id WHERE dr.employee_id IS NULL;
 
@@ -2093,18 +2174,33 @@ app.post("/api/check_rule_exists", async (req, res) => {
   let pool = null;
   try {
     await sql.connect(config);
-    const { profit_center, region, valid_from, valid_to } = req.body;
+    let { profit_center, region, valid_from, valid_to } = req.body;
 
     // Assuming profit_center is an array, convert it to a string to store in the database.
     // If your database design is different, you might need a different approach.
-    const profitCenterString = profit_center.join(","); // Convert array to string if needed
+    console.log(profit_center);
+    if (profit_center.indexOf("5") > -1) {
+      profit_center = "5";
+    } else {
+      profit_center = "2,3,4";
+    }
+
+    console.log(profit_center, region, valid_from, valid_to);
+
     pool = await sql.connect(config);
     const result = await pool.request().query`
-          INSERT INTO defined_rules (rule_name, profit_center, region, valid_from, valid_to, active, rm, nsm, hdsm, validator, created_at)
-          VALUES (${rule_name}, ${profitCenterString}, ${region}, ${valid_from}, ${valid_to}, ${active}, ${rm}, ${nsm}, ${hdsm}, ${validator}, ${created_at})
-      `;
+      SELECT COUNT(*) as count 
+      FROM defined_rules
+      WHERE profit_center = ${profit_center} 
+        AND region = ${region} 
+        AND valid_from <= ${valid_from} 
+        AND valid_to >= ${valid_from}`;
 
-    res.json({ message: "Insert successful", result });
+    if (result.recordset[0].count > 0) {
+      res.json({ message: "Rule already exists", ["add"]: false });
+    } else {
+      res.json({ message: "You can add this rule", ["add"]: true });
+    }
   } catch (err) {
     console.error("SQL error", err);
     res.status(500).json({ message: "Error inserting data", err });
@@ -2240,7 +2336,7 @@ app.post("/api/add_price_request", async (req, res) => {
     insertRequest(
       req.body.mode == undefined ? "N" : req.body.mode,
       requestId,
-      req.body.parentReqId != undefined ? req.body.parentReqId : requestId
+      req.body.mode != undefined ? req.body.parentReqId : requestId
     );
     fetchAndProcessRules(requestId, req.body.am_id)
       .then(() => console.log("Finished processing."))
