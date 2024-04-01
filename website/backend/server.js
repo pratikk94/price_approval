@@ -1514,7 +1514,12 @@ app.get("/api/fetch_employees", async (req, res) => {
 
     // Query to select employee_name and employee_id
     const result = await pool.request()
-      .query`Select employee_name as name, employee_id as id from user_master`;
+      .query`Select employee_name as name, employee_id as id FROM 
+      user_master um LEFT JOIN define_roles dr ON 
+      um.employee_id = dr.employee_id WHERE dr.employee_id IS NULL;
+
+      
+      `;
 
     // Send query results as a response
     res.json(result.recordset);
@@ -2059,6 +2064,36 @@ app.post("/api/add_defined_rule", async (req, res) => {
       validator,
       created_at,
     } = req.body;
+
+    // Assuming profit_center is an array, convert it to a string to store in the database.
+    // If your database design is different, you might need a different approach.
+    const profitCenterString = profit_center.join(","); // Convert array to string if needed
+    pool = await sql.connect(config);
+    const result = await pool.request().query`
+          INSERT INTO defined_rules (rule_name, profit_center, region, valid_from, valid_to, active, rm, nsm, hdsm, validator, created_at)
+          VALUES (${rule_name}, ${profitCenterString}, ${region}, ${valid_from}, ${valid_to}, ${active}, ${rm}, ${nsm}, ${hdsm}, ${validator}, ${created_at})
+      `;
+
+    res.json({ message: "Insert successful", result });
+  } catch (err) {
+    console.error("SQL error", err);
+    res.status(500).json({ message: "Error inserting data", err });
+  } finally {
+    if (pool) {
+      try {
+        await pool.close();
+      } catch (err) {
+        console.error("Failed to close the pool:", err);
+      }
+    }
+  }
+});
+
+app.post("/api/check_rule_exists", async (req, res) => {
+  let pool = null;
+  try {
+    await sql.connect(config);
+    const { profit_center, region, valid_from, valid_to } = req.body;
 
     // Assuming profit_center is an array, convert it to a string to store in the database.
     // If your database design is different, you might need a different approach.
