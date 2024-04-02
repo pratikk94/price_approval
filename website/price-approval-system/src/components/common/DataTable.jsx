@@ -328,15 +328,17 @@ function DynamicTable({
     setEmployeeManagement(updatedRule);
   };
 
-  const Actions = ({ id, row_id, req_id }) => {
+  const Actions = ({ id, row_id, req_id, rule_id }) => {
     if (id == "B1") {
+      console.log("IN B1.");
+      console.log(rule_id);
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              handleView(row_id);
+              handleView(rule);
               setModalOpen(true);
-              setRuleId(row_id);
+              setRuleId(rule_id);
             }}
           >
             <ViewIcon />
@@ -344,8 +346,8 @@ function DynamicTable({
           <IconButton
             onClick={() => {
               setEditModalOpen(true);
-              handleEdit(row_id);
-              setRuleId(row_id);
+              handleEdit(rule_id);
+              setRuleId(rule_id);
             }}
           >
             <EditIcon />
@@ -848,6 +850,7 @@ function DynamicTable({
                       id={action_id}
                       row_id={row.req_id}
                       req_id={row.req_id}
+                      rule_id={row.id}
                     />
                   </TableCell>
                 </TableRow>

@@ -21,6 +21,9 @@ import { IconButton } from "@mui/material";
 import RemarkBox from "../../components/common/RemarkBox";
 import { useSession } from "../../Login_Controller/SessionContext";
 import HistoryModal from "../../components/common/History";
+import FileUploader from "../../components/common/FileUploader";
+import FilesForRequest from "../../components/common/FileForRequest";
+import FileHandling from "../../components/common/FileHandling";
 
 function PriceTable({ price }) {
   console.log(price);
@@ -150,6 +153,7 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
           </div>
           <PriceTable price={data.price} />
           <RemarkBox />
+          <FileHandling requestId={data.requestId} />
           {isEditable ? (
             <>
               <IconButton

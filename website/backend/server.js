@@ -3,6 +3,11 @@ const session = require("express-session");
 const bodyParser = require("body-parser");
 const sql = require("mssql");
 const cors = require("cors");
+const multer = require("multer");
+
+const fs = require("fs");
+const nodemailer = require("nodemailer");
+const upload = multer({ storage: multer.memoryStorage() });
 const corsOptions = {
   origin: "http://localhost:5173", // or the specific origin you want to allow
   credentials: true, // allowing credentials (cookies, session)
@@ -1350,44 +1355,44 @@ WHERE
           }
           if (nsms[id] != null) {
             if (nsms[id] == 0) {
-              curr_status = curr_status + "\nPending with NSM";
+              curr_status = "\nPending with NSM";
             } else if (nsms[id] == 1) {
-              curr_status = curr_status + "\nApproved by NSM";
+              curr_status = "\nApproved by NSM";
               latest_status_updated_by = "NSM";
             } else if (nsms[id] == 2) {
-              curr_status = curr_status + "\nNSM is reworking";
+              curr_status = "\nNSM is reworking";
               latest_status_updated_by = "NSM";
             } else if (nsms[id] == 3) {
-              curr_status = curr_status + "\nNSM has rejected";
+              curr_status = "\nNSM has rejected";
               latest_status_updated_by = "NSM";
             }
           }
 
           if (hdsms[id] != null) {
             if (hdsms[id] == 0) {
-              curr_status = curr_status + "\nPending with HDSM";
+              curr_status = "\nPending with HDSM";
             } else if (hdsms[id] == 1) {
-              curr_status = curr_status + "\nApproved by HDSM";
+              curr_status = "\nApproved by HDSM";
               latest_status_updated_by = "HDSM";
             } else if (hdsms[id] == 2) {
-              curr_status = curr_status + "\nHDSM is reworking";
+              curr_status = "\nHDSM is reworking";
               latest_status_updated_by = "HDSM";
             } else if (hdsms[id] == 3) {
-              curr_status = curr_status + "\nHDSM has rejected";
+              curr_status = "\nHDSM has rejected";
               latest_status_updated_by = "HDSM";
             }
           }
           if (validators[id] != null) {
             if (validators[id] == 0) {
-              curr_status = curr_status + "\nPending with Validator";
+              curr_status = "\nPending with Validator";
             } else if (validators[id] == 1) {
-              curr_status = curr_status + "\nApproved by Validator";
+              curr_status = "\nApproved by Validator";
               latest_status_updated_by = "Validator";
             } else if (validators[id] == 2) {
-              curr_status = curr_status + "\nValidator is reworking";
+              curr_status = "\nValidator is reworking";
               latest_status_updated_by = "Validator";
             } else if (validators[id] == 3) {
-              curr_status = curr_status + "\nValidator has rejected";
+              curr_status = "\nValidator has rejected";
               latest_status_updated_by = "Validator";
             }
           }
@@ -1959,7 +1964,8 @@ app.get("/api/fetch_rules_by_id", async (req, res) => {
     pool = await sql.connect(config);
     const id = req.query.id;
 
-    const result = await pool.request().query`EXEC FetchRuleById @id=${id}`;
+    const result = await pool.request()
+      .query`Select * from defined_rules where id=${id}`;
     res.json(result.recordset);
   } catch (err) {
     console.error(err);
@@ -2846,6 +2852,48 @@ app.get("/api/get_history_of_price_request", async (req, res) => {
   );
   console.log(result);
   res.json(result);
+});
+app.post("/api/upload_file", upload.single("file"), async (req, res) => {
+  if (!req.file || !req.body.request_id) {
+    return res.status(400).send("No file uploaded or request_id missing.");
+  }
+
+  try {
+    await sql.connect(config);
+    const { originalname, buffer } = req.file;
+    console.log(req.file);
+    const request_id = req.body.request_id; // Capture the request_id from the form data
+    const query = `INSERT INTO files (request_id, file_name, file_data) VALUES (@requestId, @name, @data);`;
+    const request = new sql.Request();
+    request.input("requestId", sql.Int, request_id);
+    request.input("name", sql.VarChar, originalname);
+    request.input("data", sql.VarBinary, buffer);
+    await request.query(query);
+    res.send("File uploaded successfully.");
+  } catch (err) {
+    console.error("Database connection error:", err);
+    res.status(500).send("Failed to upload file.");
+  }
+});
+
+app.get("/api/files/:request_id", async (req, res) => {
+  try {
+    const { request_id } = req.params;
+    await sql.connect(config);
+    const query = `SELECT id, request_id, file_name FROM files WHERE request_id = @requestId`;
+    const request = new sql.Request();
+    request.input("requestId", sql.Int, request_id);
+    const result = await request.query(query);
+    console.log(result.recordset);
+    if (result.recordset.length > 0) {
+      res.json(result.recordset);
+    } else {
+      res.status(404).send("No files found for the provided request_id.");
+    }
+  } catch (err) {
+    console.error("Database query error:", err);
+    res.status(500).send("Failed to fetch files.");
+  }
 });
 
 //sendMail();
