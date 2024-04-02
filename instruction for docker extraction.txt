@@ -1,0 +1,8 @@
+1. GENERATING .bak
+BACKUP DATABASE [PriceApprovalSystem]
+TO DISK = 'Latest.bak'
+WITH FORMAT, MEDIANAME = 'YourDatabaseNameBackup', NAME = 'Full Backup of YourDatabaseName';
+
+
+2. EXPORTING .bak
+docker cp 817ff2844624:/var/opt/mssql/data/Latest.bak /Users/pratik/Desktop
