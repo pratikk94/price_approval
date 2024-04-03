@@ -56,6 +56,7 @@ function DynamicTable({
   mode,
   approve,
   rework,
+  isEmployeeManagement,
 }) {
   const [data, setData] = useState([]);
   const [startDate, setStartDate] = useState(null);
@@ -84,6 +85,8 @@ function DynamicTable({
   const [columnSearches, setColumnSearches] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [editModalId, setEditModalId] = useState(0);
+  const [employeeEditModal, setEmployeeEditModal] = useState(false);
+  const [employeeViewModal, setEmployeeViewModal] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -221,7 +224,7 @@ function DynamicTable({
       action_id == "Validator"
     )
       fetchAMData();
-  }, [modalOpen]);
+  }, [modalOpen, employeeEditModal, aprm_id, employeeViewModal]);
 
   useEffect(() => {
     if (id != 0) {
@@ -343,7 +346,7 @@ function DynamicTable({
           >
             <ViewIcon />
           </IconButton>
-          <IconButton
+          {/* <IconButton
             onClick={() => {
               setEditModalOpen(true);
               handleEdit(rule_id);
@@ -351,7 +354,7 @@ function DynamicTable({
             }}
           >
             <EditIcon />
-          </IconButton>
+          </IconButton> */}
         </div>
       );
     } else if (id == "B2") {
@@ -359,18 +362,19 @@ function DynamicTable({
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={() => {
-              handleView(row_id);
-              setModalOpen(true);
-              setEmpId(row_id);
+              handleView(rule_id);
+              setEmployeeViewModal(true);
+              setEmpId(rule_id);
             }}
           >
             <ViewIcon />
           </IconButton>
           <IconButton
             onClick={() => {
-              setEditModalOpen(true);
-              handleEdit(row_id);
-              setEmpId(row_id);
+              console.log("clicked");
+              handleEdit(rule_id);
+              setEmployeeEditModal(true);
+              setEmpId(rule_id);
             }}
           >
             <EditIcon />
@@ -738,52 +742,92 @@ function DynamicTable({
           </div>
         ))}
       </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-evenly",
-          alignItems: "center",
-        }}
-      >
-        <span>Start Date: </span>
-        <DatePicker
-          selected={startDate}
-          onChange={(date) => setStartDate(date)}
-          dateFormat="yyyy-MM-dd"
-          isClearable
-        />
-        <span>End Date: </span>
-        <DatePicker
-          selected={endDate}
-          onChange={(date) => setEndDate(date)}
-          dateFormat="yyyy-MM-dd"
-          isClearable
-          minDate={startDate} // Optional: Ensures end date is after start date
-        />
-        <FormControl sx={{ m: 1, width: 300 }}>
-          <InputLabel id="column-visibility-select-label">Columns</InputLabel>
-          <Select
-            labelId="column-visibility-select-label"
-            id="column-visibility-select"
-            multiple
-            value={selectedColumns}
-            onChange={handleColumnVisibilityChange}
-            input={<OutlinedInput label="Columns" />}
-            renderValue={(selected) => selected.join(", ")}
+      {!isEmployeeManagement && (
+        <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-evenly",
+              alignItems: "center",
+            }}
           >
-            {Object.keys(columnVisibility).map((column) => (
-              <MenuItem key={column} value={column}>
-                <Checkbox checked={selectedColumns.indexOf(column) > -1} />
-                <ListItemText
-                  primary={column
-                    .replace(/_/g, " ")
-                    .replace(/\b\w/g, (letter) => letter.toUpperCase())}
-                />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </div>
+            <span>Start Date: </span>
+            <DatePicker
+              selected={startDate}
+              onChange={(date) => setStartDate(date)}
+              dateFormat="yyyy-MM-dd"
+              isClearable
+            />
+            <span>End Date: </span>
+            <DatePicker
+              selected={endDate}
+              onChange={(date) => setEndDate(date)}
+              dateFormat="yyyy-MM-dd"
+              isClearable
+              minDate={startDate} // Optional: Ensures end date is after start date
+            />
+
+            <FormControl sx={{ m: 1, width: 300 }}>
+              <InputLabel id="column-visibility-select-label">
+                Columns
+              </InputLabel>
+              <Select
+                labelId="column-visibility-select-label"
+                id="column-visibility-select"
+                multiple
+                value={selectedColumns}
+                onChange={handleColumnVisibilityChange}
+                input={<OutlinedInput label="Columns" />}
+                renderValue={(selected) => selected.join(", ")}
+              >
+                {Object.keys(columnVisibility).map((column) => (
+                  <MenuItem key={column} value={column}>
+                    <Checkbox checked={selectedColumns.indexOf(column) > -1} />
+                    <ListItemText
+                      primary={column
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                    />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+        </>
+      )}
+      {isEmployeeManagement && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "end",
+            alignItems: "center",
+          }}
+        >
+          <FormControl sx={{ m: 1, width: 300 }}>
+            <InputLabel id="column-visibility-select-label">Columns</InputLabel>
+            <Select
+              labelId="column-visibility-select-label"
+              id="column-visibility-select"
+              multiple
+              value={selectedColumns}
+              onChange={handleColumnVisibilityChange}
+              input={<OutlinedInput label="Columns" />}
+              renderValue={(selected) => selected.join(", ")}
+            >
+              {Object.keys(columnVisibility).map((column) => (
+                <MenuItem key={column} value={column}>
+                  <Checkbox checked={selectedColumns.indexOf(column) > -1} />
+                  <ListItemText
+                    primary={column
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                  />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </div>
+      )}
       <TableContainer>
         <Table>
           <TableHead>
@@ -867,7 +911,7 @@ function DynamicTable({
             }}
             rule={rule}
           />
-          <RuleEditModal
+          {/* <RuleEditModal
             open={editModalOpen}
             handleClose={() => {
               setEditModalOpen(false);
@@ -875,29 +919,29 @@ function DynamicTable({
             }}
             rule={rule}
             onRuleUpdated={handleRuleUpdate}
-          />
+          /> */}
         </>
       )}
-      {employeeManagement && (
-        <>
-          <EmployeeDetailsModal
-            open={modalOpen}
-            handleClose={() => {
-              setModalOpen(false);
-              window.location.reload();
-            }}
-            employeeData={employeeManagement}
-          />
-          <EmployeeEditModal
-            open={editModalOpen}
-            handleClose={() => {
-              setEditModalOpen(false);
-              window.location.reload();
-            }}
-            employeeData={employeeManagement}
-            onEmployeeUpdated={handleRuleUpdate}
-          />
-        </>
+
+      {employeeViewModal && (
+        <EmployeeDetailsModal
+          open={employeeViewModal}
+          handleClose={() => {
+            setModalOpen(false);
+          }}
+          employeeData={employeeManagement}
+        />
+      )}
+      {employeeEditModal && (
+        <EmployeeEditModal
+          open={employeeEditModal}
+          handleClose={() => {
+            setEditModalOpen(false);
+            window.location.reload();
+          }}
+          employeeData={employeeManagement}
+          onEmployeeUpdated={handleRuleUpdate}
+        />
       )}
       {history && (
         <HistoryModal
@@ -913,9 +957,7 @@ function DynamicTable({
           id={aprm_id}
           data={aprm}
           isEditable={
-            action_id == "AP_RM" ||
-            action_id == "AP_NSM_HDSM" ||
-            action_id == "AM"
+            (action_id == "AP_RM" || action_id == "AP_NSM_HDSM") && !approve
           }
           role={action_id}
           mode={mode}

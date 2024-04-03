@@ -2173,18 +2173,20 @@ app.put("/api/update-rule/:id", async (req, res) => {
 });
 
 app.post("/api/update-employee-role", async (req, res) => {
-  const { employee_id, employee_name, role, region } = req.body;
+  const { employee_id, employee_name, role, region, active } = req.body;
   let pool = null;
 
   try {
     pool = await sql.connect(config);
     const result = await pool
       .request()
-      .input("employeeId", sql.Int, employee_id)
+      .input("employeeId", sql.NVarChar(255), employee_id)
       .input("newName", sql.NVarChar(255), employee_name)
       .input("newRole", sql.NVarChar(255), role)
-      .input("newRegion", sql.NVarChar(255), region)
-      .execute("UpdateEmployeeRole");
+      .input("newActive", sql.Int, active)
+      .input("newRegion", sql.NVarChar(255), region).query`UPDATE define_roles
+      SET employee_name = @newName, role = @newRole, region = @newRegion, active=@newActive
+      WHERE employee_id = @employeeId`;
 
     res.json({ message: "Employee role updated successfully", result });
   } catch (err) {

@@ -22,6 +22,7 @@ function EmployeeEditModal({ open, handleClose, employeeData }) {
   const [selectedRole, setSelectedRole] = useState("");
   const [regions, setRegions] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState("");
+  const [active, setActive] = useState(false);
   const handleChangeRegion = (event) => {
     setSelectedRegion(event.target.value);
   };
@@ -47,15 +48,22 @@ function EmployeeEditModal({ open, handleClose, employeeData }) {
 
     fetchRegions();
     fetchRole();
-  }, []);
+
+    if (employeeData != undefined) {
+      setSelectedRegion(employeeData.region);
+      setSelectedRole(employeeData.role);
+    }
+  }, [employeeData]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
+    console.log(active);
     try {
-      editedEmployee.role = selectedRole;
-      editedEmployee.region = selectedRegion;
-
+      editedEmployee.role = selectedRole ?? employeeData.role;
+      editedEmployee.region = selectedRegion ?? employeeData.region;
+      editedEmployee.active = active;
+      editedEmployee.employee_id = employeeData.employee_id;
+      editedEmployee.employee_name = employeeData.employee_name;
       console.log(editedEmployee);
 
       const response = await fetch(`${backend_url}api/update-employee-role`, {
@@ -96,9 +104,12 @@ function EmployeeEditModal({ open, handleClose, employeeData }) {
             margin="normal"
             fullWidth
             name="name"
-            label="Name"
             type="text"
-            value={editedEmployee["employee_name"]}
+            value={
+              employeeData != undefined
+                ? employeeData["employee_name"]
+                : editedEmployee["employee_name"]
+            }
           />
           <FormControl fullWidth margin="normal">
             <InputLabel>Role</InputLabel>
@@ -140,7 +151,12 @@ function EmployeeEditModal({ open, handleClose, employeeData }) {
             </Select>
           </FormControl>
 
-          <CustomCheckbox isSelcted={editedEmployee.status} />
+          <CustomCheckbox
+            isSelcted={
+              employeeData != undefined ? employeeData.active == 1 : false
+            }
+            setValue={setActive}
+          />
           <div></div>
           {/* Add more input fields for each property you want to be editable */}
           <Button type="submit" variant="contained" sx={{ mt: 3, mb: 2 }}>

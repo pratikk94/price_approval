@@ -42,9 +42,11 @@ function ResponsiveDrawer({ logout }) {
       >
         <Toolbar>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Logo
+            Price Approvals
           </Typography>
-
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            AM
+          </Typography>
           <Button
             color="inherit"
             onClick={() => {

@@ -61,7 +61,7 @@ function SelectModal() {
   return (
     <div>
       <Button variant="outlined" onClick={() => setOpen(true)}>
-        Open Select Modal
+        Create user
       </Button>
       <Dialog
         open={open}
