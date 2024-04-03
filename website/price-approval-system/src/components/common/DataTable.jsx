@@ -927,7 +927,7 @@ function DynamicTable({
         <EmployeeDetailsModal
           open={employeeViewModal}
           handleClose={() => {
-            setModalOpen(false);
+            setEmployeeViewModal(false);
           }}
           employeeData={employeeManagement}
         />
