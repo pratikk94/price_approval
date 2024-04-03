@@ -173,6 +173,46 @@ async function sendMail() {
   // });
 }
 
+app.post("/api/setPrice", async (req, res) => {
+  try {
+    await sql.connect(config);
+    const {
+      maxAgreedPrice,
+      minAgreedPrice,
+      maxSpecialDiscount,
+      minSpecialDiscount,
+      maxReelDiscount,
+      minReelDiscount,
+      maxPackupCharge,
+      minPackupCharge,
+      maxTPC,
+      minTPC,
+      maxOfflineDiscount,
+      minOfflineDiscount,
+    } = req.body;
+
+    const result = await sql.query`INSERT INTO setPrice (
+          maxAgreedPrice, minAgreedPrice,
+          maxSpecialDiscount, minSpecialDiscount,
+          maxReelDiscount, minReelDiscount,
+          maxPackupCharge, minPackupCharge,
+          maxTPC, minTPC,
+          maxOfflineDiscount, minOfflineDiscount
+      ) VALUES (
+          ${maxAgreedPrice}, ${minAgreedPrice},
+          ${maxSpecialDiscount}, ${minSpecialDiscount},
+          ${maxReelDiscount}, ${minReelDiscount},
+          ${maxPackupCharge}, ${minPackupCharge},
+          ${maxTPC}, ${minTPC},
+          ${maxOfflineDiscount}, ${minOfflineDiscount}
+      )`;
+    res.json({ message: "Data inserted successfully", result });
+  } catch (err) {
+    console.error("Database connection error", err);
+    res.status(500).send("Server error");
+  }
+});
+
 async function fetchAndProcessRules(requestId, employeeId) {
   let pool = null;
   try {
@@ -1479,7 +1519,7 @@ app.post("/api/login", async (req, res) => {
     // Query database for user role
 
     const result = await pool.request()
-      .query`SELECT role ,region FROM define_roles WHERE employee_id = ${employee_id}`;
+      .query`SELECT role ,region FROM define_roles WHERE employee_id = ${employee_id} and active = 1`;
 
     if (result.recordset.length > 0 && req.session) {
       // Set session
@@ -1494,7 +1534,12 @@ app.post("/api/login", async (req, res) => {
         region: result.recordset[0].region,
       });
     } else {
-      res.status(401).json({ loggedIn: false, message: "Invalid employee ID" });
+      res
+        .status(401)
+        .json({
+          loggedIn: false,
+          message: "Employee is inacive.Contact buisness admin",
+        });
     }
   } catch (err) {
     console.error("SQL error", err);
@@ -1809,8 +1854,8 @@ app.get("/api/fetch_roles_data_by_id", async (req, res) => {
     pool = await sql.connect(config);
     const id = req.query.id;
     // Query to fetch all values from the 'define' table
-    const result = await pool.request()
-      .query`EXEC FetchDefinedRoleById @id=${id}`;
+    const result = await pool.request().input("id", sql.Int, id)
+      .query`SELECT * FROM define_roles WHERE id = @id and active = 1`;
 
     // Send the query results as a response
     res.json(result.recordset);

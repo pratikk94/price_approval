@@ -26,7 +26,7 @@ const LoginScreen = () => {
       });
       navigate("/"); // Navigate to the home page
     } else {
-      alert("Login failed. Please try again.");
+      alert("Issue in Login. Contact buisness admin");
     }
   };
 
