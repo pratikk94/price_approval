@@ -1534,12 +1534,10 @@ app.post("/api/login", async (req, res) => {
         region: result.recordset[0].region,
       });
     } else {
-      res
-        .status(401)
-        .json({
-          loggedIn: false,
-          message: "Employee is inacive.Contact buisness admin",
-        });
+      res.status(401).json({
+        loggedIn: false,
+        message: "Employee is inacive.Contact buisness admin",
+      });
     }
   } catch (err) {
     console.error("SQL error", err);
@@ -1827,7 +1825,7 @@ app.get("/api/fetch_roles_data", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query to fetch all values from the 'define' table
-    const result = await pool.request().query`EXEC FetchDefinedRoles`;
+    const result = await pool.request().query`Select * from define_roles`;
 
     // Send the query results as a response
     res.json(result.recordset);
@@ -1855,7 +1853,7 @@ app.get("/api/fetch_roles_data_by_id", async (req, res) => {
     const id = req.query.id;
     // Query to fetch all values from the 'define' table
     const result = await pool.request().input("id", sql.Int, id)
-      .query`SELECT * FROM define_roles WHERE id = @id and active = 1`;
+      .query`SELECT * FROM define_roles WHERE id = @id`;
 
     // Send the query results as a response
     res.json(result.recordset);

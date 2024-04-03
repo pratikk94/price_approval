@@ -60,7 +60,7 @@ const CustomerSelect = ({
 
   const handleBlur = () => {
     console.log("Select has lost focus");
-    checkCheckBox();
+    if (id != 3) checkCheckBox();
     // Run any function or logic you need here
   };
 

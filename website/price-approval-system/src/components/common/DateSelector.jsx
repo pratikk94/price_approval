@@ -5,7 +5,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 function CustomDatePicker({ name, setSelection, editedData }) {
-  const [startDate, setStartDate] = useState(new Date());
+  const [startDate, setStartDate] = useState("");
 
   return (
     <div>
@@ -13,6 +13,7 @@ function CustomDatePicker({ name, setSelection, editedData }) {
 
       <DatePicker
         selected={startDate}
+        dateFormat="dd/MM/yyyy"
         onChange={(date) => {
           setStartDate(date);
           setSelection(date);

@@ -19,6 +19,8 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import RemarkBox from "../../../components/common/RemarkBox";
 import { backend_url } from "../../../util";
 import { useSession } from "../../../Login_Controller/SessionContext";
+import AlertBox from "../../../components/common/AlertBox";
+import FileHandling from "../../../components/common/FileHandling";
 
 const modalStyle = {
   position: "absolute",
@@ -57,6 +59,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [selectedCustomerrIDs, setSelectedCustomerIDs] = useState([]);
   const [selectedConsigneeIDs, setSelectedConsigneeIDs] = useState([]);
   const [selectedEndUseIDs, setSelectedEndUseIDs] = useState([]);
+  const [openAlert, setOpenAlert] = useState(false);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -75,7 +78,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       endUse.length > 0
     ) {
       if (paymentTerms.length == 0) {
-        alert("Please select payment terms");
+        alert("Please select Payment Terms");
       } else {
         formData["customerIds"] = selectedCustomers
           .map((item) => item.value)
@@ -120,24 +123,22 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
           if (validFrom < validTo) {
             submitData(formData);
           } else {
-            alert("Valid to date should be greater than valid from date");
+            alert("Valid To date should be greater than Valid From date");
           }
         }
       }
     } else if (selectedCustomers.length == 0) {
-      alert("Please select customers");
+      alert("Please Select Customer(s)");
     } else if (selectedConsignees.length == 0) {
-      alert("Please select consignees");
-    } else if (endUse.length == 0) {
-      alert("Please select end use");
+      alert("Please Select Consignee(s)");
+    } else if (paymentTerms == undefined) {
+      alert("Please Select Payment Terms");
     } else if (validFrom == "") {
-      alert("Please select valid from date");
+      alert("Please Select Valid From date");
     } else if (validTo == "") {
-      alert("Please select valid to date");
-    } else if (paymentTerms != undefined) {
-      alert("Please select payment terms");
+      alert("Please Select Valid To date");
     } else {
-      console.log("Here i am");
+      console.log("All checks met");
     }
     if (checkBoxEnabled && isChecked) {
       oneToOneMapping(selectedCustomers, selectedConsignees);
@@ -210,8 +211,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     if (selectedConsignees.length == 0 || selectedCustomers.length == 0) {
       setCheckBoxEnabled(false);
     } else if (selectedConsignees.length == selectedCustomers.length) {
-      alert("One to one mapping?");
-      setCheckBoxEnabled(true);
+      setOpenAlert(true);
     } else {
       setCheckBoxEnabled(false);
     }
@@ -245,153 +245,175 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     setTableRowsData(data);
   };
 
+  const handleCloseAlert = () => {
+    setOpenAlert(false);
+  };
+
+  const handleConfirm = () => {
+    console.log("User clicked Yes!");
+    setCheckBoxEnabled(true);
+    setIsChecked(true);
+    setOpenAlert(false);
+  };
+
   return (
-    <Modal
-      open={open}
-      onClose={handleClose}
-      aria-labelledby="create-request-modal"
-      aria-describedby="create-request-modal-description"
-    >
-      <Box sx={modalStyle} component="form" onSubmit={handleSubmit}>
-        <Typography
-          id="create-request-modal-title"
-          variant="h6"
-          component="h2"
-          marginBottom={2}
-        >
-          Create New Request
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={6}>
-            <SpacingWrapper space="12px" />
-            <Typography>Customer * </Typography>
-            <CustomerSelect
-              disabled={mode > 1}
-              id={1}
-              name={"Customer"}
-              customerState={setSelectedCustomers}
-              consigneeState={setSelectedConsignees}
-              endUseState={setEndUse}
-              checkCheckBox={CheckCheckBox}
-              isEditing={editData != undefined}
-              selectedCustomersToEdit={selectedCustomerrIDs}
-            />
-            <SpacingWrapper space="12px" />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  disabled={mode > 1 ? false : !checkBoxEnabled}
-                  icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
-                  checkedIcon={<CheckBoxIcon fontSize="medium" />}
-                  checked={isChecked}
-                  onChange={handleCheckboxChange}
-                />
-              }
-              label="All Customers for all Consignees"
-            />{" "}
-            <SpacingWrapper space="12px" />
-            <Typography>End Use</Typography>
-            <CustomerSelect
-              id={3}
-              disabled={mode > 1}
-              name={"End Use"}
-              customerState={setSelectedCustomers}
-              consigneeState={setSelectedConsignees}
-              endUseState={setEndUse}
-              checkCheckBox={CheckCheckBox}
-              isEditing={editData != undefined}
-              selectedCustomersToEdit={selectedEndUseIDs}
-            />
-            <SpacingWrapper space="12px" />
-            <Typography>Plant </Typography>
-            <Plant
-              setSelection={setPlant}
-              editedData={plant}
-              disabled={mode > 1}
-            />
-            <SpacingWrapper space="12px" />
-            <Typography>Payment Terms *</Typography>
-            <PaymentTerms
-              disabled={mode > 1}
-              setSelection={setPaymentTerms}
-              editedData={paymentTerms}
-            />
-            <SpacingWrapper space="12px" />
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <DateSelector
-                  disabled={mode > 1}
-                  name={"Valid From * "}
-                  setSelection={setValidFrom}
-                  editedData={validFrom}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <DateSelector
-                  disabled={mode > 1}
-                  name={"Valid To * "}
-                  setSelection={setValidTo}
-                  editedData={validTo}
-                />
-              </Grid>
-            </Grid>
-            <SpacingWrapper space="12px" />
-          </Grid>
-          <Grid item xs={6}>
-            <SpacingWrapper space="12px" />
-            <Typography>Consignee *</Typography>
-
-            <CustomerSelect
-              id={2}
-              disabled={mode > 1}
-              name={"Consignee"}
-              customerState={setSelectedCustomers}
-              consigneeState={setSelectedConsignees}
-              endUseState={setEndUse}
-              checkCheckBox={CheckCheckBox}
-              isEditing={editData != undefined}
-              selectedCustomersToEdit={selectedConsigneeIDs}
-            />
-
-            <SpacingWrapper space="12px" />
-
-            <SpacingWrapper space="61.5px" />
-          </Grid>
-        </Grid>
-
-        <SpacingWrapper space="0px" />
-
-        <TableWithInputs
-          disabled={mode > 1}
-          setTableRowsDataFunction={setTableRowsDataFunction}
-          setFSCCode={setFSC}
-          disableSubmit={setDisableSubmit}
-          prices={priceDetails}
-          fscCode={fsc}
-        />
-        <SpacingWrapper space="24px" />
-        <RemarkBox />
-        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-          <Button onClick={handleClose} color="primary">
-            Close
-          </Button>
-          <Button
-            onClick={(e) => {
-              setIsDraft(true);
-              handleSubmit(e);
-            }}
-            color="primary"
+    <>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="create-request-modal"
+        aria-describedby="create-request-modal-description"
+      >
+        <Box sx={modalStyle} component="form" onSubmit={handleSubmit}>
+          <Typography
+            id="create-request-modal-title"
+            variant="h6"
+            component="h2"
+            marginBottom={2}
           >
-            Save as draft
-          </Button>
+            Create New Request
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <SpacingWrapper space="12px" />
+              <Typography>Customer * </Typography>
+              <CustomerSelect
+                disabled={mode > 1}
+                id={1}
+                name={"Customer"}
+                customerState={setSelectedCustomers}
+                consigneeState={setSelectedConsignees}
+                endUseState={setEndUse}
+                checkCheckBox={CheckCheckBox}
+                isEditing={editData != undefined}
+                selectedCustomersToEdit={selectedCustomerrIDs}
+              />
+              <SpacingWrapper space="12px" />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    disabled={mode > 1 ? false : !checkBoxEnabled}
+                    icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
+                    checkedIcon={<CheckBoxIcon fontSize="medium" />}
+                    checked={isChecked}
+                    onChange={handleCheckboxChange}
+                  />
+                }
+                label="All Customers for all Consignees"
+              />{" "}
+              <SpacingWrapper space="12px" />
+              <Typography>End Use</Typography>
+              <CustomerSelect
+                id={3}
+                disabled={mode > 1}
+                name={"End Use"}
+                customerState={setSelectedCustomers}
+                consigneeState={setSelectedConsignees}
+                endUseState={setEndUse}
+                checkCheckBox={CheckCheckBox}
+                isEditing={editData != undefined}
+                selectedCustomersToEdit={selectedEndUseIDs}
+              />
+              <SpacingWrapper space="12px" />
+              <Typography>Plant </Typography>
+              <Plant
+                setSelection={setPlant}
+                editedData={plant}
+                disabled={mode > 1}
+              />
+              <SpacingWrapper space="12px" />
+              <Typography>Payment Terms *</Typography>
+              <PaymentTerms
+                disabled={mode > 1}
+                setSelection={setPaymentTerms}
+                editedData={paymentTerms}
+              />
+              <SpacingWrapper space="12px" />
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <DateSelector
+                    disabled={mode > 1}
+                    name={"Valid From * "}
+                    setSelection={setValidFrom}
+                    editedData={validFrom}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <DateSelector
+                    disabled={mode > 1}
+                    name={"Valid To * "}
+                    setSelection={setValidTo}
+                    editedData={validTo}
+                  />
+                </Grid>
+              </Grid>
+              <SpacingWrapper space="12px" />
+            </Grid>
+            <Grid item xs={6}>
+              <SpacingWrapper space="12px" />
+              <Typography>Consignee *</Typography>
+
+              <CustomerSelect
+                id={2}
+                disabled={mode > 1}
+                name={"Consignee"}
+                customerState={setSelectedCustomers}
+                consigneeState={setSelectedConsignees}
+                endUseState={setEndUse}
+                checkCheckBox={CheckCheckBox}
+                isEditing={editData != undefined}
+                selectedCustomersToEdit={selectedConsigneeIDs}
+              />
+
+              <SpacingWrapper space="12px" />
+
+              <SpacingWrapper space="61.5px" />
+            </Grid>
+          </Grid>
+
+          <SpacingWrapper space="0px" />
+
+          <TableWithInputs
+            disabled={mode > 1}
+            setTableRowsDataFunction={setTableRowsDataFunction}
+            setFSCCode={setFSC}
+            disableSubmit={setDisableSubmit}
+            prices={priceDetails}
+            fscCode={fsc}
+          />
+          <SpacingWrapper space="24px" />
+          <Typography>Attachment</Typography>
+          <FileHandling />
+          <RemarkBox />
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+            <Button onClick={handleClose} color="primary">
+              Close
+            </Button>
+            <Button
+              onClick={(e) => {
+                setIsDraft(true);
+                handleSubmit(e);
+              }}
+              color="primary"
+            >
+              Save as draft
+            </Button>
+          </Box>
+          <Box textAlign="center" marginTop={2}>
+            <Button type="submit" variant="contained" disabled={disableSubmit}>
+              Submit
+            </Button>
+          </Box>
         </Box>
-        <Box textAlign="center" marginTop={2}>
-          <Button type="submit" variant="contained" disabled={disableSubmit}>
-            Submit
-          </Button>
-        </Box>
-      </Box>
-    </Modal>
+      </Modal>
+      <AlertBox
+        isOpen={openAlert}
+        onClose={handleCloseAlert}
+        onConfirm={handleConfirm}
+        title="One to many Mapping"
+        message="Do you want to have one to many combination?"
+      />
+    </>
   );
 };
 

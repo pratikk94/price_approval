@@ -54,6 +54,7 @@ const Plant = ({ setSelection, editedData, disabled }) => {
       name="customers"
       options={customers}
       value={selectedCustomers}
+      closeMenuOnSelect={false}
       className="basic-multi-select"
       classNamePrefix="select"
       onChange={handleChange}
