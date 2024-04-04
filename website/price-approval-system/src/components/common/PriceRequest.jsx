@@ -304,8 +304,7 @@ function PriceChangeRequest({ role, isAM }) {
             isAM={true}
             action_id={role}
             url={
-              backend_url +
-              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=-1`
+              backend_url + `api/get_draft?employeeId=${session.employee_id}`
             }
             sendMode={setMode}
             mode={mode}

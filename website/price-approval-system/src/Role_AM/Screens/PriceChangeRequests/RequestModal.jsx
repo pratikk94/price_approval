@@ -60,15 +60,24 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [selectedConsigneeIDs, setSelectedConsigneeIDs] = useState([]);
   const [selectedEndUseIDs, setSelectedEndUseIDs] = useState([]);
   const [openAlert, setOpenAlert] = useState(false);
-
+  const [scenarioID, setScenarioId] = useState(0);
+  const alertBoxScenarios = {
+    0: {
+      title: "One to many Mapping",
+      message: "Do you want to have one to many combination?",
+    },
+    1: {
+      title: "Request submitted",
+      message:
+        "Request has been created successfully and submitted for approval",
+    },
+    2: {
+      title: "Draft",
+      message: "Request has been saved as draft",
+    },
+  };
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log(validFrom != "");
-    console.log(validTo != "");
-    console.log(paymentTerms != undefined);
-    console.log(selectedCustomers.length > 0);
-    console.log(selectedConsignees.length > 0);
-    console.log(endUse.length > 0);
     if (
       validFrom != "" &&
       validTo != "" &&
@@ -119,8 +128,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
 
         formData["isDraft"] = isDraft;
         formData["am_id"] = employee_id;
-        console.log(employee_id);
-        console.log(formData.length);
+
         const val = JSON.stringify(formData);
         console.log("In here");
         if (!stopExecution) {
@@ -202,8 +210,9 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       const responseData = await response;
       if (response.status === 200) {
         console.log("Success", responseData);
-        alert("Request created succesfully.");
-        window.location.reload();
+        setScenarioId(1);
+        setOpenAlert(true);
+        // window.location.reload();
       }
     } catch (error) {
       console.error("Failed to send data:", error);
@@ -215,6 +224,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     if (selectedConsignees.length == 0 || selectedCustomers.length == 0) {
       setCheckBoxEnabled(false);
     } else if (selectedConsignees.length == selectedCustomers.length) {
+      setScenarioId(0);
       setOpenAlert(true);
     } else {
       setCheckBoxEnabled(false);
@@ -423,8 +433,9 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         isOpen={openAlert}
         onClose={handleCloseAlert}
         onConfirm={handleConfirm}
-        title="One to many Mapping"
-        message="Do you want to have one to many combination?"
+        title={alertBoxScenarios[scenarioID].title}
+        message={alertBoxScenarios[scenarioID].message}
+        isUpdate={scenarioID != 0}
       />
     </>
   );

@@ -146,31 +146,34 @@ async function getCustomerNamesByIds(customerIds) {
 }
 
 async function sendMail() {
-  // Create a transporter using Mailgun SMTP settings
-  // let transporter = nodemailer.createTransport({
-  //   host: "smtp.mailgun.org", // Mailgun SMTP server
-  //   port: 587, // SMTP port (587 is typically used for STARTTLS)
-  //   secure: false, // true for 465, false for other ports
-  //   auth: {
-  //     user: "pratik.khanapurkar.20@gmail.com", // Your Mailgun SMTP username
-  //     pass: "A452731D6E455CEAB1DE48EF5797E6597849", // Your Mailgun SMTP password
-  //   },
-  // });
-  // // Email options
-  // let mailOptions = {
-  //   from: "pratik.khanapurkar.20@gmail.com", // Sender address
-  //   to: "khanapurkarpratik@gmail.com", // List of recipients
-  //   subject: "Hello from Mailgun with Nodemailer", // Subject line
-  //   text: "This is a test email sent from Node.js using Mailgun and Nodemailer.", // Plain text body
-  //   html: "<b>This is a test email sent from Node.js using Mailgun and Nodemailer.</b>", // HTML body
-  // };
-  // // Send the email
-  // transporter.sendMail(mailOptions, (error, info) => {
-  //   if (error) {
-  //     return console.log(error);
-  //   }
-  //   console.log("Message sent: %s", info.messageId);
-  // });
+  //Create a transporter using Mailgun SMTP settings
+  let transporter = nodemailer.createTransport({
+    host: "smtp.mailgun.org", // Mailgun SMTP server
+    port: 25, // SMTP port (587 is typically used for STARTTLS)
+    secure: false, // true for 465, false for other ports
+    // auth: {
+    //   user: "pratik.khanapurkar.20@gmail.com", // Your Mailgun SMTP username
+    //   pass: "A452731D6E455CEAB1DE48EF5797E6597849", // Your Mailgun SMTP password
+    // },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+  // Email options
+  let mailOptions = {
+    from: "pratik.khanapurkar.20@gmail.com", // Sender address
+    to: "khanapurkarpratik@gmail.com", // List of recipients
+    subject: "Hello from Mailgun with Nodemailer", // Subject line
+    text: "This is a test email sent from Node.js using Mailgun and Nodemailer.", // Plain text body
+    html: "<b>This is a test email sent from Node.js using Mailgun and Nodemailer.</b>", // HTML body
+  };
+  // Send the email
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.log(error);
+    }
+    console.log("Message sent: %s", info.messageId);
+  });
 }
 
 app.post("/api/setPrice", async (req, res) => {
@@ -384,7 +387,7 @@ async function getNewRequestName(parentId, type) {
         console.log(`NEW_REQ_NAME->${new_req_name}`);
         return new_req_name;
       }
-    } else if (type === "N") {
+    } else if (type === "N" || type === "D") {
       const today = new Date();
 
       // Get the year, month, and date from the today object
@@ -397,14 +400,14 @@ async function getNewRequestName(parentId, type) {
         .input(
           "name",
           sql.VarChar,
-          `NR${year.toString()}${month.toString().padStart(2, "0")}${date
+          `${type}R${year.toString()}${month.toString().padStart(2, "0")}${date
             .toString()
             .padStart(2, "0")}%`
         )
         .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like @name ORDER BY id DESC`;
 
       if (result.recordset.length === 0) {
-        new_req_name = `NR${year.toString()}${month
+        new_req_name = `${type}R${year.toString()}${month
           .toString()
           .padStart(2, "0")}${date.toString().padStart(2, "0")}0001`;
       } else {
@@ -433,6 +436,7 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
     else if (isNewRequest === 2) requestType = "E";
     else if (isNewRequest == "N") requestType = "N";
     else if (isNewRequest == 0) requestType = "U";
+    else if (isNewRequest == "D") requestType = "D";
     const parentReqIdValue = parentReqId;
     console.log(
       "Inserting request with type:",
@@ -571,6 +575,124 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       region,
       employeeId,
       status,
+      rms,
+      nsms,
+      hdsm,
+      validators
+    );
+    if (details != undefined && details.length > 0) {
+      details.forEach((detail) => {
+        if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
+          detail.req_id = detail.req_id[0]; // Convert array to single value
+        }
+        // Add any additional transformations needed
+      });
+
+      const filteredDetails = filterDuplicates(details);
+      console.log("Details->", filteredDetails);
+      res.json(filteredDetails);
+    } else res.json([]);
+  } catch (err) {
+    console.error("Error during database operations:", err);
+  } finally {
+    if (pool) {
+      await pool.close();
+    }
+  }
+}
+
+async function FetchDraft(employeeId, res) {
+  let pool = null;
+
+  try {
+    // Establish a connection to the database
+    pool = await sql.connect(config);
+    console.log("Connected to the database.");
+
+    // 1. Fetch region from 'define_role' for a given 'employee_id'
+    // Replace with actual employee ID
+    console.log(
+      `SELECT region FROM define_roles WHERE employee_id =${employeeId}`
+    );
+    const regionResult = await pool
+      .request()
+      .input("employeeId", sql.NVarChar, employeeId)
+      .query("SELECT region FROM define_roles WHERE employee_id = @employeeId");
+
+    if (regionResult.recordset.length === 0) {
+      throw new Error("No region found for this employee.");
+    }
+
+    const region = regionResult.recordset[0].region;
+    console.log("Region:", region);
+
+    // 2. Fetch all ids where 'rm' is greater than 0
+    const idsResult = await pool
+      .request()
+      .input("am_id", sql.VarChar, employeeId)
+      .query(
+        `WITH LatestTransactionPerRequest AS (
+          SELECT 
+              request_id,
+              MAX(id) AS MaxId
+          FROM 
+              [transaction]
+          GROUP BY 
+              request_id
+      )
+      , DetailedTransactions AS (
+          SELECT 
+              t.*,
+              lt.MaxId as LatestTransactionId
+          FROM 
+              [transaction] t
+          INNER JOIN 
+              LatestTransactionPerRequest lt ON t.id = lt.MaxId
+      )
+      SELECT 
+          dt.request_id,
+          dt.region,
+          dt.rule_id,
+          dt.am,
+          dt.am_status,
+          dt.am_status_updated_at,
+          dt.am_id,
+          dt.rm,
+          dt.rm_status,
+          dt.rm_status_updated_at,
+          dt.rm_id,
+          dt.nsm_status,
+          dt.nsm_status_updated_at,
+          dt.nsm_id,
+          dt.hdsm_status,
+          dt.hdsm_status_updated_at,
+          dt.hdsm_id,
+          dt.validator_status,
+          dt.validator_status_updated_at,
+          dt.validator_id,
+          dt.id,
+          dt.hdsm,
+          dt.validator,
+          dt.nsm,
+          dt.timestamp
+      FROM 
+          DetailedTransactions dt
+      LEFT JOIN request_status rs ON dt.request_id = rs.req_id
+      WHERE 
+      am_id = @am_id and rs.status='D';`
+      );
+    console.log("IDS", idsResult);
+    // Assuming you're using these IDs to fetch related price requests...
+    const ids = idsResult.recordset.map((row) => row.request_id);
+    const rms = idsResult.recordset.map((row) => row.rm_status);
+    const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const validators = idsResult.recordset.map((row) => row.validator_status);
+    const details = await fetchPriceApprovalDetails(
+      ids,
+      region,
+      employeeId,
+      0,
       rms,
       nsms,
       hdsm,
@@ -2499,8 +2621,13 @@ app.post("/api/add_price_request", async (req, res) => {
                     @oldNetNSR=${oldNetNSR}`;
       console.log(result);
     }
+
     insertRequest(
-      req.body.mode == undefined ? "N" : req.body.mode,
+      req.body.isDraft == true
+        ? "D"
+        : req.body.mode == undefined
+        ? "N"
+        : req.body.mode,
       requestId,
       req.body.mode != undefined ? req.body.parentReqId : requestId
     );
@@ -2985,6 +3112,10 @@ app.get("/api/files/:request_id", async (req, res) => {
     console.error("Database query error:", err);
     res.status(500).send("Failed to fetch files.");
   }
+});
+
+app.get("/api/get_draft", async (req, res) => {
+  FetchDraft(req.query.employeeId, res);
 });
 
 //sendMail();

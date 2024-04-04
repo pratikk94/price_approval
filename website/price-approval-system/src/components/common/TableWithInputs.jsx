@@ -28,7 +28,7 @@ function TableWithInputs({
   const [grades, setGrades] = useState([]);
   const [selectedGrade, setSelectedGrade] = useState("");
   const [fsc, setFSC] = useState(fscCode);
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [gradeType, setGradeType] = useState(null);
 
   // Options for the dropdown
   const options = [
@@ -38,7 +38,7 @@ function TableWithInputs({
   ];
   // Handling the selection
   const handleMaterialChange = (option) => {
-    setSelectedOption(option);
+    setGradeType(option);
     // You can handle additional logic here, for example:
     // update some state, or form, based on the selection
   };
@@ -179,12 +179,11 @@ function TableWithInputs({
   const handleRowChange = (id, field, value, profit_center) => {
     setRows((prevRows) =>
       prevRows.map((row) => {
-        // console.log(row);
+        console.log(row);
         if (row.id === id) {
           const updatedRow = { ...row, [field]: value };
+
           if (field === "grade") updatedRow.profitCenter = profit_center;
-          // console.log(updatedRow);
-          // If the fields to calculate netNSR are updated, recalculate it
           if (
             [
               "agreedPrice",
@@ -195,6 +194,8 @@ function TableWithInputs({
               "offlineDiscount",
             ].includes(field)
           ) {
+            // console.log(updatedRow);
+            // If the fields to calculate netNSR are updated, recalculate it
             const agreedPrice = parseFloat(updatedRow.agreedPrice) || 0;
             const specialDiscount = parseFloat(updatedRow.specialDiscount) || 0;
             const reelDiscount = parseFloat(updatedRow.reelDiscount) || 0;
@@ -413,8 +414,17 @@ function TableWithInputs({
 
               <td>
                 <Select
-                  value={selectedOption}
-                  onChange={handleMaterialChange}
+                  value={gradeType}
+                  onChange={(e) => {
+                    handleMaterialChange(e);
+                    row.gradeType = e.label;
+                    handleRowChange(
+                      row.id,
+                      "gradeType",
+                      e.label,
+                      e.profitCenter
+                    );
+                  }}
                   options={options}
                   className="tColumnGrade"
                   placeholder=""
