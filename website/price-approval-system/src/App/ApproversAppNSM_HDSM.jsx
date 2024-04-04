@@ -45,9 +45,11 @@ function ResponsiveDrawer({ logout }) {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             {session.role == "NSM"
               ? "National Sales Manger (BBK)"
-              : (session.role = "NSMT"
-                  ? "National Sales Manger (T)"
-                  : (session.role = "HDSM" ? "Head of div Sales Manager" : ""))}
+              : session.role == "NSMT"
+              ? "National Sales Manger (T)"
+              : session.role == "HDSM"
+              ? "Head of div Sales Manager"
+              : ""}
           </Typography>
           <Button
             color="inherit"

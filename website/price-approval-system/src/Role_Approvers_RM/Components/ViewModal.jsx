@@ -34,14 +34,16 @@ function PriceTable({ price }) {
           <TableHead>
             <TableRow>
               <TableCell align="center">Grade</TableCell>
-              <TableCell align="center">GradeType</TableCell>
+              <TableCell align="center">Grade Type</TableCell>
+              <TableCell align="center">GSM From</TableCell>
+              <TableCell align="center">GSM To</TableCell>
               <TableCell align="center">Agreed Price</TableCell>
               <TableCell align="center">Special Discount</TableCell>
               <TableCell align="center">Reel Discount</TableCell>
               <TableCell align="center">TPC</TableCell>
               <TableCell align="center">Offline Discount</TableCell>
               <TableCell align="center">Net NSR</TableCell>
-              <TableCell align="center">Old Net NSR</TableCell>
+              {/* <TableCell align="center">Old Net NSR</TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -51,13 +53,15 @@ function PriceTable({ price }) {
                   {row.grade}
                 </TableCell>
                 <TableCell align="right">{row.grade_type}</TableCell>
+                <TableCell align="right">{row.gsm_from}</TableCell>
+                <TableCell align="right">{row.gsm_to}</TableCell>
                 <TableCell align="right">{row.agreed_price}</TableCell>
                 <TableCell align="right">{row.special_discount}</TableCell>
                 <TableCell align="right">{row.reel_discount}</TableCell>
                 <TableCell align="right">{row.tpc}</TableCell>
                 <TableCell align="right">{row.offline_discount}</TableCell>
                 <TableCell align="right">{row.net_nsr}</TableCell>
-                <TableCell align="right">{row.old_net_nsr}</TableCell>
+                {/* <TableCell align="right">{row.old_net_nsr}</TableCell> */}
               </TableRow>
             ))}
           </TableBody>
@@ -65,6 +69,17 @@ function PriceTable({ price }) {
       </TableContainer>
     </>
   ) : null;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  // Specify the locale as 'en-GB' to ensure the format is day/month/year
+  // You can change 'en-GB' to any other locale as needed
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
@@ -102,6 +117,8 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
         alert("Failed to update report status.");
       });
   };
+
+  console.log(`DATAD -> ${JSON.stringify(data)}`);
   return (
     <ReactModal
       isOpen={open}
@@ -110,7 +127,7 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
       style={{
         content: {
           top: "50%",
-          left: "50%",
+          left: "60%",
           right: "auto",
           bottom: "auto",
           marginRight: "-50%",
@@ -132,30 +149,31 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
         <>
           <div>
             <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-              Customer ID: {data.customer_id}
+              Customer: {data.customer_id}
               <br />
-              Consignee ID: {data.consignee_id}
+              Consignee: {data.consignee_id}
               <br />
-              Plant: {data.plant}
+              Plant: {data.plant_name}
               <br />
-              End Use ID: {data.end_use_id}
-              <br />
-              End Use Segment ID: {data.end_use_segment_id}
+              End Use: {data.end_use_id}
               <br />
               Payment Terms ID: {data.payment_terms_id}
               <br />
-              Valid From: {data.valid_from}
+              Valid From: {formatDate(data.valid_from)}
               <br />
-              Valid To: {data.valid_to}
+              Valid To: {formatDate(data.valid_to)}
               <br />
-              FSC: {data.fsc}
+              FSC: {data.fsc == 1 ? "Yes" : "No"}
               <br />
-              Mapping Type: {data.mappint_type}
+              Customer-Consignee Mapping:{" "}
+              {data.mappint_type == `1` ? "One to one" : "One to many"}
             </Typography>
           </div>
           <PriceTable price={data.price} />
-          <RemarkBox />
-          <FileHandling requestId={data.requestId} />
+          {session.role != "AM" && <FileHandling />}
+
+          {session.role != "AM" && <RemarkBox />}
+
           {isEditable ? (
             <>
               <IconButton

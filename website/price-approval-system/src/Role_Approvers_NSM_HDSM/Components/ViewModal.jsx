@@ -61,6 +61,17 @@ function PriceTable({ price }) {
   ) : null;
 }
 
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  // Specify the locale as 'en-GB' to ensure the format is day/month/year
+  // You can change 'en-GB' to any other locale as needed
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
 function PriceViewModal({ open, onClose, id, data, isEditable }) {
   const updateStatus = (newStatus) => {
     const apiUrl = `${backend_url}api/update-report-status`;
@@ -117,25 +128,24 @@ function PriceViewModal({ open, onClose, id, data, isEditable }) {
         <>
           <div>
             <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-              Customer ID: {data.customer_id}
+              Customer: {data.customer_id}
               <br />
-              Consignee ID: {data.consignee_id}
+              Consignee: {data.consignee_id}
               <br />
-              Plant: {data.plant}
+              Plant: {data.plant_name}
               <br />
-              End Use ID: {data.end_use_id}
-              <br />
-              End Use Segment ID: {data.end_use_segment_id}
+              End Use: {data.end_use_id}
               <br />
               Payment Terms ID: {data.payment_terms_id}
               <br />
-              Valid From: {data.valid_from}
+              Valid From: {formatDate(data.valid_from)}
               <br />
-              Valid To: {data.valid_to}
+              Valid To: {formatDate(data.valid_to)}
               <br />
-              FSC: {data.fsc}
+              FSC: {data.fsc == 1 ? "Yes" : "No"}
               <br />
-              Mapping Type: {data.mappint_type}
+              Mapping Type:{" "}
+              {data.mappint_type == 1 ? "One to one" : "One to many"}
             </Typography>
           </div>
           <PriceTable price={data.price} />

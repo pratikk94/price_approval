@@ -524,8 +524,11 @@ function PriceChangeRequest({ role, isAM }) {
               key={filter}
               variant={activeFilter === filter ? "contained" : "outlined"}
               onClick={() => handleFilterClick(filter, index)}
-              style={{ marginRight: "2vw" }}
-              sx={{ mb: 1, ...(filter === "Rework" && { mr: 2 }) }} // Add space after "Rework"
+              style={{ marginRight: "1vw" }}
+              sx={{
+                mb: 1,
+                ...(filter === "Rework" && { mr: 2 }),
+              }} // Add space after "Rework"
             >
               {filter}
             </Button>
@@ -539,7 +542,7 @@ function PriceChangeRequest({ role, isAM }) {
               onClick={handleClick}
               variant="contained"
             >
-              Actions
+              + Create request
             </Button>
             <Menu
               id="actions-menu"

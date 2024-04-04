@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Button, Grid, TextField, TextareaAutosize } from "@mui/material";
 import Spacewrapper from "../util/SpacingWrapper";
+import SendIcon from "@mui/icons-material/Send";
 function RemarkBox() {
   const [remarks, setRemarks] = useState([]);
   const [remarkText, setRemarkText] = useState("");
@@ -32,8 +33,8 @@ function RemarkBox() {
       <Spacewrapper space="12px" />
 
       <div style={{ display: "flex", justifyContent: "end" }}>
-        <Button variant="contained" onClick={handleAddRemark}>
-          Post Remark
+        <Button onClick={handleAddRemark}>
+          <SendIcon />
         </Button>
       </div>
       <div>

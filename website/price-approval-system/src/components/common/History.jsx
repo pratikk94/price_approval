@@ -35,7 +35,7 @@ const MessagesComponent = ({ reqId }) => {
   return (
     <Paper elevation={3} style={{ padding: 20 }}>
       <Typography variant="h5" gutterBottom>
-        Unique Messages
+        Request History
       </Typography>
       {messages.map((message, index) => (
         <div key={index}>

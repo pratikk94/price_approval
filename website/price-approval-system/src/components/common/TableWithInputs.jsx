@@ -6,14 +6,17 @@ import {
   FormControlLabel,
   Grid,
   Typography,
+  MenuItem,
 } from "@mui/material";
-
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import Select from "react-select";
 import { backend_url } from "../../util";
-import { SellOutlined } from "@mui/icons-material";
+import { HeadsetRounded, SellOutlined } from "@mui/icons-material";
 import SpacingWrapper from "../util/SpacingWrapper";
+
 function TableWithInputs({
   setTableRowsDataFunction,
   fscCode,
@@ -25,6 +28,31 @@ function TableWithInputs({
   const [grades, setGrades] = useState([]);
   const [selectedGrade, setSelectedGrade] = useState("");
   const [fsc, setFSC] = useState(fscCode);
+  const [selectedOption, setSelectedOption] = useState(null);
+
+  // Options for the dropdown
+  const options = [
+    { value: "Reel", label: "Reel" },
+    { value: "Sheet", label: "Sheet" },
+    { value: "Bobbin", label: "Bobbin" },
+  ];
+  // Handling the selection
+  const handleMaterialChange = (option) => {
+    setSelectedOption(option);
+    // You can handle additional logic here, for example:
+    // update some state, or form, based on the selection
+  };
+
+  const calculateWidth = (header) => {
+    console.log("HEADER" + header);
+    if (header < 14) return "70px"; // Min width
+    if ((header = 13)) return "80px";
+    if ((header = 12)) return "95px";
+    if ((header = 11)) return "100px";
+    if (HeadsetRounded < 9) return "110px";
+    // Max width for longer headers
+  };
+
   useEffect(() => {
     fetch_grades();
   }, [fscCode]);
@@ -89,6 +117,13 @@ function TableWithInputs({
   const handleCheckboxChange = (event) => {
     const { name, checked } = event.target;
     setCheckboxState((prev) => ({ ...prev, [name]: checked }));
+  };
+
+  const countTrueCheckboxes = () => {
+    // Use Object.values to get an array of values from the checkboxState object
+    // Then use filter to find those that are true
+    // The length of the resulting array tells us how many are true
+    return Object.values(checkboxState).filter((value) => value).length;
   };
 
   const gradeMapper = (gradeLabel) => {
@@ -269,7 +304,19 @@ function TableWithInputs({
                   disabled={disabled}
                 />
               }
-              label={option}
+              label={
+                option == "AgreedPrice"
+                  ? "Agreed Price*"
+                  : option == "SpecialDiscount"
+                  ? "Special Discount*"
+                  : option == "ReelDiscount"
+                  ? "Reel Discount"
+                  : option == "PackUpCharge"
+                  ? "Pack Upcharge"
+                  : option == "TPC"
+                  ? "TPC"
+                  : "Offline Discount"
+              }
             />
           </Grid>
         ))}
@@ -277,30 +324,56 @@ function TableWithInputs({
       <table>
         <thead>
           <tr>
-            <th className="tColumn">Grade</th>
-            <th className="tColumn">Grade Type</th>
-            <th className="tColumn">GSM From</th>
-            <th className="tColumn">GSM To</th>
+            <th className="tColumn">
+              <center>Grade *</center>
+            </th>
+            <th className="tColumn">
+              <center>Grade Type *</center>
+            </th>
+            <th className="tColumn">
+              <center>GSM From</center>
+            </th>
+            <th className="tColumn">
+              <center>GSM To</center>
+            </th>
             {/* Other conditional headers based on checkboxState */}
             {checkboxState["AgreedPrice"] && (
-              <th className="tColumn">Agreed Price</th>
+              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+                <center>Agreed Price</center>
+              </th>
             )}
             {checkboxState["SpecialDiscount"] && (
-              <th className="tColumn">Special Discount</th>
+              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+                <center>Special Discount</center>
+              </th>
             )}
             {checkboxState["ReelDiscount"] && (
-              <th className="tColumn">Reel discount</th>
+              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+                <center>Reel Discount</center>
+              </th>
             )}
             {checkboxState["PackUpCharge"] && (
-              <th className="tColumn">PackUp charge</th>
+              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+                <center>Pack Upcharge</center>
+              </th>
             )}
-            {checkboxState["TPC"] && <th className="tColumn">TPC</th>}
+            {checkboxState["TPC"] && (
+              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+                <center>TPC</center>
+              </th>
+            )}
             {checkboxState["OfflineDisc"] && (
-              <th className="tColumn">Offline Discount</th>
+              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+                <center>Offline Discount</center>
+              </th>
             )}
-            <th className="tColumn">Net Nsr</th>
-            <th className="tColumn">Old net NSR</th>
-            <th className="tColumn">Actions</th>
+            <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+              <center>Net NSR</center>
+            </th>
+            {/* <th className="tColumn">Old Net NSR</th> */}
+            <th className="tAction">
+              <center>Actions</center>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -308,11 +381,12 @@ function TableWithInputs({
             <tr key={index}>
               <td>
                 <Select
-                  value={grades.find((grade) => selectedGrade.label)} // Find the option that matches the row's grade
+                  placeholder=""
+                  className="tColumnGrade"
+                  value={grades.find((grade) => row.label)} // Find the option that matches the row's grade
                   style={{ marginTop: "10px" }} // Corrected casing for marginTop
                   name="customers"
                   options={grades}
-                  className="basic-multi-select tColumn"
                   classNamePrefix="select"
                   disabled={disabled}
                   onChange={(e) => {
@@ -326,25 +400,24 @@ function TableWithInputs({
                     console.log(result);
 
                     if (!result) {
-                      alert("Invalid mix of profit centers");
+                      alert("Invalid mix of Grades");
                       disableSubmit(true);
                     } else {
                       disableSubmit(false);
                     } // Assuming e contains the selected option
-                    setSelectedGrade(e); // Assuming e is the option object
+                    // setSelectedGrade(e); // Assuming e is the option object
                     console.log(e.label, e.profitCenter); // Debugging
                   }}
                 />
               </td>
+
               <td>
-                <input
-                  type="text"
-                  className="tColumn"
-                  disabled={disabled}
-                  value={row.gradeType}
-                  onChange={(e) =>
-                    handleRowChange(row.id, "gradeType", e.target.value)
-                  }
+                <Select
+                  value={selectedOption}
+                  onChange={handleMaterialChange}
+                  options={options}
+                  className="tColumnGrade"
+                  placeholder=""
                 />
               </td>
               {/* Conditionally render inputs for other fields like gsmFrom, gsmTo */}
@@ -352,12 +425,22 @@ function TableWithInputs({
                 <td>
                   <input
                     type="number"
-                    className="tColumn"
+                    className="tColumnG"
                     disabled={disabled}
                     value={row.gsmFrom}
+                    min="0"
+                    onKeyDown={(e) =>
+                      (e.key === "ArrowUp" || e.key === "ArrowDown") &&
+                      e.preventDefault()
+                    }
+                    max="9999"
                     onChange={(e) => {
                       // setGSMFrom(e.target.value);
-                      handleRowChange(row.id, "gsmFrom", e.target.value);
+                      const newValue = event.target.value;
+                      // Allow only up to 4 digits. This will not allow the user to enter more than 4 digits.
+                      if (newValue.length <= 4 && /^[0-9]*$/.test(newValue)) {
+                        handleRowChange(row.id, "gsmFrom", e.target.value);
+                      }
                     }}
                   />
                 </td>
@@ -365,13 +448,22 @@ function TableWithInputs({
               {
                 <td>
                   <input
-                    type="text"
-                    className="tColumn"
+                    type="number"
+                    className="tColumnG"
                     value={row.gsmTo}
-                    disabled={disabled}
+                    min="0"
+                    onKeyDown={(e) =>
+                      (e.key === "ArrowUp" || e.key === "ArrowDown") &&
+                      e.preventDefault()
+                    }
+                    max="9999"
                     onChange={(e) => {
                       // setGSMFrom(e.target.value);
-                      handleRowChange(row.id, "gsmTo", e.target.value);
+                      const newValue = event.target.value;
+                      // Allow only up to 4 digits. This will not allow the user to enter more than 4 digits.
+                      if (newValue.length <= 4 && /^[0-9]*$/.test(newValue)) {
+                        handleRowChange(row.id, "gsmTo", e.target.value);
+                      }
                     }}
                   />
                 </td>
@@ -381,9 +473,9 @@ function TableWithInputs({
                 <td>
                   <input
                     type="number"
-                    className="tColumn"
                     disabled={disabled}
                     value={row.agreedPrice}
+                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
                     onChange={(e) =>
                       handleRowChange(row.id, "agreedPrice", e.target.value)
                     }
@@ -394,7 +486,7 @@ function TableWithInputs({
                 <td>
                   <input
                     type="number"
-                    className="tColumn"
+                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
                     disabled={disabled}
                     value={row.specialDiscount}
                     onChange={(e) =>
@@ -407,7 +499,7 @@ function TableWithInputs({
                 <td>
                   <input
                     type="number"
-                    className="tColumn"
+                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
                     disabled={disabled}
                     value={row.reelDiscount}
                     onChange={(e) =>
@@ -420,7 +512,7 @@ function TableWithInputs({
                 <td>
                   <input
                     type="number"
-                    className="tColumn"
+                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
                     disabled={disabled}
                     value={row.packUpCharge}
                     onChange={(e) =>
@@ -433,7 +525,7 @@ function TableWithInputs({
                 <td>
                   <input
                     type="number"
-                    className="tColumn"
+                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
                     value={row.tpc}
                     disabled={disabled}
                     onChange={(e) =>
@@ -446,7 +538,7 @@ function TableWithInputs({
                 <td>
                   <input
                     type="number"
-                    className="tColumn"
+                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
                     disabled={disabled}
                     value={row.offlineDiscount}
                     onChange={(e) =>
@@ -456,26 +548,35 @@ function TableWithInputs({
                 </td>
               )}
               <td>
-                <input type="number" readOnly value={row.netNSR} />
+                <input
+                  type="number"
+                  style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
+                  readOnly
+                  value={row.netNSR}
+                />
               </td>
-              <td>
+              {/* <td>
                 <input
                   type="text"
                   className="tColumn"
-                  disabled={disabled}
+                  disabled={true}
                   value={row.oldNetNSR}
                   onChange={(e) =>
                     handleRowChange(row.id, "oldNetNSR", e.target.value)
                   }
                 />
-              </td>
-              <td>
+              </td> */}
+              <td className="tAction">
                 <Button
+                  className="tAction"
                   variant="outlined"
                   color="error"
                   onClick={() => deleteRow(row.id)}
+                  sx={{
+                    border: "none",
+                  }}
                 >
-                  Delete
+                  <DeleteIcon />
                 </Button>
               </td>
             </tr>
@@ -486,8 +587,8 @@ function TableWithInputs({
         className="div_container"
         style={{ marginTop: "20px", textAlign: "right" }}
       >
-        <Button variant="contained" onClick={addRow} disabled={disabled}>
-          Add Row
+        <Button onClick={addRow} disabled={disabled}>
+          <AddCircleIcon />
         </Button>
       </div>
     </>

@@ -101,12 +101,19 @@ function DynamicTable({
         // Initialize column visibility based on the first item's keys
         if (jsonData.length > 0) {
           const initialVisibility = Object.keys(jsonData[0]).reduce(
-            (acc, key) => ({
-              ...acc,
-              [key]: true,
-            }),
+            (acc, key) => {
+              if (key !== "id" && key !== "req_id") {
+                // Skip 'id' and 'requestId'
+                return {
+                  ...acc,
+                  [key]: true,
+                };
+              }
+              return acc;
+            },
             {}
           );
+
           setColumnVisibility(initialVisibility);
         }
       } catch (error) {
@@ -511,7 +518,7 @@ function DynamicTable({
           >
             <ViewIcon />
           </IconButton>
-          <IconButton
+          {/* <IconButton
             onClick={() => {
               console.log("ROW id is ", row_id);
               setEditModalOpen(true);
@@ -523,7 +530,7 @@ function DynamicTable({
             }}
           >
             <EditIcon />
-          </IconButton>
+          </IconButton> */}
           {approve && (
             <>
               <IconButton
@@ -663,21 +670,99 @@ function DynamicTable({
       <div
         style={{
           display: "flex",
-          justifyContent: "end",
+          justifyContent: "space-between",
           alignItems: "center",
           margin: 10,
         }}
       >
-        <Button onClick={downloadCsv} variant="contained" color="primary">
-          Download CSV
-        </Button>
-      </div>
-      <FormControl variant="outlined" size="small" style={{ marginRight: 8 }}>
-        <Button variant="contained" onClick={handleAddSearchColumn}>
-          Add Search Column
-        </Button>
-      </FormControl>
+        <FormControl variant="outlined" size="small" style={{ marginRight: 8 }}>
+          <Button variant="contained" onClick={handleAddSearchColumn}>
+            Add Search Column
+          </Button>
+        </FormControl>
 
+        {!isEmployeeManagement && (
+          <div>
+            {/* <span>Start Date: </span>
+              <DatePicker
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
+                dateFormat="yyyy-MM-dd"
+                isClearable
+                wi
+              />
+              <span>End Date: </span>
+              <DatePicker
+                selected={endDate}
+                onChange={(date) => setEndDate(date)}
+                dateFormat="yyyy-MM-dd"
+                isClearable
+                minDate={startDate} // Optional: Ensures end date is after start date
+              /> */}
+            <Button onClick={downloadCsv} color="primary" sx={{ my: "12px" }}>
+              <DownloadIcon />
+            </Button>
+            <FormControl sx={{ m: 1, width: 205 }}>
+              <Select
+                id="column-visibility-select"
+                multiple
+                value={selectedColumns}
+                onChange={handleColumnVisibilityChange}
+                style={{ height: 40 }}
+                renderValue={(selected) =>
+                  `Columns: ${selected.length} selected`
+                }
+              >
+                {Object.keys(columnVisibility).map((column) => (
+                  <MenuItem key={column} value={column}>
+                    <Checkbox checked={selectedColumns.indexOf(column) > -1} />
+                    <ListItemText
+                      primary={column
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                    />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+        )}
+        {isEmployeeManagement && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "end",
+              alignItems: "center",
+            }}
+          >
+            <Button onClick={downloadCsv} color="primary" sx={{ my: "12px" }}>
+              <DownloadIcon />
+            </Button>
+            <FormControl sx={{ m: 1, width: 300 }}>
+              <InputLabel id="column-visibility-select-label">""</InputLabel>
+              <Select
+                id="column-visibility-select"
+                multiple
+                value={selectedColumns}
+                onChange={handleColumnVisibilityChange}
+                input={<OutlinedInput label="Columns" />}
+                renderValue={(selected) => `${selected.length} selected`}
+              >
+                {Object.keys(columnVisibility).map((column) => (
+                  <MenuItem key={column} value={column}>
+                    <Checkbox checked={selectedColumns.indexOf(column) > -1} />
+                    <ListItemText
+                      primary={column
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                    />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+        )}
+      </div>
       <div
         style={{
           display: "flex",
@@ -742,92 +827,7 @@ function DynamicTable({
           </div>
         ))}
       </div>
-      {!isEmployeeManagement && (
-        <>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-evenly",
-              alignItems: "center",
-            }}
-          >
-            <span>Start Date: </span>
-            <DatePicker
-              selected={startDate}
-              onChange={(date) => setStartDate(date)}
-              dateFormat="yyyy-MM-dd"
-              isClearable
-            />
-            <span>End Date: </span>
-            <DatePicker
-              selected={endDate}
-              onChange={(date) => setEndDate(date)}
-              dateFormat="yyyy-MM-dd"
-              isClearable
-              minDate={startDate} // Optional: Ensures end date is after start date
-            />
 
-            <FormControl sx={{ m: 1, width: 300 }}>
-              <InputLabel id="column-visibility-select-label">
-                Columns
-              </InputLabel>
-              <Select
-                labelId="column-visibility-select-label"
-                id="column-visibility-select"
-                multiple
-                value={selectedColumns}
-                onChange={handleColumnVisibilityChange}
-                input={<OutlinedInput label="Columns" />}
-                renderValue={(selected) => selected.join(", ")}
-              >
-                {Object.keys(columnVisibility).map((column) => (
-                  <MenuItem key={column} value={column}>
-                    <Checkbox checked={selectedColumns.indexOf(column) > -1} />
-                    <ListItemText
-                      primary={column
-                        .replace(/_/g, " ")
-                        .replace(/\b\w/g, (letter) => letter.toUpperCase())}
-                    />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </div>
-        </>
-      )}
-      {isEmployeeManagement && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "end",
-            alignItems: "center",
-          }}
-        >
-          <FormControl sx={{ m: 1, width: 300 }}>
-            <InputLabel id="column-visibility-select-label">Columns</InputLabel>
-            <Select
-              labelId="column-visibility-select-label"
-              id="column-visibility-select"
-              multiple
-              value={selectedColumns}
-              onChange={handleColumnVisibilityChange}
-              input={<OutlinedInput label="Columns" />}
-              renderValue={(selected) => selected.join(", ")}
-            >
-              {Object.keys(columnVisibility).map((column) => (
-                <MenuItem key={column} value={column}>
-                  <Checkbox checked={selectedColumns.indexOf(column) > -1} />
-                  <ListItemText
-                    primary={column
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (letter) => letter.toUpperCase())}
-                  />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </div>
-      )}
       <TableContainer>
         <Table>
           <TableHead>

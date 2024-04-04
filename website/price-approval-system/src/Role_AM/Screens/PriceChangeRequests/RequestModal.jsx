@@ -102,13 +102,17 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         for (let i = 0; i < tableRowsData.length; i++) {
           console.log(tableRowsData[i]);
           if (tableRowsData[i]["grade"].length == 0) {
-            alert("Select grade for row " + (i + 1));
+            alert("Select Grade for Row " + (i + 1));
+            stopExecution = true;
+          }
+          if (tableRowsData[i]["gradeType"].length == 0) {
+            alert("Select Grade Type for Row " + (i + 1));
             stopExecution = true;
           } else if (tableRowsData[i]["agreedPrice"] < 1) {
-            alert("Select agreed price for row " + (i + 1));
+            alert("Select Agreed Price for Row " + (i + 1));
             stopExecution = true;
           } else if (tableRowsData[i]["specialDiscount"] < 1) {
-            alert("Select special discount for row " + (i + 1));
+            alert("Select Special Discount for Row " + (i + 1));
             stopExecution = true;
           }
         }
@@ -256,6 +260,8 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     setOpenAlert(false);
   };
 
+  console.log(session);
+
   return (
     <>
       <Modal
@@ -383,26 +389,33 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
           />
           <SpacingWrapper space="24px" />
           <Typography>Attachment</Typography>
-          <FileHandling />
-          <RemarkBox />
+          {session.role == "AM" && <FileHandling />}
+
+          {session.role != "AM" && <RemarkBox />}
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-            <Button onClick={handleClose} color="primary">
-              Close
-            </Button>
-            <Button
-              onClick={(e) => {
-                setIsDraft(true);
-                handleSubmit(e);
-              }}
-              color="primary"
-            >
-              Save as draft
-            </Button>
-          </Box>
-          <Box textAlign="center" marginTop={2}>
             <Button type="submit" variant="contained" disabled={disableSubmit}>
               Submit
             </Button>
+            <Box>
+              <Button
+                variant="contained"
+                onClick={(e) => {
+                  setIsDraft(true);
+                  handleSubmit(e);
+                }}
+                color="primary"
+              >
+                Save as draft
+              </Button>
+              <Button
+                sx={{ marginLeft: 4 }}
+                onClick={handleClose}
+                color="primary"
+                variant="contained"
+              >
+                Close
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Modal>

@@ -40,5 +40,18 @@ button:hover {
 }
 
 .tColumn {
+  width: 70px;
+  align-items: center;
+}
+
+.tColumnG {
+  width: 50px;
+}
+
+.tColumnGrade {
   width: 120px;
+}
+
+.tAction {
+  width: 40px;
 }

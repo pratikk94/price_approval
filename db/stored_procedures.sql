@@ -261,6 +261,7 @@ BEGIN
 SELECT 
     pra.*,
     prt.*,
+    p.name AS plant_name,
     rs.created_at,rs.last_updated_at,rs.status_updated_by_id,
     (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
         FROM customer c
@@ -280,6 +281,8 @@ LEFT JOIN
     price_approval_requests_price_table prt ON pra.req_id = prt.req_id
   LEFT JOIN
       report_status rs ON pra.req_id = rs.report_id
+  LEFT JOIN
+    plant p ON p.id = prt.plant
 WHERE 
     pra.req_id = @reqId
 	END;

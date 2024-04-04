@@ -1343,25 +1343,41 @@ async function fetchPriceApprovalDetails(
         SELECT 
         TOP 1 
         rs.id,
-        rs.request_name,
-    pra.*,
-    rs.status AS CurrentStatus,
+        pra.req_id,
+        rs.request_name as "Request Id",
     (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
         FROM customer c
         JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
-    ) AS CustomerNames,
+    ) AS Customer,
     (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
         FROM customer c
         JOIN STRING_SPLIT(pra.consignee_id, ',') AS splitConsigneeIds ON c.code = TRY_CAST(splitConsigneeIds.value AS INT)
-    ) AS ConsigneeNames,
+    ) AS Consignee,
     (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
         FROM customer c
         JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
-    ) AS EndUseNames FROM price_approval_requests pra
-    
+    ) AS 'End Use',
+        pra.payment_terms_id as "Payment terms ID",
+        p.name as "Plant",
+        FORMAT(CAST(pra.valid_from AS datetime), 'dd/MM/yyyy')
+        as "Valid from",
+        FORMAT(CAST(pra.valid_to AS datetime), 'dd/MM/yyyy')
+        "Valid to",
+      CASE 
+        WHEN rs.status = 'N' THEN 'New request'
+        WHEN rs.status = 'U' THEN 'Updated request'
+        ELSE rs.status -- This will return the original value for any value not matching 'N' or 'U'
+      END AS "Request type",
+      um.employee_name as "Created By",
+      FORMAT(CAST(tr.am_status_updated_at AS datetime), 'dd/MM/yyyy')
+        "Created on"
+    FROM price_approval_requests pra
+    LEFT JOIN user_master um on pra.am_id = um.employee_id 
     LEFT JOIN request_status rs ON pra.req_id = rs.parent_req_id  
+    LEFT JOIN plant p ON pra.plant = p.id
+    LEFT JOIN [transaction] tr ON rs.req_id = tr.request_id
 WHERE 
-    pra.req_id = @reqId and rs.status IS NOT NULL    ORDER BY rs.id DESC  
+    pra.req_id = @reqId and rs.status IS NOT NULL ORDER BY rs.id DESC
     
   `);
 
@@ -2079,9 +2095,39 @@ app.get("/api/price_requests", async (req, res) => {
     pool = await sql.connect(config);
     const req_id = req.query.id;
     console.log(req_id);
-    const result = await sql.query(
-      `EXEC FetchPriceRequestById @reqId=${req_id}`
-    );
+    const result = await pool
+      .request()
+      .input("reqId", sql.Int, req_id)
+      .query(
+        `SELECT 
+      pra.*,
+      prt.*,
+      p.name AS plant_name,
+      rs.created_at,rs.last_updated_at,rs.status_updated_by_id,
+      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+          FROM customer c
+          JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
+      ) AS CustomerNames,
+      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+          FROM customer c
+          JOIN STRING_SPLIT(pra.consignee_id, ',') AS splitConsigneeIds ON c.code = TRY_CAST(splitConsigneeIds.value AS INT)
+      ) AS ConsigneeNames,
+      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+          FROM customer c
+          JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
+      ) AS EndUseNames
+  FROM 
+      price_approval_requests pra
+  LEFT JOIN 
+      price_approval_requests_price_table prt ON pra.req_id = prt.req_id
+    LEFT JOIN
+        report_status rs ON pra.req_id = rs.report_id
+    LEFT JOIN 
+      plant p ON p.id = pra.plant
+  WHERE 
+      pra.req_id = @reqId
+  `
+      );
 
     const formattedResult = result.recordset.reduce((acc, row) => {
       if (!acc[row.req_id]) {
@@ -2089,7 +2135,7 @@ app.get("/api/price_requests", async (req, res) => {
           req_id: row.req_id,
           customer_id: row.CustomerNames,
           consignee_id: row.ConsigneeNames,
-          plant: row.plant,
+          plant_name: row.plant_name,
           end_use_id: row.EndUseNames,
           end_use_segment_id: row.end_use_segment_id,
           payment_terms_id: row.payment_terms_id,
