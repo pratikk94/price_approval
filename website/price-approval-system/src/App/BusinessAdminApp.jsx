@@ -48,7 +48,9 @@ const BusinessAdminApp = ({ logout }) => {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
-
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            Business Admin
+          </Typography>
           <Button
             color="inherit"
             onClick={() => {

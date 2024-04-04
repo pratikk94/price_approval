@@ -17,6 +17,7 @@ import Dashboard from "../Role_AM/Screens/Dashboard";
 import PriceChangeRequests from "../components/common/PriceRequest";
 import RequestsHistory from "../Role_AM/Screens/RequestHistory";
 import ReportsAndAnalysis from "../Role_AM/Screens/ReportsAndAnalysis";
+import { useSession } from "../Login_Controller/SessionContext";
 
 const drawerWidth = 240;
 
@@ -44,7 +45,9 @@ function ResponsiveDrawer({ logout }) {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
-
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            Validator
+          </Typography>
           <Button
             color="inherit"
             onClick={() => {

@@ -17,9 +17,10 @@ const drawerWidth = 240;
 import Dashboard from "../Role_Approvers_RM/Screens/Dashboard";
 import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
 import PriceChangeRequest from "../components/common/PriceRequest";
+import { useSession } from "../Login_Controller/SessionContext";
 function ResponsiveDrawer({ logout }) {
   const [activePane, setActivePane] = useState("Dashboard");
-
+  const { session } = useSession();
   const drawerItems = [
     { text: "Dashboard", component: <Dashboard /> },
     {
@@ -41,6 +42,13 @@ function ResponsiveDrawer({ logout }) {
             Logo
           </Typography>
 
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            {session.role == "NSM"
+              ? "National Sales Manger (BBK)"
+              : (session.role = "NSMT"
+                  ? "National Sales Manger (T)"
+                  : (session.role = "HDSM" ? "Head of div Sales Manager" : ""))}
+          </Typography>
           <Button
             color="inherit"
             onClick={() => {

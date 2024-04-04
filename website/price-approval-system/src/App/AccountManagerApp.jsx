@@ -45,7 +45,7 @@ function ResponsiveDrawer({ logout }) {
             Price Approvals
           </Typography>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            AM
+            Account Manager
           </Typography>
           <Button
             color="inherit"

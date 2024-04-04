@@ -28,9 +28,10 @@ function TableWithInputs({
   useEffect(() => {
     fetch_grades();
   }, [fscCode]);
+
   useEffect(() => {
     // Set rows based on incoming prices data
-    console.log(prices);
+    // console.log(prices);
     if (prices && prices.length > 0 && grades.length > 0) {
       const newRows = prices.map((price, index) => ({
         id: Date.now() + index, // Ensure unique id
@@ -102,22 +103,29 @@ function TableWithInputs({
 
   const fetch_grades = async () => {
     try {
-      console.log("FSC_Code", fscCode.length == 0 ? "N" : "Y");
+      const fscM = fscCode.length == 0 ? "N" : fscCode;
+      console.log("FSC_Code", fscM);
 
       const response = await fetch(
-        `${backend_url}api/fetch_grade_with_pc?fsc=${
-          fscCode.length == 0 ? "N" : "Y"
-        }`
+        `${backend_url}api/fetch_grade_with_pc?fsc=${fscM}`
       ); // Adjust the API path as needed
       const data = await response.json();
-      // console.log(data);
+      console.log(data);
       const customerOptions = data.map((customer) => ({
         label: customer.name,
         value: customer.code,
         profitCenter: customer.profitCenter,
       }));
       // console.log(customerOptions);
-      setGrades(customerOptions);
+
+      setGrades([...customerOptions]);
+      console.log("Selected Grade", selectedGrade);
+      if (
+        selectedGrade.length > 0 &&
+        customerOptions.indexOf(selectedGrade) === -1
+      ) {
+        alert("Invalid mix of Grades");
+      }
     } catch (error) {
       console.error("Error fetching customer data:", error);
     }
@@ -216,8 +224,9 @@ function TableWithInputs({
   function handleFSCChange(e) {
     // setGrades(e.target.checked ? 1 : 0);
     setFSC((e) => {
-      fetch_grades(e ? 0 : 1);
+      // fetch_grades(e ? 0 : 1);
       setFSCCode(e ? "N" : "Y");
+      alert("FSC Code change will require Grade selection again");
       return e ? 0 : 1;
     });
   }
@@ -299,7 +308,7 @@ function TableWithInputs({
             <tr key={index}>
               <td>
                 <Select
-                  value={grades.find((grade) => grade.label === row.grade)} // Find the option that matches the row's grade
+                  value={grades.find((grade) => selectedGrade.label)} // Find the option that matches the row's grade
                   style={{ marginTop: "10px" }} // Corrected casing for marginTop
                   name="customers"
                   options={grades}
@@ -315,6 +324,7 @@ function TableWithInputs({
                     console.log(rows);
                     const result = isMixPresent(rows);
                     console.log(result);
+
                     if (!result) {
                       alert("Invalid mix of profit centers");
                       disableSubmit(true);
