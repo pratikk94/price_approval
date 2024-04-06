@@ -137,7 +137,7 @@ async function getCustomerNamesByIds(customerIds) {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -262,7 +262,7 @@ async function fetchAndProcessRules(requestId, employeeId) {
             )
             OUTPUT INSERTED.request_id
             VALUES (
-                ${requestId}, @ruleId, @region, 0, 0, GETDATE(), @employeeId,
+                @requestId, @ruleId, @region, 0, 0, GETDATE(), @employeeId,
                 @rm, @nsm, @hdsm, @validator,GETDATE(),
                 CASE WHEN @rm = 0 THEN -1 ELSE 0 END,
                 CASE WHEN @rm = 0 THEN GETDATE() ELSE NULL END,
@@ -301,6 +301,7 @@ async function fetchAndProcessRules(requestId, employeeId) {
 
       const result = await pool
         .request()
+        .input("requestId", sql.NVarChar, requestId)
         .input("ruleId", sql.NVarChar, rule.rule_name)
         .input("region", sql.NVarChar, region)
         .input("employeeId", sql.NVarChar, employeeId)
@@ -596,7 +597,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
     console.error("Error during database operations:", err);
   } finally {
     if (pool) {
-      await pool.close();
+      //await pool.close();
     }
   }
 }
@@ -714,7 +715,7 @@ async function FetchDraft(employeeId, res) {
     console.error("Error during database operations:", err);
   } finally {
     if (pool) {
-      await pool.close();
+      //await pool.close();
     }
   }
 }
@@ -839,7 +840,7 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
     console.error("Error during database operations:", err);
   } finally {
     if (pool) {
-      await pool.close();
+      //await pool.close();
     }
   }
 }
@@ -966,7 +967,7 @@ async function FetchNSMDataWithStatus(employeeId, status, res) {
     console.error("Error during database operations:", err);
   } finally {
     if (pool) {
-      await pool.close();
+      //await pool.close();
     }
   }
 }
@@ -1092,7 +1093,7 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
     console.error("Error during database operations:", err);
   } finally {
     if (pool) {
-      await pool.close();
+      //await pool.close();
     }
   }
 }
@@ -1211,7 +1212,7 @@ async function FetchValidatorDataWithStatus(employeeId, status, res) {
     console.error("Error during database operations:", err);
   } finally {
     if (pool) {
-      await pool.close();
+      //await pool.close();
     }
   }
 }
@@ -1338,7 +1339,7 @@ async function FetchBlockedStatus(employeeId, status, res) {
     console.error("Error during database operations:", err);
   } finally {
     if (pool) {
-      await pool.close();
+      //await pool.close();
     }
   }
 }
@@ -1480,7 +1481,10 @@ async function fetchPriceApprovalDetails(
         JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
     ) AS 'End Use',
         pra.payment_terms_id as "Payment terms ID",
-        p.name as "Plant",
+    (SELECT STRING_AGG(p.name, ',') WITHIN GROUP (ORDER BY p.name) 
+        FROM plant p
+        JOIN STRING_SPLIT(pra.plant, ',') AS splitPlantIds ON p.id = TRY_CAST(splitPlantIds.value AS INT)
+    ) AS 'Plant name',
         FORMAT(CAST(pra.valid_from AS datetime), 'dd/MM/yyyy')
         as "Valid from",
         FORMAT(CAST(pra.valid_to AS datetime), 'dd/MM/yyyy')
@@ -1496,7 +1500,6 @@ async function fetchPriceApprovalDetails(
     FROM price_approval_requests pra
     LEFT JOIN user_master um on pra.am_id = um.employee_id 
     LEFT JOIN request_status rs ON pra.req_id = rs.parent_req_id  
-    LEFT JOIN plant p ON pra.plant = p.id
     LEFT JOIN [transaction] tr ON rs.req_id = tr.request_id
 WHERE 
     pra.req_id = @reqId and rs.status IS NOT NULL ORDER BY rs.id DESC
@@ -1505,75 +1508,73 @@ WHERE
 
         if (result.recordset.length > 0) {
           let overallStatus = 1;
-          console.log(
-            "ResultStatus",
-            rms[id],
-            nsms[id],
-            hdsms[id],
-            validators[id]
-          );
+          console.log("ResultStatusValidator", rms[id].length);
+          console.log(typeof rms[id]);
           let curr_status = "";
           let latest_status_updated_by = "";
-          if (rms[id] != null) {
-            if (rms[id] == 0) {
-              curr_status = "Pending with RM";
-            } else if (rms[id] == 1) {
-              curr_status = "Approved by RM";
-              latest_status_updated_by = "RM";
-            } else if (rms[id] == 2) {
-              curr_status = "RM is reworking";
-              latest_status_updated_by = "RM";
-            } else if (rms[id] == 3) {
-              curr_status = "RM has rejected";
-              latest_status_updated_by = "RM";
+          if (rms[id] != null)
+            if (rms[id].length > 0) {
+              if (rms[id] == 0) {
+                curr_status = "Pending with RM";
+              } else if (rms[id] == 1) {
+                curr_status = "Approved by RM";
+                latest_status_updated_by = "RM";
+              } else if (rms[id] == 2) {
+                curr_status = "Rejected by RM";
+                latest_status_updated_by = "RM";
+              } else if (rms[id] == 3) {
+                curr_status = "RM sent back to rewok";
+                latest_status_updated_by = "RM";
+              }
+            } else {
+              curr_status = "initiated";
+              latest_status_updated_by = "AM";
             }
-          } else {
-            curr_status = "initiated";
-            latest_status_updated_by = "AM";
-          }
-          if (nsms[id] != null) {
-            if (nsms[id] == 0) {
-              curr_status = "\nPending with NSM";
-            } else if (nsms[id] == 1) {
-              curr_status = "\nApproved by NSM";
-              latest_status_updated_by = "NSM";
-            } else if (nsms[id] == 2) {
-              curr_status = "\nNSM is reworking";
-              latest_status_updated_by = "NSM";
-            } else if (nsms[id] == 3) {
-              curr_status = "\nNSM has rejected";
-              latest_status_updated_by = "NSM";
+          if (nsms[id] != null)
+            if (nsms[id].length > 0) {
+              if (nsms[id] == 0) {
+                curr_status = "\nPending with NSM";
+              } else if (nsms[id] == 1) {
+                curr_status = "\nApproved by NSM";
+                latest_status_updated_by = "NSM";
+              } else if (nsms[id] == 2) {
+                curr_status = "\nRejected by NSM";
+                latest_status_updated_by = "NSM";
+              } else if (nsms[id] == 3) {
+                curr_status = "\nNSM sent back to rework";
+                latest_status_updated_by = "NSM";
+              }
             }
-          }
-
-          if (hdsms[id] != null) {
-            if (hdsms[id] == 0) {
-              curr_status = "\nPending with HDSM";
-            } else if (hdsms[id] == 1) {
-              curr_status = "\nApproved by HDSM";
-              latest_status_updated_by = "HDSM";
-            } else if (hdsms[id] == 2) {
-              curr_status = "\nHDSM is reworking";
-              latest_status_updated_by = "HDSM";
-            } else if (hdsms[id] == 3) {
-              curr_status = "\nHDSM has rejected";
-              latest_status_updated_by = "HDSM";
+          if (hdsms[id] != null)
+            if (hdsms[id].length > 0) {
+              if (hdsms[id] == 0) {
+                curr_status = "\nPending with HDSM";
+              } else if (hdsms[id] == 1) {
+                curr_status = "\nApproved by HDSM";
+                latest_status_updated_by = "HDSM";
+              } else if (hdsms[id] == 2) {
+                curr_status = "\nHDSM has rejected";
+                latest_status_updated_by = "HDSM";
+              } else if (hdsms[id] == 3) {
+                curr_status = "\nHDSM sent back to rework";
+                latest_status_updated_by = "HDSM";
+              }
             }
-          }
-          if (validators[id] != null) {
-            if (validators[id] == 0) {
-              curr_status = "\nPending with Validator";
-            } else if (validators[id] == 1) {
-              curr_status = "\nApproved by Validator";
-              latest_status_updated_by = "Validator";
-            } else if (validators[id] == 2) {
-              curr_status = "\nValidator is reworking";
-              latest_status_updated_by = "Validator";
-            } else if (validators[id] == 3) {
-              curr_status = "\nValidator has rejected";
-              latest_status_updated_by = "Validator";
+          if (validators[id] != null)
+            if (validators[id].length > 0) {
+              if (validators[id] == 0) {
+                curr_status = "\nPending with Validator";
+              } else if (validators[id] == 1) {
+                curr_status = "\nApproved by Validator";
+                latest_status_updated_by = "Validator";
+              } else if (validators[id] == 2) {
+                curr_status = "\nValidator has rejected";
+                latest_status_updated_by = "Validator";
+              } else if (validators[id] == 3) {
+                curr_status = "\nValidator send back for rework";
+                latest_status_updated_by = "Validator";
+              }
             }
-          }
           console.log(result.recordset);
           result.recordset[0]["Current Status"] = curr_status;
           result.recordset[0]["Last updated by"] = latest_status_updated_by;
@@ -1589,7 +1590,7 @@ WHERE
     throw err;
   } finally {
     if (pool) {
-      await pool.close();
+      //await pool.close();
     }
   }
 }
@@ -1639,7 +1640,7 @@ FROM
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -1684,7 +1685,7 @@ app.post("/api/login", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -1747,7 +1748,7 @@ app.get("/api/fetch_customers", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -1775,7 +1776,7 @@ app.get("/api/fetch_payment_terms", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -1803,7 +1804,7 @@ app.get("/api/fetch_plants", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -1833,7 +1834,7 @@ app.get("/api/fetch_grade", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -1866,7 +1867,7 @@ app.get("/api/fetch_employees", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -1893,7 +1894,7 @@ app.get("/api/fetch_roles", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -1920,7 +1921,7 @@ app.get("/api/fetch_region", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -1947,7 +1948,7 @@ app.post("/api/add_employee_role", async (req, res) => {
   } finally {
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -1974,7 +1975,7 @@ app.get("/api/fetch_roles_data", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2002,7 +2003,7 @@ app.get("/api/fetch_roles_data_by_id", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2037,7 +2038,7 @@ app.get("/api/fetch_price_requests", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2062,7 +2063,7 @@ app.get("/api/fetch_approvers", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2085,7 +2086,7 @@ app.get("/api/fetch_profit_centers", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2108,7 +2109,7 @@ app.get("/api/get_approver", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2130,7 +2131,7 @@ app.get("/api/fetch_rules", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2155,7 +2156,7 @@ app.get("/api/fetch_rules_by_id", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2178,7 +2179,7 @@ app.get("/api/fetch_report_status", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2202,7 +2203,7 @@ app.get("/api/fetch_report_status_by_id", async (req, res) => {
     // Close the database connection
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2224,7 +2225,10 @@ app.get("/api/price_requests", async (req, res) => {
         `SELECT 
       pra.*,
       prt.*,
-      p.name AS plant_name,
+      (SELECT STRING_AGG(p.name, ',') WITHIN GROUP (ORDER BY p.name) 
+        FROM plant p
+        JOIN STRING_SPLIT(pra.plant, ',') AS splitPlantIds ON p.id = TRY_CAST(splitPlantIds.value AS INT)
+    ) AS plant_name,
       rs.created_at,rs.last_updated_at,rs.status_updated_by_id,
       (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
           FROM customer c
@@ -2244,8 +2248,7 @@ app.get("/api/price_requests", async (req, res) => {
       price_approval_requests_price_table prt ON pra.req_id = prt.req_id
     LEFT JOIN
         report_status rs ON pra.req_id = rs.report_id
-    LEFT JOIN 
-      plant p ON p.id = pra.plant
+    
   WHERE 
       pra.req_id = @reqId
   `
@@ -2305,7 +2308,7 @@ app.get("/api/price_requests", async (req, res) => {
   } finally {
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2329,7 +2332,7 @@ app.post("/api/update-report-status", async (req, res) => {
   } finally {
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2375,7 +2378,7 @@ app.put("/api/update-rule/:id", async (req, res) => {
   } finally {
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2406,7 +2409,7 @@ app.post("/api/update-employee-role", async (req, res) => {
   } finally {
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2450,7 +2453,7 @@ app.post("/api/add_defined_rule", async (req, res) => {
   } finally {
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2495,7 +2498,7 @@ app.post("/api/check_rule_exists", async (req, res) => {
   } finally {
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2516,7 +2519,7 @@ app.get("/api/fetch_defined_rule", async (req, res) => {
   } finally {
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2539,7 +2542,7 @@ app.get("/api/fetch_grade_with_pc", async (req, res) => {
   } finally {
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2657,7 +2660,7 @@ app.get("/api/fetch_sales_regions", async (req, res) => {
   } finally {
     if (pool) {
       try {
-        await pool.close();
+        //await pool.close();
       } catch (err) {
         console.error("Failed to close the pool:", err);
       }
@@ -2711,7 +2714,7 @@ app.post("/api/update_request_status_manager", async (req, res) => {
 
     const latestRowResult = await pool
       .request()
-      .input("requestId", sql.Int, request_id)
+      .input("requestId", sql.NVarChar, request_id)
       .query(fetchQuery);
 
     if (latestRowResult.recordset.length === 0) {
@@ -2902,7 +2905,9 @@ app.post("/api/update_request_status_manager", async (req, res) => {
     console.error("Error during database operations:", err);
     throw err;
   } finally {
-    if (pool) await pool.close();
+    if (pool) {
+      //await pool.close();
+    }
   }
 });
 
@@ -2937,7 +2942,9 @@ app.get("/api/fetch_price_request_by_id", async (req, res) => {
     console.error("SQL error", err.message);
     throw err;
   } finally {
-    if (pool) await pool.close();
+    if (pool) {
+      //await pool.close();
+    }
   }
 });
 
@@ -3083,7 +3090,7 @@ app.post("/api/upload_file", upload.single("file"), async (req, res) => {
     const request_id = req.body.request_id; // Capture the request_id from the form data
     const query = `INSERT INTO files (request_id, file_name, file_data) VALUES (@requestId, @name, @data);`;
     const request = new sql.Request();
-    request.input("requestId", sql.Int, request_id);
+    request.input("requestId", sql.NVarChar, request_id);
     request.input("name", sql.VarChar, originalname);
     request.input("data", sql.VarBinary, buffer);
     await request.query(query);
@@ -3100,7 +3107,7 @@ app.get("/api/files/:request_id", async (req, res) => {
     await sql.connect(config);
     const query = `SELECT id, request_id, file_name FROM files WHERE request_id = @requestId`;
     const request = new sql.Request();
-    request.input("requestId", sql.Int, request_id);
+    request.input("requestId", sql.NVarChar, request_id);
     const result = await request.query(query);
     console.log(result.recordset);
     if (result.recordset.length > 0) {

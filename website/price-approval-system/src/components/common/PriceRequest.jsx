@@ -142,6 +142,7 @@ function PriceChangeRequest({ role, isAM }) {
           <DataTable
             action_id={role}
             mode={mode}
+            pending={true}
             url={
               backend_url +
               `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=0`
@@ -182,6 +183,7 @@ function PriceChangeRequest({ role, isAM }) {
           <DataTable
             action_id={role}
             mode={mode}
+            rework={true}
             url={
               backend_url +
               `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=3`
@@ -223,6 +225,7 @@ function PriceChangeRequest({ role, isAM }) {
         return (
           <DataTable
             action_id={role}
+            pendnig={true}
             url={
               backend_url +
               `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=0&role=${session.role}`
@@ -262,6 +265,7 @@ function PriceChangeRequest({ role, isAM }) {
         return (
           <DataTable
             action_id={role}
+            rework={true}
             url={
               backend_url +
               `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=3&role=${session.role}`
@@ -334,7 +338,6 @@ function PriceChangeRequest({ role, isAM }) {
             action_id={role}
             sendMode={setMode}
             mode={mode}
-            approve={true}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=1`
@@ -392,7 +395,7 @@ function PriceChangeRequest({ role, isAM }) {
         // console.log("Filterred ID is 1");
         return (
           <DataTable
-            isAM={true}
+            pending={true}
             action_id={role}
             url={
               backend_url +
@@ -408,6 +411,96 @@ function PriceChangeRequest({ role, isAM }) {
         return (
           <DataTable
             isAM={true}
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=0`
+            }
+            sendMode={setMode}
+            mode={mode}
+          />
+        );
+      }
+      if (filterdId == 2) {
+        // console.log("Filterred ID is 2");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            sendMode={setMode}
+            mode={mode}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=1`
+            }
+          />
+        );
+      }
+      if (filterdId == 3) {
+        // console.log("Filterred ID is 3");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            sendMode={setMode}
+            rework={true}
+            mode={mode}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=2`
+            }
+          />
+        );
+      }
+      if (filterdId == 4) {
+        // console.log("Filterred ID is 4");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            mode={mode}
+            sendMode={setMode}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=3`
+            }
+          />
+        );
+      }
+      if (filterdId == 5) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            sendMode={setMode}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
+            }
+          />
+        );
+      }
+    } else if (role == "VP") {
+      if (filterdId == 0) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            url={
+              backend_url +
+              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=-1`
+            }
+            sendMode={setMode}
+            mode={mode}
+          />
+        );
+      }
+      if (filterdId == 1) {
+        // console.log("Filterred ID is 1");
+        return (
+          <DataTable
             action_id={role}
             url={
               backend_url +

@@ -55,6 +55,7 @@ function DynamicTable({
   sendMode,
   mode,
   approve,
+  pending,
   rework,
   isEmployeeManagement,
 }) {
@@ -434,7 +435,7 @@ function DynamicTable({
               <EditIcon />
             </IconButton>
           )}
-          {approve && (
+          {/* {approve && (
             <>
               <IconButton
                 onClick={() => {
@@ -480,7 +481,7 @@ function DynamicTable({
                 <BlockIcon />
               </IconButton>
             </>
-          )}
+          )} */}
         </div>
       );
     } else if (id == "AP_NSM_HDSM") {
@@ -500,7 +501,7 @@ function DynamicTable({
           </IconButton>
         </div>
       );
-    } else {
+    } else if (id == "AM") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
@@ -518,19 +519,21 @@ function DynamicTable({
           >
             <ViewIcon />
           </IconButton>
-          {/* <IconButton
-            onClick={() => {
-              console.log("ROW id is ", row_id);
-              setEditModalOpen(true);
-              handleEdit(row_id);
-              setId(row_id);
-              //handleView(row_id);
-              console.log(row_id);
-              setRuleId(row_id);
-            }}
-          >
-            <EditIcon />
-          </IconButton> */}
+          {rework && (
+            <IconButton
+              onClick={() => {
+                console.log("ROW id is ", row_id);
+                setEditModalOpen(true);
+                handleEdit(row_id);
+                setId(row_id);
+                //handleView(row_id);
+                console.log(row_id);
+                setRuleId(row_id);
+              }}
+            >
+              <EditIcon />
+            </IconButton>
+          )}
           {approve && (
             <>
               <IconButton
@@ -957,7 +960,8 @@ function DynamicTable({
           id={aprm_id}
           data={aprm}
           isEditable={
-            (action_id == "AP_RM" || action_id == "AP_NSM_HDSM") && !approve
+            (action_id == "AP_RM" || action_id == "AP_NSM_HDSM") &&
+            (pending || rework)
           }
           role={action_id}
           mode={mode}
