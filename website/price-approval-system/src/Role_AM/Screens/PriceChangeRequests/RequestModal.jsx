@@ -185,16 +185,33 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     }
   }, [editData]);
 
+  // Example function to fetch temp IDs from localStorage
+  const fetchTempRequestIds = async () => {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      const value = localStorage.getItem(key);
+      console.log(`${key}: ${value}`);
+    }
+    const tempIds = localStorage.getItem("request_id") || initialRequestId;
+    console.log(`Temp ids are ${tempIds}`);
+    // Assuming this is your key
+    return tempIds != undefined ? JSON.parse([tempIds]) : [];
+  };
+
   const submitData = async (formData) => {
     try {
-      //console.log(JSON.stringify(formData));
+      // Update formData based on whether it's a new submission or an edit
       formData["isNew"] = true;
+      const tempRequestIds = await fetchTempRequestIds();
+      formData.tempRequestIds = [tempRequestIds];
       if (editData) {
-        formData["parentReqId"] = reqId;
+        formData["parentReqId"] = reqId; // Assuming `reqId` is defined somewhere in your component as the current request ID
         formData["isNew"] = false;
-        formData["mode"] = mode;
+        formData["mode"] = mode; // Assuming `mode` is defined and indicates the type of operation (new, edit, etc.)
       }
       console.log(formData);
+
+      // Send the formData to your backend
       const response = await fetch(`${backend_url}api/add_price_request`, {
         method: "POST",
         headers: {
@@ -203,17 +220,20 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         body: JSON.stringify(formData),
       });
 
+      // Check for HTTP errors
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const responseData = await response;
-      if (response.status === 200) {
-        console.log("Success", responseData);
-        setScenarioId(1);
-        setOpenAlert(true);
-        // window.location.reload();
-      }
+      // Extract the JSON body from the response (it should contain the requestId)
+      const responseData = await response.json();
+
+      // Assuming you have state or methods to handle UI updates post-submission
+      // setScenarioId(newRequestId); // Example: Update state with the new request ID
+      // setOpenAlert(true); // Example: Show an alert or notification about the successful operation
+
+      // Optional: Redirect or fetch new data based on the new request ID
+      // window.location.reload(); // Might not be needed if you're handling UI updates more reactively
     } catch (error) {
       console.error("Failed to send data:", error);
     }

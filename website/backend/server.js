@@ -216,6 +216,40 @@ app.post("/api/setPrice", async (req, res) => {
   }
 });
 
+async function changeReqIds(tempRequestIds, newRequestId) {
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    console.log(`${tempRequestIds}`);
+    // Make sure `config` is defined with your DB credentials
+    const promises = tempRequestIds.map((tempId) => {
+      console.log(
+        `Temp ids are ${tempId} and New request id is ${newRequestId}`
+      );
+      return pool
+        .request()
+        .input("newRequestId", sql.NVarChar, newRequestId)
+        .input("tempId", sql.NVarChar, tempId.toString())
+        .query(
+          `UPDATE files SET request_id = @newRequestId WHERE request_id = @tempId;`
+        );
+    });
+
+    await Promise.all(promises);
+
+    console.log(
+      `All tempRequestIds have been updated to the new request_id: ${newRequestId}`
+    );
+  } catch (error) {
+    console.error("Failed to update request IDs:", error);
+    throw error; // Rethrow or handle as needed
+  } finally {
+    if (pool) {
+      // await pool.close(); // Ensure the pool is closed after operation
+    }
+  }
+}
+
 async function fetchAndProcessRules(requestId, employeeId) {
   let pool = null;
   try {
@@ -2618,6 +2652,7 @@ app.post("/api/add_price_request", async (req, res) => {
       fsc,
       mappint_type,
       statusUpdatedById,
+      tempRequestIds,
     } = req.body;
     mappint_type != undefined ? (mappint_type = 2) : (mappint_type = 1);
     console.log(req.body);
@@ -2685,11 +2720,16 @@ app.post("/api/add_price_request", async (req, res) => {
       requestId,
       req.body.mode != undefined ? req.body.parentReqId : requestId
     );
+
+    changeReqIds(tempRequestIds, requestId.toString())
+      .then(() => console.log("Request IDs updated successfully."))
+      .catch((error) => console.error("Error updating Request IDs:", error));
+
     fetchAndProcessRules(requestId, req.body.am_id)
       .then(() => console.log("Finished processing."))
       .catch((err) => console.error(err));
 
-    res.status(200).send("Data added successfully");
+    res.status(200).send(JSON.stringify("Data added successfully"));
   } catch (err) {
     console.error("Database operation failed:", err);
     res.status(500).send("Failed to add data");
@@ -3169,6 +3209,7 @@ app.post("/api/upload_file", upload.single("file"), async (req, res) => {
     await sql.connect(config);
     const { originalname, buffer } = req.file;
     console.log(req.file);
+    console.log(req.body.request_id);
     const request_id = req.body.request_id; // Capture the request_id from the form data
     const query = `INSERT INTO files (request_id, file_name, file_data) VALUES (@requestId, @name, @data);`;
     const request = new sql.Request();
