@@ -47,7 +47,7 @@ import HistoryModal from "../../Role_Business_Admin/Components/RequestHistoryMod
 import PriceViewModal from "../../Role_Approvers_RM/Components/ViewModal";
 import EmployeeEditModal from "../../Role_Business_Admin/Components/EmployeeEditModal";
 import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
-
+import ViewModalNSM from "../../Role_Approvers_NSM_HDSM/Components/ViewModal";
 function DynamicTable({
   url,
   action_id,
@@ -88,6 +88,8 @@ function DynamicTable({
   const [editModalId, setEditModalId] = useState(0);
   const [employeeEditModal, setEmployeeEditModal] = useState(false);
   const [employeeViewModal, setEmployeeViewModal] = useState(false);
+  const [openNSM, setOpenNSM] = useState(false);
+  const [openRM, setOpenRM] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -327,6 +329,8 @@ function DynamicTable({
 
   const handleClose = () => {
     setOpen(false);
+    setOpenRM(false);
+    setOpenNSM(false);
   };
 
   const handleRuleUpdate = (updatedRule) => {
@@ -406,20 +410,23 @@ function DynamicTable({
     } else if (id == "AP_RM") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
-          <IconButton
-            onClick={() => {
-              console.log("ROW id is ", row_id);
-              console.log("REQ id is ", req_id);
-
-              handleView(row_id);
-              setId(row_id);
-              setModalOpen(true);
-              setAprmId(row_id);
-              console.log(row_id);
-            }}
-          >
-            <ViewIcon />
-          </IconButton>
+          {!rework && (
+            <IconButton
+              onClick={() => {
+                console.log("ROW id is ", row_id);
+                console.log("REQ id is ", req_id);
+                setOpenRM(true);
+                setOpenNSM(false);
+                handleView(row_id);
+                setId(row_id);
+                setModalOpen(true);
+                setAprmId(row_id);
+                console.log(row_id);
+              }}
+            >
+              <ViewIcon />
+            </IconButton>
+          )}
           {rework && (
             <IconButton
               onClick={() => {
@@ -427,6 +434,7 @@ function DynamicTable({
                 setEditModalOpen(true);
                 handleEdit(row_id);
                 setId(row_id);
+
                 //handleView(row_id);
                 console.log(row_id);
                 setRuleId(row_id);
@@ -494,6 +502,7 @@ function DynamicTable({
               setId(row_id);
               setModalOpen(true);
               setAprmId(row_id);
+              setOpenNSM(true);
               console.log(row_id);
             }}
           >
@@ -504,21 +513,23 @@ function DynamicTable({
     } else if (id == "AM") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
-          <IconButton
-            onClick={() => {
-              console.log("ROW id is ", row_id);
-              console.log("REQ id is ", row_id);
+          {!rework && (
+            <IconButton
+              onClick={() => {
+                console.log("ROW id is ", row_id);
+                console.log("REQ id is ", row_id);
 
-              handleView(row_id);
-              setId(row_id);
-              setModalOpen(true);
-              setAprmId(row_id);
-
-              console.log(row_id);
-            }}
-          >
-            <ViewIcon />
-          </IconButton>
+                handleView(row_id);
+                setId(row_id);
+                setModalOpen(true);
+                setAprmId(row_id);
+                setEditable(approve);
+                console.log(row_id);
+              }}
+            >
+              <ViewIcon />
+            </IconButton>
+          )}
           {rework && (
             <IconButton
               onClick={() => {
@@ -953,7 +964,7 @@ function DynamicTable({
           history={history}
         />
       )}
-      {aprm && (
+      {/* {aprm && (
         <PriceViewModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
@@ -966,7 +977,7 @@ function DynamicTable({
           role={action_id}
           mode={mode}
         />
-      )}
+      )} */}
 
       <TablePagination
         component="div"
@@ -976,7 +987,30 @@ function DynamicTable({
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      <ViewModal open={open} onClose={handleClose} id={id} mode={mode} />
+      {openRM && aprm && (
+        <ViewModal
+          openRM={openRM}
+          data={aprm}
+          onClose={handleClose}
+          id={aprm_id}
+          isEditable={
+            (action_id == "AP_RM" || action_id == "AP_NSM_HDSM") &&
+            (pending || rework)
+          }
+          role={action_id}
+          mode={mode}
+        />
+      )}
+      {openNSM && aprm && (
+        <ViewModalNSM
+          openNSM={openNSM}
+          onClose={handleClose}
+          id={id}
+          data={aprm}
+          mode={mode}
+          isEditable={false}
+        />
+      )}
       <CreateRequestModal
         open={editModalOpen}
         handleClose={() => {

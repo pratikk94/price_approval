@@ -19,7 +19,8 @@ import axios from "axios";
 import ReactModal from "react-modal";
 import { IconButton } from "@mui/material";
 import RemarkBox from "../../components/common/RemarkBox";
-import HistoryModal from "../../Role_Business_Admin/Components/RequestHistoryModal";
+import HistoryModal from "../../components/common/History";
+import { useSession } from "../../Login_Controller/SessionContext";
 
 function PriceTable({ price }) {
   console.log(price);
@@ -72,15 +73,23 @@ function formatDate(dateString) {
   });
 }
 
-function PriceViewModal({ open, onClose, id, data, isEditable }) {
+function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
+  console.log(`Opened VSM:${openNSM}`);
+  const { session } = useSession();
+  const employee_id = session.employee_id;
   const updateStatus = (newStatus) => {
-    const apiUrl = `${backend_url}api/update-report-status`;
-    const reportData = {
-      reportId: id, // Example reportId
-      statusUpdatedById: 0, // Example statusUpdatedById
-      newStatus: newStatus, // Example new status
+    let reportData = {
+      request_id: id, // Example reportId
+      employee_id: employee_id, // Example statusUpdatedById
+      action: newStatus, // Example new status
     };
+    console.log("New Status: ", newStatus);
+    console.log(reportData);
+    const apiUrl = `${backend_url}api/update_request_status_manager`;
+    reportData["role"] = session.role;
 
+    console.log(reportData);
+    console.log(apiUrl);
     fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -98,15 +107,16 @@ function PriceViewModal({ open, onClose, id, data, isEditable }) {
         alert("Failed to update report status.");
       });
   };
+
   return (
     <ReactModal
-      isOpen={open}
+      isOpen={openNSM}
       onRequestClose={onClose}
       contentLabel="Request Details"
       style={{
         content: {
           top: "50%",
-          left: "50%",
+          left: "60%",
           right: "auto",
           bottom: "auto",
           marginRight: "-50%",
@@ -155,20 +165,20 @@ function PriceViewModal({ open, onClose, id, data, isEditable }) {
               <IconButton>
                 <DoneIcon
                   onClick={() => {
-                    updateStatus(2);
+                    updateStatus(1);
                   }}
                 />
               </IconButton>
               <IconButton
                 onClick={() => {
-                  updateStatus(3);
+                  updateStatus(2);
                 }}
               >
                 <CloseIcon />
               </IconButton>
               <IconButton
                 onClick={() => {
-                  updateStatus(4);
+                  updateStatus(3);
                 }}
               >
                 <ReplayIcon />
@@ -176,7 +186,7 @@ function PriceViewModal({ open, onClose, id, data, isEditable }) {
             </>
           ) : null}
           <br />
-          <HistoryModal />
+          <HistoryModal reqId={id} />
           <button onClick={onClose}>Close</button>
         </>
       ) : null}

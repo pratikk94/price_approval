@@ -82,7 +82,7 @@ function formatDate(dateString) {
   });
 }
 
-function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
+function PriceViewModal({ openRM, onClose, id, data, isEditable, role, mode }) {
   console.log("Mode: ", mode);
   console.log("IDSI", id, data, isEditable, role, mode);
   const { session } = useSession();
@@ -119,9 +119,10 @@ function PriceViewModal({ open, onClose, id, data, isEditable, role, mode }) {
   };
 
   console.log(`DATAD -> ${JSON.stringify(data)}`);
+  console.log(`OpenRM-> `, openRM);
   return (
     <ReactModal
-      isOpen={open}
+      isOpen={openRM}
       onRequestClose={onClose}
       contentLabel="Request Details"
       style={{

@@ -567,6 +567,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
     console.log("IDS", idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
@@ -576,6 +577,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       region,
       employeeId,
       status,
+      ams,
       rms,
       nsms,
       hdsm,
@@ -685,6 +687,7 @@ async function FetchDraft(employeeId, res) {
     console.log("IDS", idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
@@ -694,6 +697,7 @@ async function FetchDraft(employeeId, res) {
       region,
       employeeId,
       0,
+      ams,
       rms,
       nsms,
       hdsm,
@@ -803,6 +807,7 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
@@ -815,6 +820,7 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
         region,
         employeeId,
         status,
+        ams,
         rms,
         nsms,
         hdsm,
@@ -930,6 +936,7 @@ async function FetchNSMDataWithStatus(employeeId, status, res) {
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
@@ -942,6 +949,7 @@ async function FetchNSMDataWithStatus(employeeId, status, res) {
         region,
         employeeId,
         status,
+        ams,
         rms,
         nsms,
         hdsm,
@@ -1056,6 +1064,7 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
@@ -1068,6 +1077,7 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
         region,
         employeeId,
         status,
+        ams,
         rms,
         nsms,
         hdsm,
@@ -1182,6 +1192,7 @@ async function FetchValidatorDataWithStatus(employeeId, status, res) {
     console.log("IDS", idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
@@ -1191,6 +1202,7 @@ async function FetchValidatorDataWithStatus(employeeId, status, res) {
       region,
       employeeId,
       status,
+      ams,
       rms,
       nsms,
       hdsm,
@@ -1302,6 +1314,7 @@ async function FetchBlockedStatus(employeeId, status, res) {
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
     const ids = idsResult.recordset.map((row) => row.request_id);
+    const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
@@ -1314,6 +1327,7 @@ async function FetchBlockedStatus(employeeId, status, res) {
         region,
         employeeId,
         status,
+        ams,
         rms,
         nsms,
         hdsm,
@@ -1403,7 +1417,7 @@ async function AssignStatus(region, roleIndex, action) {
             break;
           }
         }
-      } else if ((action == "2" || action == "3") && roles[roleIndex] > -1) {
+      } else if (action == "2" && roles[roleIndex] > -1) {
         // Find the previous positive role and set its status to 2
         console.log(roleIndex);
         for (let i = roleIndex; i >= 0; i--) {
@@ -1412,6 +1426,24 @@ async function AssignStatus(region, roleIndex, action) {
           }
         }
         for (let i = roleIndex; i < roles.length; i++) {
+          if (roles[i] == roles[i + 1] && roles[i] != undefined) {
+            statuses[i + 1] = action;
+            console.log(statuses);
+            i++;
+          } else if (roles[i] > -1) {
+            statuses[i] = undefined;
+          }
+        }
+      } else if (action == "3" && roles[roleIndex] > -1) {
+        // Find the previous positive role and set its status to 2
+        console.log(roleIndex);
+        statuses[roleIndex] = -2;
+        for (let i = roleIndex - 1; i >= 0; i--) {
+          if (roles[i] > -1) {
+            statuses[i] = action;
+          }
+        }
+        for (let i = roleIndex + 1; i < roles.length; i++) {
           if (roles[i] == roles[i + 1] && roles[i] != undefined) {
             statuses[i + 1] = action;
             console.log(statuses);
@@ -1439,6 +1471,7 @@ async function fetchPriceApprovalDetails(
   region,
   employeeId,
   status,
+  ams,
   rms,
   nsms,
   hdsms,
@@ -1508,13 +1541,18 @@ WHERE
 
         if (result.recordset.length > 0) {
           let overallStatus = 1;
-          console.log("ResultStatusValidator", rms[id].length);
-          console.log(typeof rms[id]);
-          let curr_status = "";
-          let latest_status_updated_by = "";
-          if (rms[id] != null)
+          if (rms[id] != null) {
+            console.log("ResultStatusValidator", rms[id].length);
+            console.log(typeof rms[id]);
+            let curr_status = "";
+            let latest_status_updated_by = "";
+            console.log(`AMSID:${ams[id]}`);
+
             if (rms[id].length > 0) {
-              if (rms[id] == 0) {
+              if (rms[id] == -2) {
+                curr_status = "Sent for rework by RM";
+                latest_status_updated_by = "RM";
+              } else if (rms[id] == 0) {
                 curr_status = "Pending with RM";
               } else if (rms[id] == 1) {
                 curr_status = "Approved by RM";
@@ -1530,56 +1568,69 @@ WHERE
               curr_status = "initiated";
               latest_status_updated_by = "AM";
             }
-          if (nsms[id] != null)
-            if (nsms[id].length > 0) {
-              if (nsms[id] == 0) {
-                curr_status = "\nPending with NSM";
-              } else if (nsms[id] == 1) {
-                curr_status = "\nApproved by NSM";
-                latest_status_updated_by = "NSM";
-              } else if (nsms[id] == 2) {
-                curr_status = "\nRejected by NSM";
-                latest_status_updated_by = "NSM";
-              } else if (nsms[id] == 3) {
-                curr_status = "\nNSM sent back to rework";
-                latest_status_updated_by = "NSM";
+            if (nsms[id] != null)
+              if (nsms[id].length > 0) {
+                if (nsms[id] == -2) {
+                  curr_status = "Sent for rework by NSM";
+                  lastest_status_updated_by = "NSM";
+                }
+                if (nsms[id] == 0) {
+                  curr_status = "\nPending with NSM";
+                } else if (nsms[id] == 1) {
+                  curr_status = "\nApproved by NSM";
+                  latest_status_updated_by = "NSM";
+                } else if (nsms[id] == 2) {
+                  curr_status = "\nRejected by NSM";
+                  latest_status_updated_by = "NSM";
+                } else if (nsms[id] == 3) {
+                  curr_status = "\nNSM sent back to rework";
+                  latest_status_updated_by = "NSM";
+                }
               }
-            }
-          if (hdsms[id] != null)
-            if (hdsms[id].length > 0) {
-              if (hdsms[id] == 0) {
-                curr_status = "\nPending with HDSM";
-              } else if (hdsms[id] == 1) {
-                curr_status = "\nApproved by HDSM";
-                latest_status_updated_by = "HDSM";
-              } else if (hdsms[id] == 2) {
-                curr_status = "\nHDSM has rejected";
-                latest_status_updated_by = "HDSM";
-              } else if (hdsms[id] == 3) {
-                curr_status = "\nHDSM sent back to rework";
-                latest_status_updated_by = "HDSM";
+            if (hdsms[id] != null)
+              if (hdsms[id].length > 0) {
+                if (hdsms[id] == -2) {
+                  curr_status = "Sent for rework by HDSM";
+                  lastest_status_updated_by = "HDSM";
+                }
+                if (hdsms[id] == 0) {
+                  curr_status = "\nPending with HDSM";
+                } else if (hdsms[id] == 1) {
+                  curr_status = "\nApproved by HDSM";
+                  latest_status_updated_by = "HDSM";
+                } else if (hdsms[id] == 2) {
+                  curr_status = "\nHDSM has rejected";
+                  latest_status_updated_by = "HDSM";
+                } else if (hdsms[id] == 3) {
+                  curr_status = "\nHDSM sent back to rework";
+                  latest_status_updated_by = "HDSM";
+                }
               }
-            }
-          if (validators[id] != null)
-            if (validators[id].length > 0) {
-              if (validators[id] == 0) {
-                curr_status = "\nPending with Validator";
-              } else if (validators[id] == 1) {
-                curr_status = "\nApproved by Validator";
-                latest_status_updated_by = "Validator";
-              } else if (validators[id] == 2) {
-                curr_status = "\nValidator has rejected";
-                latest_status_updated_by = "Validator";
-              } else if (validators[id] == 3) {
-                curr_status = "\nValidator send back for rework";
-                latest_status_updated_by = "Validator";
+            if (validators[id] != null)
+              if (validators[id].length > 0) {
+                if (validators[id] == -2) {
+                  curr_status = "Sent for rework by Validator";
+                  lastest_status_updated_by = "Validator";
+                }
+                if (validators[id] == 0) {
+                  curr_status = "\nPending with Validator";
+                } else if (validators[id] == 1) {
+                  curr_status = "\nApproved by Validator";
+                  latest_status_updated_by = "Validator";
+                } else if (validators[id] == 2) {
+                  curr_status = "\nValidator has rejected";
+                  latest_status_updated_by = "Validator";
+                } else if (validators[id] == 3) {
+                  curr_status = "\nValidator send back for rework";
+                  latest_status_updated_by = "Validator";
+                }
               }
-            }
-          console.log(result.recordset);
-          result.recordset[0]["Current Status"] = curr_status;
-          result.recordset[0]["Last updated by"] = latest_status_updated_by;
-          console.log("Result", result.recordset[0]);
-          consolidatedResults.push(result.recordset[0]); // Assuming you expect one record per reqId, adjust if necessary
+            console.log(result.recordset);
+            result.recordset[0]["Current Status"] = curr_status;
+            result.recordset[0]["Last updated by"] = latest_status_updated_by;
+            console.log("Result", result.recordset[0]);
+            consolidatedResults.push(result.recordset[0]); // Assuming you expect one record per reqId, adjust if necessary
+          }
         }
       }
 
@@ -2774,11 +2825,42 @@ app.post("/api/update_request_status_manager", async (req, res) => {
       newValidatorStatus,
     ] = statusV;
     amStatus = rmIndex == 0 ? action : newAmStatus ?? latestRow.am_status;
-    rmStatus = rmIndex == 1 ? action : newRmStatus ?? latestRow.rm_status;
-    nsmStatus = rmIndex == 2 ? action : newNsmStatus ?? latestRow.nsm_status;
-    hdsmStatus = rmIndex == 3 ? action : newHdsmStatus ?? latestRow.hdsm_status;
+    console.log(`NRMS:${newRmStatus != undefined}`);
+    rmStatus =
+      rmIndex == 1
+        ? action
+        : newRmStatus != undefined
+        ? newRmStatus == -2
+          ? null
+          : newRmStatus
+        : latestRow.rm_status;
+    newRmStatus == -2 ? (rmStatus = -2) : rmStatus;
+
+    console.log(`RMStatus ->${rmStatus}`);
+    nsmStatus =
+      rmIndex == 2
+        ? action
+        : newNsmStatus != undefined
+        ? newNsmStatus == -2
+          ? null
+          : newNsmStatus
+        : latestRow.nsm_status;
+    hdsmStatus =
+      rmIndex == 3
+        ? action
+        : newHdsmStatus != undefined
+        ? newHdsmStatus == -2
+          ? null
+          : newHdsmStatus
+        : latestRow.hdsm_status;
     validatorStatus =
-      rmIndex == 4 ? action : newValidatorStatus ?? latestRow.validator_status;
+      rmIndex == 4
+        ? action
+        : newValidatorStatus != undefined
+        ? newValidatorStatus == -2
+          ? null
+          : newValidatorStatus
+        : latestRow.validator_status;
     console.log("HDSM Status", hdsmStatus);
     console.log(latestRow.hdsm_status_updated_at);
     console.log("Latest", latestRow);

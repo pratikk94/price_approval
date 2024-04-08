@@ -54,8 +54,13 @@ const modalStyle = {
 
 function PriceChangeRequest({ role, isAM }) {
   let statusFiltersValues = Array.from(statusFilters.values());
+  console.log(`ROLE->${role}`);
   if (isAM == undefined) {
     statusFiltersValues = Array.from(statusFilters.values()).slice(1, 6);
+  }
+  if (role == "AP_NSM_HDSM" || role == "Validator" || role == "VP") {
+    statusFiltersValues = Array.from(statusFilters.values()).slice(1, 4);
+    statusFiltersValues.push("Blocked");
   }
   const [filterdId, setFilterdId] = useState(0);
   const { session } = useSession();
@@ -274,19 +279,19 @@ function PriceChangeRequest({ role, isAM }) {
           />
         );
       }
-      if (filterdId == 4) {
-        // console.log("Filterred ID is 4");
-        return (
-          <DataTable
-            action_id={role}
-            url={
-              backend_url +
-              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=4&role=${session.role}`
-            }
-            mode={mode}
-          />
-        );
-      }
+      // if (filterdId == 4) {
+      //   // console.log("Filterred ID is 4");
+      //   return (
+      //     <DataTable
+      //       action_id={role}
+      //       url={
+      //         backend_url +
+      //         `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=4&role=${session.role}`
+      //       }
+      //       mode={mode}
+      //     />
+      //   );
+      // }
       if (filterdId == 5) {
         // console.log("Filterred ID is 4");
         return (
@@ -353,7 +358,6 @@ function PriceChangeRequest({ role, isAM }) {
             action_id={role}
             sendMode={setMode}
             mode={mode}
-            rework={true}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=2`
@@ -369,6 +373,7 @@ function PriceChangeRequest({ role, isAM }) {
             action_id={role}
             mode={mode}
             sendMode={setMode}
+            rework={true}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=3`
