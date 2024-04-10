@@ -335,7 +335,7 @@ async function fetchAndProcessRules(requestId, employeeId) {
 
       const result = await pool
         .request()
-        .input("requestId", sql.NVarChar, requestId)
+        .input("requestId", sql.NVarChar, requestId.toString())
         .input("ruleId", sql.NVarChar, rule.rule_name)
         .input("region", sql.NVarChar, region)
         .input("employeeId", sql.NVarChar, employeeId)
@@ -1661,7 +1661,10 @@ WHERE
               }
             console.log(result.recordset);
             result.recordset[0]["Current Status"] = curr_status;
-            result.recordset[0]["Last updated by"] = latest_status_updated_by;
+            result.recordset[0]["Last updated by"] =
+              latest_status_updated_by.length > 0
+                ? latest_status_updated_by
+                : "AM";
             console.log("Result", result.recordset[0]);
             consolidatedResults.push(result.recordset[0]); // Assuming you expect one record per reqId, adjust if necessary
           }
@@ -3216,8 +3219,11 @@ app.post("/api/upload_file", upload.single("file"), async (req, res) => {
     request.input("requestId", sql.NVarChar, request_id);
     request.input("name", sql.VarChar, originalname);
     request.input("data", sql.VarBinary, buffer);
-    await request.query(query);
-    res.send("File uploaded successfully.");
+    let result = await request.query(query);
+    console.log(result);
+    res.status(201).json({
+      message: "File uploaded successfully",
+    });
   } catch (err) {
     console.error("Database connection error:", err);
     res.status(500).send("Failed to upload file.");
@@ -3246,6 +3252,39 @@ app.get("/api/files/:request_id", async (req, res) => {
 
 app.get("/api/get_draft", async (req, res) => {
   FetchDraft(req.query.employeeId, res);
+});
+
+app.post("/api/delete_ids", async (req, res) => {
+  try {
+    const { ids } = req.body; // Assuming the request body contains an array of ids
+
+    if (!ids || ids.length === 0) {
+      return res.status(400).send("No ids provided.");
+    }
+
+    // Prepare a query with parameterized SQL to prevent SQL injection
+    const query = `DELETE FROM files WHERE request_id IN (${ids
+      .map((_, i) => `@id${i}`)
+      .join(", ")})`;
+
+    // Get a SQL request object
+    const request = new sql.Request();
+
+    // Add each id in the ids array as a parameter to the request object
+    ids.forEach((id, i) => request.input(`id${i}`, sql.BigInt, id));
+
+    // Execute the query
+    const result = await request.query(query);
+
+    // Send a response back
+    res.json({
+      message: `Records deleted successfully`,
+      count: result.rowsAffected[0],
+    });
+  } catch (error) {
+    console.error("Error on deleting records:", error);
+    res.status(500).send("Error deleting records");
+  }
 });
 
 //sendMail();

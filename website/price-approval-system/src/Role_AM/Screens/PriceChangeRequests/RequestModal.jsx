@@ -61,6 +61,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [selectedEndUseIDs, setSelectedEndUseIDs] = useState([]);
   const [openAlert, setOpenAlert] = useState(false);
   const [scenarioID, setScenarioId] = useState(0);
+  const [stopExecution, setStopExecution] = useState(false);
   const alertBoxScenarios = {
     0: {
       title: "One to many Mapping",
@@ -76,7 +77,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       message: "Request has been saved as draft",
     },
   };
-  const handleSubmit = (event) => {
+  const handleFormSubmit = (event) => {
     event.preventDefault();
     if (
       validFrom != "" &&
@@ -107,22 +108,22 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
         formData["fsc"] = 1;
         formData["priceTable"] = tableRowsData;
-        let stopExecution = false;
+
         for (let i = 0; i < tableRowsData.length; i++) {
           console.log(tableRowsData[i]);
           if (tableRowsData[i]["grade"].length == 0) {
             alert("Select Grade for Row " + (i + 1));
-            stopExecution = true;
+            setStopExecution(true);
           }
           if (tableRowsData[i]["gradeType"].length == 0) {
             alert("Select Grade Type for Row " + (i + 1));
-            stopExecution = true;
+            setStopExecution(true);
           } else if (tableRowsData[i]["agreedPrice"] < 1) {
             alert("Select Agreed Price for Row " + (i + 1));
-            stopExecution = true;
+            setStopExecution(true);
           } else if (tableRowsData[i]["specialDiscount"] < 1) {
             alert("Select Special Discount for Row " + (i + 1));
-            stopExecution = true;
+            setStopExecution(true);
           }
         }
 
@@ -133,7 +134,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         console.log("In here");
         if (!stopExecution) {
           if (validFrom < validTo) {
-            submitData(formData);
+            submitFormData(formData);
           } else {
             alert("Valid To date should be greater than Valid From date");
           }
@@ -198,7 +199,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     return tempIds != undefined ? JSON.parse([tempIds]) : [];
   };
 
-  const submitData = async (formData) => {
+  const submitFormData = async (formData) => {
     try {
       // Update formData based on whether it's a new submission or an edit
       formData["isNew"] = true;
@@ -227,6 +228,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
 
       // Extract the JSON body from the response (it should contain the requestId)
       const responseData = await response.json();
+      localStorage.removeItem("request_id");
 
       // Assuming you have state or methods to handle UI updates post-submission
       // setScenarioId(newRequestId); // Example: Update state with the new request ID
@@ -300,7 +302,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         aria-labelledby="create-request-modal"
         aria-describedby="create-request-modal-description"
       >
-        <Box sx={modalStyle} component="form" onSubmit={handleSubmit}>
+        <Box sx={modalStyle} component="form">
           <Typography
             id="create-request-modal-title"
             variant="h6"
@@ -423,7 +425,12 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
 
           {session.role != "AM" && <RemarkBox />}
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-            <Button type="submit" variant="contained" disabled={disableSubmit}>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={disableSubmit}
+              onClick={handleFormSubmit}
+            >
               Submit
             </Button>
             <Box>
@@ -431,7 +438,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
                 variant="contained"
                 onClick={(e) => {
                   setIsDraft(true);
-                  handleSubmit(e);
+                  handleFormSubmit(e);
                 }}
                 color="primary"
               >

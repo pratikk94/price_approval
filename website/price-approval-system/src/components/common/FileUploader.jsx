@@ -19,24 +19,32 @@ export default function FileUploader({
     setTempFiles((prev) => [...prev, uploadedFile]); // Add the newly uploaded file to tempFiles
   }, []);
 
-  const handleUpload = async () => {
+  const handleUpload = async (event) => {
+    event.preventDefault();
+
     if (!file) {
       alert("Please select a file first!");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
+    const formDataUpload = new FormData();
+    formDataUpload.append("file", file);
     // Assuming requestId is available in the component's scope
-    formData.append("request_id", requestId);
+    formDataUpload.append("request_id", requestId);
+
     localStorage.setItem("request_id", requestId);
     console.log("requestId", requestId);
     console.log("Time", Date.now().toString());
+    console.log("Form Data", formDataUpload);
     try {
       const response = await fetch(`${backend_url}api/upload_file`, {
         method: "POST",
-        body: formData,
+        // headers: { "Content-Type": "application/json" },
+        body: formDataUpload,
       });
+
+      console.log("Response", response);
+
       if (response.ok) {
         alert("File uploaded successfully");
         onSuccess(file); // Pass the file object to the onSuccess handler

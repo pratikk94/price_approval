@@ -88,6 +88,7 @@ function DynamicTable({
   const [editModalId, setEditModalId] = useState(0);
   const [employeeEditModal, setEmployeeEditModal] = useState(false);
   const [employeeViewModal, setEmployeeViewModal] = useState(false);
+  const [openAM, setOpenAM] = useState(false);
   const [openNSM, setOpenNSM] = useState(false);
   const [openRM, setOpenRM] = useState(false);
   useEffect(() => {
@@ -236,6 +237,28 @@ function DynamicTable({
       fetchAMData();
   }, [modalOpen, employeeEditModal, aprm_id, employeeViewModal]);
 
+  // useEffect(() => {
+  //   // Function to delete IDs from the database
+
+  //   console.log(openAM, openRM, openNSM, modalOpen);
+
+  //   // This effect runs when `openAM` changes. If it's false, perform deletion.
+  //   if (!modalOpen) {
+  //     // Assuming IDs are stored in local storage in a specific format; you'll need to adjust this based on your actual storage format.
+  //     const idsToDelete = JSON.parse(
+  //       localStorage.getItem("request_id") || "[]"
+  //     );
+  //     if (idsToDelete.length > 0) {
+  //       deleteIdsFromDb(idsToDelete);
+
+  //       // Optionally, clear the ids from local storage after deletion
+  //       localStorage.removeItem("request_id");
+
+  //       // Here you would also handle the "dumping" of file data as required by your application.
+  //     }
+  //   }
+  // }, [modalOpen]);
+
   useEffect(() => {
     if (id != 0) {
       const fetchForEdit = async () => {
@@ -329,6 +352,8 @@ function DynamicTable({
 
   const handleClose = () => {
     setOpen(false);
+    setOpenAM(false);
+    console.log(openAM);
     setOpenRM(false);
     setOpenNSM(false);
   };
@@ -518,12 +543,12 @@ function DynamicTable({
               onClick={() => {
                 console.log("ROW id is ", row_id);
                 console.log("REQ id is ", row_id);
-
+                setOpenAM(true);
                 handleView(row_id);
                 setId(row_id);
                 setModalOpen(true);
                 setAprmId(row_id);
-                setEditable(approve);
+                // setEditable(false);
                 console.log(row_id);
               }}
             >
@@ -987,14 +1012,17 @@ function DynamicTable({
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      {openRM && aprm && (
+      {(openRM || openAM) && aprm && (
         <ViewModal
           openRM={openRM}
+          openAM={openAM}
           data={aprm}
           onClose={handleClose}
           id={aprm_id}
           isEditable={
-            (action_id == "AP_RM" || action_id == "AP_NSM_HDSM") &&
+            (action_id == "AP_RM" ||
+              action_id == "AP_NSM_HDSM" ||
+              action_id == "AM") &&
             (pending || rework)
           }
           role={action_id}
@@ -1015,6 +1043,9 @@ function DynamicTable({
         open={editModalOpen}
         handleClose={() => {
           setEditModalOpen(false);
+          console.log("In here");
+          handleClose();
+          // Here you would also handle the "dumping" of file data as required by your application.
         }}
         req
         editData={editData}

@@ -130,8 +130,31 @@ function PriceChangeRequest({ role, isAM }) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleOpenModal = () => setModalOpen(true);
+  const deleteIdsFromDb = async (ids) => {
+    try {
+      const response = await fetch(`${backend_url}api/delete_ids`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      });
+      const data = await response.json();
+      console.log("Delete response:", data);
+    } catch (error) {
+      console.error("Error deleting ids:", error);
+    }
+  };
   const handleCloseModal = () => {
     setModalOpen(false);
+    const idsToDelete = JSON.parse(localStorage.getItem("request_id") || []);
+
+    if ([idsToDelete].length > 0) {
+      deleteIdsFromDb([idsToDelete]);
+
+      // Optionally, clear the ids from local storage after deletion
+      localStorage.removeItem("request_id");
+    }
     //window.location.reload();
   };
 

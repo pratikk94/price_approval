@@ -82,7 +82,16 @@ function formatDate(dateString) {
   });
 }
 
-function PriceViewModal({ openRM, onClose, id, data, isEditable, role, mode }) {
+function PriceViewModal({
+  openRM,
+  openAM,
+  onClose,
+  id,
+  data,
+  isEditable,
+  role,
+  mode,
+}) {
   console.log("Mode: ", mode);
   console.log("IDSI", id, data, isEditable, role, mode);
   const { session } = useSession();
@@ -122,7 +131,7 @@ function PriceViewModal({ openRM, onClose, id, data, isEditable, role, mode }) {
   console.log(`OpenRM-> `, openRM);
   return (
     <ReactModal
-      isOpen={openRM}
+      isOpen={openRM || openAM}
       onRequestClose={onClose}
       contentLabel="Request Details"
       style={{
@@ -171,7 +180,7 @@ function PriceViewModal({ openRM, onClose, id, data, isEditable, role, mode }) {
             </Typography>
           </div>
           <PriceTable price={data.price} />
-          {session.role != "AM" && <FileHandling />}
+          {session.role == "RM" && <FileHandling />}
 
           {session.role != "AM" && <RemarkBox />}
 
