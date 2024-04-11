@@ -43,14 +43,21 @@ function TableWithInputs({
     // update some state, or form, based on the selection
   };
 
-  const calculateWidth = (header) => {
-    console.log("HEADER" + header);
-    if (header < 14) return "70px"; // Min width
-    if ((header = 13)) return "80px";
-    if ((header = 12)) return "95px";
-    if ((header = 11)) return "100px";
-    if (HeadsetRounded < 9) return "110px";
-    // Max width for longer headers
+  const calculateWidth = () => {
+    const fixedColumnWidths = 30; // Adjust this percentage based on the total fixed widths you desire
+    const activeConditionalColumns = Object.values(checkboxState).filter(
+      (val) => val
+    ).length;
+    console.log(activeConditionalColumns);
+    // Assuming the rest of the width is evenly distributed among the conditional columns
+    const conditionalColumnWidth =
+      activeConditionalColumns > 0
+        ? (100 - fixedColumnWidths) / activeConditionalColumns
+        : 0;
+
+    console.log(conditionalColumnWidth);
+
+    return `${conditionalColumnWidth}%`;
   };
 
   useEffect(() => {
@@ -325,54 +332,62 @@ function TableWithInputs({
       <table>
         <thead>
           <tr>
-            <th className="tColumn">
+            <th>
+              {" "}
               <center>Grade *</center>
             </th>
-            <th className="tColumn">
+            <th>
               <center>Grade Type *</center>
             </th>
-            <th className="tColumn">
+            <th>
               <center>GSM From</center>
             </th>
-            <th className="tColumn">
+            <th>
               <center>GSM To</center>
             </th>
             {/* Other conditional headers based on checkboxState */}
             {checkboxState["AgreedPrice"] && (
-              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+              <th style={{ width: calculateWidth() }}>
                 <center>Agreed Price</center>
               </th>
             )}
             {checkboxState["SpecialDiscount"] && (
-              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+              <th style={{ width: calculateWidth() }}>
+                {" "}
                 <center>Special Discount</center>
               </th>
             )}
             {checkboxState["ReelDiscount"] && (
-              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+              <th style={{ width: calculateWidth() }}>
+                {" "}
                 <center>Reel Discount</center>
               </th>
             )}
             {checkboxState["PackUpCharge"] && (
-              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+              <th style={{ width: calculateWidth() }}>
+                {" "}
                 <center>Pack Upcharge</center>
               </th>
             )}
             {checkboxState["TPC"] && (
-              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+              <th style={{ width: calculateWidth() }}>
+                {" "}
                 <center>TPC</center>
               </th>
             )}
             {checkboxState["OfflineDisc"] && (
-              <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+              <th style={{ width: calculateWidth() }}>
+                {" "}
                 <center>Offline Discount</center>
               </th>
             )}
-            <th style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}>
+            <th style={{ width: calculateWidth() }}>
+              {" "}
               <center>Net NSR</center>
             </th>
             {/* <th className="tColumn">Old Net NSR</th> */}
-            <th className="tAction">
+            <th style={{ width: calculateWidth() }}>
+              {" "}
               <center>Actions</center>
             </th>
           </tr>
@@ -480,12 +495,12 @@ function TableWithInputs({
               }
               {/* Other conditional inputs based on checkboxState */}
               {checkboxState["AgreedPrice"] && (
-                <td>
+                <td style={{ width: calculateWidth() }}>
                   <input
                     type="number"
                     disabled={disabled}
+                    style={{ width: "100%" }}
                     value={row.agreedPrice}
-                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
                     onChange={(e) =>
                       handleRowChange(row.id, "agreedPrice", e.target.value)
                     }
@@ -493,11 +508,11 @@ function TableWithInputs({
                 </td>
               )}
               {checkboxState["SpecialDiscount"] && (
-                <td>
+                <td style={{ width: calculateWidth() }}>
                   <input
                     type="number"
-                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
                     disabled={disabled}
+                    style={{ width: "100%" }}
                     value={row.specialDiscount}
                     onChange={(e) =>
                       handleRowChange(row.id, "specialDiscount", e.target.value)
@@ -506,10 +521,10 @@ function TableWithInputs({
                 </td>
               )}
               {checkboxState["ReelDiscount"] && (
-                <td>
+                <td style={{ width: calculateWidth() }}>
                   <input
                     type="number"
-                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
+                    style={{ width: "100%" }}
                     disabled={disabled}
                     value={row.reelDiscount}
                     onChange={(e) =>
@@ -519,10 +534,10 @@ function TableWithInputs({
                 </td>
               )}
               {checkboxState["PackUpCharge"] && (
-                <td>
+                <td style={{ width: calculateWidth() }}>
                   <input
                     type="number"
-                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
+                    style={{ width: "100%" }}
                     disabled={disabled}
                     value={row.packUpCharge}
                     onChange={(e) =>
@@ -532,10 +547,10 @@ function TableWithInputs({
                 </td>
               )}
               {checkboxState["TPC"] && (
-                <td>
+                <td style={{ width: calculateWidth() }}>
                   <input
                     type="number"
-                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
+                    style={{ width: "100%" }}
                     value={row.tpc}
                     disabled={disabled}
                     onChange={(e) =>
@@ -545,10 +560,10 @@ function TableWithInputs({
                 </td>
               )}
               {checkboxState["OfflineDisc"] && (
-                <td>
+                <td style={{ width: calculateWidth() }}>
                   <input
                     type="number"
-                    style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
+                    style={{ width: "100%" }}
                     disabled={disabled}
                     value={row.offlineDiscount}
                     onChange={(e) =>
@@ -557,12 +572,12 @@ function TableWithInputs({
                   />
                 </td>
               )}
-              <td>
+              <td style={{ width: calculateWidth() }}>
                 <input
                   type="number"
-                  style={{ width: calculateWidth(8 + countTrueCheckboxes()) }}
                   readOnly
                   value={row.netNSR}
+                  style={{ width: "100%" }}
                 />
               </td>
               {/* <td>

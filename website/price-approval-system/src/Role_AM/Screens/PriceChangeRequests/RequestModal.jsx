@@ -423,7 +423,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
           <Typography>Attachment</Typography>
           {session.role == "AM" && <FileHandling />}
 
-          {session.role != "AM" && <RemarkBox />}
+          <RemarkBox />
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
             <Button
               type="submit"
