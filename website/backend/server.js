@@ -885,7 +885,7 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
   }
 }
 
-async function FetchNSMDataWithStatus(employeeId, status, res) {
+async function FetchNSMDataWithStatus(employeeId, status, res, isNsmT) {
   let pool = null;
   try {
     // Establish a connection to the database
@@ -2781,7 +2781,7 @@ app.get("/api/fetch_blocked_requests", async (req, res) => {
 app.get("/api/fetch_request_manager_with_status", async (req, res) => {
   const role = req.query.role;
   if (role === "NSM") {
-    FetchNSMDataWithStatus(req.query.employeeId, req.query.status, res);
+    FetchNSMDataWithStatus(req.query.employeeId, req.query.status, isNsmT, res);
   } else if (role === "HDSM") {
     FetchHDSMDataWithStatus(req.query.employeeId, req.query.status, res);
   }

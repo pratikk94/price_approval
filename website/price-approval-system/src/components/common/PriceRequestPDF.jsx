@@ -11,100 +11,108 @@ import {
 // Define your styles
 const styles = StyleSheet.create({
   page: {
-    flexDirection: "column",
-    backgroundColor: "#fff",
+    flexDirection: "column", // Changed to column to ensure items are placed top-to-bottom
+    backgroundColor: "#E4E4E4",
     padding: 10,
   },
   section: {
     margin: 10,
-    padding: 5,
+    padding: 10,
     flexGrow: 1,
   },
-  header: {
-    fontSize: 18,
-    marginBottom: 10,
-    textAlign: "center",
-    textDecoration: "underline",
-  },
-  subheader: {
-    fontSize: 16,
-    margin: 5,
-  },
   text: {
-    margin: 5,
-    fontSize: 14,
-    textAlign: "left",
-  },
-  priceTable: {
-    marginTop: 10,
-  },
-  priceRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 3,
-  },
-  priceCell: {
+    margin: 12,
     fontSize: 12,
+
+    textAlign: "justify",
+  },
+  table: {
+    display: "table",
+    width: "auto",
+    marginTop: 5, // Added a margin top for spacing between the section and the table
+  },
+  tableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eeeeee",
+    borderBottomStyle: "solid",
+    alignItems: "center",
+  },
+  tableHeader: {
+    flexDirection: "row",
+    borderBottomWidth: 2,
+    borderBottomColor: "#eeeeee",
+    borderBottomStyle: "solid",
+    backgroundColor: "#f3f3f3",
+  },
+  tableColHeader: {
+    width: "20%",
+    padding: 5,
+  },
+  tableCol: {
+    width: "20%",
+    padding: 10,
+  },
+  tableCell: {
+    fontSize: 6,
   },
 });
+
 // Create document component
 function MyDocument({ data }) {
-  console.log(data);
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.row}>
-          {/* Customer ID and Consignee ID in the first row */}
-          <View style={styles.column}>
-            <Text style={styles.label}>Customer ID:</Text>
-            <Text style={styles.value}>cust1, cust2</Text>
+  if (data === undefined) return null;
+  else {
+    return (
+      <Document>
+        <Page size="A4" style={styles.page} orientation="landscape">
+          <View style={styles.section}>
+            <Text>Request ID: {data.req_id}</Text>
+            <Text>Customer ID: {data.customer_id}</Text>
+            <Text>Consignee ID: {data.consignee_id}</Text>
+            <Text>Plant Name: {data.plant_name}</Text>
+            <Text>End Use ID: {data.end_use_id}</Text>
+            <Text>End Use Segment ID: {data.end_use_segment_id}</Text>
+            <Text>Payment Terms ID: {data.payment_terms_id}</Text>
+            <Text>Valid From: {data.valid_from}</Text>
+            <Text>Valid To: {data.valid_to}</Text>
+            <Text>FSC: {data.fsc}</Text>
+            <Text>Mapping Type: {data.mapping_type}</Text>
           </View>
-          <View style={styles.column}>
-            <Text style={styles.label}>Consignee ID:</Text>
-            <Text style={styles.value}>cons1, cons2</Text>
+
+          <View style={styles.table}>
+            <View style={styles.tableHeader}>
+              <Text style={styles.tableColHeader}>Grade</Text>
+              <Text style={styles.tableColHeader}>Grade Type</Text>
+              <Text style={styles.tableColHeader}>GSM From</Text>
+              <Text style={styles.tableColHeader}>GSM To</Text>
+              <Text style={styles.tableColHeader}>Agreed Price</Text>
+              <Text style={styles.tableColHeader}>Special Discount</Text>
+              <Text style={styles.tableColHeader}>Reel Discount</Text>
+              <Text style={styles.tableColHeader}>TPC</Text>
+              <Text style={styles.tableColHeader}>Offline Discount</Text>
+              <Text style={styles.tableColHeader}>Net NSR</Text>
+              <Text style={styles.tableColHeader}>Old Net NSR</Text>
+            </View>
+            {data.price.map((item, index) => (
+              <View key={index} style={styles.tableRow}>
+                <Text style={styles.tableCol}>{item.grade}</Text>
+                <Text style={styles.tableCol}>{item.grade_type}</Text>
+                <Text style={styles.tableCol}>{item.gsm_range_from}</Text>
+                <Text style={styles.tableCol}>{item.gsm_range_to}</Text>
+                <Text style={styles.tableCol}>{item.agreed_price}</Text>
+                <Text style={styles.tableCol}>{item.special_discount}</Text>
+                <Text style={styles.tableCol}>{item.reel_discount}</Text>
+                <Text style={styles.tableCol}>{item.tpc}</Text>
+                <Text style={styles.tableCol}>{item.offline_discount}</Text>
+                <Text style={styles.tableCol}>{item.net_nsr}</Text>
+                <Text style={styles.tableCol}>{item.old_net_nsr}</Text>
+              </View>
+            ))}
           </View>
-        </View>
-        {/* Other details in subsequent rows */}
-        {/* Display price details in a table */}
-        <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCell}>Grade</Text>
-            </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCell}>Grade Type</Text>
-            </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCell}>GSM Range</Text>
-            </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCell}>Agreed Price</Text>
-            </View>
-            {/* Add more headers as needed */}
-          </View>
-          {data[0].price.map((item, index) => (
-            <View key={index} style={styles.tableRow}>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>{item.grade}</Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>{item.grade_type}</Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text
-                  style={styles.tableCell}
-                >{`${item.gsm_range_from} - ${item.gsm_range_to}`}</Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>{item.agreed_price}</Text>
-              </View>
-              {/* Add more cells as needed */}
-            </View>
-          ))}
-        </View>
-      </Page>
-    </Document>
-  );
+        </Page>
+      </Document>
+    );
+  }
 }
 
 export default MyDocument;

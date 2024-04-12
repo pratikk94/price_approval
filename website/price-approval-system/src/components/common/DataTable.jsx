@@ -91,6 +91,7 @@ function DynamicTable({
   const [openAM, setOpenAM] = useState(false);
   const [openNSM, setOpenNSM] = useState(false);
   const [openRM, setOpenRM] = useState(false);
+  const [openDownloadModal, setOpenDownloadModal] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -353,7 +354,7 @@ function DynamicTable({
   const handleClose = () => {
     setOpen(false);
     setOpenAM(false);
-    console.log(openAM);
+    setOpenDownloadModal(false);
     setOpenRM(false);
     setOpenNSM(false);
   };
@@ -383,6 +384,7 @@ function DynamicTable({
           >
             <ViewIcon />
           </IconButton>
+
           {/* <IconButton
             onClick={() => {
               setEditModalOpen(true);
@@ -436,21 +438,31 @@ function DynamicTable({
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           {!rework && (
-            <IconButton
-              onClick={() => {
-                console.log("ROW id is ", row_id);
-                console.log("REQ id is ", req_id);
-                setOpenRM(true);
-                setOpenNSM(false);
-                handleView(row_id);
-                setId(row_id);
-                setModalOpen(true);
-                setAprmId(row_id);
-                console.log(row_id);
-              }}
-            >
-              <ViewIcon />
-            </IconButton>
+            <>
+              <IconButton
+                onClick={() => {
+                  console.log("ROW id is ", row_id);
+                  console.log("REQ id is ", req_id);
+                  setOpenRM(true);
+                  setOpenNSM(false);
+                  handleView(row_id);
+                  setId(row_id);
+                  setModalOpen(true);
+                  setAprmId(row_id);
+                  console.log(row_id);
+                }}
+              >
+                <ViewIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  setId(row_id);
+                  console.log(row_id);
+                }}
+              >
+                <DownloadIcon />
+              </IconButton>
+            </>
           )}
           {rework && (
             <IconButton
@@ -533,27 +545,46 @@ function DynamicTable({
           >
             <ViewIcon />
           </IconButton>
+          <IconButton
+            onClick={() => {
+              setId(row_id);
+              console.log(row_id);
+            }}
+          >
+            <DownloadIcon />
+          </IconButton>
         </div>
       );
     } else if (id == "AM") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           {!rework && (
-            <IconButton
-              onClick={() => {
-                console.log("ROW id is ", row_id);
-                console.log("REQ id is ", row_id);
-                setOpenAM(true);
-                handleView(row_id);
-                setId(row_id);
-                setModalOpen(true);
-                setAprmId(row_id);
-                // setEditable(false);
-                console.log(row_id);
-              }}
-            >
-              <ViewIcon />
-            </IconButton>
+            <>
+              <IconButton
+                onClick={() => {
+                  console.log("ROW id is ", row_id);
+                  console.log("REQ id is ", row_id);
+                  setOpenAM(true);
+                  handleView(row_id);
+                  setId(row_id);
+                  setModalOpen(true);
+                  setAprmId(row_id);
+                  // setEditable(false);
+                  console.log(row_id);
+                }}
+              >
+                <ViewIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  setId(row_id);
+                  setOpenDownloadModal(true);
+                  console.log(row_id);
+                }}
+              >
+                <DownloadIcon />
+              </IconButton>
+            </>
           )}
           {rework && (
             <IconButton
@@ -1039,6 +1070,7 @@ function DynamicTable({
           isEditable={false}
         />
       )}
+      <DownloadModal open={openDownloadModal} onClose={handleClose} id={id} />
       <CreateRequestModal
         open={editModalOpen}
         handleClose={() => {
