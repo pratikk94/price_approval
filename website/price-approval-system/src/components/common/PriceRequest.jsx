@@ -250,13 +250,18 @@ function PriceChangeRequest({ role, isAM }) {
       console.log(role);
       if (filterdId == 0) {
         // console.log("Filterred ID is 1");
+        let isNsm = false;
+        if (session.role == "NSMT") {
+          isNsm = true;
+        }
+
         return (
           <DataTable
             action_id={role}
             pendnig={true}
             url={
               backend_url +
-              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=0&role=${session.role}`
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=0&role=${session.role}&isNsmT=${isNsm}`
             }
             mode={mode}
           />
@@ -269,7 +274,7 @@ function PriceChangeRequest({ role, isAM }) {
             action_id={role}
             url={
               backend_url +
-              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=1&role=${session.role}`
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=1&role=${session.role}&isNsmT=${isNsm}`
             }
             mode={mode}
           />
@@ -282,7 +287,7 @@ function PriceChangeRequest({ role, isAM }) {
             action_id={role}
             url={
               backend_url +
-              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=2&role=${session.role}`
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=2&role=${session.role}&isNsmT=${isNsm}`
             }
             mode={mode}
           />
@@ -296,7 +301,7 @@ function PriceChangeRequest({ role, isAM }) {
             rework={true}
             url={
               backend_url +
-              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=3&role=${session.role}`
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=3&role=${session.role}&isNsmT=${isNsm}`
             }
             mode={mode}
           />
@@ -322,7 +327,7 @@ function PriceChangeRequest({ role, isAM }) {
             action_id={role}
             url={
               backend_url +
-              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=5&role=${session.role}`
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=5&role=${session.role}&isNsmT=${isNsm}`
             }
             mode={mode}
           />

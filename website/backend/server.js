@@ -892,6 +892,14 @@ async function FetchNSMDataWithStatus(employeeId, status, res, isNsmT) {
     pool = await sql.connect(config);
     console.log("Connected to the database.");
 
+    let nsmQuery = "";
+
+    if (isNsmT) {
+      nsmQuery = `where pc.Profit_Center like '%5'`;
+    } else {
+      nsmQuery = `where pc.Profit_Center not like '%5'`;
+    }
+
     // 1. Fetch region from 'define_role' for a given 'employee_id'
     // Replace with actual employee ID
     console.log(
@@ -962,9 +970,13 @@ async function FetchNSMDataWithStatus(employeeId, status, res, isNsmT) {
           dt.timestamp
       FROM 
           DetailedTransactions dt
+      INNER JOIN price_approval_requests_price_table par on 
+          par.req_id = dt.request_id
+      INNER JOIN profit_center pc on 
+          pc.Grade = par.grade 
+    
       WHERE 
-          dt.nsm_status = @status ;
-      `
+          dt.nsm_status = @status and ${nsmQuery} ;`
       );
 
     console.log(idsResult);
@@ -2781,7 +2793,12 @@ app.get("/api/fetch_blocked_requests", async (req, res) => {
 app.get("/api/fetch_request_manager_with_status", async (req, res) => {
   const role = req.query.role;
   if (role === "NSM") {
-    FetchNSMDataWithStatus(req.query.employeeId, req.query.status, isNsmT, res);
+    FetchNSMDataWithStatus(
+      req.query.employeeId,
+      req.query.status,
+      req.query.isNsmT,
+      res
+    );
   } else if (role === "HDSM") {
     FetchHDSMDataWithStatus(req.query.employeeId, req.query.status, res);
   }
