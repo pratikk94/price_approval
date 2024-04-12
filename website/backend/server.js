@@ -520,6 +520,7 @@ function filterDuplicates(details) {
 async function FetchAMDataWithStatus(employeeId, status, res) {
   let pool = null;
   console.log(employeeId, status);
+  let a_status = status == "1" ? "0" : status;
   try {
     // Establish a connection to the database
     pool = await sql.connect(config);
@@ -547,7 +548,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
     const idsResult = await pool
       .request()
       .input("region", sql.VarChar, region)
-      .input("status", sql.VarChar, status) // Correctly setting the parameter
+      .input("status", sql.VarChar, a_status) // Correctly setting the parameter
       .query(
         `WITH LatestTransactionPerRequest AS (
           SELECT 
@@ -618,10 +619,18 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       validators
     );
     if (details != undefined && details.length > 0) {
+      if (status == "1") {
+        if (checkVariables(nsms, hdsm, validators, 1)) {
+          detail.am_status = 1;
+        }
+
+        details.filter((detail) => detail.am_status === 1);
+      }
       details.forEach((detail) => {
         if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
           detail.req_id = detail.req_id[0]; // Convert array to single value
         }
+
         // Add any additional transformations needed
       });
 
@@ -636,6 +645,33 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       //await pool.close();
     }
   }
+}
+
+function checkVariables(var1, var2, var3, targetValue) {
+  // Initialize a count to track how many variables match the targetValue
+  let matchCount = 0;
+
+  // Array to hold the variables
+  let variables = [var1, var2, var3];
+
+  // Loop through the array and check each variable
+  variables.forEach((variable) => {
+    // Check if the variable is neither null, undefined, nor has a length of 0 if it is a string or array
+    if (
+      variable !== null &&
+      variable !== undefined &&
+      !(typeof variable === "string" || Array.isArray(variable)) &&
+      variable.length === 0
+    ) {
+      // Check if the variable matches the target value
+      if (variable === targetValue) {
+        matchCount++;
+      }
+    }
+  });
+
+  // Return true if any variable matches the target value
+  return matchCount > 0;
 }
 
 async function FetchDraft(employeeId, res) {
@@ -893,12 +929,14 @@ async function FetchNSMDataWithStatus(employeeId, status, res, isNsmT) {
     console.log("Connected to the database.");
 
     let nsmQuery = "";
-
-    if (isNsmT) {
-      nsmQuery = `where pc.Profit_Center like '%5'`;
+    console.log(`Status is ${isNsmT}`);
+    if (isNsmT == "true") {
+      nsmQuery = `pc.Profit_Centre like '5%'`;
     } else {
-      nsmQuery = `where pc.Profit_Center not like '%5'`;
+      nsmQuery = `pc.Profit_Centre not like '5%'`;
     }
+
+    console.log(`NSM Query is ${nsmQuery}`);
 
     // 1. Fetch region from 'define_role' for a given 'employee_id'
     // Replace with actual employee ID
@@ -974,7 +1012,6 @@ async function FetchNSMDataWithStatus(employeeId, status, res, isNsmT) {
           par.req_id = dt.request_id
       INNER JOIN profit_center pc on 
           pc.Grade = par.grade 
-    
       WHERE 
           dt.nsm_status = @status and ${nsmQuery} ;`
       );
@@ -2792,12 +2829,12 @@ app.get("/api/fetch_blocked_requests", async (req, res) => {
 
 app.get("/api/fetch_request_manager_with_status", async (req, res) => {
   const role = req.query.role;
-  if (role === "NSM") {
+  if (role === "NSM" || role == "NSMT") {
     FetchNSMDataWithStatus(
       req.query.employeeId,
       req.query.status,
-      req.query.isNsmT,
-      res
+      res,
+      req.query.isNsmT
     );
   } else if (role === "HDSM") {
     FetchHDSMDataWithStatus(req.query.employeeId, req.query.status, res);
@@ -2806,7 +2843,8 @@ app.get("/api/fetch_request_manager_with_status", async (req, res) => {
 
 app.post("/api/update_request_status_manager", async (req, res) => {
   let { id, action, employee_id, request_id } = req.body;
-  const role = req.body.role;
+  let role = req.body.role;
+  role = role == "NSMT" ? "NSM" : role;
   action = action == 0 ? "1" : action;
   console.log(
     `   BODY-> ${req.body.request_id} ${req.body.action} ${req.body.employee_id}`

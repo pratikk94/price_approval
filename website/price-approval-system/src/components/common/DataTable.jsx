@@ -92,6 +92,9 @@ function DynamicTable({
   const [openNSM, setOpenNSM] = useState(false);
   const [openRM, setOpenRM] = useState(false);
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
+
+  console.log("NSM_pending", pending);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -1067,7 +1070,7 @@ function DynamicTable({
           id={id}
           data={aprm}
           mode={mode}
-          isEditable={false}
+          isEditable={true && pending}
         />
       )}
       <DownloadModal open={openDownloadModal} onClose={handleClose} id={id} />

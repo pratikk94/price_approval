@@ -248,17 +248,18 @@ function PriceChangeRequest({ role, isAM }) {
       }
     } else if (role == "AP_NSM_HDSM") {
       console.log(role);
+      let isNsm = false;
+      console.log(session.role);
+      if (session.role == "NSMT") {
+        isNsm = true;
+      }
       if (filterdId == 0) {
         // console.log("Filterred ID is 1");
-        let isNsm = false;
-        if (session.role == "NSMT") {
-          isNsm = true;
-        }
 
         return (
           <DataTable
             action_id={role}
-            pendnig={true}
+            pending={true}
             url={
               backend_url +
               `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=0&role=${session.role}&isNsmT=${isNsm}`

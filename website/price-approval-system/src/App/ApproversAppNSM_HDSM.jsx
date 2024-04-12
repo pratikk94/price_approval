@@ -48,7 +48,7 @@ function ResponsiveDrawer({ logout }) {
               : session.role == "NSMT"
               ? "National Sales Manger (T)"
               : session.role == "HDSM"
-              ? "Head of div Sales Manager"
+              ? "Head-Divisional Sales Manager"
               : ""}
           </Typography>
           <Button
