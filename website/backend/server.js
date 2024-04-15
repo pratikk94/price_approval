@@ -521,6 +521,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
   let pool = null;
   console.log(employeeId, status);
   let a_status = status == "1" ? "0" : status;
+  a_status = status == "5" ? "0" : status;
   try {
     // Establish a connection to the database
     pool = await sql.connect(config);
@@ -607,7 +608,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
     const validators = idsResult.recordset.map((row) => row.validator_status);
-    const details = await fetchPriceApprovalDetails(
+    let details = await fetchPriceApprovalDetails(
       ids,
       region,
       employeeId,
@@ -626,6 +627,56 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
 
         details.filter((detail) => detail.am_status === 1);
       }
+
+      if (status == "5") {
+        let ids_values = ids.toString().split(",");
+        let nsm_values = nsms.toString().split(",");
+        let hdsm_values = hdsm.toString().split(",");
+        let validator_values = validators.toString().split(",");
+        for (let i = 0; i < nsm_values.length; i++) {
+          if (nsm_values[i] > 0 && hdsm_values[i] > 0) {
+            if (
+              nsm_values[i] == 1 &&
+              hdsm_values[i] == 1 &&
+              validator_values[i] == 1
+            ) {
+              details.find((map) => map.req_id === ids_values[i]).am_status = 1;
+            } else {
+              details.find((map) => map.req_id === ids_values[i]).am_status = 0;
+            }
+          } else if (
+            (nsm_values[i] == undefined || nsm_values[i] == null) &&
+            hdsm_values[i] > 0 &&
+            details[i] != undefined
+          ) {
+            if (hdsm_values[i] == 1 && validator_values[i] == 1) {
+              details.find((map) => map.req_id === ids_values[i]).am_status = 1;
+            } else {
+              details.find((map) => map.req_id === ids_values[i]).am_status = 0;
+            }
+          } else if (
+            (hdsm_values[i] == undefined || hdsm_values[i] == null) &&
+            nsm_values[i] > 0 &&
+            details[i] != undefined
+          ) {
+            if (nsm_values[i] == 1 && validator_values[i] == 1) {
+              details.find((map) => map.req_id === ids_values[i]).am_status = 1;
+            } else {
+              details.find((map) => map.req_id === ids_values[i]).am_status = 0;
+            }
+          } else if (
+            details.find((map) => map.req_id === ids_values[i]) != undefined
+          ) {
+            details.find((map) => map.req_id === ids_values[i]).am_status = 0;
+          }
+          details.filter((detail) => detail.am_status === 1);
+        }
+
+        details = details.filter((mapElement) => mapElement.am_status !== 0);
+
+        console.log(details);
+      }
+
       details.forEach((detail) => {
         if (Array.isArray(detail.req_id) && detail.req_id.length > 0) {
           detail.req_id = detail.req_id[0]; // Convert array to single value

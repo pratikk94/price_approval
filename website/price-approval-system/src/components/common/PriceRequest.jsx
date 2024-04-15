@@ -54,16 +54,27 @@ const modalStyle = {
 
 function PriceChangeRequest({ role, isAM }) {
   let statusFiltersValues = Array.from(statusFilters.values());
+  const { session } = useSession();
   console.log(`ROLE->${role}`);
-  if (isAM == undefined) {
-    statusFiltersValues = Array.from(statusFilters.values()).slice(1, 6);
+  if (session.role == "AM") {
+    statusFiltersValues = [
+      Array.from(statusFilters.values())[4],
+      Array.from(statusFilters.values())[6],
+      Array.from(statusFilters.values())[0],
+      ,
+    ];
+  }
+  if (session.role == "RM") {
+    statusFiltersValues = [
+      Array.from(statusFilters.values())[1],
+      Array.from(statusFilters.values())[4],
+    ];
   }
   if (role == "AP_NSM_HDSM" || role == "Validator" || role == "VP") {
-    statusFiltersValues = Array.from(statusFilters.values()).slice(1, 4);
+    statusFiltersValues = Array.from(statusFilters.values())[1];
     statusFiltersValues.push("Blocked");
   }
   const [filterdId, setFilterdId] = useState(0);
-  const { session } = useSession();
 
   const employee_id = session.employee_id;
   const [data, setData] = useState(initialData);
@@ -164,6 +175,7 @@ function PriceChangeRequest({ role, isAM }) {
 
   const ReturnDataTable = () => {
     if (role == "AP_RM") {
+      //Pending
       if (filterdId == 0) {
         // console.log("Filterred ID is 1");
         return (
@@ -178,34 +190,37 @@ function PriceChangeRequest({ role, isAM }) {
           />
         );
       }
+      //Approved
+      // if (filterdId == 1) {
+      //   // console.log("Filterred ID is 1");
+      //   return (
+      //     <DataTable
+      //       action_id={role}
+      //       mode={mode}
+      //       approve={true}
+      //       url={
+      //         backend_url +
+      //         `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=1`
+      //       }
+      //     />
+      //   );
+      // }
+      //Rejected
+      // if (filterdId == 2) {
+      //   // console.log("Filterred ID is 2");
+      //   return (
+      //     <DataTable
+      //       action_id={role}
+      //       mode={mode}
+      //       url={
+      //         backend_url +
+      //         `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=2`
+      //       }
+      //     />
+      //   );
+      // }
+      //Rework
       if (filterdId == 1) {
-        // console.log("Filterred ID is 1");
-        return (
-          <DataTable
-            action_id={role}
-            mode={mode}
-            approve={true}
-            url={
-              backend_url +
-              `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=1`
-            }
-          />
-        );
-      }
-      if (filterdId == 2) {
-        // console.log("Filterred ID is 2");
-        return (
-          <DataTable
-            action_id={role}
-            mode={mode}
-            url={
-              backend_url +
-              `api/fetch_request_rm_with_status?employeeId=${employee_id}&status=2`
-            }
-          />
-        );
-      }
-      if (filterdId == 3) {
         // console.log("Filterred ID is 3");
         return (
           <DataTable
@@ -219,33 +234,21 @@ function PriceChangeRequest({ role, isAM }) {
           />
         );
       }
-      if (filterdId == 4) {
-        // console.log("Filterred ID is 4");
-        return (
-          <DataTable
-            action_id={role}
-            mode={mode}
-            rework={true}
-            url={
-              backend_url +
-              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=4`
-            }
-          />
-        );
-      }
-      if (filterdId == 5) {
-        // console.log("Filterred ID is 4");
-        return (
-          <DataTable
-            action_id={role}
-            mode={mode}
-            url={
-              backend_url +
-              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
-            }
-          />
-        );
-      }
+      //Blocked
+      // if (filterdId == 4) {
+      //   // console.log("Filterred ID is 4");
+      //   return (
+      //     <DataTable
+      //       action_id={role}
+      //       mode={mode}
+      //       rework={true}
+      //       url={
+      //         backend_url +
+      //         `api/fetch_request_am_with_status?employeeId=${employee_id}&status=4`
+      //       }
+      //     />
+      //   );
+      // }
     } else if (role == "AP_NSM_HDSM") {
       console.log(role);
       let isNsm = false;
@@ -335,67 +338,9 @@ function PriceChangeRequest({ role, isAM }) {
         );
       }
     } else if (role == "AM") {
+      //Rework
       if (filterdId == 0) {
         // console.log("Filterred ID is 1");
-        return (
-          <DataTable
-            isAM={true}
-            action_id={role}
-            url={
-              backend_url + `api/get_draft?employeeId=${session.employee_id}`
-            }
-            sendMode={setMode}
-            mode={mode}
-          />
-        );
-      }
-      if (filterdId == 1) {
-        // console.log("Filterred ID is 1");
-        return (
-          <DataTable
-            isAM={true}
-            action_id={role}
-            url={
-              backend_url +
-              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=0`
-            }
-            sendMode={setMode}
-            mode={mode}
-          />
-        );
-      }
-      if (filterdId == 2) {
-        // console.log("Filterred ID is 2");
-        return (
-          <DataTable
-            isAM={true}
-            action_id={role}
-            sendMode={setMode}
-            mode={mode}
-            url={
-              backend_url +
-              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=1`
-            }
-          />
-        );
-      }
-      if (filterdId == 3) {
-        // console.log("Filterred ID is 3");
-        return (
-          <DataTable
-            isAM={true}
-            action_id={role}
-            sendMode={setMode}
-            mode={mode}
-            url={
-              backend_url +
-              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=2`
-            }
-          />
-        );
-      }
-      if (filterdId == 4) {
-        // console.log("Filterred ID is 4");
         return (
           <DataTable
             isAM={true}
@@ -410,20 +355,84 @@ function PriceChangeRequest({ role, isAM }) {
           />
         );
       }
-      if (filterdId == 5) {
+      //Completely Approved
+      if (filterdId == 1) {
         // console.log("Filterred ID is 1");
         return (
           <DataTable
             isAM={true}
             action_id={role}
-            sendMode={setMode}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
             }
+            sendMode={setMode}
+            mode={mode}
           />
         );
       }
+      //Approved
+      // if (filterdId == 2) {
+      //   // console.log("Filterred ID is 2");
+      //   return (
+      //     <DataTable
+      //       isAM={true}
+      //       action_id={role}
+      //       sendMode={setMode}
+      //       mode={mode}
+      //       url={
+      //         backend_url +
+      //         `api/fetch_request_am_with_status?employeeId=${employee_id}&status=1`
+      //       }
+      //     />
+      //   );
+      // }
+      //Rejected
+      // if (filterdId == 3) {
+      //   // console.log("Filterred ID is 3");
+      //   return (
+      //     <DataTable
+      //       isAM={true}
+      //       action_id={role}
+      //       sendMode={setMode}
+      //       mode={mode}
+      //       url={
+      //         backend_url +
+      //         `api/fetch_request_am_with_status?employeeId=${employee_id}&status=2`
+      //       }
+      //     />
+      //   );
+      // }
+      // Rework
+      if (filterdId == 2) {
+        // console.log("Filterred ID is 4");
+        return (
+          <DataTable
+            isAM={true}
+            action_id={role}
+            url={
+              backend_url + `api/get_draft?employeeId=${session.employee_id}`
+            }
+            sendMode={setMode}
+            mode={mode}
+          />
+        );
+      }
+      // Blocked
+      // if (filterdId == 5) {
+      //   // console.log("Filterred ID is 1");
+      //   return (
+      //     <DataTable
+      //       isAM={true}
+      //       action_id={role}
+      //       sendMode={setMode}
+      //       url={
+      //         backend_url +
+      //         `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
+      //       }
+      //     />
+      //   );
+      // }
     } else if (role == "Validator") {
       if (filterdId == 0) {
         // console.log("Filterred ID is 1");
@@ -677,13 +686,23 @@ function PriceChangeRequest({ role, isAM }) {
               open={open}
               onClose={handleClose}
             >
-              <MenuItem onClick={handleCreateRequest}>Create Request</MenuItem>
-              {/* <MenuItem onClick={handleCopyRequest}>Copy Request</MenuItem> */}
-              <MenuItem onClick={handleMergeRequest}>Merge Request</MenuItem>
-              {/* <MenuItem onClick={handleBlockRequest}>Block Request</MenuItem> */}
-              <MenuItem onClick={handleExtensionOrPreclosure}>
-                Extension or Preclosure
+              <MenuItem onClick={handleCreateRequest}>
+                Create New Request
               </MenuItem>
+              {/* <MenuItem onClick={handleCopyRequest}>Copy Request</MenuItem> */}
+              {activeFilter == "Completely Approved" ? (
+                <>
+                  <MenuItem onClick={handleMergeRequest}>
+                    Merge Request
+                  </MenuItem>
+                  <MenuItem onClick={handleBlockRequest}>
+                    Block Request
+                  </MenuItem>
+                  <MenuItem onClick={handleExtensionOrPreclosure}>
+                    Extension or Preclosure
+                  </MenuItem>
+                </>
+              ) : null}
             </Menu>
           </div>
         ) : null}
