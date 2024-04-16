@@ -71,8 +71,10 @@ function PriceChangeRequest({ role, isAM }) {
     ];
   }
   if (role == "AP_NSM_HDSM" || role == "Validator" || role == "VP") {
-    statusFiltersValues = Array.from(statusFilters.values())[1];
-    statusFiltersValues.push("Blocked");
+    statusFiltersValues = [
+      Array.from(statusFilters.values())[1],
+      Array.from(statusFilters.values())[5],
+    ];
   }
   const [filterdId, setFilterdId] = useState(0);
 

@@ -221,25 +221,30 @@ async function changeReqIds(tempRequestIds, newRequestId) {
   try {
     pool = await sql.connect(config);
     console.log(`${tempRequestIds}`);
-    // Make sure `config` is defined with your DB credentials
-    const promises = tempRequestIds.map((tempId) => {
-      console.log(
-        `Temp ids are ${tempId} and New request id is ${newRequestId}`
-      );
-      return pool
-        .request()
-        .input("newRequestId", sql.NVarChar, newRequestId)
-        .input("tempId", sql.NVarChar, tempId.toString())
-        .query(
-          `UPDATE files SET request_id = @newRequestId WHERE request_id = @tempId;`
+    console.log(typeof tempRequestIds);
+    if (tempRequestIds != undefined) {
+      // Make sure `config` is defined with your DB credentials
+      const promises = tempRequestIds.map((tempId) => {
+        console.log(
+          `Temp ids are ${tempId} and New request id is ${newRequestId}`
         );
-    });
+        return pool
+          .request()
+          .input("newRequestId", sql.NVarChar, newRequestId)
+          .input("tempId", sql.NVarChar, tempId.toString())
+          .query(
+            `UPDATE files SET request_id = @newRequestId WHERE request_id = @tempId;`
+          );
+      });
 
-    await Promise.all(promises);
+      await Promise.all(promises);
 
-    console.log(
-      `All tempRequestIds have been updated to the new request_id: ${newRequestId}`
-    );
+      console.log(
+        `All tempRequestIds have been updated to the new request_id: ${newRequestId}`
+      );
+    } else {
+      console.log("No tempRequestIds found to update.");
+    }
   } catch (error) {
     console.error("Failed to update request IDs:", error);
     throw error; // Rethrow or handle as needed

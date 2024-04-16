@@ -21,7 +21,21 @@ import { backend_url } from "../../../util";
 import { useSession } from "../../../Login_Controller/SessionContext";
 import AlertBox from "../../../components/common/AlertBox";
 import FileHandling from "../../../components/common/FileHandling";
-
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import { green, red } from "@mui/material/colors";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+const style = {
+  position: "absolute",
+  top: "10%",
+  left: "50%",
+  transform: "translate(-50%, -10%)",
+  width: 400,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  p: 4,
+  textAlign: "center",
+};
 const modalStyle = {
   position: "absolute",
   top: "50%",
@@ -77,7 +91,20 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       message: "Request has been saved as draft",
     },
   };
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const handleOpen = () => setOpenModal(true);
+  const handleCloseModal = () => setOpenModal(false);
+  const handleConfirm = () => {
+    setTimeout(() => {
+      setShowSuccess(false);
+      handleCloseModal();
+    }, 2000); // Close the modal and hide success message after 2 seconds
+  };
+  const [errorMessage, setErrorMessage] = useState("");
   const handleFormSubmit = (event) => {
+    handleOpen();
+    setShowSuccess(false);
     event.preventDefault();
     if (
       validFrom != "" &&
@@ -88,7 +115,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       endUse.length > 0
     ) {
       if (paymentTerms.length == 0) {
-        alert("Please select Payment Terms");
+        setErrorMessage("Please select Payment Terms");
       } else {
         formData["customerIds"] = selectedCustomers
           .map((item) => item.value)
@@ -112,44 +139,54 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         for (let i = 0; i < tableRowsData.length; i++) {
           console.log(tableRowsData[i]);
           if (tableRowsData[i]["grade"].length == 0) {
-            alert("Select Grade for Row " + (i + 1));
+            setErrorMessage("Select Grade for Row " + (i + 1));
             setStopExecution(true);
           }
           if (tableRowsData[i]["gradeType"].length == 0) {
-            alert("Select Grade Type for Row " + (i + 1));
+            setErrorMessage("Select Grade Type for Row " + (i + 1));
             setStopExecution(true);
           } else if (tableRowsData[i]["agreedPrice"] < 1) {
-            alert("Select Agreed Price for Row " + (i + 1));
+            setErrorMessage("Select Agreed Price for Row " + (i + 1));
             setStopExecution(true);
           } else if (tableRowsData[i]["specialDiscount"] < 1) {
-            alert("Select Special Discount for Row " + (i + 1));
+            setErrorMessage("Select Special Discount for Row " + (i + 1));
             setStopExecution(true);
           }
         }
+
+        console.log("CP_1");
 
         formData["isDraft"] = isDraft;
         formData["am_id"] = employee_id;
 
         const val = JSON.stringify(formData);
-        console.log("In here");
+
+        console.log(stopExecution);
         if (!stopExecution) {
           if (validFrom < validTo) {
+            setShowSuccess(true);
+            handleOpen();
             submitFormData(formData);
+            handleConfirm();
           } else {
-            alert("Valid To date should be greater than Valid From date");
+            setShowSuccess(false);
+            setOpenModal(true);
+            setErrorMessage(
+              "Valid To date should be greater than Valid From date"
+            );
           }
         }
       }
     } else if (selectedCustomers.length == 0) {
-      alert("Please Select Customer(s)");
+      setErrorMessage("Please Select Customer(s)");
     } else if (selectedConsignees.length == 0) {
-      alert("Please Select Consignee(s)");
+      setErrorMessage("Please Select Consignee(s)");
     } else if (paymentTerms == undefined) {
-      alert("Please Select Payment Terms");
+      setErrorMessage("Please Select Payment Terms");
     } else if (validFrom == "") {
-      alert("Please Select Valid From date");
+      setErrorMessage("Pleas Select Valid From date");
     } else if (validTo == "") {
-      alert("Please Select Valid To date");
+      setErrorMessage("Please Select Valid To date");
     } else {
       console.log("All checks met");
     }
@@ -195,16 +232,22 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     }
     const tempIds = localStorage.getItem("request_id") || initialRequestId;
     console.log(`Temp ids are ${tempIds}`);
+    console.log(typeof tempIds);
+    console.log(tempIds == "undefined");
     // Assuming this is your key
-    return tempIds != undefined ? JSON.parse([tempIds]) : [];
+    return tempIds != "undefined" ? [tempIds] : [];
   };
 
   const submitFormData = async (formData) => {
+    console.log("In here SFD");
     try {
       // Update formData based on whether it's a new submission or an edit
       formData["isNew"] = true;
       const tempRequestIds = await fetchTempRequestIds();
-      formData.tempRequestIds = [tempRequestIds];
+      console.log(tempRequestIds.length);
+      if (tempRequestIds.length > 0) {
+        formData.tempRequestIds = [tempRequestIds];
+      }
       if (editData) {
         formData["parentReqId"] = reqId; // Assuming `reqId` is defined somewhere in your component as the current request ID
         formData["isNew"] = false;
@@ -223,9 +266,15 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
 
       // Check for HTTP errors
       if (!response.ok) {
+        setShowSuccess(false);
+        setErrorMessage(
+          `Failed to create request due to HTTP error! \n Reason : ${response.status}`
+        );
         throw new Error(`HTTP error! status: ${response.status}`);
+      } else {
+        //setShowSuccess(true);
+        //setOpenModal(true);
       }
-
       // Extract the JSON body from the response (it should contain the requestId)
       const responseData = await response.json();
       localStorage.removeItem("request_id");
@@ -282,13 +331,6 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   };
 
   const handleCloseAlert = () => {
-    setOpenAlert(false);
-  };
-
-  const handleConfirm = () => {
-    console.log("User clicked Yes!");
-    setCheckBoxEnabled(true);
-    setIsChecked(true);
     setOpenAlert(false);
   };
 
@@ -456,14 +498,51 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
           </Box>
         </Box>
       </Modal>
-      <AlertBox
-        isOpen={openAlert}
-        onClose={handleCloseAlert}
-        onConfirm={handleConfirm}
-        title={alertBoxScenarios[scenarioID].title}
-        message={alertBoxScenarios[scenarioID].message}
-        isUpdate={scenarioID != 0}
-      />
+      <Modal
+        open={openModal}
+        onClose={handleCloseModal}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          {showSuccess ? (
+            <Box sx={{ mt: 2, color: green[500] }}>
+              <CheckCircleOutlineIcon
+                sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
+              />
+              Request Created Successfully.
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleConfirm}
+                sx={{ mt: 2 }}
+              >
+                Confirm
+              </Button>
+            </Box>
+          ) : (
+            <Box sx={{ mt: 2, color: red[500] }}>
+              <ErrorOutlineIcon
+                sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
+              />
+              <br />
+
+              <Typography id="modal-modal-description">
+                Failed to created request.
+                <br /> Reason : {errorMessage}
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleConfirm}
+                sx={{ mt: 2 }}
+              >
+                Confirm
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </Modal>
     </>
   );
 };
