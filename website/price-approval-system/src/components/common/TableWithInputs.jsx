@@ -29,7 +29,7 @@ function TableWithInputs({
   const [selectedGrade, setSelectedGrade] = useState("");
   const [fsc, setFSC] = useState(fscCode);
   const [gradeType, setGradeType] = useState(null);
-
+  console.log(fscCode);
   // Options for the dropdown
   const options = [
     { value: "Reel", label: "Reel" },
@@ -48,14 +48,14 @@ function TableWithInputs({
     const activeConditionalColumns = Object.values(checkboxState).filter(
       (val) => val
     ).length;
-    console.log(activeConditionalColumns);
+    // console.log(activeConditionalColumns);
     // Assuming the rest of the width is evenly distributed among the conditional columns
     const conditionalColumnWidth =
       activeConditionalColumns > 0
         ? (100 - fixedColumnWidths) / activeConditionalColumns
         : 0;
 
-    console.log(conditionalColumnWidth);
+    // console.log(conditionalColumnWidth);
 
     return `${conditionalColumnWidth}%`;
   };

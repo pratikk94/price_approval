@@ -10,6 +10,7 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Button,
 } from "@material-ui/core";
 import DoneIcon from "@mui/icons-material/Done";
 import CloseIcon from "@mui/icons-material/Close";
@@ -21,7 +22,9 @@ import { IconButton } from "@mui/material";
 import RemarkBox from "../../components/common/RemarkBox";
 import HistoryModal from "../../components/common/History";
 import { useSession } from "../../Login_Controller/SessionContext";
-
+import { green, red } from "@mui/material/colors";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 function PriceTable({ price }) {
   console.log(price);
   return price ? (
@@ -100,97 +103,234 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
       .then((response) => response.json())
       .then((data) => {
         console.log("Success:", data);
-        alert("Report status updated successfully!");
+        handleOpen();
+        setShowSuccess(true);
+        switch (newStatus) {
+          case 2:
+            setSuccessMessage("Request rejected succesfully!");
+            break;
+          case 3:
+            setSuccessMessage("Request sent for rework!");
+            break;
+          default:
+            setSuccessMessage("Request updated successfully!");
+            break;
+        }
       })
       .catch((error) => {
         console.error("Error:", error);
-        alert("Failed to update report status.");
+        handleOpen();
+        showSuccess(false);
+        setErrorMessage(error);
       });
+  };
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const handleOpen = () => setOpenModal(true);
+  const handleCloseModal = () => setOpenModal(false);
+  const [success_message, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [updateStatusV, setUpdateStatusV] = useState(0);
+
+  const handleConfirm = () => {
+    setTimeout(() => {
+      setShowSuccess(false);
+      handleCloseModal();
+    }, 2000); // Close the modal and hide success message after 2 seconds
+    updateStatus(updateStatusV);
+    window.location.reload();
   };
 
   return (
-    <ReactModal
-      isOpen={openNSM}
-      onRequestClose={onClose}
-      contentLabel="Request Details"
-      style={{
-        content: {
-          top: "50%",
-          left: "60%",
-          right: "auto",
-          bottom: "auto",
-          marginRight: "-50%",
-          transform: "translate(-50%, -50%)",
-          backgroundColor: "#FFF", // White background
-          padding: "20px",
-          borderRadius: "10px",
-          maxHeight: "56vh", // Adjust the height as needed
-          maxWidth: "70vw", // Adjust the width as needed
-          // Responsive width
-        },
-        overlay: {
-          backgroundColor: "rgba(0, 0, 0, 0.75)", // Dark overlay
-        },
-      }}
-    >
-      <h2>Request Details</h2>
-      {data ? (
-        <>
-          <div>
-            <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-              Customer: {data.customer_id}
-              <br />
-              Consignee: {data.consignee_id}
-              <br />
-              Plant: {data.plant_name}
-              <br />
-              End Use: {data.end_use_id}
-              <br />
-              Payment Terms ID: {data.payment_terms_id}
-              <br />
-              Valid From: {formatDate(data.valid_from)}
-              <br />
-              Valid To: {formatDate(data.valid_to)}
-              <br />
-              FSC: {data.fsc == 1 ? "Yes" : "No"}
-              <br />
-              Mapping Type:{" "}
-              {data.mappint_type == 1 ? "One to one" : "One to many"}
-            </Typography>
-          </div>
-          <PriceTable price={data.price} />
-          <RemarkBox />
-          {isEditable ? (
-            <>
-              <IconButton>
-                <DoneIcon
+    <>
+      <ReactModal
+        isOpen={openNSM}
+        onRequestClose={onClose}
+        contentLabel="Request Details"
+        style={{
+          content: {
+            top: "50%",
+            left: "60%",
+            right: "auto",
+            bottom: "auto",
+            marginRight: "-50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#FFF", // White background
+            padding: "20px",
+            borderRadius: "10px",
+            maxHeight: "56vh", // Adjust the height as needed
+            maxWidth: "70vw", // Adjust the width as needed
+            // Responsive width
+          },
+          overlay: {
+            backgroundColor: "rgba(0, 0, 0, 0.75)", // Dark overlay
+          },
+        }}
+      >
+        <h2>Request Details</h2>
+        {data ? (
+          <>
+            <div>
+              <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                Customer: {data.customer_id}
+                <br />
+                Consignee: {data.consignee_id}
+                <br />
+                Plant: {data.plant_name}
+                <br />
+                End Use: {data.end_use_id}
+                <br />
+                Payment Terms ID: {data.payment_terms_id}
+                <br />
+                Valid From: {formatDate(data.valid_from)}
+                <br />
+                Valid To: {formatDate(data.valid_to)}
+                <br />
+                FSC: {data.fsc == 1 ? "Yes" : "No"}
+                <br />
+                Mapping Type:{" "}
+                {data.mappint_type == 1 ? "One to one" : "One to many"}
+              </Typography>
+            </div>
+            <PriceTable price={data.price} />
+            <RemarkBox />
+            {isEditable ? (
+              <>
+                <IconButton
                   onClick={() => {
-                    updateStatus(1);
+                    setUpdateStatusV(1);
+                    handleConfirm();
                   }}
-                />
-              </IconButton>
-              <IconButton
-                onClick={() => {
-                  updateStatus(2);
-                }}
-              >
-                <CloseIcon />
-              </IconButton>
-              <IconButton
-                onClick={() => {
-                  updateStatus(3);
-                }}
-              >
-                <ReplayIcon />
-              </IconButton>
-            </>
-          ) : null}
-          <br />
-          <HistoryModal reqId={id} />
-          <button onClick={onClose}>Close</button>
+                >
+                  <DoneIcon />
+                </IconButton>
+                <IconButton
+                  onClick={() => {
+                    setShowSuccess(false);
+                    setErrorMessage(
+                      "Are you sure you want to reject this request?"
+                    );
+                    setOpenModal(true);
+                    setUpdateStatusV(2);
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+                <IconButton
+                  onClick={() => {
+                    setShowSuccess(false);
+                    setErrorMessage(
+                      "Are you sure you want to send this request for rework?"
+                    );
+                    setOpenModal(true);
+                    setUpdateStatusV(3);
+                  }}
+                >
+                  <ReplayIcon />
+                </IconButton>
+              </>
+            ) : null}
+            <br />
+            <HistoryModal reqId={id} />
+            <button onClick={onClose}>Close</button>
+          </>
+        ) : null}
+      </ReactModal>
+      <ReactModal
+        isOpen={openModal}
+        onRequestClose={handleCloseModal}
+        contentLabel="Request Details"
+        style={{
+          content: {
+            top: "50%",
+            left: "60%",
+            right: "auto",
+            bottom: "auto",
+            marginRight: "-50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#FFF", // White background
+            padding: "20px",
+            borderRadius: "10px",
+            maxHeight: "56vh", // Adjust the height as needed
+            maxWidth: "70vw", // Adjust the width as needed
+            // Responsive width
+          },
+          overlay: {
+            backgroundColor: "rgba(0, 0, 0, 0.75)", // Dark overlay
+          },
+        }}
+      >
+        <>
+          {showSuccess ? (
+            <Box sx={{ mt: 2, color: green[500] }}>
+              <CheckCircleOutlineIcon
+                sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
+              />
+              {success_message}
+              <br />
+              <center>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleConfirm}
+                  sx={{ mt: 2 }}
+                >
+                  Confirm
+                </Button>
+              </center>
+            </Box>
+          ) : (
+            <Box sx={{ mt: 2, color: red[500] }}>
+              <ErrorOutlineIcon
+                sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
+              />
+              <br />
+              {updateStatusV < 2 ? (
+                <Typography id="modal-modal-description">
+                  Failed to created request.
+                  <br /> Reason : {errorMessage}
+                </Typography>
+              ) : null}
+              {updateStatusV < 2 ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleConfirm}
+                  sx={{ mt: 2 }}
+                >
+                  Confirm
+                </Button>
+              ) : (
+                <>
+                  <Typography id="modal-modal-description">
+                    {errorMessage}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleConfirm}
+                    sx={{ mt: 2 }}
+                  >
+                    Yes
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => {
+                      setOpenModal(false);
+                      setUpdateStatusV(0);
+                    }}
+                    sx={{ mt: 2 }}
+                  >
+                    No
+                  </Button>
+                </>
+              )}
+            </Box>
+          )}
         </>
-      ) : null}
-    </ReactModal>
+      </ReactModal>
+    </>
   );
 }
 

@@ -532,7 +532,7 @@ function DynamicTable({
           )} */}
         </div>
       );
-    } else if (id == "AP_NSM_HDSM") {
+    } else if (id == "AP_NSM_HDSM" || id == "Validator") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
@@ -561,48 +561,22 @@ function DynamicTable({
     } else if (id == "AM") {
       return (
         <div style={{ display: "flex", alignItems: "center" }}>
-          {!rework && (
+          {rework && (
             <>
               <IconButton
                 onClick={() => {
                   console.log("ROW id is ", row_id);
-                  console.log("REQ id is ", row_id);
-                  setOpenAM(true);
-                  handleView(row_id);
+                  setEditModalOpen(true);
+                  handleEdit(row_id);
                   setId(row_id);
-                  setModalOpen(true);
-                  setAprmId(row_id);
-                  // setEditable(false);
+                  //handleView(row_id);
                   console.log(row_id);
+                  setRuleId(row_id);
                 }}
               >
-                <ViewIcon />
-              </IconButton>
-              <IconButton
-                onClick={() => {
-                  setId(row_id);
-                  setOpenDownloadModal(true);
-                  console.log(row_id);
-                }}
-              >
-                <DownloadIcon />
+                <EditIcon />
               </IconButton>
             </>
-          )}
-          {rework && (
-            <IconButton
-              onClick={() => {
-                console.log("ROW id is ", row_id);
-                setEditModalOpen(true);
-                handleEdit(row_id);
-                setId(row_id);
-                //handleView(row_id);
-                console.log(row_id);
-                setRuleId(row_id);
-              }}
-            >
-              <EditIcon />
-            </IconButton>
           )}
           {approve && (
             <>

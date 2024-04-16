@@ -71,11 +71,9 @@ function PriceChangeRequest({ role, isAM }) {
     ];
   }
   if (role == "AP_NSM_HDSM" || role == "Validator" || role == "VP") {
-    statusFiltersValues = [
-      Array.from(statusFilters.values())[1],
-      Array.from(statusFilters.values())[5],
-    ];
+    statusFiltersValues = [Array.from(statusFilters.values())[1]];
   }
+
   const [filterdId, setFilterdId] = useState(0);
 
   const employee_id = session.employee_id;
@@ -364,6 +362,7 @@ function PriceChangeRequest({ role, isAM }) {
           <DataTable
             isAM={true}
             action_id={role}
+            approve={true}
             url={
               backend_url +
               `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
@@ -412,6 +411,7 @@ function PriceChangeRequest({ role, isAM }) {
           <DataTable
             isAM={true}
             action_id={role}
+            rework={true}
             url={
               backend_url + `api/get_draft?employeeId=${session.employee_id}`
             }
@@ -444,9 +444,8 @@ function PriceChangeRequest({ role, isAM }) {
             action_id={role}
             url={
               backend_url +
-              `api/fetch_request_am_with_status?employeeId=${employee_id}&status=-1`
+              `api/fetch_request_manager_with_status?employeeId=${employee_id}&status=0&role=${session.role}`
             }
-            sendMode={setMode}
             mode={mode}
           />
         );

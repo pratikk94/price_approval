@@ -2885,6 +2885,7 @@ app.get("/api/fetch_blocked_requests", async (req, res) => {
 
 app.get("/api/fetch_request_manager_with_status", async (req, res) => {
   const role = req.query.role;
+  console.log(role);
   if (role === "NSM" || role == "NSMT") {
     FetchNSMDataWithStatus(
       req.query.employeeId,
@@ -2894,6 +2895,8 @@ app.get("/api/fetch_request_manager_with_status", async (req, res) => {
     );
   } else if (role === "HDSM") {
     FetchHDSMDataWithStatus(req.query.employeeId, req.query.status, res);
+  } else if (role === "Validator") {
+    FetchValidatorDataWithStatus(req.query.employeeId, req.query.status, res);
   }
 });
 

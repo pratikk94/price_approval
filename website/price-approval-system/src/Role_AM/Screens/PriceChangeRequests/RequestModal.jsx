@@ -100,12 +100,15 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       setShowSuccess(false);
       handleCloseModal();
     }, 2000); // Close the modal and hide success message after 2 seconds
+    if (showSuccess) window.location.reload();
   };
   const [errorMessage, setErrorMessage] = useState("");
-  const handleFormSubmit = (event) => {
+
+  const handleFormSubmit = (event, draft = false) => {
     handleOpen();
     setShowSuccess(false);
     event.preventDefault();
+
     if (
       validFrom != "" &&
       validTo != "" &&
@@ -154,9 +157,14 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
           }
         }
 
+        if (tableRowsData.length == 0) {
+          setErrorMessage("Please add grade ");
+          setStopExecution(true);
+        }
+
         console.log("CP_1");
 
-        formData["isDraft"] = isDraft;
+        formData["isDraft"] = draft;
         formData["am_id"] = employee_id;
 
         const val = JSON.stringify(formData);
@@ -216,7 +224,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       });
       setValidFrom(data.valid_from);
       setValidTo(data.valid_to);
-      setFSC(data.fsc);
+      setFSC(data.fsc == 1 ? "Y" : "N");
       console.log(data.fsc);
       //setMap(data.mappint_type);
       setPriceDetails(data.price); // Assuming this directly maps to your price details state structure
@@ -479,8 +487,10 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
               <Button
                 variant="contained"
                 onClick={(e) => {
-                  setIsDraft(true);
-                  handleFormSubmit(e);
+                  setIsDraft((isDraft) => {
+                    handleFormSubmit(e, true);
+                    return true;
+                  });
                 }}
                 color="primary"
               >
