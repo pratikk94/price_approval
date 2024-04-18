@@ -193,7 +193,7 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
               </Typography>
             </div>
             <PriceTable price={data.price} />
-            <RemarkBox />
+            <RemarkBox request_id={data.request_name} />
             {isEditable ? (
               <>
                 <IconButton

@@ -96,7 +96,7 @@ function PriceViewModal({
 }) {
   const { session } = useSession();
   const employee_id = session.employee_id;
-
+  console.log(data);
   const [open, setOpen] = useState(openRM);
   const updateStatus = (newStatus) => {
     let reportData = {
@@ -214,9 +214,9 @@ function PriceViewModal({
               </Typography>
             </div>
             <PriceTable price={data.price} />
-            {session.role == "RM" && <FileHandling />}
+            <FileHandling />
 
-            {session.role != "AM" && <RemarkBox />}
+            <RemarkBox request_id={data.request_name} />
 
             {isEditable ? (
               <>

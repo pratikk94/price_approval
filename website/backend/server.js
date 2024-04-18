@@ -4,7 +4,6 @@ const bodyParser = require("body-parser");
 const sql = require("mssql");
 const cors = require("cors");
 const multer = require("multer");
-
 const fs = require("fs");
 const nodemailer = require("nodemailer");
 const upload = multer({ storage: multer.memoryStorage() });
@@ -15,6 +14,7 @@ const corsOptions = {
 const app = express();
 const PORT = process.env.PORT || 3001;
 const { format } = require("date-fns");
+const { listenerCount } = require("events");
 app.use(cors(corsOptions));
 app.use(express.json());
 // Configuration object for your SQL Server
@@ -175,46 +175,6 @@ async function sendMail() {
     console.log("Message sent: %s", info.messageId);
   });
 }
-
-app.post("/api/setPrice", async (req, res) => {
-  try {
-    await sql.connect(config);
-    const {
-      maxAgreedPrice,
-      minAgreedPrice,
-      maxSpecialDiscount,
-      minSpecialDiscount,
-      maxReelDiscount,
-      minReelDiscount,
-      maxPackupCharge,
-      minPackupCharge,
-      maxTPC,
-      minTPC,
-      maxOfflineDiscount,
-      minOfflineDiscount,
-    } = req.body;
-
-    const result = await sql.query`INSERT INTO setPrice (
-          maxAgreedPrice, minAgreedPrice,
-          maxSpecialDiscount, minSpecialDiscount,
-          maxReelDiscount, minReelDiscount,
-          maxPackupCharge, minPackupCharge,
-          maxTPC, minTPC,
-          maxOfflineDiscount, minOfflineDiscount
-      ) VALUES (
-          ${maxAgreedPrice}, ${minAgreedPrice},
-          ${maxSpecialDiscount}, ${minSpecialDiscount},
-          ${maxReelDiscount}, ${minReelDiscount},
-          ${maxPackupCharge}, ${minPackupCharge},
-          ${maxTPC}, ${minTPC},
-          ${maxOfflineDiscount}, ${minOfflineDiscount}
-      )`;
-    res.json({ message: "Data inserted successfully", result });
-  } catch (err) {
-    console.error("Database connection error", err);
-    res.status(500).send("Server error");
-  }
-});
 
 async function changeReqIds(tempRequestIds, newRequestId) {
   let pool = null;
@@ -502,6 +462,8 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
       .query(query);
 
     console.log("Request inserted successfully.");
+
+    return requestName;
   } catch (err) {
     console.error("SQL error", err);
   }
@@ -610,8 +572,11 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
     const ids = idsResult.recordset.map((row) => row.request_id);
     const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
+    const rms_i = idsResult.recordset.map((row) => row.rm_id);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const nsms_i = idsResult.recordset.map((row) => row.nsm_id);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const hdsm_i = idsResult.recordset.map((row) => row.hdsm_id);
     const validators = idsResult.recordset.map((row) => row.validator_status);
     let details = await fetchPriceApprovalDetails(
       ids,
@@ -620,8 +585,11 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       status,
       ams,
       rms,
+      rms_i,
       nsms,
+      nsms_i,
       hdsm,
+      hdsm_i,
       validators
     );
     if (details != undefined && details.length > 0) {
@@ -815,8 +783,11 @@ async function FetchDraft(employeeId, res) {
     const ids = idsResult.recordset.map((row) => row.request_id);
     const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
+    const rms_i = idsResult.recordset.map((row) => row.rm_id);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const nsms_i = idsResult.recordset.map((row) => row.nsm_id);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const hdsm_i = idsResult.recordset.map((row) => row.hdsm_id);
     const validators = idsResult.recordset.map((row) => row.validator_status);
     const details = await fetchPriceApprovalDetails(
       ids,
@@ -825,8 +796,11 @@ async function FetchDraft(employeeId, res) {
       0,
       ams,
       rms,
+      rms_i,
       nsms,
+      nsms_i,
       hdsm,
+      hdsm_i,
       validators
     );
     if (details != undefined && details.length > 0) {
@@ -935,8 +909,11 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
     const ids = idsResult.recordset.map((row) => row.request_id);
     const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
+    const rms_i = idsResult.recordset.map((row) => row.rm_id);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const nsms_i = idsResult.recordset.map((row) => row.nsm_id);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const hdsm_i = idsResult.recordset.map((row) => row.hdsm_id);
     const validators = idsResult.recordset.map((row) => row.validator_status);
 
     console.log("IDs:", ids);
@@ -948,8 +925,11 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
         status,
         ams,
         rms,
+        rms_i,
         nsms,
+        nsms_i,
         hdsm,
+        hdsm_i,
         validators
       );
 
@@ -1077,8 +1057,11 @@ async function FetchNSMDataWithStatus(employeeId, status, res, isNsmT) {
     const ids = idsResult.recordset.map((row) => row.request_id);
     const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
+    const rms_i = idsResult.recordset.map((row) => row.rm_id);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const nsms_i = idsResult.recordset.map((row) => row.nsm_id);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const hdsm_i = idsResult.recordset.map((row) => row.hdsm_id);
     const validators = idsResult.recordset.map((row) => row.validator_status);
 
     console.log("IDs:", ids);
@@ -1090,8 +1073,11 @@ async function FetchNSMDataWithStatus(employeeId, status, res, isNsmT) {
         status,
         ams,
         rms,
+        rms_i,
         nsms,
+        nsms_i,
         hdsm,
+        hdsm_i,
         validators
       );
 
@@ -1205,8 +1191,11 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
     const ids = idsResult.recordset.map((row) => row.request_id);
     const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
+    const rms_i = idsResult.recordset.map((row) => row.rm_id);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const nsms_i = idsResult.recordset.map((row) => row.nsm_id);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const hdsm_i = idsResult.recordset.map((row) => row.hdsm_id);
     const validators = idsResult.recordset.map((row) => row.validator_status);
 
     console.log("IDs:", ids);
@@ -1218,8 +1207,11 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
         status,
         ams,
         rms,
+        rms_i,
         nsms,
+        nsms_i,
         hdsm,
+        hdsm_i,
         validators
       );
 
@@ -1333,8 +1325,11 @@ async function FetchValidatorDataWithStatus(employeeId, status, res) {
     const ids = idsResult.recordset.map((row) => row.request_id);
     const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
+    const rms_id = idsResult.recordset.map((row) => row.rm_id);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const nsms_id = idsResult.recordset.map((row) => row.nsm_id);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const hdsm_id = idsResult.recordset.map((row) => row.hdsm_id);
     const validators = idsResult.recordset.map((row) => row.validator_status);
     const details = await fetchPriceApprovalDetails(
       ids,
@@ -1343,8 +1338,11 @@ async function FetchValidatorDataWithStatus(employeeId, status, res) {
       status,
       ams,
       rms,
+      rms_id,
       nsms,
+      nsms_id,
       hdsm,
+      hdsm_id,
       validators
     );
     if (details != undefined && details.length > 0) {
@@ -1455,8 +1453,11 @@ async function FetchBlockedStatus(employeeId, status, res) {
     const ids = idsResult.recordset.map((row) => row.request_id);
     const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
+    const rms_i = idsResult.recordset.map((row) => row.rm_id);
     const nsms = idsResult.recordset.map((row) => row.nsm_status);
+    const nsms_i = idsResult.recordset.map((row) => row.nsm_id);
     const hdsm = idsResult.recordset.map((row) => row.hdsm_status);
+    const hdsm_i = idsResult.recordset.map((row) => row.hdsm_id);
     const validators = idsResult.recordset.map((row) => row.validator_status);
 
     console.log("IDs:", ids);
@@ -1468,8 +1469,11 @@ async function FetchBlockedStatus(employeeId, status, res) {
         status,
         ams,
         rms,
+        rms_i,
         nsms,
+        nsms_i,
         hdsm,
+        hdsm_i,
         validators
       );
 
@@ -1538,21 +1542,38 @@ async function AssignStatus(region, roleIndex, action) {
       // Process action based on the provided action and roleIndex
       if ((action == "1" || action == "5") && roles[roleIndex] > -1) {
         statuses[roleIndex] = parseInt(action);
-        // Find the next positive role and set its status to 0
 
+        // If higher roles are already approved, all lower have ther status
+        // set to 1
+        for (let j = 0; j < roleIndex + 1; j++) {
+          if (roles[j] > -1) {
+            statuses[j] = 1;
+          }
+        }
+
+        // Check if higher role is actually at same role.
+        // Find the next positive role and set its status to 0
         for (let i = roleIndex + 1; i < roles.length; i++) {
-          if (!roles.some((element) => element > roles[roleIndex])) {
-            for (let j = i; j < region.length; j++) {
-              if (roles[j] > -1) {
-                statuses[j] = 1;
-              }
-            }
+          // if nsm and hdsm are on same level
+          if (roles[i - 1] == roles[i]) {
+            statuses[roleIndex + 1] = 1;
+          }
+          // if 3 higher roles on same level
+          else if (roles[i] == roles[i + 1] && roles[i] == roles[i + 2]) {
+            statuses[i] = 0;
+            statuses[i + 1] = 0;
+            statuses[i + 2] = 0;
             break;
           }
-          if (roles[i] > -1) {
+          // if 2 higher roles on same level
+          else if (roles[i] == roles[i + 1]) {
             statuses[i] = 0;
+            statuses[i + 1] = 0;
+            break;
           }
-          if (roles[i] != roles[i + 1]) {
+          // if 1 just higher role on same level
+          else {
+            statuses[i] = 0;
             break;
           }
         }
@@ -1612,8 +1633,11 @@ async function fetchPriceApprovalDetails(
   status,
   ams,
   rms,
+  rms_i,
   nsms,
+  nsms_i,
   hdsms,
+  hdsms_i,
   validators
 ) {
   let pool = null;
@@ -1745,11 +1769,28 @@ WHERE
                   latest_status_updated_by = "HDSM";
                 }
               }
+
+            if (hdsms[id] == 0 && nsms[id] == 0) {
+              curr_status = "\nPending with NSM / HDSM";
+            }
+            console.log(`I am outside ${hdsms[id]} and ${nsms[id]}`);
+            if (hdsms[id] == 1 && nsms[id] == 1) {
+              console.log(`I am hereee ${hdsms_i[id]} and ${nsms_i[id]}`);
+              if (hdsms_i[id] != null) {
+                curr_status = "\nApproved by HDSM";
+                latest_status_updated_by = "HDSM";
+              } else {
+                console.log(`I am hereee NSM has approved`);
+                curr_status = "\nApproved by NSM";
+                latest_status_updated_by = "NSM";
+              }
+            }
+
             if (validators[id] != null)
               if (validators[id].length > 0) {
                 if (validators[id] == -2) {
                   curr_status = "Sent for rework by Validator";
-                  lastest_status_updated_by = "Validator";
+                  latest_status_updated_by = "Validator";
                 }
                 if (validators[id] == 0) {
                   curr_status = "\nPending with Validator";
@@ -1840,6 +1881,155 @@ FROM
     }
   }
 }
+
+async function getAllUpdatersWithLatestUpdateAndRoleHandlingInvalidDate(
+  requestId
+) {
+  try {
+    await sql.connect(config);
+
+    const query = `
+        SELECT id, am_id, am_status_updated_at, am_status,
+               rm_id, rm_status_updated_at, rm_status,
+               nsm_id, nsm_status_updated_at, nsm_status,
+               hdsm_id, hdsm_status_updated_at, hdsm_status,
+               validator_id, validator_status_updated_at, validator_status
+        FROM [transaction]
+        WHERE request_id = ${requestId}
+    `;
+
+    const result = await sql.query(query);
+    if (result.recordset.length === 0) {
+      console.log("No updates found.");
+      return "No updates found.";
+    }
+
+    const messagesPromises = result.recordset.map(async (row) => {
+      const id = row.id;
+      const userResults = await Promise.all([
+        getUserInfo(row.am_id),
+        getUserInfo(row.rm_id),
+        getUserInfo(row.nsm_id),
+        getUserInfo(row.hdsm_id),
+        getUserInfo(row.validator_id),
+      ]);
+
+      const updatesSet = new Set();
+      console.log(row);
+      for (let i = 0; i < userResults.length; i++) {
+        const userInfo = userResults[i];
+        console.log(userInfo);
+        if (userInfo != null) {
+          const statusField = `${userInfo.role}_status`;
+          const timestampField = `${userInfo.role}_status_updated_at`;
+
+          if (row[userInfo.idField] !== "-1" && row[timestampField]) {
+            const formattedTimestamp = row[timestampField];
+            let status = getStatus(row[statusField.toLowerCase()]);
+
+            if (i == 0) {
+              status = "Submitted";
+            }
+            const update = `${id}: ${userInfo.role.toUpperCase()} (${status}). Updated by ${
+              userInfo.name
+            } on ${formattedTimestamp}`;
+            updatesSet.add(update); // Add the update to the Set
+          }
+        }
+      }
+
+      return Array.from(updatesSet); // Return unique updates as an array
+    });
+
+    const messagesArrays = await Promise.all(messagesPromises); // Array of arrays
+    const messages = messagesArrays.flat(); // Flatten the array of arrays
+
+    if (messages.length > 0) {
+      console.log(messages);
+      return messages;
+    } else {
+      console.log("No valid updates found.");
+      return "No valid updates found.";
+    }
+  } catch (err) {
+    console.error("An error occurred:", err);
+    return "Error fetching updaters with latest updates and roles.";
+  } finally {
+    await sql.close();
+  }
+}
+
+async function getUserInfo(id) {
+  const userResult =
+    await sql.query`SELECT um.employee_name as employee_name, dr.role as role FROM user_master um LEFT JOIN define_roles dr ON um.employee_id = dr.employee_id WHERE dr.employee_id  = ${id}`;
+  if (userResult.recordset.length > 0) {
+    const userInfo = userResult.recordset[0];
+
+    return {
+      name: userInfo.employee_name,
+      role: userInfo.role.toLowerCase(),
+      idField: `${userInfo.role.toLowerCase()}_id`,
+    };
+  } else {
+    return null;
+  }
+}
+
+function getStatus(status) {
+  console.log(status);
+  switch (status) {
+    case "1":
+      return "Approved";
+    case "2":
+      return "Rejected";
+    case "3":
+      return "Rework";
+    case "0":
+      return "Pending";
+    default:
+      return "Unknown";
+  }
+}
+
+app.post("/api/setPrice", async (req, res) => {
+  try {
+    await sql.connect(config);
+    const {
+      maxAgreedPrice,
+      minAgreedPrice,
+      maxSpecialDiscount,
+      minSpecialDiscount,
+      maxReelDiscount,
+      minReelDiscount,
+      maxPackupCharge,
+      minPackupCharge,
+      maxTPC,
+      minTPC,
+      maxOfflineDiscount,
+      minOfflineDiscount,
+    } = req.body;
+
+    const result = await sql.query`INSERT INTO setPrice (
+          maxAgreedPrice, minAgreedPrice,
+          maxSpecialDiscount, minSpecialDiscount,
+          maxReelDiscount, minReelDiscount,
+          maxPackupCharge, minPackupCharge,
+          maxTPC, minTPC,
+          maxOfflineDiscount, minOfflineDiscount
+      ) VALUES (
+          ${maxAgreedPrice}, ${minAgreedPrice},
+          ${maxSpecialDiscount}, ${minSpecialDiscount},
+          ${maxReelDiscount}, ${minReelDiscount},
+          ${maxPackupCharge}, ${minPackupCharge},
+          ${maxTPC}, ${minTPC},
+          ${maxOfflineDiscount}, ${minOfflineDiscount}
+      )`;
+    res.json({ message: "Data inserted successfully", result });
+  } catch (err) {
+    console.error("Database connection error", err);
+    res.status(500).send("Server error");
+  }
+});
 
 app.post("/api/login", async (req, res) => {
   const employee_id = req.body.employee_id;
@@ -2422,7 +2612,6 @@ app.get("/api/price_requests", async (req, res) => {
         FROM plant p
         JOIN STRING_SPLIT(pra.plant, ',') AS splitPlantIds ON p.id = TRY_CAST(splitPlantIds.value AS INT)
     ) AS plant_name,
-      rs.created_at,rs.last_updated_at,rs.status_updated_by_id,
       (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
           FROM customer c
           JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
@@ -2434,14 +2623,14 @@ app.get("/api/price_requests", async (req, res) => {
       (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
           FROM customer c
           JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
-      ) AS EndUseNames
+      ) AS EndUseNames,
+      rst.request_name as request_name
   FROM 
       price_approval_requests pra
   LEFT JOIN 
       price_approval_requests_price_table prt ON pra.req_id = prt.req_id
-    LEFT JOIN
-        report_status rs ON pra.req_id = rs.report_id
-    
+  LEFT JOIN
+      request_status rst ON pra.req_id = rst.parent_req_id
   WHERE 
       pra.req_id = @reqId
   `
@@ -2461,6 +2650,7 @@ app.get("/api/price_requests", async (req, res) => {
           valid_to: row.valid_to,
           fsc: row.fsc,
           mappint_type: row.mappint_type,
+          request_name: row.request_name,
           price: [],
         };
       }
@@ -2819,7 +3009,7 @@ app.post("/api/add_price_request", async (req, res) => {
       console.log(result);
     }
 
-    insertRequest(
+    const req_name = await insertRequest(
       req.body.isDraft == true
         ? "D"
         : req.body.mode == undefined
@@ -2837,7 +3027,7 @@ app.post("/api/add_price_request", async (req, res) => {
       .then(() => console.log("Finished processing."))
       .catch((err) => console.error(err));
 
-    res.status(200).send(JSON.stringify("Data added successfully"));
+    res.json({ message: "Data added successfully", id: req_name });
   } catch (err) {
     console.error("Database operation failed:", err);
     res.status(500).send("Failed to add data");
@@ -3187,111 +3377,6 @@ app.get("/api/fetch_price_request_by_id", async (req, res) => {
   }
 });
 
-async function getAllUpdatersWithLatestUpdateAndRoleHandlingInvalidDate(
-  requestId
-) {
-  try {
-    await sql.connect(config);
-
-    const query = `
-        SELECT id, am_id, am_status_updated_at, am_status,
-               rm_id, rm_status_updated_at, rm_status,
-               nsm_id, nsm_status_updated_at, nsm_status,
-               hdsm_id, hdsm_status_updated_at, hdsm_status,
-               validator_id, validator_status_updated_at, validator_status
-        FROM [transaction]
-        WHERE request_id = ${requestId}
-    `;
-
-    const result = await sql.query(query);
-    if (result.recordset.length === 0) {
-      console.log("No updates found.");
-      return "No updates found.";
-    }
-
-    const messagesPromises = result.recordset.map(async (row) => {
-      const id = row.id;
-      const userResults = await Promise.all([
-        getUserInfo(row.am_id),
-        getUserInfo(row.rm_id),
-        getUserInfo(row.nsm_id),
-        getUserInfo(row.hdsm_id),
-        getUserInfo(row.validator_id),
-      ]);
-
-      const updatesSet = new Set();
-      console.log(row);
-      for (let i = 0; i < userResults.length; i++) {
-        const userInfo = userResults[i];
-        console.log(userInfo);
-        if (userInfo != null) {
-          const statusField = `${userInfo.role}_status`;
-          const timestampField = `${userInfo.role}_status_updated_at`;
-
-          if (row[userInfo.idField] !== "-1" && row[timestampField]) {
-            const formattedTimestamp = row[timestampField];
-            const status = getStatus(row[statusField.toLowerCase()]);
-            const update = `${id}: ${userInfo.role.toUpperCase()} update (${status}). Updated by ${
-              userInfo.name
-            } at ${formattedTimestamp}`;
-            updatesSet.add(update); // Add the update to the Set
-          }
-        }
-      }
-
-      return Array.from(updatesSet); // Return unique updates as an array
-    });
-
-    const messagesArrays = await Promise.all(messagesPromises); // Array of arrays
-    const messages = messagesArrays.flat(); // Flatten the array of arrays
-
-    if (messages.length > 0) {
-      console.log(messages);
-      return messages;
-    } else {
-      console.log("No valid updates found.");
-      return "No valid updates found.";
-    }
-  } catch (err) {
-    console.error("An error occurred:", err);
-    return "Error fetching updaters with latest updates and roles.";
-  } finally {
-    await sql.close();
-  }
-}
-
-async function getUserInfo(id) {
-  const userResult =
-    await sql.query`SELECT um.employee_name as employee_name, dr.role as role FROM user_master um LEFT JOIN define_roles dr ON um.employee_id = dr.employee_id WHERE dr.employee_id  = ${id}`;
-  if (userResult.recordset.length > 0) {
-    const userInfo = userResult.recordset[0];
-
-    return {
-      name: userInfo.employee_name,
-      role: userInfo.role.toLowerCase(),
-      idField: `${userInfo.role.toLowerCase()}_id`,
-    };
-  } else {
-    return null;
-  }
-}
-
-function getStatus(status) {
-  console.log(status);
-  switch (status) {
-    case "1":
-      return "Approved";
-    case "2":
-      return "Rejected";
-    case "3":
-      return "Rework";
-    case "0":
-      return "Pending";
-    default:
-      return "Unknown";
-  }
-}
-
 app.get("/api/get_history_of_price_request", async (req, res) => {
   const messages =
     await getAllUpdatersWithLatestUpdateAndRoleHandlingInvalidDate(
@@ -3317,6 +3402,7 @@ app.get("/api/get_history_of_price_request", async (req, res) => {
   console.log(result);
   res.json(result);
 });
+
 app.post("/api/upload_file", upload.single("file"), async (req, res) => {
   if (!req.file || !req.body.request_id) {
     return res.status(400).send("No file uploaded or request_id missing.");
@@ -3401,7 +3487,92 @@ app.post("/api/delete_ids", async (req, res) => {
   }
 });
 
+app.post("/api/remarks", async (req, res) => {
+  try {
+    const { requestId, remarksText, remarkAuthorId } = req.body;
+
+    // Ensure all fields are provided
+    if (!(requestId && remarksText && remarkAuthorId)) {
+      return res.status(400).send("All fields are required");
+    }
+
+    // Connect to the database
+    await sql.connect(config);
+
+    // Get current date and time in UTC
+    const createdAt = new Date().toISOString();
+
+    // Insert the data including created_at
+    const result = await sql.query`
+          INSERT INTO Remarks (request_id, user_id, comment, created_at)
+          VALUES (${requestId}, ${remarkAuthorId}, ${remarksText}, ${createdAt})
+      `;
+
+    // Send success response
+    res.status(201).send({
+      message: "Remark added successfully",
+    });
+  } catch (err) {
+    console.error("SQL error", err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.get("/api/remarks", async (req, res) => {
+  try {
+    // Connect to the database
+    await sql.connect(config);
+
+    // Fetch all remarks
+    const result =
+      await sql.query`SELECT id, request_id, user_id as authorId, comment as text, created_at as timestamp FROM Remarks where request_id = ${req.query.requestId} ORDER BY created_at DESC `;
+
+    // Send the fetched remarks
+    res.status(200).json(result.recordset);
+  } catch (err) {
+    console.error("SQL error", err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.put("/api/update-request-ids", async (req, res) => {
+  const { oldRequestIds, newRequestId } = req.body;
+
+  if (!oldRequestIds || !newRequestId) {
+    return res
+      .status(400)
+      .send("Both oldRequestIds and newRequestId are required.");
+  }
+
+  try {
+    await sql.connect(config);
+
+    // Prepare the query to update request_ids
+    const query = `
+          UPDATE Remarks
+          SET request_id = @newRequestId
+          WHERE request_id IN (${oldRequestIds
+            .map((id) => `'${id}'`)
+            .join(", ")})
+      `;
+
+    // Execute the query with parameterized input
+    let request = new sql.Request();
+    request.input("newRequestId", sql.VarChar, newRequestId);
+    const result = await request.query(query);
+
+    res.json({
+      message: "Request IDs updated successfully",
+      affectedRows: result.rowsAffected[0],
+    });
+  } catch (err) {
+    console.error("SQL error", err);
+    res.status(500).send("Failed to update request IDs");
+  }
+});
+
 //sendMail();
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

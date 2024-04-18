@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
   Button,
@@ -14,21 +14,70 @@ import {
 } from "@mui/material";
 import Spacewrapper from "../util/SpacingWrapper";
 import SendIcon from "@mui/icons-material/Send";
+import { backend_url } from "../../util";
+import { useSession } from "../../Login_Controller/SessionContext";
 
-function RemarkBox() {
+function RemarkBox({ request_id }) {
   const [remarks, setRemarks] = useState([]);
   const [remarkText, setRemarkText] = useState("");
+  const { session } = useSession();
+  const [requestIds, setRequestIds] = useState([]);
+
+  useEffect(() => {
+    // Load request_ids from localStorage
+    fetch(`${backend_url}api/remarks?requestId=${request_id}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setRemarks((prevRemarks) => [...prevRemarks, ...data]); // Combine remarks from multiple requests
+      })
+      .catch((error) => console.error("Error fetching remarks:", error));
+  }, []);
 
   const handleAddRemark = () => {
-    const newRemark = {
-      id: remarks.length + 1, // Simple ID generation
-      text: remarkText,
-      author: "User Name", // Static author name, replace with dynamic data if available
-      timestamp: new Date(),
+    var t_req_id =
+      request_id ?? session.employee_id + "-" + new Date().getTime();
+    const storedRequestIds =
+      JSON.parse(localStorage.getItem("request_ids")) || [];
+    setRequestIds(storedRequestIds);
+    localStorage.setItem(
+      "request_ids",
+      JSON.stringify([...storedRequestIds, t_req_id])
+    );
+    setRequestIds(localStorage.getItem("request_ids"));
+
+    console.log("Request IDs: ", localStorage.getItem("request_ids"));
+
+    const postData = {
+      requestId: t_req_id, // This should ideally come from user input or another part of the application logic
+      remarksText: remarkText,
+      remarkAuthorId: session.employee_id,
     };
-    setRemarks((prevRemarks) => [...prevRemarks, newRemark]);
-    setRemarkText(""); // Reset input field
+
+    fetch(`${backend_url}api/remarks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(postData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const newRemark = {
+          id: remarks.length + 1,
+          text: remarkText,
+          author: session.employee_id || "User Name",
+          timestamp: new Date(),
+        };
+        setRemarks((prevRemarks) => [newRemark, ...prevRemarks]);
+
+        setRemarkText(""); // Reset input field
+      })
+      .catch((error) => {
+        console.error("Error posting remark:", error);
+      });
   };
+
+  console.log("RequestID -> ", request_id);
 
   return (
     <div>

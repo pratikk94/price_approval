@@ -76,6 +76,8 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [openAlert, setOpenAlert] = useState(false);
   const [scenarioID, setScenarioId] = useState(0);
   const [stopExecution, setStopExecution] = useState(false);
+  const [newRequestId, setNewRequestId] = useState("");
+
   const alertBoxScenarios = {
     0: {
       title: "One to many Mapping",
@@ -97,10 +99,9 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const handleCloseModal = () => setOpenModal(false);
   const handleConfirm = () => {
     setTimeout(() => {
-      setShowSuccess(false);
       handleCloseModal();
+      window.location.reload();
     }, 2000); // Close the modal and hide success message after 2 seconds
-    if (showSuccess) window.location.reload();
   };
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -174,8 +175,9 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
           if (validFrom < validTo) {
             setShowSuccess(true);
             handleOpen();
+
             submitFormData(formData);
-            handleConfirm();
+            //handleConfirm();
           } else {
             setShowSuccess(false);
             setOpenModal(true);
@@ -186,15 +188,15 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         }
       }
     } else if (selectedCustomers.length == 0) {
-      setErrorMessage("Please Select Customer(s)");
+      setErrorMessage("Please select Customer(s)");
     } else if (selectedConsignees.length == 0) {
-      setErrorMessage("Please Select Consignee(s)");
+      setErrorMessage("Please select Consignee(s)");
     } else if (paymentTerms == undefined) {
-      setErrorMessage("Please Select Payment Terms");
+      setErrorMessage("Please select Payment Terms");
     } else if (validFrom == "") {
-      setErrorMessage("Pleas Select Valid From date");
+      setErrorMessage("Please select Valid From date");
     } else if (validTo == "") {
-      setErrorMessage("Please Select Valid To date");
+      setErrorMessage("Please select Valid To date");
     } else {
       console.log("All checks met");
     }
@@ -203,6 +205,22 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     } else {
       oneToManyMapping(selectedCustomers, selectedConsignees);
     }
+  };
+
+  const updateRequestIds = async (oldRequestIds, newRequestId) => {
+    const response = await fetch(`${backend_url}api/update-request-ids`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ oldRequestIds, newRequestId }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    return response.json();
   };
 
   useEffect(() => {
@@ -272,6 +290,21 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         body: JSON.stringify(formData),
       });
 
+      const oldRequestIds =
+        JSON.parse(localStorage.getItem("request_ids")) || [];
+      const requestData = await response.json();
+      console.log(requestData["id"]);
+      if (oldRequestIds.length > 0) {
+        updateRequestIds(oldRequestIds, requestData["id"])
+          .then((response) => {
+            console.log("Update successful:", response);
+            // Handle further actions like notifying the user
+          })
+          .catch((error) => {
+            console.error("Failed to update request IDs:", error);
+            // Handle error (e.g., showing error message to the user)
+          });
+      }
       // Check for HTTP errors
       if (!response.ok) {
         setShowSuccess(false);
@@ -284,8 +317,8 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         //setOpenModal(true);
       }
       // Extract the JSON body from the response (it should contain the requestId)
-      const responseData = await response.json();
-      localStorage.removeItem("request_id");
+
+      localStorage.removeItem("request_ids");
 
       // Assuming you have state or methods to handle UI updates post-submission
       // setScenarioId(newRequestId); // Example: Update state with the new request ID

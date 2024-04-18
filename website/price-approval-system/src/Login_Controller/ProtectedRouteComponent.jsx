@@ -28,6 +28,8 @@ const ProtectedRoute = () => {
     const data = await response.json();
     console.log(data);
     if (data.loggedOut) {
+      localStorage.removeItem("request_id");
+      localStorage.removeItem("request_ids");
       setSession({ loggedIn: false, role: null }); // Update session context
       navigate("/login"); // Redirect to login page
     } else {

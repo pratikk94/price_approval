@@ -48,6 +48,7 @@ import PriceViewModal from "../../Role_Approvers_RM/Components/ViewModal";
 import EmployeeEditModal from "../../Role_Business_Admin/Components/EmployeeEditModal";
 import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
 import ViewModalNSM from "../../Role_Approvers_NSM_HDSM/Components/ViewModal";
+import { setDayOfYear } from "date-fns";
 function DynamicTable({
   url,
   action_id,
@@ -461,6 +462,7 @@ function DynamicTable({
                 onClick={() => {
                   setId(row_id);
                   console.log(row_id);
+                  setOpenDownloadModal(true);
                 }}
               >
                 <DownloadIcon />
@@ -552,6 +554,8 @@ function DynamicTable({
             onClick={() => {
               setId(row_id);
               console.log(row_id);
+
+              setOpenDownloadModal(true);
             }}
           >
             <DownloadIcon />

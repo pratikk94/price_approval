@@ -67,16 +67,16 @@ function MyDocument({ data }) {
         <Page size="A4" style={styles.page} orientation="landscape">
           <View style={styles.section}>
             <Text>Request ID: {data.req_id}</Text>
-            <Text>Customer ID: {data.customer_id}</Text>
-            <Text>Consignee ID: {data.consignee_id}</Text>
-            <Text>Plant Name: {data.plant_name}</Text>
-            <Text>End Use ID: {data.end_use_id}</Text>
-            <Text>End Use Segment ID: {data.end_use_segment_id}</Text>
+            <Text>Customer: {data.customer_id}</Text>
+            <Text>Consignee: {data.consignee_id}</Text>
+            <Text>One to one mapping: {data.mapping_type}</Text>
+            <Text>Plant : {data.plant_name}</Text>
+            <Text>End Use: {data.end_use_id}</Text>
+
             <Text>Payment Terms ID: {data.payment_terms_id}</Text>
             <Text>Valid From: {data.valid_from}</Text>
             <Text>Valid To: {data.valid_to}</Text>
-            <Text>FSC: {data.fsc}</Text>
-            <Text>Mapping Type: {data.mapping_type}</Text>
+            <Text>FSC: {data.fsc == 1 ? "Yes" : "No"}</Text>
           </View>
 
           <View style={styles.table}>
