@@ -54,18 +54,15 @@ const CustomerSelect = ({
       setSelectedOptions(selected);
       if (id === 1) customerState(selected);
       if (id === 2) consigneeState(selected);
-      if (id === 3) endUseState(selected);
     }
   };
 
   const handleBlur = () => {
-    console.log("Select has lost focus");
     if (id != 3) checkCheckBox();
-    // Run any function or logic you need here
   };
 
   // console.log(disabled);
-  return (
+  return id != 3 ? (
     <Select
       isMulti
       disabled={disabled}
@@ -73,6 +70,20 @@ const CustomerSelect = ({
       options={customers}
       value={selectedOptions}
       onChange={handleChange}
+      onBlur={handleBlur}
+      closeMenuOnSelect={false}
+      placeholder={`Select ${name}`}
+    />
+  ) : (
+    <Select
+      disabled={disabled}
+      name={name}
+      options={customers}
+      value={selectedOptions}
+      onChange={(e) => {
+        setSelectedOptions(e);
+        endUseState(e);
+      }}
       onBlur={handleBlur}
       closeMenuOnSelect={false}
       placeholder={`Select ${name}`}

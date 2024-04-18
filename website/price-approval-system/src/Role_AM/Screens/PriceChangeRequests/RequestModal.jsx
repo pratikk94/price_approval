@@ -73,11 +73,11 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [selectedCustomerrIDs, setSelectedCustomerIDs] = useState([]);
   const [selectedConsigneeIDs, setSelectedConsigneeIDs] = useState([]);
   const [selectedEndUseIDs, setSelectedEndUseIDs] = useState([]);
-  const [openAlert, setOpenAlert] = useState(false);
   const [scenarioID, setScenarioId] = useState(0);
-  const [stopExecution, setStopExecution] = useState(false);
+  const [stopExecution, setStopExecution] = useState(true);
   const [newRequestId, setNewRequestId] = useState("");
-
+  const [o2oMapping, setO2oMapping] = useState(false);
+  const [handleMapping, setHandleMapping] = useState(0);
   const alertBoxScenarios = {
     0: {
       title: "One to many Mapping",
@@ -98,10 +98,18 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const handleOpen = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
   const handleConfirm = () => {
-    setTimeout(() => {
-      handleCloseModal();
-      window.location.reload();
-    }, 2000); // Close the modal and hide success message after 2 seconds
+    if (showSuccess) window.location.reload();
+    else setErrorMessage("");
+    if (o2oMapping && handleMapping == 1) {
+      setCheckBoxEnabled(true);
+      setIsChecked(false);
+      setO2oMapping(false);
+      setErrorMessage("");
+    }
+    handleCloseModal();
+    // setTimeout(() => {
+    //   handleCloseModal();
+    // }, 2000); // Close the modal and hide success message after 2 seconds
   };
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -116,7 +124,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       paymentTerms != undefined &&
       selectedCustomers.length > 0 &&
       selectedConsignees.length > 0 &&
-      endUse.length > 0
+      endUse.value != 0
     ) {
       if (paymentTerms.length == 0) {
         setErrorMessage("Please select Payment Terms");
@@ -127,7 +135,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         formData["consigneeIds"] = selectedConsignees
           .map((item) => item.value)
           .join(",");
-        formData["endUseIds"] = endUse.map((item) => item.value).join(",");
+        formData["endUseIds"] = endUse.value.toString();
         formData["endUseSegmentIds"] = ["seg1"].toString();
         formData["plants"] = plant
           .map((item) => item.value.toString())
@@ -142,40 +150,49 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
 
         for (let i = 0; i < tableRowsData.length; i++) {
           console.log(tableRowsData[i]);
-          if (tableRowsData[i]["grade"].length == 0) {
+          console.log(tableRowsData[i]["grade"] == "");
+          if (tableRowsData[i]["grade"] == "") {
             setErrorMessage("Select Grade for Row " + (i + 1));
             setStopExecution(true);
+            return;
           }
           if (tableRowsData[i]["gradeType"].length == 0) {
             setErrorMessage("Select Grade Type for Row " + (i + 1));
             setStopExecution(true);
-          } else if (tableRowsData[i]["agreedPrice"] < 1) {
-            setErrorMessage("Select Agreed Price for Row " + (i + 1));
+            return;
+          } else if (
+            tableRowsData[i]["agreedPrice"] < 1 ||
+            isNaN(tableRowsData[i]["agreedPrice"])
+          ) {
+            setErrorMessage("Select valid agreed Price for Row " + (i + 1));
             setStopExecution(true);
-          } else if (tableRowsData[i]["specialDiscount"] < 1) {
+            return;
+          } else if (
+            tableRowsData[i]["specialDiscount"] < 1 ||
+            isNaN(tableRowsData[i]["specialDiscount"])
+          ) {
             setErrorMessage("Select Special Discount for Row " + (i + 1));
             setStopExecution(true);
+            return;
           }
         }
 
         if (tableRowsData.length == 0) {
           setErrorMessage("Please add grade ");
           setStopExecution(true);
+          return;
         }
 
         console.log("CP_1");
-
+        setShowSuccess(true);
+        setStopExecution(false);
         formData["isDraft"] = draft;
         formData["am_id"] = employee_id;
 
         const val = JSON.stringify(formData);
-
         console.log(stopExecution);
         if (!stopExecution) {
           if (validFrom < validTo) {
-            setShowSuccess(true);
-            handleOpen();
-
             submitFormData(formData);
             //handleConfirm();
           } else {
@@ -313,8 +330,8 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         );
         throw new Error(`HTTP error! status: ${response.status}`);
       } else {
-        //setShowSuccess(true);
-        //setOpenModal(true);
+        setShowSuccess(true);
+        setOpenModal(true);
       }
       // Extract the JSON body from the response (it should contain the requestId)
 
@@ -333,13 +350,22 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
 
   const CheckCheckBox = () => {
     console.log(selectedConsignees.length, selectedCustomers.length);
-    if (selectedConsignees.length == 0 || selectedCustomers.length == 0) {
-      setCheckBoxEnabled(false);
-    } else if (selectedConsignees.length == selectedCustomers.length) {
-      setScenarioId(0);
-      setOpenAlert(true);
-    } else {
-      setCheckBoxEnabled(false);
+    if (handleMapping == 0) {
+      if (selectedConsignees.length == 0 || selectedCustomers.length == 0) {
+        setCheckBoxEnabled(false);
+      } else if (selectedConsignees.length == selectedCustomers.length) {
+        setScenarioId(0);
+        //setOpenAlert(true);
+        setOpenModal(true);
+        setShowSuccess(false);
+        setErrorMessage(
+          "Do you wish to have one to one mapping of customers and consignees?"
+        );
+        setO2oMapping(true);
+        setHandleMapping((handleMapping) => handleMapping + 1);
+      } else {
+        setCheckBoxEnabled(false);
+      }
     }
   };
 
@@ -371,17 +397,15 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     setTableRowsData(data);
   };
 
-  const handleCloseAlert = () => {
-    setOpenAlert(false);
-  };
-
-  console.log(session);
-
   return (
     <>
       <Modal
         open={open}
-        onClose={handleClose}
+        onClose={(event, reason) => {
+          if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
+            handleClose();
+          }
+        }}
         aria-labelledby="create-request-modal"
         aria-describedby="create-request-modal-description"
       >
@@ -420,7 +444,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
                     onChange={handleCheckboxChange}
                   />
                 }
-                label="All Customers for all Consignees"
+                label="1 Customers for 1 Consignees only"
               />{" "}
               <SpacingWrapper space="12px" />
               <Typography>End Use</Typography>
@@ -580,7 +604,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
                 onClick={handleConfirm}
                 sx={{ mt: 2 }}
               >
-                Confirm
+                Ok
               </Button>
             </Box>
           )}
