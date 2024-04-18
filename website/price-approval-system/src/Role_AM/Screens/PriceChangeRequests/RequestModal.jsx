@@ -22,7 +22,7 @@ import { useSession } from "../../../Login_Controller/SessionContext";
 import AlertBox from "../../../components/common/AlertBox";
 import FileHandling from "../../../components/common/FileHandling";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import { green, red } from "@mui/material/colors";
+import { green, orange, red } from "@mui/material/colors";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 const style = {
   position: "absolute",
@@ -76,36 +76,23 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [scenarioID, setScenarioId] = useState(0);
   const [stopExecution, setStopExecution] = useState(true);
   const [newRequestId, setNewRequestId] = useState("");
-  const [o2oMapping, setO2oMapping] = useState(false);
   const [handleMapping, setHandleMapping] = useState(0);
-  const alertBoxScenarios = {
-    0: {
-      title: "One to many Mapping",
-      message: "Do you want to have one to many combination?",
-    },
-    1: {
-      title: "Request submitted",
-      message:
-        "Request has been created successfully and submitted for approval",
-    },
-    2: {
-      title: "Draft",
-      message: "Request has been saved as draft",
-    },
-  };
+  const [openOneToOneModal, setOpenOneToOneModal] = useState(false);
+
   const [showSuccess, setShowSuccess] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const handleOpen = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
+
+  const handleConfirmOneToOne = () => {
+    setCheckBoxEnabled(true);
+    setOpenOneToOneModal(false);
+  };
+
   const handleConfirm = () => {
     if (showSuccess) window.location.reload();
     else setErrorMessage("");
-    if (o2oMapping && handleMapping == 1) {
-      setCheckBoxEnabled(true);
-      setIsChecked(false);
-      setO2oMapping(false);
-      setErrorMessage("");
-    }
+
     handleCloseModal();
     // setTimeout(() => {
     //   handleCloseModal();
@@ -356,13 +343,11 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       } else if (selectedConsignees.length == selectedCustomers.length) {
         setScenarioId(0);
         //setOpenAlert(true);
-        setOpenModal(true);
-        setShowSuccess(false);
-        setErrorMessage(
-          "Do you wish to have one to one mapping of customers and consignees?"
-        );
-        setO2oMapping(true);
-        setHandleMapping((handleMapping) => handleMapping + 1);
+        setOpenOneToOneModal(true);
+        // setShowSuccess(false);
+        // setErrorMessage(
+        //   "Do you wish to have one to one mapping of customers and consignees?"
+        // );
       } else {
         setCheckBoxEnabled(false);
       }
@@ -395,6 +380,10 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
 
   const setTableRowsDataFunction = (data) => {
     setTableRowsData(data);
+  };
+
+  const handleOneToOneModalClode = () => {
+    setOpenOneToOneModal(false);
   };
 
   return (
@@ -595,7 +584,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
               <br />
 
               <Typography id="modal-modal-description">
-                Failed to created request.
+                Failed to create request.
                 <br /> Reason : {errorMessage}
               </Typography>
               <Button
@@ -608,6 +597,36 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
               </Button>
             </Box>
           )}
+        </Box>
+      </Modal>
+      <Modal
+        open={openOneToOneModal}
+        onClose={handleOneToOneModalClode}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Box sx={{ mt: 2, color: orange[500] }}>
+            Do you wish to choose one to one mapping for your customers and
+            consignees?
+            <br />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleConfirmOneToOne}
+              sx={{ mt: 2 }}
+            >
+              Yes
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleOneToOneModalClode}
+              sx={{ mt: 2, marginLeft: 2 }}
+            >
+              No
+            </Button>
+          </Box>
         </Box>
       </Modal>
     </>

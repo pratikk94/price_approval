@@ -309,7 +309,11 @@ function TableWithInputs({
                   checked={checkboxState[option]}
                   onChange={handleCheckboxChange}
                   name={option}
-                  disabled={disabled}
+                  disabled={
+                    option === "AgreedPrice" || option === "SpecialDiscount"
+                      ? true
+                      : false
+                  }
                 />
               }
               label={

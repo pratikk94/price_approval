@@ -488,7 +488,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
   let pool = null;
   console.log(employeeId, status);
   let a_status = status == "1" ? "0" : status;
-  a_status = status == "5" ? "0" : status;
+  a_status = status == "5" ? "1" : status;
   try {
     // Establish a connection to the database
     pool = await sql.connect(config);
@@ -645,7 +645,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
           details.filter((detail) => detail.am_status === 1);
         }
 
-        details = details.filter((mapElement) => mapElement.am_status !== 0);
+        details = details.filter((mapElement) => mapElement.am_status != 0);
 
         console.log(details);
       }
@@ -660,6 +660,7 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
 
       const filteredDetails = filterDuplicates(details);
       console.log("Details->", filteredDetails);
+
       res.json(filteredDetails);
     } else res.json([]);
   } catch (err) {
@@ -1765,7 +1766,7 @@ WHERE
                   curr_status = "\nHDSM has rejected";
                   latest_status_updated_by = "HDSM";
                 } else if (hdsms[id] == 3) {
-                  curr_status = "\nHDSM sent back to rework";
+                  curr_status = "\nHDSM sent back for rework";
                   latest_status_updated_by = "HDSM";
                 }
               }

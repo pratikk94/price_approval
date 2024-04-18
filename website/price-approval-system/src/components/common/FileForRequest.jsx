@@ -1,6 +1,6 @@
 export default function FilesForRequest({ files, tempFiles }) {
   if (files.length === 0 && (!tempFiles || tempFiles.length === 0)) {
-    return <div>No files found for this request.</div>;
+    return <div>No attachments for this request.</div>;
   }
 
   return (

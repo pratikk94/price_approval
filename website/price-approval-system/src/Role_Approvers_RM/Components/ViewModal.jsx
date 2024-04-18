@@ -311,7 +311,7 @@ function PriceViewModal({
               <br />
               {updateStatusV < 2 ? (
                 <Typography id="modal-modal-description">
-                  Failed to created request.
+                  Failed to create request.
                   <br /> Reason : {errorMessage}
                 </Typography>
               ) : null}
