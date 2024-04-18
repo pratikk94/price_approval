@@ -19,11 +19,6 @@ export default function FilesForRequest({ files, tempFiles }) {
             </a>
           </li>
         ))}
-        {/* Display temp files if any */}
-        {tempFiles &&
-          tempFiles.map((file, index) => (
-            <li key={`temp-${index}`}> {file.name} - (Pending Upload) </li>
-          ))}
       </ul>
     </div>
   );

@@ -320,7 +320,7 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
                       setOpenModal(false);
                       setUpdateStatusV(0);
                     }}
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 2, marginLeft: 2 }}
                   >
                     No
                   </Button>
