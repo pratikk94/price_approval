@@ -131,7 +131,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         formData["validTo"] = validTo;
         formData["remarks"] = remarks;
         formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
-        formData["fsc"] = 1;
+        formData["fsc"] = fsc;
         formData["priceTable"] = tableRowsData;
 
         setStopExecution(false);
