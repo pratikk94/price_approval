@@ -24,9 +24,10 @@ import HistoryModal from "../../components/common/History";
 import FileUploader from "../../components/common/FileUploader";
 import FilesForRequest from "../../components/common/FileForRequest";
 import FileHandling from "../../components/common/FileHandling";
-import { BreakfastDiningOutlined } from "@mui/icons-material";
+import { BreakfastDiningOutlined, SpaceBar } from "@mui/icons-material";
 import { green, red } from "@mui/material/colors";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 function PriceTable({ price }) {
   console.log(price);
@@ -214,7 +215,7 @@ function PriceViewModal({
               </Typography>
             </div>
             <PriceTable price={data.price} />
-            <FileHandling />
+            <FileHandling requestId={data.request_name} />
 
             <RemarkBox request_id={data.request_name} />
 
@@ -305,10 +306,11 @@ function PriceViewModal({
             </Box>
           ) : (
             <Box sx={{ mt: 2, color: red[500] }}>
-              <ErrorOutlineIcon
+              {/* <ErrorOutlineIcon
                 sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
-              />
+              /> */}
               <br />
+
               {updateStatusV < 2 ? (
                 <Typography id="modal-modal-description">
                   Failed to create request.
@@ -326,6 +328,7 @@ function PriceViewModal({
                 </Button>
               ) : (
                 <>
+                  <br />
                   <Typography id="modal-modal-description">
                     {errorMessage}
                   </Typography>
@@ -337,6 +340,7 @@ function PriceViewModal({
                   >
                     Yes
                   </Button>
+                  <div style={{ display: "inline-block", width: "40" }}></div>
                   <Button
                     variant="contained"
                     color="primary"

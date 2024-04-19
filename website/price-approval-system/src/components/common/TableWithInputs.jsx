@@ -66,7 +66,7 @@ function TableWithInputs({
 
   useEffect(() => {
     // Set rows based on incoming prices data
-    // console.log(prices);
+    console.log(prices);
     if (prices && prices.length > 0 && grades.length > 0) {
       const newRows = prices.map((price, index) => ({
         id: Date.now() + index, // Ensure unique id

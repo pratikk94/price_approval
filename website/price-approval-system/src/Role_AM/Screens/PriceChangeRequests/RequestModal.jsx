@@ -74,7 +74,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [selectedConsigneeIDs, setSelectedConsigneeIDs] = useState([]);
   const [selectedEndUseIDs, setSelectedEndUseIDs] = useState([]);
   const [scenarioID, setScenarioId] = useState(0);
-  const [stopExecution, setStopExecution] = useState(true);
+  const [stopExecution, setStopExecution] = useState(false);
   const [newRequestId, setNewRequestId] = useState("");
   const [handleMapping, setHandleMapping] = useState(0);
   const [openOneToOneModal, setOpenOneToOneModal] = useState(false);
@@ -104,7 +104,6 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     handleOpen();
     setShowSuccess(false);
     event.preventDefault();
-
     if (
       validFrom != "" &&
       validTo != "" &&
@@ -135,44 +134,52 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         formData["fsc"] = 1;
         formData["priceTable"] = tableRowsData;
 
+        setStopExecution(false);
         for (let i = 0; i < tableRowsData.length; i++) {
           console.log(tableRowsData[i]);
           console.log(tableRowsData[i]["grade"] == "");
+          console.log(tableRowsData[i]["gradeType"] == "");
+          console.log(
+            tableRowsData[i]["agreedPrice"] < 1 ||
+              isNaN(tableRowsData[i]["agreedPrice"])
+          );
+          console.log(
+            tableRowsData[i]["specialDiscount"] < 1 ||
+              isNaN(tableRowsData[i]["specialDiscount"])
+          );
           if (tableRowsData[i]["grade"] == "") {
             setErrorMessage("Select Grade for Row " + (i + 1));
-            setStopExecution(true);
-            return;
-          }
-          if (tableRowsData[i]["gradeType"].length == 0) {
+            setStopExecution(e, !e);
+            // return;
+          } else if (tableRowsData[i]["gradeType"] == "") {
             setErrorMessage("Select Grade Type for Row " + (i + 1));
-            setStopExecution(true);
-            return;
+            setStopExecution(e, !e);
+            // return;
           } else if (
             tableRowsData[i]["agreedPrice"] < 1 ||
             isNaN(tableRowsData[i]["agreedPrice"])
           ) {
             setErrorMessage("Select valid agreed Price for Row " + (i + 1));
-            setStopExecution(true);
-            return;
+            setStopExecution(e, !e);
+            // return;
           } else if (
-            tableRowsData[i]["specialDiscount"] < 1 ||
+            tableRowsData[i]["specialDiscount"] < 0 ||
             isNaN(tableRowsData[i]["specialDiscount"])
           ) {
             setErrorMessage("Select Special Discount for Row " + (i + 1));
-            setStopExecution(true);
-            return;
+            setStopExecution(e, !e);
+            // return;
           }
         }
 
         if (tableRowsData.length == 0) {
           setErrorMessage("Please add grade ");
           setStopExecution(true);
-          return;
+          // return;
         }
 
         console.log("CP_1");
         setShowSuccess(true);
-        setStopExecution(false);
         formData["isDraft"] = draft;
         formData["am_id"] = employee_id;
 
@@ -189,6 +196,9 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
               "Valid To date should be greater than Valid From date"
             );
           }
+        } else {
+          setShowSuccess(false);
+          setOpenModal(true);
         }
       }
     } else if (selectedCustomers.length == 0) {

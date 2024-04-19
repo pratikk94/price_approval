@@ -352,41 +352,44 @@ async function getNewRequestName(parentId, type) {
         prepend = "ER";
         let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
         new_req_name = prepend + new_req_name + new_current_id;
-      } else if (type === "U" && curr_status === "U") {
-        prepend = "UR";
-        let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
-        new_req_name = prepend + new_req_name + new_current_id;
-      } else if (type === "E") {
+      }
+      // else if (type === "U" && curr_status === "U") {
+      //   prepend = "UR";
+      //   let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
+      //   new_req_name = prepend + new_req_name + new_current_id;
+      // }
+      else if (type === "E") {
         const result = await pool.request()
           .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'ER%' ORDER BY id DESC`;
         new_req_name =
           result.recordset[0].request_name.substring(0, 7) +
           (parseInt(result.recordset[0].request_name.substring(7, 11)) + 1);
-      } else if (type === "U") {
-        const result = await pool.request()
-          .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'UR%' ORDER BY id DESC`;
-        console.log(result.recordset.length);
-        if (result.recordset.length == 0) {
-          const resultFindNR = await pool
-            .request()
-            .input("parentId", sql.Int, parentId)
-            .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
-
-          new_req_name = `UR${resultFindNR.recordset[0].request_name.substring(
-            2,
-            12
-          )}`;
-        } else {
-          console.log(result.recordset[0].request_name.toString());
-          new_req_name =
-            result.recordset[0].request_name.toString().substring(0, 7) +
-            (parseInt(result.recordset[0].request_name.substring(7, 12)) + 1)
-              .toString()
-              .padStart(4, "0");
-        }
-        console.log(`NEW_REQ_NAME->${new_req_name}`);
-        return new_req_name;
       }
+      // else if (type === "U") {
+      //   const result = await pool.request()
+      //     .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'UR%' ORDER BY id DESC`;
+      //   console.log(result.recordset.length);
+      //   if (result.recordset.length == 0) {
+      //     const resultFindNR = await pool
+      //       .request()
+      //       .input("parentId", sql.Int, parentId)
+      //       .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
+
+      //     new_req_name = `UR${resultFindNR.recordset[0].request_name.substring(
+      //       2,
+      //       12
+      //     )}`;
+      //   }
+      else {
+        console.log(result.recordset[0].request_name.toString());
+        new_req_name =
+          result.recordset[0].request_name.toString().substring(0, 7) +
+          (parseInt(result.recordset[0].request_name.substring(7, 12)) + 1)
+            .toString()
+            .padStart(4, "0");
+      }
+      console.log(`NEW_REQ_NAME->${new_req_name}`);
+      return new_req_name;
     } else if (type === "N" || type === "D") {
       const today = new Date();
 
@@ -434,8 +437,8 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
     console.log("STATUS" + isNewRequest);
     if (isNewRequest === 3) requestType = "B";
     else if (isNewRequest === 2) requestType = "E";
-    else if (isNewRequest == "N") requestType = "N";
-    else if (isNewRequest == 0) requestType = "U";
+    else if (isNewRequest == "N" || isNewRequest === 0) requestType = "N";
+    // else if (isNewRequest == 0) requestType = "U";
     else if (isNewRequest == "D") requestType = "D";
     const parentReqIdValue = parentReqId;
     console.log(
@@ -475,8 +478,8 @@ function filterDuplicates(details) {
     // If the entry doesn't exist, or it doesn't have a status of 'U',
     // or the current detail's status is 'U', update/overwrite it.
     if (
-      !unique[detail.req_id] ||
-      unique[detail.req_id].current_status !== "U"
+      !unique[detail.req_id]
+      // || unique[detail.req_id].current_status !== "U"
     ) {
       unique[detail.req_id] = detail;
     }
@@ -1580,7 +1583,7 @@ async function AssignStatus(region, roleIndex, action) {
         }
       } else if (action == "2" && roles[roleIndex] > -1) {
         // Find the previous positive role and set its status to 2
-        console.log(roleIndex);
+        // console.log(roleIndex);
         for (let i = roleIndex; i >= 0; i--) {
           if (roles[i] > -1) {
             statuses[i] = action;
@@ -1589,7 +1592,7 @@ async function AssignStatus(region, roleIndex, action) {
         for (let i = roleIndex; i < roles.length; i++) {
           if (roles[i] == roles[i + 1] && roles[i] != undefined) {
             statuses[i + 1] = action;
-            console.log(statuses);
+            // console.log(statuses);
             i++;
           } else if (roles[i] > -1) {
             statuses[i] = undefined;
@@ -1597,20 +1600,16 @@ async function AssignStatus(region, roleIndex, action) {
         }
       } else if (action == "3" && roles[roleIndex] > -1) {
         // Find the previous positive role and set its status to 2
-        console.log(roleIndex);
+        // console.log(roleIndex);
         statuses[roleIndex] = -2;
         for (let i = roleIndex - 1; i >= 0; i--) {
           if (roles[i] > -1) {
             statuses[i] = action;
           }
-        }
-        for (let i = roleIndex + 1; i < roles.length; i++) {
-          if (roles[i] == roles[i + 1] && roles[i] != undefined) {
-            statuses[i + 1] = action;
-            console.log(statuses);
-            i++;
-          } else if (roles[i] > -1) {
-            statuses[i] = undefined;
+          if (roles[i + 1] == roles[i + 2]) {
+            statuses[i + 2] = -4;
+          } else if (roles[i + 1] == roles[i]) {
+            statuses[i] = -4;
           }
         }
       }
@@ -1688,7 +1687,7 @@ async function fetchPriceApprovalDetails(
         "Valid to",
       CASE 
         WHEN rs.status = 'N' THEN 'New request'
-        WHEN rs.status = 'U' THEN 'Updated request'
+        -- WHEN rs.status = 'U' THEN 'Updated request'
         ELSE rs.status -- This will return the original value for any value not matching 'N' or 'U'
       END AS "Request type",
       um.employee_name as "Created By",
@@ -1711,7 +1710,9 @@ WHERE
             let curr_status = "";
             let latest_status_updated_by = "";
             console.log(`AMSID:${ams[id]}`);
-
+            console.log(`RMSID:${rms[id]}`);
+            console.log(`NSMSID:${nsms[id]}`);
+            console.log(`HDSMSID:${hdsms[id]}`);
             if (rms[id].length > 0) {
               if (rms[id] == -2) {
                 curr_status = "Sent for rework by RM";
@@ -3191,6 +3192,8 @@ app.post("/api/update_request_status_manager", async (req, res) => {
         : newNsmStatus != undefined
         ? newNsmStatus == -2
           ? null
+          : newNsmStatus == -4
+          ? null
           : newNsmStatus
         : latestRow.nsm_status;
     hdsmStatus =
@@ -3198,6 +3201,8 @@ app.post("/api/update_request_status_manager", async (req, res) => {
         ? action
         : newHdsmStatus != undefined
         ? newHdsmStatus == -2
+          ? null
+          : newHdsmStatus == -4
           ? null
           : newHdsmStatus
         : latestRow.hdsm_status;

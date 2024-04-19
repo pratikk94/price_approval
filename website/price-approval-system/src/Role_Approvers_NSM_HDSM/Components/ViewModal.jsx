@@ -25,6 +25,7 @@ import { useSession } from "../../Login_Controller/SessionContext";
 import { green, red } from "@mui/material/colors";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import FileHandling from "../../components/common/FileHandling";
 function PriceTable({ price }) {
   console.log(price);
   return price ? (
@@ -193,6 +194,7 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
               </Typography>
             </div>
             <PriceTable price={data.price} />
+            <FileHandling request_id={data.request_name} />
             <RemarkBox request_id={data.request_name} />
             {isEditable ? (
               <>
@@ -281,9 +283,9 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
             </Box>
           ) : (
             <Box sx={{ mt: 2, color: red[500] }}>
-              <ErrorOutlineIcon
+              {/* <ErrorOutlineIcon
                 sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
-              />
+              /> */}
               <br />
               {updateStatusV < 2 ? (
                 <Typography id="modal-modal-description">
@@ -305,25 +307,29 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
                   <Typography id="modal-modal-description">
                     {errorMessage}
                   </Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleConfirm}
-                    sx={{ mt: 2 }}
-                  >
-                    Yes
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => {
-                      setOpenModal(false);
-                      setUpdateStatusV(0);
-                    }}
-                    sx={{ mt: 2, marginLeft: 2 }}
-                  >
-                    No
-                  </Button>
+                  <br />
+                  <center>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleConfirm}
+                      sx={{ mt: 2 }}
+                    >
+                      Yes
+                    </Button>
+                    <div style={{ display: "inline-block", width: "40" }}></div>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => {
+                        setOpenModal(false);
+                        setUpdateStatusV(0);
+                      }}
+                      sx={{ mt: 2, marginLeft: 2 }}
+                    >
+                      No
+                    </Button>
+                  </center>
                 </>
               )}
             </Box>
