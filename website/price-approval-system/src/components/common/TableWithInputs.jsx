@@ -36,6 +36,8 @@ function TableWithInputs({
     { value: "Sheet", label: "Sheet" },
     { value: "Bobbin", label: "Bobbin" },
   ];
+
+  const gradeTypes = ["Reel", "Sheet", "Bobbin"];
   // Handling the selection
   const handleMaterialChange = (option) => {
     setGradeType(option);
@@ -68,26 +70,29 @@ function TableWithInputs({
     // Set rows based on incoming prices data
     console.log(prices);
     if (prices && prices.length > 0 && grades.length > 0) {
-      const newRows = prices.map((price, index) => ({
-        id: Date.now() + index, // Ensure unique id
-        grade:
-          gradeMapper(price.grade)[0] != undefined
-            ? gradeMapper(price.grade)[0].label
-            : gradeMapper(price.grade),
-        gradeType: price.grade_type,
-        gsmFrom: price.gsm_range_from,
-        gsmTo: price.gsm_range_to,
-        agreedPrice: price.agreed_price,
-        specialDiscount: price.special_discount,
-        reelDiscount: price.reel_discount,
-        packUpCharge: price.pack_upcharge,
-        tpc: price.tpc,
-        offlineDiscount: price.offline_discount,
-        netNSR: price.net_nsr,
-        oldNetNSR: price.old_net_nsr,
-        profitCenter: "", // Add any additional fields here
-      }));
-      //console.log(newRows);
+      console.log(prices[0].grade_type);
+
+      const newRows = prices.map((price, index) => {
+        const newId = Date.now() + index; // Calculate the new ID
+        return {
+          id: newId,
+          grade: gradeMapper(newId, price.grade, newId),
+          gradeType: price.grade_type,
+          gsmFrom: price.gsm_range_from,
+          gsmTo: price.gsm_range_to,
+          agreedPrice: price.agreed_price,
+          specialDiscount: price.special_discount,
+          reelDiscount: price.reel_discount,
+          packUpCharge: price.pack_upcharge,
+          tpc: price.tpc,
+          offlineDiscount: price.offline_discount,
+          netNSR: price.net_nsr,
+          oldNetNSR: price.old_net_nsr,
+          profitCenter: "", // Add any additional fields here
+        };
+      });
+
+      console.log(newRows);
       setRows(newRows);
     }
   }, [prices, grades]);
@@ -133,19 +138,31 @@ function TableWithInputs({
     return Object.values(checkboxState).filter((value) => value).length;
   };
 
-  const gradeMapper = (gradeLabel) => {
-    if (gradeLabel && grades.length > 0) {
-      const foundCustomer = grades.find((c) => c.label === gradeLabel);
+  const gradeMapper = (id, gradeLabel) => {
+    console.log(gradeLabel);
+    console.log(grades);
 
+    if (gradeLabel && grades.length > 0) {
+      const foundCustomer = grades.find((c) => c.label == gradeLabel);
+      if (foundCustomer) {
+        console.log(foundCustomer ? [foundCustomer] : []);
+        handleRowChange(
+          id,
+          "grade",
+          foundCustomer.name,
+          foundCustomer.profitCenter
+        );
+        return foundCustomer.name;
+      }
+      return gradeLabel;
       // Return the found customer in an array format, or an empty array if not found
-      return foundCustomer ? [foundCustomer] : [];
     }
     return []; // Return an empty array by default if conditions are not met
   };
 
   const fetch_grades = async () => {
     try {
-      const fscM = fscCode.length == 0 ? "N" : fscCode;
+      const fscM = fscCode.length == 0 ? "Y" : fscCode;
       console.log("FSC_Code", fscM);
 
       const response = await fetch(
@@ -189,8 +206,10 @@ function TableWithInputs({
         console.log(row);
         if (row.id === id) {
           const updatedRow = { ...row, [field]: value };
-
-          if (field === "grade") updatedRow.profitCenter = profit_center;
+          console.log(updatedRow);
+          if (field === "grade") {
+            updatedRow.profitCenter = profit_center;
+          }
           if (
             [
               "agreedPrice",
@@ -266,6 +285,7 @@ function TableWithInputs({
 
   function handleFSCChange(e) {
     // setGrades(e.target.checked ? 1 : 0);
+
     setFSC((e) => {
       // fetch_grades(e ? 0 : 1);
       setFSCCode(e ? "N" : "Y");
@@ -403,14 +423,17 @@ function TableWithInputs({
                 <Select
                   placeholder=""
                   className="tColumnGrade"
-                  value={grades.find((grade) => row.label)} // Find the option that matches the row's grade
+                  value={grades.find((label) => label.grade === row.grade)} // Find the option that matches the row's grade
                   style={{ marginTop: "10px" }} // Corrected casing for marginTop
                   name="customers"
                   options={grades}
                   classNamePrefix="select"
                   disabled={disabled}
                   onChange={(e) => {
-                    console.log(row); // Debugging
+                    console.log(rows); // Debugging
+                    console.log(
+                      grades.find((label) => label.grade === row.grade)
+                    );
                     handleRowChange(row.id, "grade", e.label, e.profitCenter);
                     console.log("Handling row change");
                     row.grade = e.label;
@@ -433,8 +456,11 @@ function TableWithInputs({
 
               <td>
                 <Select
-                  value={gradeType}
+                  value={options.find(
+                    (option) => option.label === row.gradeType
+                  )}
                   onChange={(e) => {
+                    console.log("EEE" + e);
                     handleMaterialChange(e);
                     row.gradeType = e.label;
                     handleRowChange(
