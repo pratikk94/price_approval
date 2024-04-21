@@ -82,6 +82,30 @@ function TableWithInputs({
 
         console.log(newId);
 
+        if (price.tpc != 0 && price.tpc != null) {
+          setCheckboxState((prev) => {
+            return { ...prev, TPC: true };
+          });
+        }
+
+        if (price.offline_discount != 0 && price.offline_discount != null) {
+          setCheckboxState((prev) => {
+            return { ...prev, offlineDiscount: true };
+          });
+        }
+
+        if (price.reel_discount != 0 && price.reel_discount != null) {
+          setCheckboxState((prev) => {
+            return { ...prev, ReelDiscount: true };
+          });
+        }
+
+        if (price.pack_upcharge != 0 && price.pack_upcharge != null) {
+          setCheckboxState((prev) => {
+            return { ...prev, PackUpCharge: true };
+          });
+        }
+
         return {
           id: newId,
           grade: price.grade,
@@ -221,6 +245,7 @@ function TableWithInputs({
           if (field === "grade") {
             updatedRow.profitCenter = profit_center;
           }
+
           if (
             [
               "agreedPrice",

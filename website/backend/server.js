@@ -2976,10 +2976,12 @@ app.post("/api/add_price_request", async (req, res) => {
     const requestId = mainResult.recordset[0].id;
     console.log(requestId);
     console.log("Here 1");
+    console.log(req.body.priceTable);
     pool = await sql.connect(config);
     for (const item of req.body.priceTable) {
-      // console.log(item);
-
+      console.log("****");
+      console.log(item);
+      console.log("****");
       const reqId = requestId;
       const grade = item.grade;
       const gradeType = item.gradeType;
@@ -2998,8 +3000,8 @@ app.post("/api/add_price_request", async (req, res) => {
                     @reqId=${reqId}, 
                     @grade=${grade}, 
                     @gradeType=${gradeType}, 
-                    @gsmFrom=${gsmFrom}, 
-                    @gsmTo=${gsmTo}, 
+                    @gsmFrom=${parseInt(gsmFrom)}, 
+                    @gsmTo=${parseInt(gsmTo)}, 
                     @agreedPrice=${agreedPrice}, 
                     @specialDiscount=${specialDiscount}, 
                     @reelDiscount=${reelDiscount}, 

@@ -86,6 +86,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
 
   const handleConfirmOneToOne = () => {
     setCheckBoxEnabled(true);
+    setIsChecked(true);
     setOpenOneToOneModal(false);
   };
 
@@ -131,9 +132,10 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         formData["validTo"] = validTo;
         formData["remarks"] = remarks;
         formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
-        formData["fsc"] = fsc;
-        formData["priceTable"] = tableRowsData;
+        formData["fsc"] = fsc == "Y" ? 1 : 0;
 
+        formData["priceTable"] = tableRowsData;
+        console.log(formData["priceTable"]);
         setStopExecution(false);
         for (let i = 0; i < tableRowsData.length; i++) {
           console.log(tableRowsData[i]);
@@ -392,7 +394,8 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     setTableRowsData(data);
   };
 
-  const handleOneToOneModalClode = () => {
+  const handleOneToOneModalClose = () => {
+    setIsChecked(false);
     setOpenOneToOneModal(false);
   };
 
@@ -611,7 +614,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       </Modal>
       <Modal
         open={openOneToOneModal}
-        onClose={handleOneToOneModalClode}
+        onClose={handleOneToOneModalClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
@@ -631,7 +634,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
             <Button
               variant="contained"
               color="primary"
-              onClick={handleOneToOneModalClode}
+              onClick={handleOneToOneModalClose}
               sx={{ mt: 2, marginLeft: 2 }}
             >
               No
