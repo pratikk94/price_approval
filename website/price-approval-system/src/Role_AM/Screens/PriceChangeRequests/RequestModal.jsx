@@ -41,8 +41,8 @@ const modalStyle = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: "90vw",
-  height: "80vh", // Adjusted for better layout
+  width: "95vw",
+  height: "90vh", // Adjusted for better layout
   bgcolor: "background.paper",
   border: "2px solid #000",
   boxShadow: 24,
@@ -256,7 +256,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       });
       setValidFrom(data.valid_from);
       setValidTo(data.valid_to);
-      setFSC(data.fsc == 1 ? "Y" : "N");
+      setFSC(data.fsc == "1" ? "Y" : "N");
       console.log(data.fsc);
       //setMap(data.mappint_type);
       setPriceDetails(data.price); // Assuming this directly maps to your price details state structure

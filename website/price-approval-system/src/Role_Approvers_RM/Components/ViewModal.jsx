@@ -171,8 +171,8 @@ function PriceViewModal({
         contentLabel="Request Details"
         style={{
           content: {
-            top: "50%",
-            left: "60%",
+            top: "54%",
+            left: "58%",
             right: "auto",
             bottom: "auto",
             marginRight: "-50%",
@@ -180,8 +180,8 @@ function PriceViewModal({
             backgroundColor: "#FFF", // White background
             padding: "20px",
             borderRadius: "10px",
-            maxHeight: "56vh", // Adjust the height as needed
-            maxWidth: "70vw", // Adjust the width as needed
+            maxHeight: "84vh", // Adjust the height as needed
+            maxWidth: "76vw", // Adjust the width as needed
             // Responsive width
           },
           overlay: {
@@ -267,8 +267,8 @@ function PriceViewModal({
         contentLabel="Request Details"
         style={{
           content: {
-            top: "50%",
-            left: "60%",
+            top: "54%",
+            left: "58%",
             right: "auto",
             bottom: "auto",
             marginRight: "-50%",
@@ -276,8 +276,8 @@ function PriceViewModal({
             backgroundColor: "#FFF", // White background
             padding: "20px",
             borderRadius: "10px",
-            maxHeight: "56vh", // Adjust the height as needed
-            maxWidth: "70vw", // Adjust the width as needed
+            maxHeight: "84vh", // Adjust the height as needed
+            maxWidth: "76vw", // Adjust the width as needed
             // Responsive width
           },
           overlay: {

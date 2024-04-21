@@ -16,7 +16,7 @@ import Select from "react-select";
 import { backend_url } from "../../util";
 import { HeadsetRounded, SellOutlined } from "@mui/icons-material";
 import SpacingWrapper from "../util/SpacingWrapper";
-
+import { v4 as uuidv4 } from "uuid";
 function TableWithInputs({
   setTableRowsDataFunction,
   fscCode,
@@ -29,6 +29,7 @@ function TableWithInputs({
   const [selectedGrade, setSelectedGrade] = useState("");
   const [fsc, setFSC] = useState(fscCode);
   const [gradeType, setGradeType] = useState(null);
+  const [ids, setIds] = useState([]);
   console.log(fscCode);
   // Options for the dropdown
   const options = [
@@ -73,10 +74,17 @@ function TableWithInputs({
       console.log(prices[0].grade_type);
 
       const newRows = prices.map((price, index) => {
-        const newId = Date.now() + index; // Calculate the new ID
+        const newId = uuidv4(); // Calculate the new ID
+
+        console.log(price.grade);
+
+        setIds(ids, [...ids, newId]);
+
+        console.log(newId);
+
         return {
           id: newId,
-          grade: gradeMapper(newId, price.grade, newId),
+          grade: price.grade,
           gradeType: price.grade_type,
           gsmFrom: price.gsm_range_from,
           gsmTo: price.gsm_range_to,
@@ -88,18 +96,23 @@ function TableWithInputs({
           offlineDiscount: price.offline_discount,
           netNSR: price.net_nsr,
           oldNetNSR: price.old_net_nsr,
-          profitCenter: "", // Add any additional fields here
+          profitCenter: gradeMapper(newId, price.grade), // Add any additional fields here
         };
       });
 
       console.log(newRows);
+      // for (let i = 0; i < newRows.length; i++) {
+      //   if (newRows[i].grade != undefined && newRows[i].grade != "") {
+      //     return;
+      //   }
+      // }
       setRows(newRows);
     }
   }, [prices, grades]);
 
   const [rows, setRows] = useState([
     {
-      id: Date.now(),
+      id: "",
       grade: "",
       gradeType: "",
       gsmFrom: "",
@@ -146,13 +159,9 @@ function TableWithInputs({
       const foundCustomer = grades.find((c) => c.label == gradeLabel);
       if (foundCustomer) {
         console.log(foundCustomer ? [foundCustomer] : []);
-        handleRowChange(
-          id,
-          "grade",
-          foundCustomer.name,
-          foundCustomer.profitCenter
-        );
-        return foundCustomer.name;
+        console.log(foundCustomer.profitCenter);
+
+        return foundCustomer.profitCenter;
       }
       return gradeLabel;
       // Return the found customer in an array format, or an empty array if not found
@@ -162,7 +171,8 @@ function TableWithInputs({
 
   const fetch_grades = async () => {
     try {
-      const fscM = fscCode.length == 0 ? "Y" : fscCode;
+      const fscM = fscCode;
+      if (fscCode.length == 0) return;
       console.log("FSC_Code", fscM);
 
       const response = await fetch(
@@ -201,6 +211,7 @@ function TableWithInputs({
 
   // Update row field values and calculate netNSR dynamically
   const handleRowChange = (id, field, value, profit_center) => {
+    console.log("In_handleRowChange");
     setRows((prevRows) =>
       prevRows.map((row) => {
         console.log(row);
@@ -260,7 +271,7 @@ function TableWithInputs({
   // Add a new row
   const addRow = () => {
     const newRow = {
-      id: Date.now(),
+      id: uuidv4(),
       grade: "",
       gradeType: "",
       gsmFrom: "",
@@ -423,7 +434,7 @@ function TableWithInputs({
                 <Select
                   placeholder=""
                   className="tColumnGrade"
-                  value={grades.find((label) => label.grade === row.grade)} // Find the option that matches the row's grade
+                  value={grades.find((grade) => grade.label === row.grade)} // Find the option that matches the row's grade
                   style={{ marginTop: "10px" }} // Corrected casing for marginTop
                   name="customers"
                   options={grades}
