@@ -340,7 +340,7 @@ function PriceViewModal({
                   >
                     Yes
                   </Button>
-                  <div style={{ display: "inline-block", width: "40" }}></div>
+                  <div style={{ display: "inline-block", width: "40px" }}></div>
                   <Button
                     variant="contained"
                     color="primary"
