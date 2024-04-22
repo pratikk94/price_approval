@@ -32,7 +32,7 @@ const BusinessAdminApp = ({ logout }) => {
     { text: "Employee Management", component: <EmployeeManagement /> },
     { text: "Set Price Range", component: <SetPriceRange /> },
     { text: "Price Requests", component: <PriceChangeRequest /> },
-    { text: "Request History", component: <RequestHistory /> },
+    // { text: "Request History", component: <RequestHistory /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
     { text: "Master", component: <Master /> },
   ];

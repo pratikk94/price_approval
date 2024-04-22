@@ -326,7 +326,7 @@ function TableWithInputs({
       // fetch_grades(e ? 0 : 1);
       setFSCCode(e ? "N" : "Y");
       alert("FSC Code change will require Grade selection again");
-      return e ? 0 : 1;
+      return e ? "N" : "Y";
     });
   }
 

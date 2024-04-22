@@ -30,7 +30,7 @@ function ResponsiveDrawer({ logout }) {
       text: "Price Requests",
       component: <PriceChangeRequests role={"Validator"} isAM={true} />,
     },
-    { text: "Requests History", component: <RequestsHistory /> },
+    // { text: "Requests History", component: <RequestsHistory /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
   ];
 
