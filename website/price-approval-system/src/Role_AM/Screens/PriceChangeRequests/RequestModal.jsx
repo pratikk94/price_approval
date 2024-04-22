@@ -189,7 +189,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
             setErrorMessage(
               "GSM From should be less than GSM To for Row " + (i + 1)
             );
-            setStopExecution(e, !e);
+            setStopExecution(true);
             // return;
           }
         }
@@ -310,12 +310,18 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     return tempIds != "undefined" ? [tempIds] : [];
   };
 
+  const fetchTempAttachments = async () => {
+    const tempAttachments = localStorage.getItem("request_id") || [];
+    return tempAttachments;
+  };
+
   const submitFormData = async (formData) => {
     console.log("In here SFD");
     try {
       // Update formData based on whether it's a new submission or an edit
       formData["isNew"] = true;
       const tempRequestIds = await fetchTempRequestIds();
+      const tempAttachments = await fetchTempAttachments();
       console.log(tempRequestIds.length);
       if (tempRequestIds.length > 0) {
         formData.tempRequestIds = [tempRequestIds];

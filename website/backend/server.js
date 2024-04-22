@@ -215,6 +215,39 @@ async function changeReqIds(tempRequestIds, newRequestId) {
   }
 }
 
+async function changeAttachmentIds(tempAttachmentIds, newRequestId) {
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    console.log(`${tempAttachmentIds}`);
+    console.log(`New request id ${newRequestId}`);
+    console.log(typeof tempAttachmentIds);
+    if (tempAttachmentIds != undefined) {
+      // Make sure `config` is defined with your DB credentials
+      const promises = tempAttachmentIds.map((tempId) => {
+        console.log(
+          `Temp ids are ${tempId} and New request id is ${newRequestId}`
+        );
+        return pool
+          .request()
+          .input("newRequestId", sql.NVarChar, newRequestId)
+          .input("tempId", sql.NVarChar, tempId.toString())
+          .query(
+            `UPDATE files SET request_id = @newRequestId WHERE id = @tempId;`
+          );
+      });
+    }
+    await Promise.all(promises);
+
+    console.log(
+      `All tempAttachmentIds have been updated to the new request_id: ${newRequestId}`
+    );
+  } catch (error) {
+    console.error("Failed to update request IDs:", error);
+    throw error; // Rethrow or handle as needed
+  }
+}
+
 async function fetchAndProcessRules(requestId, employeeId, isReworked, isAM) {
   let pool = null;
   try {
@@ -2998,6 +3031,7 @@ app.post("/api/add_price_request", async (req, res) => {
       mappint_type,
       statusUpdatedById,
       tempRequestIds,
+      tempAttachmentId,
       isAM,
     } = req.body;
     mappint_type != undefined ? (mappint_type = 2) : (mappint_type = 1);
@@ -3072,10 +3106,19 @@ app.post("/api/add_price_request", async (req, res) => {
     let isRework = false;
     if (req.body.mode != undefined) isRework = true;
 
-    changeReqIds(tempRequestIds, requestId.toString())
-      .then(() => console.log("Request IDs updated successfully."))
-      .catch((error) => console.error("Error updating Request IDs:", error));
+    if (tempRequestIds != null && tempRequestIds != undefined) {
+      changeReqIds(tempRequestIds, req_name)
+        .then(() => console.log("Request IDs updated successfully."))
+        .catch((error) => console.error("Error updating Request IDs:", error));
+    }
 
+    if (tempAttachmentId != null && tempAttachmentId != undefined) {
+      changeAttachmentIds(tempAttachmentId, req_name)
+        .then(() => console.log("Attachment ID updated successfully."))
+        .catch((error) =>
+          console.error("Error updating Attachment ID:", error)
+        );
+    }
     fetchAndProcessRules(requestId, req.body.am_id, isRework, isAM)
       .then(() => console.log("Finished processing."))
       .catch((err) => console.error(err));

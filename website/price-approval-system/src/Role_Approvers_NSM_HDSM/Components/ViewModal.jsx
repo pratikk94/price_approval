@@ -200,7 +200,7 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
               </Typography>
             </div>
             <PriceTable price={data.price} />
-            <FileHandling request_id={data.request_name} />
+            {/* <FileHandling request_id={data.request_name} /> */}
             <RemarkBox request_id={data.request_name} />
             {isEditable ? (
               <>

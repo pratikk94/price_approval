@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { backend_url } from "../../util";
 import FileUploader from "./FileUploader"; // Make sure this path is correct
 import FilesForRequest from "./FileForRequest";
+import { useSession } from "../../Login_Controller/SessionContext";
 
 export default function FileHandling({ requestId: initialRequestId }) {
   const [files, setFiles] = useState([]);
   const [tempFiles, setTempFiles] = useState([]);
   const [triggerFetch, setTriggerFetch] = useState(false);
-
+  const { session } = useSession();
   // Attempt to retrieve requestId from local storage or use the initialRequestId if not found
   const storedRequestId =
     localStorage.getItem("request_id") || initialRequestId;
@@ -38,7 +39,9 @@ export default function FileHandling({ requestId: initialRequestId }) {
   return (
     <div>
       <FilesForRequest files={files} tempFiles={tempFiles} />
-      <FileUploader onSuccess={onUploadSuccess} requestId={storedRequestId} />
+      {session.role === "AM" && (
+        <FileUploader onSuccess={onUploadSuccess} requestId={storedRequestId} />
+      )}
     </div>
   );
 }
