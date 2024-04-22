@@ -28,6 +28,7 @@ function RemarkBox({ request_id }) {
     fetch(`${backend_url}api/remarks?requestId=${request_id}`)
       .then((response) => response.json())
       .then((data) => {
+        // console.log("Remarks fetched:", data);
         setRemarks(data); // Combine remarks from multiple requests
       })
       .catch((error) => console.error("Error fetching remarks:", error));
@@ -65,7 +66,7 @@ function RemarkBox({ request_id }) {
         const newRemark = {
           id: remarks.length + 1,
           text: remarkText,
-          author: session.employee_id || "User Name",
+          authorId: session.employee_id || "User Name",
           timestamp: new Date(),
         };
         setRemarks((prevRemarks) => [newRemark, ...prevRemarks]);
@@ -108,7 +109,7 @@ function RemarkBox({ request_id }) {
         <Table aria-label="simple table">
           <TableHead>
             <TableRow>
-              <TableCell style={{ width: "5%" }}>ID</TableCell>
+              {/* <TableCell style={{ width: "5%" }}>ID</TableCell> */}
               <TableCell style={{ width: "70%" }}>Comment</TableCell>
               <TableCell style={{ width: "15%" }}>Posted By</TableCell>
               <TableCell style={{ width: "10%" }}>Date of Comment</TableCell>
@@ -117,11 +118,13 @@ function RemarkBox({ request_id }) {
           <TableBody>
             {remarks.map((remark) => (
               <TableRow key={remark.id}>
-                <TableCell component="th" scope="row" style={{ width: "5%" }}>
+                {/* <TableCell component="th" scope="row" style={{ width: "5%" }}>
                   {remark.id}
-                </TableCell>
+                </TableCell> */}
                 <TableCell style={{ width: "70%" }}>{remark.text}</TableCell>
-                <TableCell style={{ width: "15%" }}>{remark.author}</TableCell>
+                <TableCell style={{ width: "15%" }}>
+                  {remark.authorId}
+                </TableCell>
                 <TableCell style={{ width: "10%" }}>
                   {formatDistanceToNow(new Date(remark.timestamp), {
                     addSuffix: true,

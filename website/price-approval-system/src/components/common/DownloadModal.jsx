@@ -26,10 +26,11 @@ function FullScreenDialog({ open, onClose, id }) {
       .get(`${backend_url}api/price_requests?id=${id}`)
       .then((response) => {
         // Assuming the response data is directly the array you want to use
+
         console.log(response.data[0]);
         setPriceRequests(response.data[0]);
         setIdR(response.data[0]["request_name"]);
-        console.log(response.data[0]);
+        console.log(response.data[0]["request_name"]);
       })
       .catch((error) => console.error("Failed to fetch data:", error));
   }, [id]);

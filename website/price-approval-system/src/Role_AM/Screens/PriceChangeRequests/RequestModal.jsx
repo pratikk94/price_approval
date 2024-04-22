@@ -213,7 +213,10 @@ const CreateRequestModal = ({
             // return;
           }
 
-          if (tableRowsData[i]["gsmFrom"] < tableRowsData[i]["gsmTo"]) {
+          if (
+            parseInt(tableRowsData[i]["gsmFrom"]) <
+            parseInt(tableRowsData[i]["gsmTo"])
+          ) {
             setErrorMessage(
               "GSM From should be less than GSM To for Row " + (i + 1)
             );
@@ -331,7 +334,8 @@ const CreateRequestModal = ({
       const value = localStorage.getItem(key);
       console.log(`${key}: ${value}`);
     }
-    const tempIds = localStorage.getItem("request_id") || initialRequestId;
+
+    const tempIds = localStorage.getItem("request_id") ?? [];
     console.log(`Temp ids are ${tempIds}`);
     console.log(typeof tempIds);
     console.log(tempIds == "undefined");

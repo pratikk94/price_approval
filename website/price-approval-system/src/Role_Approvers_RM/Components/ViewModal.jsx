@@ -163,6 +163,9 @@ function PriceViewModal({
     window.location.reload();
   };
   const [errorMessage, setErrorMessage] = useState("");
+
+  console.log("Data: ", data);
+
   return (
     <>
       <ReactModal

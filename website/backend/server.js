@@ -22,10 +22,10 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  password: "SayaliK20311",
-  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  //password: "12345",
-  //server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  //password: "SayaliK20311",
+  //server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "12345",
+  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
   database: "PriceApprovalSystem",
   options: {
@@ -698,9 +698,10 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
               hdsm_values[i] == 1 &&
               validator_values[i] == 1
             ) {
-              details.find((map) => map.req_id === ids_values[i]).am_status = 1;
+              console.log(details.find((map) => map.id == ids_values[i]));
+              details.find((map) => map.id == ids_values[i]).am_status = 1;
             } else {
-              details.find((map) => map.req_id === ids_values[i]).am_status = 0;
+              details.find((map) => map.id == ids_values[i]).am_status = 0;
             }
           } else if (
             (nsm_values[i] == undefined || nsm_values[i] == null) &&
@@ -708,9 +709,9 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
             details[i] != undefined
           ) {
             if (hdsm_values[i] == 1 && validator_values[i] == 1) {
-              details.find((map) => map.req_id === ids_values[i]).am_status = 1;
+              details.find((map) => map.id == ids_values[i]).am_status = 1;
             } else {
-              details.find((map) => map.req_id === ids_values[i]).am_status = 0;
+              details.find((map) => map.id == ids_values[i]).am_status = 0;
             }
           } else if (
             (hdsm_values[i] == undefined || hdsm_values[i] == null) &&
@@ -718,14 +719,14 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
             details[i] != undefined
           ) {
             if (nsm_values[i] == 1 && validator_values[i] == 1) {
-              details.find((map) => map.req_id === ids_values[i]).am_status = 1;
+              details.find((map) => map.id == ids_values[i]).am_status = 1;
             } else {
-              details.find((map) => map.req_id === ids_values[i]).am_status = 0;
+              details.find((map) => map.id == ids_values[i]).am_status = 0;
             }
           } else if (
-            details.find((map) => map.req_id === ids_values[i]) != undefined
+            details.find((map) => map.id == ids_values[i]) != undefined
           ) {
-            details.find((map) => map.req_id === ids_values[i]).am_status = 0;
+            details.find((map) => map.id == ids_values[i]).am_status = 0;
           }
           details.filter((detail) => detail.am_status === 1);
         }
@@ -2762,8 +2763,8 @@ app.get("/api/price_requests", async (req, res) => {
         `SELECT 
         pra.*,
         prt.*,
+        rs.request_name as request_name,
         
-        rs.created_at,rs.last_updated_at,rs.status_updated_by_id,
         (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
             FROM customer c
             JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
@@ -2781,7 +2782,7 @@ app.get("/api/price_requests", async (req, res) => {
     LEFT JOIN 
         price_approval_requests_price_table prt ON pra.req_id = prt.req_id
       LEFT JOIN
-          report_status rs ON pra.req_id = rs.report_id
+          request_status rs ON pra.req_id = rs.req_id
       INNER JOIN (
         SELECT parent_req_id, MAX(req_id) AS max_req_id
         FROM [request_status]

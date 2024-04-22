@@ -8,7 +8,8 @@ TRUNCATE TABLE [price_approval_requests];
 TRUNCATE TABLE [price_approval_requests_price_table];
 TRUNCATE TABLE [transaction];
 TRUNCATE TABLE [request_status]; 
-TRUNCATE TABLE [files];   
+TRUNCATE TABLE [files];  
+TRUNCATE TABLE [remarks]; 
 
 /*
 Redundat tables
@@ -20,6 +21,26 @@ region
 rules
 */
 
-UPDATE  [transaction]
-SET rm = '1'
-WHERE id = 12;
+
+/*
+
+To add a BAM.
+
+*/
+INSERT INTO [dbo].[define_roles]
+           ([employee_name]
+           ,[employee_id]
+           ,[role]
+           ,[region]
+           ,[created_by]
+           ,[created_date]
+           ,[active])
+     VALUES
+           ('Admin'
+           ,'e1'
+           ,'BAM'
+           ,''
+           ,''
+           ,''
+           ,1)
+GO
