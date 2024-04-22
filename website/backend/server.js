@@ -2027,6 +2027,8 @@ function getStatus(status) {
       return "Approved";
     case "2":
       return "Rejected";
+    case "3":
+      break;
     case "0":
       return "Pending";
     case "-2":
