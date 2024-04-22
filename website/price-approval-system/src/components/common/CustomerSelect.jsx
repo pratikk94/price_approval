@@ -47,13 +47,20 @@ const CustomerSelect = ({
     };
     fetchCustomers();
   }, [disabled, id, selectedCustomersToEdit, customerState]);
+
   const handleChange = (selected) => {
     // Only update if not disabled
-
+    console.log(selected);
+    console.log(!disabled);
+    console.log(id);
     if (!disabled) {
       setSelectedOptions(selected);
       if (id === 1) customerState(selected);
       if (id === 2) consigneeState(selected);
+      if (id === 3) {
+        console.log("End use state");
+        endUseState(selected);
+      }
     }
   };
 
@@ -80,10 +87,7 @@ const CustomerSelect = ({
       name={name}
       options={customers}
       value={selectedOptions}
-      onChange={(e) => {
-        setSelectedOptions(e);
-        endUseState(e);
-      }}
+      onChange={handleChange}
       onBlur={handleBlur}
       closeMenuOnSelect={false}
       placeholder={`Select ${name}`}

@@ -215,7 +215,7 @@ async function changeReqIds(tempRequestIds, newRequestId) {
   }
 }
 
-async function fetchAndProcessRules(requestId, employeeId) {
+async function fetchAndProcessRules(requestId, employeeId, isReworked, isAM) {
   let pool = null;
   try {
     // Establish a connection
@@ -251,6 +251,15 @@ async function fetchAndProcessRules(requestId, employeeId) {
     // 5. Extract values of rm, nsm, hdsm, and validator for active and valid rules
     for (const rule of rulesResults.recordset) {
       console.log("Processing rule:", rule);
+      let reworked = isReworked ? 1 : 0;
+      let rmUpdate =
+        isReworked && isAM
+          ? 0
+          : `CASE WHEN @rm = 0 THEN 1 ELSE ${reworked} END`;
+
+      let nsmUpdate = isReworked
+        ? "0,"
+        : "CASE WHEN @nsm > 1 THEN NULL WHEN @nsm = 1 THEN @employeeId ELSE NULL END,";
       const insertQuery = `
             INSERT INTO [transaction] (
                 request_id, rule_id, region, am, am_status, am_status_updated_at,
@@ -261,16 +270,15 @@ async function fetchAndProcessRules(requestId, employeeId) {
             )
             OUTPUT INSERTED.request_id
             VALUES (
-                @requestId, @ruleId, @region, 0, 0, GETDATE(), @employeeId,
+                @requestId, @ruleId, @region, 0 , 1
+                , GETDATE(), @employeeId,
                 @rm, @nsm, @hdsm, @validator,GETDATE(),
-                CASE WHEN @rm = 0 THEN -1 ELSE 0 END,
+                ${rmUpdate},
                 CASE WHEN @rm = 0 THEN GETDATE() ELSE NULL END,
                 CASE WHEN @rm = 0 THEN -1 ELSE NULL END,
-                CASE 
-                  WHEN @nsm > 1 THEN NULL 
-                  WHEN @nsm = 1 THEN 0 
-                  WHEN @nsm = 0 THEN -1  
-                END,
+                
+                  ${nsmUpdate}        
+                
                 CASE 
                   WHEN @nsm > 1 THEN NULL 
                   WHEN @nsm = 1 THEN GETDATE() 
@@ -298,12 +306,16 @@ async function fetchAndProcessRules(requestId, employeeId) {
                 END
                 )`;
 
+      let am = 0;
+      console.log(`REWORK: ${isReworked}`);
+
       const result = await pool
         .request()
         .input("requestId", sql.NVarChar, requestId.toString())
         .input("ruleId", sql.NVarChar, rule.rule_name)
         .input("region", sql.NVarChar, region)
         .input("employeeId", sql.NVarChar, employeeId)
+        .input("am", sql.Int, am)
         .input("rm", sql.Int, rule.rm)
         .input("nsm", sql.Int, rule.nsm)
         .input("hdsm", sql.Int, rule.hdsm)
@@ -352,35 +364,32 @@ async function getNewRequestName(parentId, type) {
         prepend = "ER";
         let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
         new_req_name = prepend + new_req_name + new_current_id;
-      }
-      // else if (type === "U" && curr_status === "U") {
-      //   prepend = "UR";
-      //   let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
-      //   new_req_name = prepend + new_req_name + new_current_id;
-      // }
-      else if (type === "E") {
+      } else if (type === "U" && curr_status === "U") {
+        prepend = "UR";
+        let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
+        new_req_name = prepend + new_req_name + new_current_id;
+      } else if (type === "E") {
         const result = await pool.request()
           .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'ER%' ORDER BY id DESC`;
         new_req_name =
           result.recordset[0].request_name.substring(0, 7) +
           (parseInt(result.recordset[0].request_name.substring(7, 11)) + 1);
-      }
-      // else if (type === "U") {
-      //   const result = await pool.request()
-      //     .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'UR%' ORDER BY id DESC`;
-      //   console.log(result.recordset.length);
-      //   if (result.recordset.length == 0) {
-      //     const resultFindNR = await pool
-      //       .request()
-      //       .input("parentId", sql.Int, parentId)
-      //       .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
+      } else if (type === "U") {
+        const result = await pool.request()
+          .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'UR%' ORDER BY id DESC`;
+        console.log(result.recordset.length);
+        if (result.recordset.length == 0) {
+          const resultFindNR = await pool
+            .request()
+            .input("parentId", sql.Int, parentId)
+            .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
 
-      //     new_req_name = `UR${resultFindNR.recordset[0].request_name.substring(
-      //       2,
-      //       12
-      //     )}`;
-      //   }
-      else {
+          new_req_name = `UR${resultFindNR.recordset[0].request_name.substring(
+            2,
+            12
+          )}`;
+        }
+      } else {
         console.log(result.recordset[0].request_name.toString());
         new_req_name =
           result.recordset[0].request_name.toString().substring(0, 7) +
@@ -437,8 +446,8 @@ async function insertRequest(isNewRequest, reqId, parentReqId) {
     console.log("STATUS" + isNewRequest);
     if (isNewRequest === 3) requestType = "B";
     else if (isNewRequest === 2) requestType = "E";
-    else if (isNewRequest == "N" || isNewRequest === 0) requestType = "N";
-    // else if (isNewRequest == 0) requestType = "U";
+    else if (isNewRequest == "N") requestType = "N";
+    else if (isNewRequest == 0) requestType = "U";
     else if (isNewRequest == "D") requestType = "D";
     const parentReqIdValue = parentReqId;
     console.log(
@@ -860,12 +869,13 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
       .query(
         `WITH LatestTransactionPerRequest AS (
           SELECT 
-              request_id,
-              MAX(id) AS MaxId
+              MAX(t.id) AS MaxId
           FROM 
-              [transaction]
+              [transaction] t
+          INNER JOIN  request_status r_s on
+                t.request_id = r_s.id 
           GROUP BY 
-              request_id
+              r_s.parent_req_id
       )
       , DetailedTransactions AS (
           SELECT 
@@ -873,8 +883,10 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
               lt.MaxId as LatestTransactionId
           FROM 
               [transaction] t
+              
           INNER JOIN 
               LatestTransactionPerRequest lt ON t.id = lt.MaxId
+            WHERE t.rm_status = @status and t.region = @region
       )
       SELECT 
           dt.request_id,
@@ -901,16 +913,23 @@ async function FetchRMDataWithStatus(employeeId, status, res) {
           dt.hdsm,
           dt.validator,
           dt.nsm,
-          dt.timestamp
+          dt.timestamp,
+          r_s.parent_req_id
       FROM 
           DetailedTransactions dt
-      WHERE 
-          dt.rm_status = @status and dt.region = @region ;`
+      INNER JOIN price_approval_requests_price_table par on 
+          par.req_id = dt.request_id
+      INNER JOIN profit_center pc on 
+          pc.Grade = par.grade 
+      INNER JOIN  request_status r_s on
+          par.req_id = r_s.id 
+      
+;`
       );
 
     console.log(idsResult);
     // Assuming you're using these IDs to fetch related price requests...
-    const ids = idsResult.recordset.map((row) => row.request_id);
+    const ids = idsResult.recordset.map((row) => row.parent_req_id);
     const ams = idsResult.recordset.map((row) => row.am_status);
     const rms = idsResult.recordset.map((row) => row.rm_status);
     const rms_i = idsResult.recordset.map((row) => row.rm_id);
@@ -1004,12 +1023,13 @@ async function FetchNSMDataWithStatus(employeeId, status, res, isNsmT) {
       .query(
         `WITH LatestTransactionPerRequest AS (
           SELECT 
-              request_id,
-              MAX(id) AS MaxId
+              MAX(t.id) AS MaxId
           FROM 
-              [transaction]
+              [transaction] t
+          INNER JOIN  request_status r_s on
+                t.request_id = r_s.id 
           GROUP BY 
-              request_id
+              r_s.parent_req_id
       )
       , DetailedTransactions AS (
           SELECT 
@@ -1017,8 +1037,10 @@ async function FetchNSMDataWithStatus(employeeId, status, res, isNsmT) {
               lt.MaxId as LatestTransactionId
           FROM 
               [transaction] t
+              
           INNER JOIN 
               LatestTransactionPerRequest lt ON t.id = lt.MaxId
+            WHERE t.nsm_status = @status
       )
       SELECT 
           dt.request_id,
@@ -1045,15 +1067,18 @@ async function FetchNSMDataWithStatus(employeeId, status, res, isNsmT) {
           dt.hdsm,
           dt.validator,
           dt.nsm,
-          dt.timestamp
+          dt.timestamp,
+          r_s.parent_req_id
       FROM 
           DetailedTransactions dt
       INNER JOIN price_approval_requests_price_table par on 
           par.req_id = dt.request_id
       INNER JOIN profit_center pc on 
           pc.Grade = par.grade 
-      WHERE 
-          dt.nsm_status = @status and ${nsmQuery} ;`
+      INNER JOIN  request_status r_s on
+          par.req_id = r_s.id 
+      
+;`
       );
 
     console.log(idsResult);
@@ -1140,54 +1165,63 @@ async function FetchHDSMDataWithStatus(employeeId, status, res) {
       .input("status", sql.VarChar, status) // Correctly setting the parameter
       .query(
         `WITH LatestTransactionPerRequest AS (
-            SELECT 
-                request_id,
-                MAX(id) AS MaxId
-            FROM 
-                [transaction]
-            GROUP BY 
-                request_id
-        )
-        , DetailedTransactions AS (
-            SELECT 
-                t.*,
-                lt.MaxId as LatestTransactionId
-            FROM 
-                [transaction] t
-            INNER JOIN 
-                LatestTransactionPerRequest lt ON t.id = lt.MaxId
-        )
-        SELECT 
-            dt.request_id,
-            dt.region,
-            dt.rule_id,
-            dt.am,
-            dt.am_status,
-            dt.am_status_updated_at,
-            dt.am_id,
-            dt.rm,
-            dt.rm_status,
-            dt.rm_status_updated_at,
-            dt.rm_id,
-            dt.nsm_status,
-            dt.nsm_status_updated_at,
-            dt.nsm_id,
-            dt.hdsm_status,
-            dt.hdsm_status_updated_at,
-            dt.hdsm_id,
-            dt.validator_status,
-            dt.validator_status_updated_at,
-            dt.validator_id,
-            dt.id,
-            dt.hdsm,
-            dt.validator,
-            dt.nsm,
-            dt.timestamp
-        FROM 
-            DetailedTransactions dt
-        WHERE 
-            dt.hdsm_status = @status AND dt.nsm > 0
-                 `
+          SELECT 
+              MAX(t.id) AS MaxId
+          FROM 
+              [transaction] t
+          INNER JOIN  request_status r_s on
+                t.request_id = r_s.id 
+          GROUP BY 
+              r_s.parent_req_id
+      )
+      , DetailedTransactions AS (
+          SELECT 
+              t.*,
+              lt.MaxId as LatestTransactionId
+          FROM 
+              [transaction] t
+              
+          INNER JOIN 
+              LatestTransactionPerRequest lt ON t.id = lt.MaxId
+            WHERE t.hdsm_status = @status
+      )
+      SELECT 
+          dt.request_id,
+          dt.region,
+          dt.rule_id,
+          dt.am,
+          dt.am_status,
+          dt.am_status_updated_at,
+          dt.am_id,
+          dt.rm,
+          dt.rm_status,
+          dt.rm_status_updated_at,
+          dt.rm_id,
+          dt.nsm_status,
+          dt.nsm_status_updated_at,
+          dt.nsm_id,
+          dt.hdsm_status,
+          dt.hdsm_status_updated_at,
+          dt.hdsm_id,
+          dt.validator_status,
+          dt.validator_status_updated_at,
+          dt.validator_id,
+          dt.id,
+          dt.hdsm,
+          dt.validator,
+          dt.nsm,
+          dt.timestamp,
+          r_s.parent_req_id
+      FROM 
+          DetailedTransactions dt
+      INNER JOIN price_approval_requests_price_table par on 
+          par.req_id = dt.request_id
+      INNER JOIN profit_center pc on 
+          pc.Grade = par.grade 
+      INNER JOIN  request_status r_s on
+          par.req_id = r_s.id 
+      
+;`
       );
 
     console.log(idsResult);
@@ -1277,12 +1311,13 @@ async function FetchValidatorDataWithStatus(employeeId, status, res) {
       .query(
         `WITH LatestTransactionPerRequest AS (
           SELECT 
-              request_id,
-              MAX(id) AS MaxId
+              MAX(t.id) AS MaxId
           FROM 
-              [transaction]
+              [transaction] t
+          INNER JOIN  request_status r_s on
+                t.request_id = r_s.id 
           GROUP BY 
-              request_id
+              r_s.parent_req_id
       )
       , DetailedTransactions AS (
           SELECT 
@@ -1290,8 +1325,10 @@ async function FetchValidatorDataWithStatus(employeeId, status, res) {
               lt.MaxId as LatestTransactionId
           FROM 
               [transaction] t
+              
           INNER JOIN 
               LatestTransactionPerRequest lt ON t.id = lt.MaxId
+            WHERE t.validator_status = @status and t.region = @region
       )
       SELECT 
           dt.request_id,
@@ -1318,11 +1355,16 @@ async function FetchValidatorDataWithStatus(employeeId, status, res) {
           dt.hdsm,
           dt.validator,
           dt.nsm,
-          dt.timestamp
+          dt.timestamp,
+          r_s.parent_req_id
       FROM 
           DetailedTransactions dt
-      WHERE 
-          dt.validator_status = @status and dt.region = @region ;`
+      INNER JOIN price_approval_requests_price_table par on 
+          par.req_id = dt.request_id
+      INNER JOIN profit_center pc on 
+          pc.Grade = par.grade 
+      INNER JOIN  request_status r_s on
+          par.req_id = r_s.id `
       );
     console.log("IDS", idsResult);
     // Assuming you're using these IDs to fetch related price requests...
@@ -2953,6 +2995,7 @@ app.post("/api/add_price_request", async (req, res) => {
       mappint_type,
       statusUpdatedById,
       tempRequestIds,
+      isAM,
     } = req.body;
     mappint_type != undefined ? (mappint_type = 2) : (mappint_type = 1);
     console.log(req.body);
@@ -3023,11 +3066,14 @@ app.post("/api/add_price_request", async (req, res) => {
       req.body.mode != undefined ? req.body.parentReqId : requestId
     );
 
+    let isRework = false;
+    if (req.body.mode != undefined) isRework = true;
+
     changeReqIds(tempRequestIds, requestId.toString())
       .then(() => console.log("Request IDs updated successfully."))
       .catch((error) => console.error("Error updating Request IDs:", error));
 
-    fetchAndProcessRules(requestId, req.body.am_id)
+    fetchAndProcessRules(requestId, req.body.am_id, isRework, isAM)
       .then(() => console.log("Finished processing."))
       .catch((err) => console.error(err));
 
@@ -3187,35 +3233,71 @@ app.post("/api/update_request_status_manager", async (req, res) => {
         : latestRow.rm_status;
     newRmStatus == -2 ? (rmStatus = -2) : rmStatus;
 
+    if (newRmStatus == undefined) {
+      newRmStatus = latestRow.rm_status;
+    } else {
+      if (newRmStatus == -2) {
+        rmStatus = -4;
+      } else {
+        rmStatus = newRmStatus;
+      }
+    }
+
     console.log(`RMStatus ->${rmStatus}`);
-    nsmStatus =
-      rmIndex == 2
-        ? action
-        : newNsmStatus != undefined
-        ? newNsmStatus == -2
-          ? null
-          : newNsmStatus == -4
-          ? null
-          : newNsmStatus
-        : latestRow.nsm_status;
-    hdsmStatus =
-      rmIndex == 3
-        ? action
-        : newHdsmStatus != undefined
-        ? newHdsmStatus == -2
-          ? null
-          : newHdsmStatus == -4
-          ? null
-          : newHdsmStatus
-        : latestRow.hdsm_status;
-    validatorStatus =
-      rmIndex == 4
-        ? action
-        : newValidatorStatus != undefined
-        ? newValidatorStatus == -2
-          ? null
-          : newValidatorStatus
-        : latestRow.validator_status;
+    console.log(`NewNSMStatus ->${newNsmStatus}`);
+    console.log(`rmIndex ->${rmIndex}`);
+    let nsmStatus = null;
+
+    if (newNsmStatus == undefined) {
+      newNsmStatus = latestRow.nsm_status;
+    } else {
+      if (newNsmStatus == -2) {
+        nsmStatus = -4;
+      } else {
+        nsmStatus = newNsmStatus;
+      }
+    }
+    let hdsmStatus = null;
+    if (newHdsmStatus == undefined) {
+      newHdsmStatus = latestRow.hdsm_status;
+    } else {
+      if (newHdsmStatus == -2) {
+        hdsmStatus = -4;
+      } else {
+        hdsmStatus = newHdsmStatus;
+      }
+    }
+
+    // hdsmStatus =
+    //   rmIndex == 3
+    //     ? action
+    //     : newHdsmStatus != undefined
+    //     ? newHdsmStatus == -2
+    //       ? -4
+    //       : newHdsmStatus == -4
+    //       ? -4
+    //       : newHdsmStatus
+    //     : latestRow.hdsm_status;
+    let validatorStatus = null;
+    if (newValidatorStatus == undefined) {
+      newValidatorStatus = latestRow.validator_status;
+    } else {
+      if (newValidatorStatus == -2) {
+        validatorStatus = -4;
+      } else {
+        validatorStatus = newValidatorStatus;
+      }
+    }
+
+    // validatorStatus =
+    //   rmIndex == 4
+    //     ? action
+    //     : newValidatorStatus != undefined
+    //     ? newValidatorStatus == -2
+    //       ? null
+    //       : newValidatorStatus
+    //     : latestRow.validator_status;
+    console.log("NSM Status", nsmStatus);
     console.log("HDSM Status", hdsmStatus);
     console.log(latestRow.hdsm_status_updated_at);
     console.log("Latest", latestRow);
@@ -3266,7 +3348,11 @@ app.post("/api/update_request_status_manager", async (req, res) => {
       .input(
         "nsmStatus",
         sql.VarChar,
-        nsmStatus == undefined ? null : nsmStatus.toString()
+        nsmStatus != null
+          ? nsmStatus != -4
+            ? nsmStatus.toString()
+            : null
+          : null
       )
       .input(
         "nsmStatusUpdatedAt",
@@ -3284,7 +3370,11 @@ app.post("/api/update_request_status_manager", async (req, res) => {
       .input(
         "hdsmStatus",
         sql.VarChar,
-        hdsmStatus == undefined ? null : hdsmStatus.toString()
+        hdsmStatus != null
+          ? hdsmStatus != -4
+            ? hdsmStatus.toString()
+            : null
+          : null
       )
       .input(
         "hdsmStatusUpdatedAt",
@@ -3305,10 +3395,10 @@ app.post("/api/update_request_status_manager", async (req, res) => {
         "validatorStatus",
         sql.VarChar,
         validatorStatus != null
-          ? validatorStatus == undefined
-            ? null
-            : validatorStatus.toString()
-          : ""
+          ? validatorStatus != -4
+            ? validatorStatus.toString()
+            : null
+          : null
       )
       .input(
         "validatorStatusUpdatedAt",

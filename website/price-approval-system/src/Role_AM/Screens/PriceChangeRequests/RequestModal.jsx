@@ -100,19 +100,23 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     // }, 2000); // Close the modal and hide success message after 2 seconds
   };
   const [errorMessage, setErrorMessage] = useState("");
-
+  console.log(`Mode is ${mode}`);
   const handleFormSubmit = (event, draft = false) => {
     handleOpen();
     setShowSuccess(false);
     event.preventDefault();
+    console.log(endUse);
+    console.log(endUse != undefined);
+    console.log(endUse["value"] != undefined);
     if (
       validFrom != "" &&
       validTo != "" &&
       paymentTerms != undefined &&
       selectedCustomers.length > 0 &&
       selectedConsignees.length > 0 &&
-      endUse.value != 0
+      endUse["value"] != undefined
     ) {
+      console.log(endUse);
       if (paymentTerms.length == 0) {
         setErrorMessage("Please select Payment Terms");
       } else {
@@ -122,7 +126,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         formData["consigneeIds"] = selectedConsignees
           .map((item) => item.value)
           .join(",");
-        formData["endUseIds"] = endUse.value.toString();
+        formData["endUseIds"] = endUse["value"].toString();
         formData["endUseSegmentIds"] = ["seg1"].toString();
         formData["plants"] = plant
           .map((item) => item.value.toString())
@@ -213,6 +217,8 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       setErrorMessage("Please select Valid From date");
     } else if (validTo == "") {
       setErrorMessage("Please select Valid To date");
+    } else if (endUse.length == 0) {
+      setErrorMessage("Please select End Use");
     } else {
       console.log("All checks met");
     }
@@ -250,12 +256,20 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
       setSelectedCustomerIDs(data.customer_id);
       // con    sole.log(data.consignee_id);
       setSelectedEndUseIDs(data.end_use_id);
+      setEndUse({
+        value: data.end_use_id,
+        label: `End Use ${data.end_use_id}`,
+      });
       // Assumption: plant, paymentTermsId are singular values, not lists
       setPlant([{ value: data.plant, label: `Plant ${data.plant}` }]);
       setPaymentTerms({
         value: data.payment_terms_id,
         label: `Terms ${data.payment_terms_id}`,
       });
+
+      console.log(data.valid_from);
+      console.log(data.valid_to);
+
       setValidFrom(data.valid_from);
       setValidTo(data.valid_to);
       setFSC(data.fsc == "1" ? "Y" : "N");
@@ -294,6 +308,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         formData["parentReqId"] = reqId; // Assuming `reqId` is defined somewhere in your component as the current request ID
         formData["isNew"] = false;
         formData["mode"] = mode; // Assuming `mode` is defined and indicates the type of operation (new, edit, etc.)
+        formData["isAM"] = session.role === "AM"; // Assuming `session` is defined and contains the user's role
       }
       console.log(formData);
 

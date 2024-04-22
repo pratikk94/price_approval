@@ -6,13 +6,13 @@ import "react-datepicker/dist/react-datepicker.css";
 
 function CustomDatePicker({ name, setSelection, editedData }) {
   const [startDate, setStartDate] = useState("");
-
+  console.log(`Time${editedData.length}`);
   return (
     <div>
       <Typography variant="p">{name + "\t"}</Typography>
 
       <DatePicker
-        selected={startDate}
+        selected={editedData.length != 0 ? editedData : startDate}
         dateFormat="dd/MM/yyyy"
         onChange={(date) => {
           setStartDate(date);
