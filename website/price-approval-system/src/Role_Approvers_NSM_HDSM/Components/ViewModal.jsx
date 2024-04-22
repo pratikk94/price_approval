@@ -22,7 +22,7 @@ import { IconButton } from "@mui/material";
 import RemarkBox from "../../components/common/RemarkBox";
 import HistoryModal from "../../components/common/History";
 import { useSession } from "../../Login_Controller/SessionContext";
-import { green, red } from "@mui/material/colors";
+
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import FileHandling from "../../components/common/FileHandling";
@@ -87,6 +87,7 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
   console.log(`Opened VSM:${openNSM}`);
   const { session } = useSession();
   const employee_id = session.employee_id;
+  console.log(data);
   const updateStatus = (newStatus) => {
     let reportData = {
       request_id: id, // Example reportId
@@ -200,7 +201,9 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
               </Typography>
             </div>
             <PriceTable price={data.price} />
-            {/* <FileHandling request_id={data.request_name} /> */}
+            {data.request_name != undefined && (
+              <FileHandling requestId={data.request_name} />
+            )}
             <RemarkBox request_id={data.request_name} />
             {isEditable ? (
               <>
@@ -270,7 +273,7 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
       >
         <>
           {showSuccess ? (
-            <Box sx={{ mt: 2, color: green[500] }}>
+            <Box sx={{ mt: 2, color: color[500] }}>
               <CheckCircleOutlineIcon
                 sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
               />
@@ -283,12 +286,12 @@ function PriceViewModal({ openNSM, onClose, id, data, isEditable }) {
                   onClick={handleConfirm}
                   sx={{ mt: 2 }}
                 >
-                  Confirm
+                  Ok
                 </Button>
               </center>
             </Box>
           ) : (
-            <Box sx={{ mt: 2, color: red[500] }}>
+            <Box sx={{ mt: 2, color: "black" }}>
               {/* <ErrorOutlineIcon
                 sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
               /> */}

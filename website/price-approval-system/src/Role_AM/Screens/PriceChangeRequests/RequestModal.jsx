@@ -22,9 +22,11 @@ import { useSession } from "../../../Login_Controller/SessionContext";
 import AlertBox from "../../../components/common/AlertBox";
 import FileHandling from "../../../components/common/FileHandling";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import { green, orange, red } from "@mui/material/colors";
+import { green, red } from "@mui/material/colors";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { format, toZonedTime } from "date-fns-tz";
+import HistoryModal from "../../../Role_Business_Admin/Components/RequestHistoryModal";
+
 const style = {
   position: "absolute",
   top: "10%",
@@ -591,6 +593,8 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
           {session.role == "AM" && <FileHandling />}
 
           <RemarkBox />
+
+          {/* <HistoryModal reqId={id} /> */}
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
             <Button
               type="submit"
@@ -644,7 +648,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
                 onClick={handleConfirm}
                 sx={{ mt: 2 }}
               >
-                Confirm
+                Ok
               </Button>
             </Box>
           ) : (
@@ -654,7 +658,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
               />
               <br />
 
-              <Typography id="modal-modal-description">
+              <Typography id="modal-modal-description" sx={{ color: "black" }}>
                 Failed to create request.
                 <br /> Reason : {errorMessage}
               </Typography>
@@ -677,7 +681,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
-          <Box sx={{ mt: 2, color: orange[500] }}>
+          <Box sx={{ mt: 2 }}>
             Do you wish to choose one to one mapping for your customers and
             consignees?
             <br />

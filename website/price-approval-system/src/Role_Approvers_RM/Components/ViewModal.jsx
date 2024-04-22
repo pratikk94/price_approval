@@ -25,7 +25,7 @@ import FileUploader from "../../components/common/FileUploader";
 import FilesForRequest from "../../components/common/FileForRequest";
 import FileHandling from "../../components/common/FileHandling";
 import { BreakfastDiningOutlined, SpaceBar } from "@mui/icons-material";
-import { green, red } from "@mui/material/colors";
+
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -287,7 +287,7 @@ function PriceViewModal({
       >
         <>
           {showSuccess ? (
-            <Box sx={{ mt: 2, color: green[500] }}>
+            <Box sx={{ mt: 2, color: color[500] }}>
               <CheckCircleOutlineIcon
                 sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
               />
@@ -300,12 +300,12 @@ function PriceViewModal({
                   onClick={handleConfirm}
                   sx={{ mt: 2 }}
                 >
-                  Confirm
+                  Ok
                 </Button>
               </center>
             </Box>
           ) : (
-            <Box sx={{ mt: 2, color: red[500] }}>
+            <Box sx={{ mt: 2, color: "black" }}>
               {/* <ErrorOutlineIcon
                 sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
               /> */}

@@ -26,8 +26,9 @@ function FullScreenDialog({ open, onClose, id }) {
       .get(`${backend_url}api/price_requests?id=${id}`)
       .then((response) => {
         // Assuming the response data is directly the array you want to use
+        console.log(response.data[0]);
         setPriceRequests(response.data[0]);
-        setIdR(response.data[0]["req_id"]);
+        setIdR(response.data[0]["request_name"]);
         console.log(response.data[0]);
       })
       .catch((error) => console.error("Failed to fetch data:", error));
@@ -58,9 +59,6 @@ function FullScreenDialog({ open, onClose, id }) {
       <PDFViewer style={{ width: "100%", height: "90vh" }}>
         <MyDocument data={priceRequests} id={id} />
       </PDFViewer>
-      <Typography variant="body1" style={{ margin: 20 }}>
-        This is an example of a full-screen dialog.
-      </Typography>
     </Dialog>
   );
 }

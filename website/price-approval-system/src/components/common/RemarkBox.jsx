@@ -28,7 +28,7 @@ function RemarkBox({ request_id }) {
     fetch(`${backend_url}api/remarks?requestId=${request_id}`)
       .then((response) => response.json())
       .then((data) => {
-        setRemarks((prevRemarks) => [...prevRemarks, ...data]); // Combine remarks from multiple requests
+        setRemarks(data); // Combine remarks from multiple requests
       })
       .catch((error) => console.error("Error fetching remarks:", error));
   }, []);

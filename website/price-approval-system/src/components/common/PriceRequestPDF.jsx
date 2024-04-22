@@ -33,10 +33,8 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eeeeee",
-    borderBottomStyle: "solid",
     alignItems: "center",
+    borderColor: "#000",
   },
   tableHeader: {
     flexDirection: "row",
@@ -66,10 +64,13 @@ function MyDocument({ data }) {
       <Document>
         <Page size="A4" style={styles.page} orientation="landscape">
           <View style={styles.section}>
-            <Text>Request ID: {data.req_id}</Text>
+            <Text>Request ID: {data.request_name}</Text>
             <Text>Customer: {data.customer_id}</Text>
             <Text>Consignee: {data.consignee_id}</Text>
-            <Text>One to one mapping: {data.mapping_type}</Text>
+            <Text>
+              Customer to consignee mapping:{" "}
+              {data.mappint_type == 1 ? "One to one" : "One to many"}
+            </Text>
             <Text>Plant : {data.plant_name}</Text>
             <Text>End Use: {data.end_use_id}</Text>
 

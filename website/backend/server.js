@@ -3715,7 +3715,7 @@ app.get("/api/remarks", async (req, res) => {
     // Fetch all remarks
     const result =
       await sql.query`SELECT id, request_id, user_id as authorId, comment as text, created_at as timestamp FROM Remarks where request_id = ${req.query.requestId} ORDER BY created_at DESC `;
-
+    console.log(`MESSAGES->${result.recordset}`);
     // Send the fetched remarks
     res.status(200).json(result.recordset);
   } catch (err) {
