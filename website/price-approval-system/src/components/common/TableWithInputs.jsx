@@ -72,7 +72,7 @@ function TableWithInputs({
     console.log(prices);
     if (prices && prices.length > 0 && grades.length > 0) {
       console.log(prices[0].grade_type);
-
+      setFSCCode(fscCode);
       const newRows = prices.map((price, index) => {
         const newId = uuidv4(); // Calculate the new ID
 
@@ -346,7 +346,7 @@ function TableWithInputs({
       <FormControlLabel
         control={
           <Checkbox
-            checked={fsc == 1 ? true : false}
+            checked={fsc == "Y" ? true : false}
             onChange={handleFSCChange}
             icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
             checkedIcon={<CheckBoxIcon fontSize="medium" />}

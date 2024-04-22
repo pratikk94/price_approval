@@ -11,9 +11,11 @@ const corsOptions = {
   origin: "http://localhost:5173", // or the specific origin you want to allow
   credentials: true, // allowing credentials (cookies, session)
 };
+const timeZone = "Asia/Kolkata";
+
 const app = express();
 const PORT = process.env.PORT || 3001;
-const { format } = require("date-fns");
+const { format, toZonedTime } = require("date-fns-tz");
 const { listenerCount } = require("events");
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -588,12 +590,13 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       .query(
         `WITH LatestTransactionPerRequest AS (
           SELECT 
-              request_id,
-              MAX(id) AS MaxId
+              MAX(t.id) AS MaxId
           FROM 
-              [transaction]
+              [transaction] t
+          INNER JOIN  request_status r_s on
+                t.request_id = r_s.id 
           GROUP BY 
-              request_id
+              r_s.parent_req_id
       )
       , DetailedTransactions AS (
           SELECT 
@@ -601,8 +604,10 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
               lt.MaxId as LatestTransactionId
           FROM 
               [transaction] t
+              
           INNER JOIN 
               LatestTransactionPerRequest lt ON t.id = lt.MaxId
+            WHERE t.am_status = @status and t.region = @region
       )
       SELECT 
           dt.request_id,
@@ -629,11 +634,16 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
           dt.hdsm,
           dt.validator,
           dt.nsm,
-          dt.timestamp
+          dt.timestamp,
+          r_s.parent_req_id
       FROM 
           DetailedTransactions dt
-      WHERE 
-          dt.am_status = @status and dt.region = @region ;`
+      INNER JOIN price_approval_requests_price_table par on 
+          par.req_id = dt.request_id
+      INNER JOIN profit_center pc on 
+          pc.Grade = par.grade 
+      INNER JOIN  request_status r_s on
+          par.req_id = r_s.id `
       );
     console.log("IDS", idsResult);
     // Assuming you're using these IDs to fetch related price requests...
@@ -3067,8 +3077,20 @@ app.post("/api/add_price_request", async (req, res) => {
       .input("endUseIds", sql.VarChar, req.body.endUseIds)
       .input("endUseSegmentIds", sql.VarChar, req.body.endUseSegmentIds)
       .input("paymentTermsId", sql.VarChar, req.body.paymentTermsId)
-      .input("validFrom", sql.DateTime, new Date(req.body.validFrom))
-      .input("validTo", sql.DateTime, new Date(req.body.validTo))
+      .input(
+        "validFrom",
+        sql.NVarChar,
+        format(toZonedTime(req.body.validFrom, timeZone), "yyyy-MM-dd", {
+          timeZone,
+        })
+      )
+      .input(
+        "validTo",
+        sql.NVarChar,
+        format(toZonedTime(req.body.validTo, timeZone), "yyyy-MM-dd", {
+          timeZone,
+        })
+      )
       .input("fsc", sql.Int, req.body.fsc)
       .input("mappint_type", sql.Int, req.body.mappingType)
       .input("am_id", sql.VarChar, req.body.am_id)

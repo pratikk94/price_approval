@@ -24,6 +24,7 @@ import FileHandling from "../../../components/common/FileHandling";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { green, orange, red } from "@mui/material/colors";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { format, toZonedTime } from "date-fns-tz";
 const style = {
   position: "absolute",
   top: "10%",
@@ -58,7 +59,9 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [paymentTerms, setPaymentTerms] = useState([]);
   const [validFrom, setValidFrom] = useState([]);
   const [validTo, setValidTo] = useState([]);
-  const [fsc, setFSC] = useState(0);
+  const [fsc, setFSC] = useState(
+    editData != undefined ? editData["fsc"] == 1 : 0
+  );
   const [priceDetails, setPriceDetails] = useState([]); // Assuming this is an array of objects with the structure { price: number, ...
   const [remarks, setRemarks] = useState([]);
   const [checkBoxEnabled, setCheckBoxEnabled] = useState(false);
@@ -78,7 +81,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [newRequestId, setNewRequestId] = useState("");
   const [handleMapping, setHandleMapping] = useState(0);
   const [openOneToOneModal, setOpenOneToOneModal] = useState(false);
-
+  const timeZone = "Asia/Kolkata";
   const [showSuccess, setShowSuccess] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const handleOpen = () => setOpenModal(true);
@@ -106,11 +109,12 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     setShowSuccess(false);
     event.preventDefault();
     console.log(endUse);
-    const checkForEndUse = endUse
-      ? true
-      : endUse["value"] != undefined
-      ? true
-      : false;
+    const checkForEndUse =
+      endUse != undefined
+        ? endUse["value"] != undefined
+          ? true
+          : false
+        : false;
     console.log(checkForEndUse);
     if (
       validFrom != "" &&
@@ -136,8 +140,21 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
           .map((item) => item.value.toString())
           .toString();
         formData["paymentTermsId"] = paymentTerms["value"].toString();
-        formData["validFrom"] = validFrom;
-        formData["validTo"] = validTo;
+
+        formData["validFrom"] = format(
+          toZonedTime(validFrom, timeZone),
+          "yyyy-MM-dd HH:mm:ssXXX",
+          {
+            timeZone,
+          }
+        );
+        formData["validTo"] = format(
+          toZonedTime(validTo, timeZone),
+          "yyyy-MM-dd HH:mm:ssXXX",
+          {
+            timeZone,
+          }
+        );
         formData["remarks"] = remarks;
         formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
         formData["fsc"] = fsc == "Y" ? 1 : 0;
