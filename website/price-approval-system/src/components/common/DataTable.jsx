@@ -93,7 +93,7 @@ function DynamicTable({
   const [openNSM, setOpenNSM] = useState(false);
   const [openRM, setOpenRM] = useState(false);
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
-
+  const [parentId, setParentId] = useState(0);
   console.log("NSM_pending", pending);
 
   useEffect(() => {
@@ -217,12 +217,15 @@ function DynamicTable({
     };
 
     const fetchAMData = async () => {
+      console.log("in here", aprm_id);
       if (aprm_id != 0) {
         try {
           const response = await axios.get(
             `${backend_url}api/price_requests?id=${aprm_id}`
           );
+          console.log("IN_HERE");
           console.log(response.data[0]);
+          response.data[0].parent_id = id;
           setAprm(response.data[0]);
         } catch (error) {
           console.error("Error fetching rule data:", error);
@@ -271,8 +274,10 @@ function DynamicTable({
           const response = await axios.get(
             `${backend_url}api/fetch_price_request_by_id?id=${id}`
           );
+
           console.log(JSON.parse(response.data));
           setEditData(JSON.parse(response.data));
+          setParentId(id);
         } catch (error) {
           console.error("Error fetching rule data:", error);
         }
@@ -447,6 +452,7 @@ function DynamicTable({
                 onClick={() => {
                   console.log("ROW id is ", row_id);
                   console.log("REQ id is ", req_id);
+                  console.log("APRM ID is", aprm_id);
                   setOpenRM(true);
                   setOpenNSM(false);
                   handleView(row_id);
@@ -477,6 +483,7 @@ function DynamicTable({
                 handleEdit(row_id);
                 setId(row_id);
 
+                setAprmId(row_id);
                 //handleView(row_id);
                 console.log(row_id);
                 setRuleId(row_id);
@@ -573,6 +580,7 @@ function DynamicTable({
                   setEditModalOpen(true);
                   handleEdit(row_id);
                   setId(row_id);
+                  setAprmId(row_id);
                   //handleView(row_id);
                   console.log(row_id);
                   setRuleId(row_id);
@@ -1060,7 +1068,7 @@ function DynamicTable({
           handleClose();
           // Here you would also handle the "dumping" of file data as required by your application.
         }}
-        req
+        parentId={parentId}
         editData={editData}
         mode={mode}
       />

@@ -53,7 +53,13 @@ const modalStyle = {
   overflowY: "auto", // In case of overflow
 };
 
-const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
+const CreateRequestModal = ({
+  open,
+  handleClose,
+  editData,
+  mode,
+  parentId,
+}) => {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [selectedConsignees, setSelectedConsignees] = useState([]);
   const [endUse, setEndUse] = useState([]);
@@ -88,7 +94,6 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
   const [openModal, setOpenModal] = useState(false);
   const handleOpen = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
-
   const handleConfirmOneToOne = () => {
     setCheckBoxEnabled(true);
     setIsChecked(true);
@@ -288,6 +293,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     if (editData != undefined && editData.length > 0) {
       const [data] = editData; // Assuming editData is the array provided, and you're using the first item.
       console.log(`DATA-> ${data}`);
+      console.log(data);
       setReqId(data.req_id[0]);
 
       // Update states
@@ -350,7 +356,7 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
         formData.tempRequestIds = [tempRequestIds];
       }
       if (editData) {
-        formData["parentReqId"] = reqId; // Assuming `reqId` is defined somewhere in your component as the current request ID
+        formData["parentReqId"] = parentId; // Assuming `reqId` is defined somewhere in your component as the current request ID
         formData["isNew"] = false;
         formData["mode"] = mode; // Assuming `mode` is defined and indicates the type of operation (new, edit, etc.)
         formData["isAM"] = session.role === "AM"; // Assuming `session` is defined and contains the user's role

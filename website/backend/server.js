@@ -292,9 +292,12 @@ async function fetchAndProcessRules(requestId, employeeId, isReworked, isAM) {
           ? 0
           : `CASE WHEN @rm = 0 THEN 1 ELSE ${reworked} END`;
 
-      let nsmUpdate = isReworked
-        ? "0,"
-        : "CASE WHEN @nsm > 1 THEN NULL WHEN @nsm = 1 THEN @employeeId ELSE NULL END,";
+      let nsmUpdate =
+        isReworked && isAM
+          ? null
+          : isReworked && !isAM
+          ? 0
+          : "CASE WHEN @nsm > 1 THEN NULL WHEN @nsm = 1 THEN @employeeId ELSE NULL END";
       const insertQuery = `
             INSERT INTO [transaction] (
                 request_id, rule_id, region, am, am_status, am_status_updated_at,
@@ -312,7 +315,7 @@ async function fetchAndProcessRules(requestId, employeeId, isReworked, isAM) {
                 CASE WHEN @rm = 0 THEN GETDATE() ELSE NULL END,
                 CASE WHEN @rm = 0 THEN -1 ELSE NULL END,
                 
-                  ${nsmUpdate}        
+                  ${nsmUpdate}   ,     
                 
                 CASE 
                   WHEN @nsm > 1 THEN NULL 
@@ -393,15 +396,15 @@ async function getNewRequestName(parentId, type) {
 
       if (type === "B" && curr_status === "B") {
         prepend = "BR";
-        let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
+        let new_current_id = parseInt(curr_req_name.substring(7, 12)) + 1;
         new_req_name = prepend + new_req_name + new_current_id;
       } else if (type === "E" && curr_status === "E") {
         prepend = "ER";
-        let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
+        let new_current_id = parseInt(curr_req_name.substring(7, 12)) + 1;
         new_req_name = prepend + new_req_name + new_current_id;
       } else if (type === "U" && curr_status === "U") {
         prepend = "UR";
-        let new_current_id = parseInt(curr_req_name.substring(7, 11)) + 1;
+        let new_current_id = parseInt(curr_req_name.substring(7, 12)) + 1;
         new_req_name = prepend + new_req_name + new_current_id;
       } else if (type === "E") {
         const result = await pool.request()
@@ -670,6 +673,10 @@ async function FetchAMDataWithStatus(employeeId, status, res) {
       hdsm_i,
       validators
     );
+
+    console.log("___DETAILS___");
+    console.log(details);
+
     if (details != undefined && details.length > 0) {
       if (status == "1") {
         if (checkVariables(nsms, hdsm, validators, 1)) {
@@ -1795,7 +1802,7 @@ async function fetchPriceApprovalDetails(
         "Valid to",
       CASE 
         WHEN rs.status = 'N' THEN 'New request'
-        -- WHEN rs.status = 'U' THEN 'Updated request'
+        WHEN rs.status = 'U' THEN 'Updated request'
         ELSE rs.status -- This will return the original value for any value not matching 'N' or 'U'
       END AS "Request type",
       um.employee_name as "Created By",
@@ -1806,7 +1813,7 @@ async function fetchPriceApprovalDetails(
     LEFT JOIN request_status rs ON pra.req_id = rs.parent_req_id  
     LEFT JOIN [transaction] tr ON rs.req_id = tr.request_id
 WHERE 
-    pra.req_id = @reqId and rs.status IS NOT NULL ORDER BY rs.id DESC
+    tr.request_id = @reqId and rs.status IS NOT NULL ORDER BY rs.id DESC
     
   `);
 
@@ -1834,7 +1841,10 @@ WHERE
                 curr_status = "Rejected by RM";
                 latest_status_updated_by = "RM";
               } else if (rms[id] == 3) {
-                curr_status = "RM sent back to rewok";
+                curr_status = "RM sent back to rework";
+                latest_status_updated_by = "RM";
+              } else if (rms[id] == -4) {
+                curr_status = "RM sent back to rework";
                 latest_status_updated_by = "RM";
               }
             } else {
@@ -2516,8 +2526,39 @@ app.get("/api/fetch_price_requests", async (req, res) => {
     pool = await sql.connect(config);
 
     // Query the database
-    const result = await pool.request()
-      .query`EXEC FetchPriceRequest @status=${status}`;
+    const result = await pool.request().input("status", sql.Int, status).query`
+      SELECT 
+    pra.req_id,
+    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+        FROM customer c
+        JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
+    ) AS CustomerNames,
+    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+        FROM customer c
+        JOIN STRING_SPLIT(pra.consignee_id, ',') AS splitConsigneeIds ON c.code = TRY_CAST(splitConsigneeIds.value AS INT)
+    ) AS ConsigneeNames,
+    (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+        FROM customer c
+        JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
+    ) AS EndUseNames,
+    pra.*,
+    prt.*,
+    rs.created_at as created_on,
+    rs.last_updated_at as updated_on,
+    rs.status_updated_by_id as created_by
+FROM 
+    price_approval_requests pra
+LEFT JOIN
+    report_status rs ON pra.req_id = rs.report_id
+LEFT JOIN 
+    price_approval_requests_price_table prt ON pra.req_id = prt.req_id
+INNER JOIN (
+    SELECT parent_req_id, MAX(req_id) AS max_req_id
+    FROM [request_status]
+    GROUP BY parent_req_id
+) AS max_reqs ON pra.req_id = max_reqs.max_req_id
+
+`;
     // Send the results as a response
 
     const transformedData = result.recordset.map((item) => ({
@@ -2719,35 +2760,39 @@ app.get("/api/price_requests", async (req, res) => {
       .input("reqId", sql.Int, req_id)
       .query(
         `SELECT 
-      pra.*,
-      prt.*,
-      (SELECT STRING_AGG(p.name, ',') WITHIN GROUP (ORDER BY p.name) 
-        FROM plant p
-        JOIN STRING_SPLIT(pra.plant, ',') AS splitPlantIds ON p.id = TRY_CAST(splitPlantIds.value AS INT)
-    ) AS plant_name,
-      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
-          FROM customer c
-          JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
-      ) AS CustomerNames,
-      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
-          FROM customer c
-          JOIN STRING_SPLIT(pra.consignee_id, ',') AS splitConsigneeIds ON c.code = TRY_CAST(splitConsigneeIds.value AS INT)
-      ) AS ConsigneeNames,
-      (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
-          FROM customer c
-          JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
-      ) AS EndUseNames,
-      rst.request_name as request_name
-  FROM 
-      price_approval_requests pra
-  LEFT JOIN 
-      price_approval_requests_price_table prt ON pra.req_id = prt.req_id
-  LEFT JOIN
-      request_status rst ON pra.req_id = rst.parent_req_id
-  WHERE 
-      pra.req_id = @reqId
+        pra.*,
+        prt.*,
+        
+        rs.created_at,rs.last_updated_at,rs.status_updated_by_id,
+        (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+            FROM customer c
+            JOIN STRING_SPLIT(pra.customer_id, ',') AS splitCustomerIds ON c.code = TRY_CAST(splitCustomerIds.value AS INT)
+        ) AS CustomerNames,
+        (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+            FROM customer c
+            JOIN STRING_SPLIT(pra.consignee_id, ',') AS splitConsigneeIds ON c.code = TRY_CAST(splitConsigneeIds.value AS INT)
+        ) AS ConsigneeNames,
+        (SELECT STRING_AGG(c.name, ',') WITHIN GROUP (ORDER BY c.name) 
+            FROM customer c
+            JOIN STRING_SPLIT(pra.end_use_id, ',') AS splitEndUseIds ON c.code = TRY_CAST(splitEndUseIds.value AS INT)
+        ) AS EndUseNames
+    FROM 
+        price_approval_requests pra
+    LEFT JOIN 
+        price_approval_requests_price_table prt ON pra.req_id = prt.req_id
+      LEFT JOIN
+          report_status rs ON pra.req_id = rs.report_id
+      INNER JOIN (
+        SELECT parent_req_id, MAX(req_id) AS max_req_id
+        FROM [request_status]
+        
+    WHERE parent_req_id =@reqId
+        GROUP BY parent_req_id
+    ) AS max_reqs ON pra.req_id = max_reqs.max_req_id
   `
       );
+    console.log("_PRATIK_");
+    console.log(result.recordset);
 
     const formattedResult = result.recordset.reduce((acc, row) => {
       if (!acc[row.req_id]) {
@@ -2789,13 +2834,19 @@ app.get("/api/price_requests", async (req, res) => {
           // Other price table specific fields...
         });
       }
+
       return acc;
     }, {});
+
+    console.log(`FormateedResult`);
+
     console.log(formattedResult);
+
     const transformedData = Object.values(formattedResult).map((item) => ({
       ...item, // Spread the rest of the properties of the object
       req_id: item.req_id[0], // Assuming all values in req_id array are the same, take the first one
     }));
+
     res.json(transformedData);
     //res.json(Object.values(formattedResult));
   } catch (err) {
@@ -3098,7 +3149,7 @@ app.post("/api/add_price_request", async (req, res) => {
               VALUES (@customerIds, @consigneeIds, @plants, @endUseIds, @endUseSegmentIds, @paymentTermsId, @validFrom, @validTo, @fsc, @mappint_type,@am_id);
               SELECT SCOPE_IDENTITY() AS id;`);
 
-    const requestId = mainResult.recordset[0].id;
+    const requestId = mainResult.recordset[mainResult.recordset.length - 1].id;
     console.log(requestId);
     console.log("Here 1");
     console.log(req.body.priceTable);
@@ -3137,7 +3188,7 @@ app.post("/api/add_price_request", async (req, res) => {
                     @oldNetNSR=${oldNetNSR}`;
       console.log(result);
     }
-
+    console.log("3191", req.body.mode, req.body.parentReqId, requestId);
     const req_name = await insertRequest(
       req.body.isDraft == true
         ? "D"
@@ -3246,10 +3297,10 @@ app.post("/api/update_request_status_manager", async (req, res) => {
 
     // Fetch the latest row for the given requestId
     const fetchQuery = `
-          SELECT TOP 1 *
-          FROM [transaction]
-          WHERE request_id = @requestId
-          ORDER BY id DESC`;
+    SELECT  TOP 1 *
+    FROM [transaction] t
+    INNER JOIN request_status rs on t.request_id  = rs.id
+    ORDER BY t.id DESC`;
 
     const latestRowResult = await pool
       .request()
@@ -3406,6 +3457,8 @@ app.post("/api/update_request_status_manager", async (req, res) => {
       validatorId = employee_id;
     }
 
+    console.log("REQUEST_ID_TRANSFORMER_IS");
+
     const newRecordResult = await pool
       .request()
       .input("requestId", sql.VarChar, latestRow.request_id)
@@ -3538,16 +3591,21 @@ app.get("/api/fetch_price_request_by_id", async (req, res) => {
     console.log(id);
     // Perform the query
     const result = await pool.request().query`
-      SELECT 
-          par.*, 
-          part.*
-      FROM 
-          price_approval_requests AS par
-      LEFT JOIN 
-          price_approval_requests_price_table AS part
-      ON 
-          par.req_id = part.req_id
-      WHERE par.req_id = ${id}; 
+    WITH MaxReqID AS (
+      SELECT parent_req_id, MAX(req_id) AS max_req_id
+      FROM [request_status]
+      GROUP BY parent_req_id
+      HAVING parent_req_id = ${id}
+  )
+  SELECT 
+      par.*, 
+      part.*
+  FROM 
+      price_approval_requests AS par
+  LEFT JOIN 
+      price_approval_requests_price_table AS part ON par.req_id = part.req_id
+  JOIN
+      MaxReqID ON par.req_id = MaxReqID.max_req_id; 
   `;
 
     // Log or return the results
