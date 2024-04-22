@@ -34,14 +34,17 @@ function PriceTable({ price }) {
         <Table aria-label="price table">
           <TableHead>
             <TableRow>
-              <TableCell>Grade</TableCell>
-              <TableCell align="right">Agreed Price</TableCell>
-              <TableCell align="right">Special Discount</TableCell>
-              <TableCell align="right">Reel Discount</TableCell>
-              <TableCell align="right">TPC</TableCell>
-              <TableCell align="right">Offline Discount</TableCell>
-              <TableCell align="right">Net NSR</TableCell>
-              <TableCell align="right">Old Net NSR</TableCell>
+              <TableCell align="center">Grade</TableCell>
+              <TableCell align="center">Grade Type</TableCell>
+              <TableCell align="center">GSM From</TableCell>
+              <TableCell align="center">GSM To</TableCell>
+              <TableCell align="center">Agreed Price</TableCell>
+              <TableCell align="center">Special Discount</TableCell>
+              <TableCell align="center">Reel Discount</TableCell>
+              <TableCell align="center">TPC</TableCell>
+              <TableCell align="center">Offline Discount</TableCell>
+              <TableCell align="center">Net NSR</TableCell>
+              {/* <TableCell align="center">Old Net NSR</TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -50,13 +53,16 @@ function PriceTable({ price }) {
                 <TableCell component="th" scope="row">
                   {row.grade}
                 </TableCell>
+                <TableCell align="right">{row.grade_type}</TableCell>
+                <TableCell align="right">{row.gsm_range_from}</TableCell>
+                <TableCell align="right">{row.gsm_range_to}</TableCell>
                 <TableCell align="right">{row.agreed_price}</TableCell>
                 <TableCell align="right">{row.special_discount}</TableCell>
                 <TableCell align="right">{row.reel_discount}</TableCell>
                 <TableCell align="right">{row.tpc}</TableCell>
                 <TableCell align="right">{row.offline_discount}</TableCell>
                 <TableCell align="right">{row.net_nsr}</TableCell>
-                <TableCell align="right">{row.old_net_nsr}</TableCell>
+                {/* <TableCell align="right">{row.old_net_nsr}</TableCell> */}
               </TableRow>
             ))}
           </TableBody>

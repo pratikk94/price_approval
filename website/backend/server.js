@@ -1970,14 +1970,15 @@ async function getAllUpdatersWithLatestUpdateAndRoleHandlingInvalidDate(
           if (row[userInfo.idField] !== "-1" && row[timestampField]) {
             const formattedTimestamp = row[timestampField];
             let status = getStatus(row[statusField.toLowerCase()]);
-
-            if (i == 0) {
-              status = "Submitted";
+            if (status != "Unknown") {
+              if (i == 0) {
+                status = "Submitted";
+              }
+              const update = `${id}: ${userInfo.role.toUpperCase()} (${status}). Updated by ${
+                userInfo.name
+              } on ${formattedTimestamp}`;
+              updatesSet.add(update); // Add the update to the Set
             }
-            const update = `${id}: ${userInfo.role.toUpperCase()} (${status}). Updated by ${
-              userInfo.name
-            } on ${formattedTimestamp}`;
-            updatesSet.add(update); // Add the update to the Set
           }
         }
       }
@@ -2026,10 +2027,10 @@ function getStatus(status) {
       return "Approved";
     case "2":
       return "Rejected";
-    case "3":
-      return "Rework";
     case "0":
       return "Pending";
+    case "-2":
+      return "Sent_For_Rework";
     default:
       return "Unknown";
   }

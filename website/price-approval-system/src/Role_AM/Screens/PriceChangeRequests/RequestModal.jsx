@@ -175,6 +175,22 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
             setErrorMessage("Select Special Discount for Row " + (i + 1));
             setStopExecution(e, !e);
             // return;
+          } else if (tableRowsData[i]["gsmFrom"] == "") {
+            setErrorMessage("Select GSM From for Row " + (i + 1));
+            setStopExecution(e, !e);
+            // return;
+          } else if (tableRowsData[i]["gsmTo"] == "") {
+            setErrorMessage("Select GSM To for Row " + (i + 1));
+            setStopExecution(e, !e);
+            // return;
+          }
+
+          if (tableRowsData[i]["gsmFrom"] < tableRowsData[i]["gsmTo"]) {
+            setErrorMessage(
+              "GSM From should be less than GSM To for Row " + (i + 1)
+            );
+            setStopExecution(e, !e);
+            // return;
           }
         }
 

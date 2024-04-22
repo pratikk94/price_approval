@@ -57,8 +57,8 @@ function PriceTable({ price }) {
                   {row.grade}
                 </TableCell>
                 <TableCell align="right">{row.grade_type}</TableCell>
-                <TableCell align="right">{row.gsm_from}</TableCell>
-                <TableCell align="right">{row.gsm_to}</TableCell>
+                <TableCell align="right">{row.gsm_range_from}</TableCell>
+                <TableCell align="right">{row.gsm_range_to}</TableCell>
                 <TableCell align="right">{row.agreed_price}</TableCell>
                 <TableCell align="right">{row.special_discount}</TableCell>
                 <TableCell align="right">{row.reel_discount}</TableCell>
