@@ -107,9 +107,9 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     event.preventDefault();
     console.log(endUse);
     const checkForEndUse = endUse
-      ? endUse["value"] != undefined
-        ? true
-        : false
+      ? true
+      : endUse["value"] != undefined
+      ? true
       : false;
     console.log(checkForEndUse);
     if (
