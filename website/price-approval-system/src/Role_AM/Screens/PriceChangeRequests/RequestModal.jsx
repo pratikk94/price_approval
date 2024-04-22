@@ -106,15 +106,19 @@ const CreateRequestModal = ({ open, handleClose, editData, mode }) => {
     setShowSuccess(false);
     event.preventDefault();
     console.log(endUse);
-    console.log(endUse != undefined);
-    console.log(endUse["value"] != undefined);
+    const checkForEndUse = endUse
+      ? endUse["value"] != undefined
+        ? true
+        : false
+      : false;
+    console.log(checkForEndUse);
     if (
       validFrom != "" &&
       validTo != "" &&
       paymentTerms != undefined &&
       selectedCustomers.length > 0 &&
       selectedConsignees.length > 0 &&
-      endUse["value"] != undefined
+      checkForEndUse
     ) {
       console.log(endUse);
       if (paymentTerms.length == 0) {

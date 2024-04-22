@@ -404,9 +404,17 @@ async function getNewRequestName(parentId, type) {
       } else if (type === "E") {
         const result = await pool.request()
           .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'ER%' ORDER BY id DESC`;
-        new_req_name =
-          result.recordset[0].request_name.substring(0, 7) +
-          (parseInt(result.recordset[0].request_name.substring(7, 11)) + 1);
+        if (result.recordset.length == 0) {
+          const resultFindNR = await pool
+            .request()
+            .input("parentId", sql.Int, parentId)
+            .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
+
+          new_req_name = `ER${resultFindNR.recordset[0].request_name.substring(
+            2,
+            12
+          )}`;
+        }
       } else if (type === "U") {
         const result = await pool.request()
           .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'UR%' ORDER BY id DESC`;
@@ -418,6 +426,21 @@ async function getNewRequestName(parentId, type) {
             .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
 
           new_req_name = `UR${resultFindNR.recordset[0].request_name.substring(
+            2,
+            12
+          )}`;
+        }
+      } else if (type === "B") {
+        const result = await pool.request()
+          .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'BR%' ORDER BY id DESC`;
+        console.log(result.recordset.length);
+        if (result.recordset.length == 0) {
+          const resultFindNR = await pool
+            .request()
+            .input("parentId", sql.Int, parentId)
+            .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
+
+          new_req_name = `BR${resultFindNR.recordset[0].request_name.substring(
             2,
             12
           )}`;
