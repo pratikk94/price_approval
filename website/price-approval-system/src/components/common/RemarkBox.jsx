@@ -32,14 +32,17 @@ function RemarkBox({ request_id }) {
         setRemarks(data); // Combine remarks from multiple requests
       })
       .catch((error) => console.error("Error fetching remarks:", error));
-  }, []);
+  }, [request_id]);
 
   const handleAddRemark = () => {
     var t_req_id =
-      request_id ?? session.employee_id + "-" + new Date().getTime();
+      request_id.length > 0
+        ? request_id
+        : session.employee_id + "-" + new Date().getTime();
+    console.log("Request ID: ", t_req_id);
     const storedRequestIds =
       JSON.parse(localStorage.getItem("request_ids")) || [];
-    setRequestIds(storedRequestIds);
+    setRequestIds([...storedRequestIds, t_req_id]);
     localStorage.setItem(
       "request_ids",
       JSON.stringify([...storedRequestIds, t_req_id])

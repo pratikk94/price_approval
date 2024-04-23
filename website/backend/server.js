@@ -1,6 +1,8 @@
 const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
+const fileRoutes = require("./fileRoutes"); // Import the router
+
 const sql = require("mssql");
 const cors = require("cors");
 const multer = require("multer");
@@ -22,13 +24,14 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  //password: "SayaliK20311",
-  //server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  password: "12345",
-  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "SayaliK20311",
+  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  //password: "12345",
+  //server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
   database: "PriceApprovalSystem",
   options: {
+    enableArithAbort: true,
     encrypt: true, // Use this if you're on Windows Azure
     // encrypt: false, // Use this if you're on Windows Azure
     trustServerCertificate: true, // Use this if you're on a local development environment
@@ -47,6 +50,8 @@ app.use(
   })
 );
 
+app.use("/api", fileRoutes); // Use the router on path /api
+
 function transformData(rawData) {
   // Assuming rawData is an array of your items, similar to those in the 'price' array
   // Start by grouping data by req_id (if rawData comes varied by req_id)
@@ -63,6 +68,7 @@ function transformData(rawData) {
       valid_to,
       fsc,
       mappint_type,
+      request_name,
     } = item; // Extract these common properties
 
     // Initialize or update the group
@@ -79,6 +85,7 @@ function transformData(rawData) {
         valid_to,
         fsc,
         mappint_type,
+        request_name,
         price: [], // Prepare to hold all 'grade' related data
       };
     }
@@ -383,7 +390,7 @@ async function getNewRequestName(parentId, type) {
   let pool = null;
   try {
     pool = await sql.connect(config);
-    console.log(`Parent_id - ${parentId}`);
+    console.log(`Parent_id - ${parentId} and type - ${type}`);
     const o_result = await pool.request().input("parentId", sql.Int, parentId)
       .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where [parent_req_id] = @parentId ORDER BY id DESC`;
 
@@ -393,7 +400,7 @@ async function getNewRequestName(parentId, type) {
       const curr_status = curr_req_name.charAt(0);
       let new_req_name = curr_req_name.substring(2, 7);
       let new_current_id = 0;
-
+      console.log(`Current state ${curr_status} & type ${type}`);
       if (type === "B" && curr_status === "B") {
         prepend = "BR";
         let new_current_id = parseInt(curr_req_name.substring(7, 12)) + 1;
@@ -420,7 +427,8 @@ async function getNewRequestName(parentId, type) {
             12
           )}`;
         }
-      } else if (type === "U") {
+      } else if (type == "U") {
+        console.log("U Type executed");
         const result = await pool.request()
           .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where request_name like 'UR%' ORDER BY id DESC`;
         console.log(result.recordset.length);
@@ -429,11 +437,22 @@ async function getNewRequestName(parentId, type) {
             .request()
             .input("parentId", sql.Int, parentId)
             .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
-
+          console.log(resultFindNR.recordset[0].request_name.substring(2, 12));
           new_req_name = `UR${resultFindNR.recordset[0].request_name.substring(
             2,
             12
           )}`;
+        } else {
+          const resultFindNR = await pool
+            .request()
+            .input("parentId", sql.Int, parentId)
+            .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
+
+          new_req_name =
+            `UR${resultFindNR.recordset[0].request_name.substring(2, 7)}` +
+            (parseInt(result.recordset[0].request_name.substring(7, 12)) + 1)
+              .toString()
+              .padStart(4, "0");
         }
       } else if (type === "B") {
         const result = await pool.request()
@@ -445,12 +464,25 @@ async function getNewRequestName(parentId, type) {
             .input("parentId", sql.Int, parentId)
             .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
 
-          new_req_name = `BR${resultFindNR.recordset[0].request_name.substring(
-            2,
-            12
-          )}`;
+          new_req_name =
+            `BR${resultFindNR.recordset[0].request_name.substring(2, 7)}` +
+            (parseInt(result.recordset[0].request_name.substring(7, 12)) + 1)
+              .toString()
+              .padStart(4, "0");
+        } else {
+          const resultFindNR = await pool
+            .request()
+            .input("parentId", sql.Int, parentId)
+            .query`Select TOP 1 request_name FROM [PriceApprovalSystem].[dbo].[request_status] where parent_req_id = @parentId ORDER by id DESC`;
+
+          new_req_name =
+            result.recordset[0].request_name.toString().substring(0, 7) +
+            (parseInt(result.recordset[0].request_name.substring(7, 12)) + 1)
+              .toString()
+              .padStart(4, "0");
         }
       } else {
+        console.log("Else block executed");
         console.log(result.recordset[0].request_name.toString());
         new_req_name =
           result.recordset[0].request_name.toString().substring(0, 7) +
@@ -3593,24 +3625,28 @@ app.get("/api/fetch_price_request_by_id", async (req, res) => {
     // Perform the query
     const result = await pool.request().query`
     WITH MaxReqID AS (
-      SELECT parent_req_id, MAX(req_id) AS max_req_id
+      SELECT parent_req_id,MAX(req_id) AS max_req_id
       FROM [request_status]
       GROUP BY parent_req_id
+
       HAVING parent_req_id = ${id}
   )
   SELECT 
       par.*, 
-      part.*
+      part.*,rs.request_name
   FROM 
       price_approval_requests AS par
   LEFT JOIN 
       price_approval_requests_price_table AS part ON par.req_id = part.req_id
+  INNER JOIN
+      request_status rs on par.req_id = rs.parent_req_id 
   JOIN
       MaxReqID ON par.req_id = MaxReqID.max_req_id; 
   `;
 
     // Log or return the results
     const transformedData = transformData(result.recordset);
+    console.log(`Transformed Data`);
     console.log(transformedData);
     console.log(JSON.stringify(transformedData, null, 2));
     res.json(JSON.stringify(transformedData, null, 2));
@@ -3682,7 +3718,29 @@ app.get("/api/files/:request_id", async (req, res) => {
   try {
     const { request_id } = req.params;
     await sql.connect(config);
-    const query = `SELECT id, request_id, file_name FROM files WHERE request_id = @requestId`;
+    const query = `WITH RelevantRequests AS (
+      SELECT parent_req_id 
+      FROM [request_status]
+      WHERE request_name = @requestId
+
+  ),
+  ParentRequests AS (
+      SELECT req_id,request_name
+      FROM [request_status]
+      WHERE parent_req_id IN (SELECT parent_req_id FROM RelevantRequests)
+  )
+  SELECT 
+      *
+  FROM 
+      files f
+  INNER JOIN 
+      ParentRequests pr ON f.request_id = pr.request_name
+  INNER JOIN
+      [request_status] rs ON f.request_id = rs.request_name
+  
+  
+  
+  `;
     const request = new sql.Request();
     request.input("requestId", sql.NVarChar, request_id);
     const result = await request.query(query);
@@ -3770,10 +3828,39 @@ app.get("/api/remarks", async (req, res) => {
   try {
     // Connect to the database
     await sql.connect(config);
-
+    console.log(`Request ID->${req.query.requestId}`);
     // Fetch all remarks
-    const result =
-      await sql.query`SELECT id, request_id, user_id as authorId, comment as text, created_at as timestamp FROM Remarks where request_id = ${req.query.requestId} ORDER BY created_at DESC `;
+    const result = await sql.query`
+      WITH RelevantRequests AS (
+          SELECT parent_req_id 
+          FROM [request_status]
+          WHERE request_name = ${req.query.requestId}
+    
+      ),
+      ParentRequests AS (
+          SELECT req_id,request_name
+          FROM [request_status]
+          WHERE parent_req_id IN (SELECT parent_req_id FROM RelevantRequests)
+      )
+      SELECT 
+          r.id, 
+          r.request_id, 
+          r.user_id as authorId, 
+          r.comment as text, 
+          r.created_at as timestamp,
+          rs.request_name
+      FROM 
+          Remarks r
+      INNER JOIN 
+          ParentRequests pr ON r.request_id = pr.request_name
+      INNER JOIN
+          [request_status] rs ON r.request_id = rs.request_name
+      ORDER BY 
+          r.created_at DESC;
+      
+      
+      
+      `;
     console.log(`MESSAGES->${result.recordset}`);
     // Send the fetched remarks
     res.status(200).json(result.recordset);

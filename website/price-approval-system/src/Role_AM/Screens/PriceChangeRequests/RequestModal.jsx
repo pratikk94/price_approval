@@ -469,6 +469,8 @@ const CreateRequestModal = ({
     setOpenOneToOneModal(false);
   };
 
+  // console.log(`RID + ${editData != undefined ? editData[0].request_name : ""}`);
+
   return (
     <>
       <Modal
@@ -600,9 +602,26 @@ const CreateRequestModal = ({
           />
           <SpacingWrapper space="24px" />
           <Typography>Attachment</Typography>
-          {session.role == "AM" && <FileHandling />}
 
-          <RemarkBox />
+          <FileHandling
+            requestId={
+              editData != undefined
+                ? editData[0] != undefined
+                  ? editData[0].request_name
+                  : ""
+                : ""
+            }
+          />
+
+          <RemarkBox
+            request_id={
+              editData != undefined
+                ? editData[0] != undefined
+                  ? editData[0].request_name
+                  : ""
+                : ""
+            }
+          />
 
           {/* <HistoryModal reqId={id} /> */}
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>

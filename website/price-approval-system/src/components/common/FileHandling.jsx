@@ -4,18 +4,19 @@ import FileUploader from "./FileUploader"; // Make sure this path is correct
 import FilesForRequest from "./FileForRequest";
 import { useSession } from "../../Login_Controller/SessionContext";
 
-export default function FileHandling({ requestId: initialRequestId }) {
+export default function FileHandling({ requestId }) {
   const [files, setFiles] = useState([]);
   const [tempFiles, setTempFiles] = useState([]);
   const [triggerFetch, setTriggerFetch] = useState(false);
   const { session } = useSession();
   // Attempt to retrieve requestId from local storage or use the initialRequestId if not found
-  const storedRequestId =
-    localStorage.getItem("request_id") || initialRequestId;
+  const storedRequestId = requestId || localStorage.getItem("request_id");
   // If there's no storedRequestId in localStorage, you should set it
   if (!localStorage.getItem("request_id")) {
-    localStorage.setItem("request_id", initialRequestId);
+    localStorage.setItem("request_id", requestId);
   }
+
+  console.log("Stored request id:", storedRequestId);
 
   const fetchFiles = useCallback(() => {
     fetch(`${backend_url}api/files/${storedRequestId}`) // Corrected for dynamic backend_url usage
