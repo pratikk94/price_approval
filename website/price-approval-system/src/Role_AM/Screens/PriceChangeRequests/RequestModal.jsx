@@ -214,7 +214,7 @@ const CreateRequestModal = ({
           }
 
           if (
-            parseInt(tableRowsData[i]["gsmFrom"]) <
+            parseInt(tableRowsData[i]["gsmFrom"]) <=
             parseInt(tableRowsData[i]["gsmTo"])
           ) {
             setErrorMessage(

@@ -38,7 +38,7 @@ const MessagesComponent = ({ reqId }) => {
               parseISO(response.data[i].split(" ").slice(6, 7).join("")),
               "d/M/yy H:mm:ss"
             );
-            changedtime = addTimeUsingMoment(changedtime, 5, 30);
+            changedtime = addTimeUsingMoment(changedtime, 0, 0);
           } else {
             changedtime = formatMomentDate(
               response.data[i].split(" ").slice(6, 11)
