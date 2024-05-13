@@ -59,6 +59,8 @@ const CreateRequestModal = ({
   editData,
   mode,
   parentId,
+  isCopyOrMerged,
+  isExtension,
 }) => {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [selectedConsignees, setSelectedConsignees] = useState([]);
@@ -319,11 +321,17 @@ const CreateRequestModal = ({
       console.log(data.valid_to);
 
       setValidFrom(data.valid_from);
-      setValidTo(data.valid_to);
+      if (isExtension) {
+      } else {
+        setValidTo(data.valid_to);
+      }
       setFSC(data.fsc == "1" ? "Y" : "N");
       console.log(data.fsc);
       //setMap(data.mappint_type);
-      setPriceDetails(data.price); // Assuming this directly maps to your price details state structure
+      if (isCopyOrMerged) {
+      } else {
+        setPriceDetails(data.price); // Assuming this directly maps to your price details state structure
+      }
     }
   }, [editData]);
 
@@ -497,7 +505,7 @@ const CreateRequestModal = ({
               <SpacingWrapper space="12px" />
               <Typography>Customer * </Typography>
               <CustomerSelect
-                disabled={mode > 1}
+                disabled={mode > 1 || isExtension}
                 id={1}
                 name={"Customer"}
                 customerState={setSelectedCustomers}
@@ -524,7 +532,7 @@ const CreateRequestModal = ({
               <Typography>End Use</Typography>
               <CustomerSelect
                 id={3}
-                disabled={mode > 1}
+                disabled={mode > 1 || isExtension}
                 name={"End Use"}
                 customerState={setSelectedCustomers}
                 consigneeState={setSelectedConsignees}
@@ -538,12 +546,12 @@ const CreateRequestModal = ({
               <Plant
                 setSelection={setPlant}
                 editedData={plant}
-                disabled={mode > 1}
+                disabled={mode > 1 || isExtension}
               />
               <SpacingWrapper space="12px" />
               <Typography>Payment Terms *</Typography>
               <PaymentTerms
-                disabled={mode > 1}
+                disabled={mode > 1 || isExtension}
                 setSelection={setPaymentTerms}
                 editedData={paymentTerms}
               />
@@ -551,7 +559,7 @@ const CreateRequestModal = ({
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <DateSelector
-                    disabled={mode > 1}
+                    disabled={mode > 1 || isExtension}
                     name={"Valid From * "}
                     setSelection={setValidFrom}
                     editedData={validFrom}
@@ -559,7 +567,7 @@ const CreateRequestModal = ({
                 </Grid>
                 <Grid item xs={6}>
                   <DateSelector
-                    disabled={mode > 1}
+                    disabled={isExtension}
                     name={"Valid To * "}
                     setSelection={setValidTo}
                     editedData={validTo}
@@ -574,7 +582,7 @@ const CreateRequestModal = ({
 
               <CustomerSelect
                 id={2}
-                disabled={mode > 1}
+                disabled={mode > 1 || isExtension}
                 name={"Consignee"}
                 customerState={setSelectedCustomers}
                 consigneeState={setSelectedConsignees}
@@ -593,7 +601,8 @@ const CreateRequestModal = ({
           <SpacingWrapper space="0px" />
 
           <TableWithInputs
-            disabled={mode > 1}
+            isExtension={isExtension}
+            disabled={mode > 1 || isExtension}
             setTableRowsDataFunction={setTableRowsDataFunction}
             setFSCCode={setFSC}
             disableSubmit={setDisableSubmit}
@@ -605,7 +614,9 @@ const CreateRequestModal = ({
 
           <FileHandling
             requestId={
-              editData != undefined
+              isCopyOrMerged || isExtension
+                ? ""
+                : editData != undefined
                 ? editData[0] != undefined
                   ? editData[0].request_name
                   : ""
@@ -615,7 +626,9 @@ const CreateRequestModal = ({
 
           <RemarkBox
             request_id={
-              editData != undefined
+              isCopyOrMerged || isExtension
+                ? ""
+                : editData != undefined
                 ? editData[0] != undefined
                   ? editData[0].request_name
                   : ""

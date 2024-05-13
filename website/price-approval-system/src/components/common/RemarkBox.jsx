@@ -17,71 +17,25 @@ import SendIcon from "@mui/icons-material/Send";
 import { backend_url } from "../../util";
 import { useSession } from "../../Login_Controller/SessionContext";
 
-function RemarkBox({ request_id }) {
+function RemarkBox({ request_id, setUpdateRemarks }) {
   const [remarks, setRemarks] = useState([]);
   const [remarkText, setRemarkText] = useState("");
   const { session } = useSession();
-  const [requestIds, setRequestIds] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState("");
+  const [editId, setEditId] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
-    // Load request_ids from localStorage
-    fetch(`${backend_url}api/remarks?requestId=${request_id}`)
+    // Fetch remarks data using the new API logic
+    fetch(`${backend_url}api/remarks?request_id=${request_id}`)
       .then((response) => response.json())
-      .then((data) => {
-        // console.log("Remarks fetched:", data);
-        setRemarks(data); // Combine remarks from multiple requests
-      })
+      .then((data) => setRemarks(data))
       .catch((error) => console.error("Error fetching remarks:", error));
   }, [request_id]);
 
-  const handleAddRemark = () => {
-    var t_req_id =
-      request_id.length > 0
-        ? request_id
-        : session.employee_id + "-" + new Date().getTime();
-    console.log("Request ID: ", t_req_id);
-    const storedRequestIds =
-      JSON.parse(localStorage.getItem("request_ids")) || [];
-    setRequestIds([...storedRequestIds, t_req_id]);
-    localStorage.setItem(
-      "request_ids",
-      JSON.stringify([...storedRequestIds, t_req_id])
-    );
-    setRequestIds(localStorage.getItem("request_ids"));
-
-    console.log("Request IDs: ", localStorage.getItem("request_ids"));
-
-    const postData = {
-      requestId: t_req_id, // This should ideally come from user input or another part of the application logic
-      remarksText: remarkText,
-      remarkAuthorId: session.employee_id,
-    };
-
-    fetch(`${backend_url}api/remarks`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(postData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        const newRemark = {
-          id: remarks.length + 1,
-          text: remarkText,
-          authorId: session.employee_id || "User Name",
-          timestamp: new Date(),
-        };
-        setRemarks((prevRemarks) => [newRemark, ...prevRemarks]);
-
-        setRemarkText(""); // Reset input field
-      })
-      .catch((error) => {
-        console.error("Error posting remark:", error);
-      });
-  };
-
-  console.log("RequestID -> ", request_id);
+  const latestRemark = remarks.length ? remarks[0] : null;
+  const olderRemarks = remarks.length > 1 ? remarks.slice(1) : [];
 
   return (
     <div>
@@ -91,50 +45,55 @@ function RemarkBox({ request_id }) {
           variant="outlined"
           fullWidth
           value={remarkText}
-          onChange={(e) => setRemarkText(e.target.value)}
+          onChange={(e) => {
+            setRemarkText(e.target.value);
+            setUpdateRemarks(e.target.value);
+          }}
           placeholder="Type your remark..."
         />
       </Grid>
       <Spacewrapper space="12px" />
 
-      <div style={{ display: "flex", justifyContent: "end" }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleAddRemark}
-          startIcon={<SendIcon />}
-        >
-          Send
-        </Button>
-      </div>
-
       <TableContainer component={Paper} style={{ marginTop: "20px" }}>
         <Table aria-label="simple table">
           <TableHead>
             <TableRow>
-              {/* <TableCell style={{ width: "5%" }}>ID</TableCell> */}
-              <TableCell style={{ width: "70%" }}>Comment</TableCell>
-              <TableCell style={{ width: "15%" }}>Posted By</TableCell>
-              <TableCell style={{ width: "10%" }}>Date of Comment</TableCell>
+              <TableCell>Latest Remark</TableCell>
+              <TableCell>Posted By</TableCell>
+              <TableCell>Date of Comment</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {remarks.map((remark) => (
-              <TableRow key={remark.id}>
-                {/* <TableCell component="th" scope="row" style={{ width: "5%" }}>
-                  {remark.id}
-                </TableCell> */}
-                <TableCell style={{ width: "70%" }}>{remark.text}</TableCell>
-                <TableCell style={{ width: "15%" }}>
-                  {remark.authorId}
-                </TableCell>
-                <TableCell style={{ width: "10%" }}>
-                  {formatDistanceToNow(new Date(remark.timestamp), {
+            {latestRemark && (
+              <TableRow key={latestRemark.id}>
+                <TableCell>{latestRemark.text}</TableCell>
+                <TableCell>{latestRemark.authorId}</TableCell>
+                <TableCell>
+                  {formatDistanceToNow(new Date(latestRemark.timestamp), {
                     addSuffix: true,
                   })}
                 </TableCell>
               </TableRow>
-            ))}
+            )}
+            <TableRow>
+              <TableCell colSpan={4}>
+                <Button onClick={() => setShowDropdown((prev) => !prev)}>
+                  {showDropdown ? "Hide Older Remarks" : "Show Older Remarks"}
+                </Button>
+              </TableCell>
+            </TableRow>
+            {showDropdown &&
+              olderRemarks.map((remark) => (
+                <TableRow key={remark.id}>
+                  <TableCell>{remark.text}</TableCell>
+                  <TableCell>{remark.authorId}</TableCell>
+                  <TableCell>
+                    {formatDistanceToNow(new Date(remark.timestamp), {
+                      addSuffix: true,
+                    })}
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>

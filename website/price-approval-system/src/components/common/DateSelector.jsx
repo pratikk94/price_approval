@@ -11,7 +11,7 @@ const timeZone = "Asia/Kolkata";
 
 // Convert UTC date to the specified time zone
 
-function CustomDatePicker({ name, setSelection, editedData }) {
+function CustomDatePicker({ name, setSelection, editedData, disabled }) {
   const [startDate, setStartDate] = useState("");
   console.log(`Time${editedData.length}`);
   return (
@@ -21,6 +21,7 @@ function CustomDatePicker({ name, setSelection, editedData }) {
       <DatePicker
         selected={editedData.length != 0 ? editedData : startDate}
         dateFormat="dd/MM/yyyy"
+        disabled={disabled}
         onChange={(date) => {
           console.log(
             format(toZonedTime(date, timeZone), "yyyy-MM-dd HH:mm:ssXXX", {

@@ -94,6 +94,7 @@ function DynamicTable({
   const [openRM, setOpenRM] = useState(false);
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
   const [parentId, setParentId] = useState(0);
+  const [extension, setExtension] = useState(false);
   console.log("NSM_pending", pending);
 
   useEffect(() => {
@@ -1070,6 +1071,8 @@ function DynamicTable({
         }}
         parentId={parentId}
         editData={editData}
+        isCopyOrMerged={true}
+        isExtension={extension}
         mode={mode}
       />
       {/* <DownloadModal open={open} handleClose={handleClose} setOpen={setOpen} /> */}

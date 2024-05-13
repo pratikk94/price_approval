@@ -3828,13 +3828,13 @@ app.get("/api/remarks", async (req, res) => {
   try {
     // Connect to the database
     await sql.connect(config);
-    console.log(`Request ID->${req.query.requestId}`);
+    console.log(`Request ID->${req.query.request_id}`);
     // Fetch all remarks
     const result = await sql.query`
       WITH RelevantRequests AS (
           SELECT parent_req_id 
           FROM [request_status]
-          WHERE request_name = ${req.query.requestId}
+          WHERE request_name = ${req.query.request_id}
     
       ),
       ParentRequests AS (
@@ -3907,6 +3907,57 @@ app.put("/api/update-request-ids", async (req, res) => {
 });
 
 //sendMail();
+
+// Edit Remark API (PUT)
+// app.put("/api/remarks/:id", async (req, res) => {
+//   const remarkId = parseInt(req.params.id, 10);
+//   const { comment } = req.body;
+
+//   if (!comment || isNaN(remarkId)) {
+//     return res.status(400).json({ message: "Invalid input" });
+//   }
+
+//   try {
+//     const query = `
+//           UPDATE remarks
+//           SET comment = @comment
+//           WHERE id = @id
+//       `;
+//     const request = new sql.Request();
+//     request.input("id", sql.Int, remarkId);
+//     request.input("comment", sql.NVarChar, comment);
+//     await request.query(query);
+
+//     return res.json({ message: "Remark updated successfully" });
+//   } catch (error) {
+//     console.error("Error updating remark:", error);
+//     return res.status(500).json({ message: "Error updating remark" });
+//   }
+// });
+
+// Delete Remark API (DELETE)
+// app.delete("/api/remarks/:id", async (req, res) => {
+//   const remarkId = parseInt(req.params.id, 10);
+
+//   if (isNaN(remarkId)) {
+//     return res.status(400).json({ message: "Invalid input" });
+//   }
+
+//   try {
+//     const query = `
+//           DELETE FROM remarks
+//           WHERE id = @id
+//       `;
+//     const request = new sql.Request();
+//     request.input("id", sql.Int, remarkId);
+//     await request.query(query);
+
+//     return res.json({ message: "Remark deleted successfully" });
+//   } catch (error) {
+//     console.error("Error deleting remark:", error);
+//     return res.status(500).json({ message: "Error deleting remark" });
+//   }
+// });
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

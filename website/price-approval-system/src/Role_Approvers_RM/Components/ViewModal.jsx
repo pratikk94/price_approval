@@ -29,8 +29,10 @@ import { BreakfastDiningOutlined, SpaceBar } from "@mui/icons-material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import { green } from "@mui/material/colors";
 function PriceTable({ price }) {
   console.log(price);
+
   return price ? (
     <>
       <TableContainer component={Paper}>
@@ -98,6 +100,7 @@ function PriceViewModal({
   const { session } = useSession();
   const employee_id = session.employee_id;
   console.log(data);
+  const [remarks, setRemarks] = useState([]);
   const [open, setOpen] = useState(openRM);
   const updateStatus = (newStatus) => {
     let reportData = {
@@ -152,19 +155,48 @@ function PriceViewModal({
   const handleCloseModal = () => setOpenModal(false);
   const [success_message, setSuccessMessage] = useState("");
   const [updateStatusV, setUpdateStatusV] = useState(0);
-  const handleConfirm = () => {
+  const [updateRemarks, setUpdateRemarks] = useState("");
+  const handleConfirm = (status) => {
     setTimeout(() => {
       setShowSuccess(false);
       handleCloseModal();
     }, 2000);
-    updateStatus(updateStatusV);
-
+    console.log("Update Status: ", status);
+    updateStatus(status);
+    if (updateRemarks.length > 0) handleAddRemark(updateRemarks);
     // Close the modal and hide success message after 2 seconds
     window.location.reload();
   };
   const [errorMessage, setErrorMessage] = useState("");
 
   console.log("Data: ", data);
+  console.log(updateRemarks);
+  const handleAddRemark = () => {
+    const postData = {
+      requestId: data.request_name,
+      remarksText: updateRemarks,
+      remarkAuthorId: session.employee_id,
+    };
+
+    fetch(`${backend_url}api/remarks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(postData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const newRemark = {
+          id: data.id,
+          requestId: data.request_name,
+          comment: data.remarksText,
+          user_id: session.employee_id,
+          created_at: new Date(),
+        };
+        setRemarks([newRemark, ...remarks]);
+        //setUpdateRemarks("");
+      })
+      .catch((error) => console.error("Error posting remark:", error));
+  };
 
   return (
     <>
@@ -220,49 +252,57 @@ function PriceViewModal({
             <PriceTable price={data.price} />
             <FileHandling requestId={data.request_name} />
 
-            <RemarkBox request_id={data.request_name} />
+            <RemarkBox
+              request_id={data.request_name}
+              setUpdateRemarks={setUpdateRemarks}
+            />
 
-            {isEditable ? (
-              <>
-                <IconButton
-                  onClick={() => {
-                    setUpdateStatusV(1);
-                    handleConfirm();
-                  }}
-                >
-                  <DoneIcon />
-                </IconButton>
-                <IconButton
-                  onClick={() => {
-                    setShowSuccess(false);
-                    setErrorMessage(
-                      "Are you sure you want to reject this request?"
-                    );
-                    setOpenModal(true);
-                    setUpdateStatusV(2);
-                  }}
-                >
-                  <CloseIcon />
-                </IconButton>
-                <IconButton
-                  onClick={() => {
-                    setShowSuccess(false);
-                    setErrorMessage(
-                      "Are you sure you want to send this request for rework?"
-                    );
-                    setOpenModal(true);
-                    setUpdateStatusV(3);
-                  }}
-                >
-                  <ReplayIcon />
-                </IconButton>
-              </>
-            ) : null}
-            <HistoryModal reqId={id} />
-            <br />
-            <button onClick={onClose}>Close</button>
+            <IconButton
+              onClick={() => {
+                setUpdateStatusV((e) => {
+                  handleConfirm(1);
+                  return 1;
+                });
+                setShowSuccess(false);
+              }}
+            >
+              <DoneIcon />
+            </IconButton>
+            <IconButton
+              onClick={() => {
+                setShowSuccess(false);
+                setErrorMessage(
+                  "Are you sure you want to reject this request?"
+                );
+                setOpenModal(true);
+                setUpdateStatusV((e) => {
+                  // handleConfirm(2);
+                  return 2;
+                });
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+            <IconButton
+              onClick={() => {
+                setShowSuccess(false);
+                setErrorMessage(
+                  "Are you sure you want to send this request for rework?"
+                );
+                setOpenModal(true);
+                setUpdateStatusV((e) => {
+                  // handleConfirm(3);
+                  return 3;
+                });
+              }}
+            >
+              <ReplayIcon />
+            </IconButton>
           </>
         ) : null}
+        <HistoryModal reqId={id} />
+        <br />
+        <button onClick={onClose}>Close</button>
       </ReactModal>
       <ReactModal
         isOpen={openModal}
@@ -290,7 +330,7 @@ function PriceViewModal({
       >
         <>
           {showSuccess ? (
-            <Box sx={{ mt: 2, color: color[500] }}>
+            <Box sx={{ mt: 2, color: green[500] }}>
               <CheckCircleOutlineIcon
                 sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
               />
@@ -300,7 +340,7 @@ function PriceViewModal({
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={handleConfirm}
+                  onClick={() => handleCloseModal}
                   sx={{ mt: 2 }}
                 >
                   Ok
@@ -349,7 +389,7 @@ function PriceViewModal({
                     color="primary"
                     onClick={() => {
                       setOpenModal(false);
-                      setUpdateStatusV(0);
+                      // setUpdateStatusV(0);
                     }}
                     sx={{ mt: 2, marginLeft: 2 }}
                   >
