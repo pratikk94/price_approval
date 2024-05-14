@@ -1,0 +1,29 @@
+Rules:
+1. fetch highest id for given request_id.
+2. check current_status column.
+3. tokenize it on '_' and get the no of elements.calling this tokenized elements list as 'tel'.
+4. if 2 elements, then check if first element of tel and currently_pending_with_role match.
+5. return the last digit of the second element of tel. this should be a single value.
+6. if 3 or more elements, then check if first element's token is a substring of any item of tel,find it's index say(m).
+7. return the last digit of the m element of tel. this should be an array 
+
+Transation : 
+1. fetch highest id for given request_id.
+2. check current_status column.
+3. for given request_id, check if current_status is same for any other row.
+4. if yes, then return the rows with same request_id and same current_status.
+5. if no, return row with max_id.
+
+
+
+id,rule_id,currently_pending_with_role,last_updated_by_role,last_updated_by_id,current_status,request_id,created_at
+1,1,RM,AM,e1001,"RM0_AM1",NR202405130001,2019-01-01,
+2,1,NSM,RM,e1002,"NSM0_HDSM0_RM1",NR202405130001,2019-01-01,
+3,1,HDSM,RM,e1002,"NSM0_HDSM0_RM1",NR202405130001,2019-01-01,
+4,1,VAL,NSM,e1003,"VAL0_NSM1",NR202405130001,2019-01-01,
+5,1,VP,Validator,e1005,"VP0_VAL1",NR202405130001,2019-01-01,
+6,2,RM,AM,e1001,"RM0_AM1",NR202405130002,2019-01-01,
+7,2,NSM,RM,e1002,"NSM0_RM1",NR202405130002,2019-01-01,
+8,2,HDSM,NSM,e1003,"HDSM0_NSM1",NR202405130002,2019-01-01,
+9,2,VAL,HDSM,e1004,"VAL0_HDSM1",NR202405130002,2019-01-01,
+10,2,VP,Validator,e1005,"VP0_VAL1",NR202405130002,2019-01-01,
