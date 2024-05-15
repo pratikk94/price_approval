@@ -8,7 +8,7 @@ router.get(
 );
 
 router.get(
-  "/transactions/:approver/:pendingWith",
+  "/transactions-pending/:approver/:pendingWith",
   transactionController.getTransactionsByRole
 );
 
@@ -18,5 +18,10 @@ router.get(
 );
 
 router.get("/transactions-all/:role", transactionController.getTransactions);
+
+router.post(
+  "/transactions-add/:requestId/:roleId/:role",
+  transactionController.acceptTransaction
+);
 
 module.exports = router;

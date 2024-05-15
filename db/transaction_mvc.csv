@@ -15,6 +15,18 @@ Transation :
 5. if no, return row with max_id.
 
 
+Add role:
+1. I/P params : request_id
+2. Find max_id for request_id.
+3. For this max_id fetch Fetch  last_updated_by_role 'A'
+4. For this max_id fetch rule_id.
+5. Inner join rule_mvc table.
+6. Match last_updated_by_role with approver and find level l.
+7. Find a approver higher than 1 l.
+8. If there is 1 approver as 'B' add to transaction table with current status as 'B0_A1' with currently_pending_with_role as 'B'
+9. If there are more than one approvers (say 2 as B and C) add to transaction table with current status as 'B0_C0_A1' with 2 rows. one row will hvae currently_pending_with_role 'b' and other will have 'c'.   
+
+
 
 id,rule_id,currently_pending_with_role,last_updated_by_role,last_updated_by_id,current_status,request_id,created_at
 1,1,RM,AM,e1001,"RM0_AM1",NR202405130001,2019-01-01,

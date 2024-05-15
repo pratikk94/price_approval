@@ -80,9 +80,34 @@ async function getTransactions(req, res) {
   }
 }
 
+async function acceptTransaction(req, res) {
+  const requestId = req.params.requestId;
+  const roleId = req.params.roleId;
+  const role = req.params.role;
+  try {
+    const result = await transactionModel.acceptTransaction(
+      requestId,
+      roleId,
+      role
+    );
+    if (result.success) {
+      res.json({
+        message: "Transaction added successfully",
+        currentStatus: result.currentStatus,
+      });
+    } else {
+      res.status(500).send("Failed to add transaction");
+    }
+  } catch (error) {
+    res.status(500).send("Server error while adding transaction");
+    console.error("Error:", error);
+  }
+}
+
 module.exports = {
   getTransactionsPendingWithRole,
   analyzeTransaction,
   getTransactionsByRole,
   getTransactions,
+  acceptTransaction,
 };

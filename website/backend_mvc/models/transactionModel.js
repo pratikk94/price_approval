@@ -115,9 +115,82 @@ async function fetchTransactions(role) {
   }
 }
 
+async function acceptTransaction(
+  requestId,
+  lastUpdatedById,
+  lastUpdatedByRole
+) {
+  try {
+    await sql.connect(config);
+
+    // Fetch the transaction with the highest ID for the provided request_id
+    const transactionResult = await sql.query(
+      `
+          SELECT TOP 1 id, currently_pending_with , rule_id
+          FROM transaction_mvc
+          WHERE request_id = '${requestId}'
+          ORDER BY id DESC
+      `
+    );
+
+    let { currently_pending_with: currentRole, rule_id } =
+      transactionResult.recordset[0];
+
+    currentRole =
+      currentRole != lastUpdatedByRole ? lastUpdatedByRole : currentRole;
+
+    // Fetch approvers with a higher level from the rules_mvc table
+    const approversResult = await sql.query(
+      `
+      SELECT approver, level
+      FROM rule_mvc
+      WHERE rule_id = '${rule_id}' AND level = (
+          SELECT level + 1
+          FROM rule_mvc
+          WHERE approver = '${currentRole}' AND rule_id = '${rule_id}'
+      )
+      `
+    );
+
+    // Construct and insert new transactions based on the number of approvers found
+    if (approversResult.recordset.length === 1) {
+      const { approver } = approversResult.recordset[0];
+      const newStatus = `${approver}0_${currentRole}1`;
+
+      await sql.query(
+        `
+              INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+              VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
+          `
+      );
+    } else if (approversResult.recordset.length > 1) {
+      for (const { approver } of approversResult.recordset) {
+        const newStatus =
+          approversResult.recordset.reduce(
+            (acc, { approver }, index, array) => {
+              return `${acc}${approver}0${index < array.length - 1 ? "_" : ""}`;
+            },
+            ""
+          ) + `${currentRole}1`;
+
+        await sql.query(
+          `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
+                  VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
+              `
+        );
+      }
+    }
+
+    return { success: true, message: "Transactions added successfully." };
+  } catch (err) {
+    console.error("Database connection error:", err);
+    return { success: false, message: err.message };
+  }
+}
 module.exports = {
   getTransactionByRequestId,
   getTransactionsPendingWithRole,
   getTransactionsByRole,
   fetchTransactions,
+  acceptTransaction,
 };
