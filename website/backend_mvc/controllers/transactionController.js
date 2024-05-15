@@ -96,7 +96,7 @@ async function acceptTransaction(req, res) {
         currentStatus: result.currentStatus,
       });
     } else {
-      res.status(500).send("Failed to add transaction");
+      res.status(500).send("Failed to process transaction");
     }
   } catch (error) {
     res.status(500).send("Server error while adding transaction");
