@@ -32,6 +32,8 @@ Check for valid last_updated_by_role:
 3. if currently_pending_with_role which is a list of string does not contain last_updated_by_role, return false
 
 
+**************************** CREATING A NEW REQUEST ********************************
+
 
 Initiate a request:
 1. Fetch i/p params :
@@ -60,3 +62,37 @@ Initiate a request:
         9. oneToOneMapping (boolean)
 7. If one to one mapping is checked, first csv element of customers and consignees will be mapped. So if there are 2 customers and 2 consignees there will be 2 rows.
 8. If one to one mapping isnt checked, all combinations of customers and consignees will be mapped. So if there are 2 customers and 2 consignees there will be 4 rows.
+
+
+Add price_approval_system_price:
+1. Fetch i/p params:
+    A. request_id
+    B. fsc
+    C. grade
+    D. grade_type
+    E. gsm_range_from
+    F. gsm_range_to
+    G. agreed_price
+    H. special_discount
+    I. reel_discount
+    J. pack_upcharge
+    K. TPC
+    L. offline_discount
+    M. net_nsr
+    N. old_net_nsr
+    O. id (Pk) auto increment. 
+2. All above params will be added to price_approval_system_price table.
+3. Values will be in form of json_array.
+
+
+Adding to transaction table:    
+1.  Fetch AM_id user am_id from user table.
+2.  Fetch region_id from user
+3.  In given timeframe, return rule_id which exists.
+4.  Insert values in transaction table with current_status as 'RM0A1'
+    and currently_pending_with as 'RM' and rule_id 
+    last_updated_by_role as 'AM' last updated_id as am_id 
+    request_id as given request_id and fetch current time
+
+
+*************************** FETCH REQUEST DETAILS ********************************
