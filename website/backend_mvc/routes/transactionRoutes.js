@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const transactionController = require("../controllers/transactionController");
-
+const priceRequestController = require("../controllers/priceRequestController");
 router.get(
   "/transactions/:requestId/analyze",
   transactionController.analyzeTransaction
@@ -22,6 +22,11 @@ router.get("/transactions-all/:role", transactionController.getTransactions);
 router.post(
   "/transactions-add/:requestId/:roleId/:role",
   transactionController.acceptTransaction
+);
+
+router.get(
+  "/price-approval/:requestId",
+  priceRequestController.getPriceApprovalData
 );
 
 module.exports = router;

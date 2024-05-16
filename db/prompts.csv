@@ -96,3 +96,9 @@ Adding to transaction table:
 
 
 *************************** FETCH REQUEST DETAILS ********************************
+
+1. Pass i/p params as request_id.
+2. Fetch all the rows from price_approval_requests table with given request_id.
+3. Club all the repeating json into a consolidated json . By this i mean if there are 2 rows with same request_id,
+    then club the json of both rows into a single json. If customer in row 1 is c1 and customer in row 2 is c2 return customer as c1,c2
+4. Fetch all the rows from price_approval_system_price table with given request_id with maximum id.

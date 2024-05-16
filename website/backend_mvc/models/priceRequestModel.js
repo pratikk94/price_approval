@@ -159,7 +159,61 @@ async function addTransactionToTable(requestId, userId) {
   }
 }
 
+async function fetchConsolidatedRequest(requestId) {
+  try {
+    await sql.connect(config);
+    // Fetch all rows from the price_approval_requests table with the given request_id
+    const requestResult = await sql.query(
+      `
+          SELECT *
+          FROM price_approval_requests
+          WHERE request_name = '${requestId}'
+      `
+    );
+
+    // Consolidate rows by combining similar data into one JSON object
+    const consolidated = requestResult.recordset.reduce((acc, row) => {
+      Object.keys(row).forEach((key) => {
+        if (!(key in acc)) {
+          acc[key] = new Set(); // Initialize a new Set for each key
+        }
+        // Check if the value is null before splitting and adding to the Set
+        if (row[key] !== null && row[key] !== undefined) {
+          row[key]
+            .toString()
+            .split(",")
+            .forEach((value) => {
+              if (value.trim() !== "") {
+                // Ensure empty strings are not added
+                acc[key].add(value.trim());
+              }
+            });
+        }
+      });
+      return acc;
+    }, {});
+    // Convert sets back to comma-separated strings
+    Object.keys(consolidated).forEach((key) => {
+      consolidated[key] = Array.from(consolidated[key]).join(", ");
+    });
+    // Fetch all rows from the price_approval_system_price table with the maximum ID
+    const priceResult = await sql.query(`
+          SELECT *
+          FROM price_approval_requests_price_table
+          WHERE req_id = '${requestId}' AND id = (SELECT MAX(id) FROM price_approval_requests_price_table WHERE req_id = '${requestId}')
+      `);
+    return {
+      consolidatedRequest: consolidated,
+      priceDetails: priceResult.recordset,
+    };
+  } catch (err) {
+    console.error("Database operation failed:", err);
+    throw err;
+  }
+}
+
 module.exports = {
   handleNewRequest: getCurrentDateRequestId,
   insertTransactions,
+  fetchConsolidatedRequest,
 };
