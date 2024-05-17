@@ -11,6 +11,17 @@ TRUNCATE TABLE [request_status];
 TRUNCATE TABLE [files];  
 TRUNCATE TABLE [remarks]; 
 
+MVC
+
+TRUNCATE TABLE [price_approval_requests];
+TRUNCATE TABLE [price_approval_requests_price_table];
+TRUNCATE TABLE [transaction_mvc];
+TRUNCATE TABLE [rule_mvc];
+TRUNCATE TABLE [request_status]; 
+TRUNCATE TABLE [files];  
+TRUNCATE TABLE [remarks]; 
+
+
 /*
 Redundat tables
 category

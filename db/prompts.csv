@@ -102,3 +102,24 @@ Adding to transaction table:
 3. Club all the repeating json into a consolidated json . By this i mean if there are 2 rows with same request_id,
     then club the json of both rows into a single json. If customer in row 1 is c1 and customer in row 2 is c2 return customer as c1,c2
 4. Fetch all the rows from price_approval_system_price table with given request_id with maximum id.
+
+
+
+**************** HISTORY **************
+
+1. I/P parameters:
+    a. Customer ids (comma seperated string values)
+    b. Consignee ids (comma seperated string values)
+    c. End us id. (single value strig)
+    d. plant ids  (comma seperated string values)
+    e. grade  (single value string)
+2. All the above parameters are optional.
+3. Split customer_ids into individual elements. 
+4. For each element, find the available ids and request_ids from table price_approval_requests.
+5. Repeat the same for consignee, end_use, plants.
+6. Take the inresection or the common elements from the above list.
+7. Return that common request_id.
+8. Fot that request_id, look into table price_approval_requests_price_table and also filter by provided grade.
+9. Return the rows with selected_request_id and grade.
+
+
