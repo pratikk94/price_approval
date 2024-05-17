@@ -17,66 +17,157 @@ async function getCurrentDateRequestId() {
   }
 }
 
+async function insertCombinationsOneToOne(customers, consignees, plants, data) {
+  try {
+    await sql.connect(config);
+    const transaction = new sql.Transaction();
+    await transaction.begin();
+    const request = new sql.Request(transaction);
+
+    for (let i = 0; i < customers.length; i++) {
+      for (const plant of plants) {
+        await request.query(`
+                  INSERT INTO price_approval_requests (
+                      customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
+                      valid_from, valid_to, payment_terms_id, request_name,mappint_type) 
+                  VALUES (
+                      '${customers[i]}', '${consignees[i]}', '${data.endUse}', '${plant}', 
+                      '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
+                      '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping})
+              `);
+      }
+    }
+
+    await transaction.commit();
+    return {
+      success: true,
+      message: "Data inserted successfully.",
+      count: customers.length * plants.length,
+    };
+  } catch (err) {
+    console.error("Error during database operation:", err);
+    return { success: false, message: err.message };
+  }
+}
+
+async function insertCombinationsOneToMany(
+  customers,
+  consignees,
+  plants,
+  data
+) {
+  try {
+    await sql.connect(config);
+    const transaction = new sql.Transaction();
+    await transaction.begin();
+    const request = new sql.Request(transaction);
+
+    for (const customer of customers) {
+      for (const consignee of consignees) {
+        for (const plant of plants) {
+          await request.query(`
+                      INSERT INTO price_approval_requests (
+                          customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
+                          valid_from, valid_to, payment_terms_id, request_name, mappint_type) 
+                      VALUES (
+                          '${customer}', '${consignee}', '${data.endUse}', '${plant}', 
+                          '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
+                          '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping})
+                  `);
+        }
+      }
+    }
+
+    await transaction.commit();
+    return {
+      success: true,
+      message: "Data inserted successfully.",
+      count: customers.length * consignees.length * plants.length,
+    };
+  } catch (err) {
+    console.error("Error during database operation:", err);
+    return { success: false, message: err.message };
+  }
+}
+
 async function insertTransactions(data) {
   const {
     customers,
     consignees,
     endUse,
-    plant,
     endUseSegment,
     validFrom,
     validTo,
     paymentTerms,
     oneToOneMapping,
     requestId,
-    prices, // Ensure this is correctly parsed as an array
+    prices, // Assume prices is an array
     am_id,
   } = data;
 
-  console.log(prices);
-
   const customerList = customers.split(",");
   const consigneeList = consignees.split(",");
+  const plantList = data.plant.split(","); // Assuming plant is also provided as a comma-separated string
 
-  let transactions = [];
+  try {
+    await sql.connect(config);
 
-  if (oneToOneMapping) {
-    for (let i = 0; i < customerList.length; i++) {
-      transactions.push(
-        `('${customerList[i]}', '${consigneeList[i]}', '${endUse}', '${plant}', '${endUseSegment}', '${validFrom}', '${validTo}', '${paymentTerms}', ${oneToOneMapping},
-        '${requestId}'
-        )`
-      );
-    }
-  } else {
-    for (let customer of customerList) {
-      for (let consignee of consigneeList) {
-        transactions.push(
-          `('${customer}', '${consignee}', '${endUse}', '${plant}', '${endUseSegment}', '${validFrom}', '${validTo}', '${paymentTerms}', ${oneToOneMapping}, '${requestId}'
-          )`
-        );
+    // Determine which function to call based on the mapping type
+    const mappingFunction = oneToOneMapping
+      ? insertCombinationsOneToOne
+      : insertCombinationsOneToMany;
+
+    // Call the appropriate mapping function with the split data
+    const result = await mappingFunction(
+      customerList,
+      consigneeList,
+      plantList,
+      {
+        endUse,
+        endUseSegment,
+        validFrom,
+        validTo,
+        paymentTerms,
+        requestId,
+        oneToOneMapping,
       }
+    );
+
+    if (!result.success) {
+      throw new Error(`Error inserting data: ${result.message}`);
     }
+
+    // Additional business logic for inserting prices
+    if (Array.isArray(prices)) {
+      await insertPrices(prices, requestId); // Assume insertPrices is defined elsewhere
+    } else {
+      throw new Error("Invalid input: prices must be an array");
+    }
+
+    // Example function to log a transaction record
+    await logTransaction(requestId, am_id);
+
+    return {
+      success: true,
+      message: `Successfully processed ${result.count} transactions.`,
+      count: result.count,
+    };
+  } catch (err) {
+    console.error("Error during transaction insertion:", err);
+    return {
+      success: false,
+      message: err.message || "Failed to insert transactions",
+    };
   }
+}
 
-  await sql.connect(config);
-  await sql.query(
-    `INSERT INTO price_approval_requests (customer_id, consignee_id, end_use_id, plant, end_use_segment_id, valid_from, valid_to, payment_terms_id, mappint_type, request_name) VALUES ${transactions.join(
-      ", "
-    )}`
-  );
-
-  // Ensure 'prices' is an array before calling insertPrices
-  if (Array.isArray(prices)) {
-    await insertPrices(prices, requestId);
-  } else {
-    console.error("Invalid input: prices must be an array");
-    throw new Error("Invalid input: prices must be an array");
-  }
-
-  await addTransactionToTable(requestId, am_id);
-
-  return transactions.length;
+async function logTransaction(requestId, am_id) {
+  // Example logging function that inserts a transaction log into the database
+  const request = new sql.Request();
+  // await request.query(`
+  //     INSERT INTO transaction_logs (request_id, am_id, log_time)
+  //     VALUES ('${requestId}', '${am_id}', GETDATE())
+  // `);
 }
 
 async function insertPrices(data, request_id) {
@@ -212,8 +303,197 @@ async function fetchConsolidatedRequest(requestId) {
   }
 }
 
+async function fetchData(role) {
+  try {
+    await sql.connect(config);
+
+    // Use advanced query to get transactions pending with the given role
+    const transactionsResult = await sql.query(
+      `
+          WITH MaxIds AS (
+              SELECT MAX(id) AS maxId, request_id
+              FROM transaction_mvc
+              GROUP BY request_id
+          ),
+          MaxDetails AS (
+              SELECT m.maxId, m.request_id, t.current_status
+              FROM transaction_mvc t
+              INNER JOIN MaxIds m ON t.id = m.maxId
+          ),
+          RelatedTransactions AS (
+              SELECT t.*
+              FROM transaction_mvc t
+              INNER JOIN MaxDetails m ON t.request_id = m.request_id AND t.current_status = m.current_status
+          )
+          SELECT *
+          FROM RelatedTransactions
+          WHERE EXISTS (
+              SELECT 1
+              FROM transaction_mvc
+              WHERE request_id = RelatedTransactions.request_id
+              AND current_status = RelatedTransactions.current_status
+              AND id != RelatedTransactions.id
+          )
+          AND currently_pending_with = '${role}'
+          UNION
+          SELECT *
+          FROM transaction_mvc
+          WHERE id IN (SELECT maxId FROM MaxDetails)
+          AND currently_pending_with = '${role}';
+      `
+    );
+
+    let details = [];
+
+    // For each transaction, fetch and consolidate request details
+    for (let transaction of transactionsResult.recordset) {
+      const requestResult = await sql.query(`
+              SELECT *
+              FROM price_approval_requests
+              WHERE request_name = '${transaction.request_id}'
+          `);
+
+      const consolidated = requestResult.recordset.reduce((acc, row) => {
+        Object.keys(row).forEach((key) => {
+          if (!(key in acc)) acc[key] = new Set();
+          if (row[key] != null) {
+            row[key]
+              .toString()
+              .split(",")
+              .forEach((value) => {
+                if (value.trim() !== "") acc[key].add(value.trim());
+              });
+          }
+        });
+        return acc;
+      }, {});
+
+      Object.keys(consolidated).forEach((key) => {
+        consolidated[key] = Array.from(consolidated[key]).join(", ");
+      });
+
+      // Fetch price details with the maximum ID
+      const priceResult = await sql.query(`
+              SELECT *
+              FROM price_approval_requests_price_table
+              WHERE req_id = '${transaction.request_id}' AND id = (SELECT MAX(id) FROM price_approval_requests_price_table WHERE req_id = '${transaction.request_id}')
+          `);
+
+      details.push({
+        request_id: transaction.request_id,
+        consolidatedRequest: consolidated,
+        priceDetails: priceResult.recordset,
+      });
+    }
+
+    return details;
+  } catch (err) {
+    console.error("Database operation failed:", err);
+    throw err;
+  }
+}
+
+//History
+async function fetchRequestDetails({
+  customerIds,
+  consigneeIds,
+  endUseId,
+  plantIds,
+  grade,
+}) {
+  try {
+    await sql.connect(config);
+
+    // Helper function to query and update request ID sets using parameterized queries
+    async function queryRequestIds(columnName, values) {
+      if (!values) return new Set();
+
+      const list = values
+        .split(",")
+        .map((value) => value.trim())
+        .filter((value) => value);
+      if (list.length === 0) {
+        return new Set();
+      }
+
+      const request = new sql.Request();
+      const params = list.map((id, index) => {
+        const paramName = `param${index}`;
+        request.input(paramName, sql.VarChar, id);
+        return `@${paramName}`;
+      });
+
+      const query = `
+        SELECT DISTINCT request_name
+        FROM price_approval_requests
+        WHERE ${columnName} IN (${params.join(",")})
+      `;
+
+      const result = await request.query(query);
+
+      return new Set(result.recordset.map((row) => row.request_name));
+    }
+
+    // Parallel queries for efficiency
+    const [
+      customerRequestIds,
+      consigneeRequestIds,
+      endUseRequestIds,
+      plantRequestIds,
+    ] = await Promise.all([
+      queryRequestIds("customer_id", customerIds),
+      queryRequestIds("consignee_id", consigneeIds),
+      queryRequestIds("end_use_id", endUseId),
+      queryRequestIds("plant", plantIds),
+    ]);
+
+    // Calculate the intersection of all sets
+    const allRequestIds = [
+      customerRequestIds,
+      consigneeRequestIds,
+      endUseRequestIds,
+      plantRequestIds,
+    ];
+
+    console.log(allRequestIds);
+
+    const commonRequestIds = allRequestIds.reduce(
+      (a, b) => new Set([...a].filter((x) => b.has(x)))
+    );
+
+    // Fetch details for intersected IDs
+    if (commonRequestIds.size > 0) {
+      const filteredRequestIds = Array.from(commonRequestIds);
+      const request = new sql.Request();
+      filteredRequestIds.forEach((id, index) =>
+        request.input(`reqId${index}`, sql.VarChar, id)
+      );
+      const gradeFilter = grade ? ` AND grade = @grade` : "";
+      if (grade) request.input("grade", sql.VarChar, grade);
+
+      const detailsQuery = `
+        SELECT * 
+        FROM price_approval_requests_price_table 
+        WHERE req_id IN (${filteredRequestIds
+          .map((_, index) => `@reqId${index}`)
+          .join(",")})
+        ${gradeFilter}
+      `;
+      const details = await request.query(detailsQuery);
+      return details.recordset;
+    }
+
+    return []; // Return empty if no common IDs found or no parameters provided
+  } catch (err) {
+    console.error("Database operation failed:", err);
+    throw err;
+  }
+}
+
 module.exports = {
   handleNewRequest: getCurrentDateRequestId,
   insertTransactions,
   fetchConsolidatedRequest,
+  fetchData,
+  fetchRequestDetails,
 };
