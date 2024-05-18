@@ -1,0 +1,7 @@
+id,role,can_approve,can_rework,can_view,can_initiate,
+1,AM,1,1,1,1,
+2,RM,1,1,1,0,
+3,NSM,1,0,1,0,
+4,HDSM,1,0,1,0,
+5,Validator,1,0,1,0,
+6,VP,1,0,1,0,

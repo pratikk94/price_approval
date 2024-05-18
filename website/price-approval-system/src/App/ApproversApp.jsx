@@ -12,22 +12,52 @@ import {
   CssBaseline,
   Divider,
   TextField,
+  IconButton,
 } from "@mui/material";
-const drawerWidth = 240;
-import Dashboard from "../Role_Approvers_RM/Screens/Dashboard";
-import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
-import PriceChangeRequest from "../components/common/PriceRequest";
+import MenuIcon from "@mui/icons-material/Menu";
+import { useTheme, useMediaQuery } from "@mui/material";
+import Dashboard from "../../src/Role_Approvers_RM/Screens/Dashboard";
+
+import ReportsAndAnalysis from "../../src/Role_Approvers_RM/Screens/ReportsAndAnalytics";
+import ParentComponent from "../Generic/Main";
 function ResponsiveDrawer({ logout }) {
-  const [activePane, setActivePane] = useState("Dashboard");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activePane, setActivePane] = useState("Dashboard"); // Initialize with "Dashboard" or whichever is default
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const drawerWidth = 240;
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   const drawerItems = [
     { text: "Dashboard", component: <Dashboard /> },
-    {
-      text: "Price Requests",
-      component: <PriceChangeRequest role={"AP_RM"} />,
-    },
+    { text: "Price Requests", component: <ParentComponent /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
   ];
+
+  const drawer = (
+    <div>
+      <Toolbar />
+      <Divider />
+      <List>
+        {drawerItems.map(({ text }) => (
+          <ListItem
+            button
+            key={text}
+            onClick={() => {
+              setActivePane(text);
+              if (isMobile) setMobileOpen(false);
+            }}
+          >
+            <ListItemText primary={text} />
+          </ListItem>
+        ))}
+      </List>
+    </div>
+  );
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -37,24 +67,35 @@ function ResponsiveDrawer({ logout }) {
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
         <Toolbar>
+          {isMobile && (
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { sm: "none" } }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Regional Manager
           </Typography>
-          <Button
-            color="inherit"
-            onClick={() => {
-              logout();
-            }}
-          >
+          <Button color="inherit" onClick={logout}>
             Logout
           </Button>
         </Toolbar>
       </AppBar>
       <Drawer
-        variant="permanent"
+        variant={isMobile ? "temporary" : "permanent"}
+        open={isMobile ? mobileOpen : true}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile.
+        }}
         sx={{
           width: drawerWidth,
           flexShrink: 0,
@@ -64,15 +105,7 @@ function ResponsiveDrawer({ logout }) {
           },
         }}
       >
-        <Toolbar />
-        <Divider />
-        <List>
-          {drawerItems.map(({ text }) => (
-            <ListItem button key={text} onClick={() => setActivePane(text)}>
-              <ListItemText primary={text} />
-            </ListItem>
-          ))}
-        </List>
+        {drawer}
       </Drawer>
       <Box
         component="main"

@@ -123,3 +123,72 @@ Adding to transaction table:
 9. Return the rows with selected_request_id and grade.
 
 
+************************************DATA TABELE********************************************
+
+1. Consume api : http://localhost:3000/api/data/RM.
+2. O/P is 
+[
+    {
+        "request_id": "NR202405170001",
+        "consolidatedRequest": {
+            "customer_id": "Customer1, Customer2",
+            "consignee_id": "Consignee1, Consignee2",
+            "plant": "NorthPlant, South Plant",
+            "end_use_id": "Paper",
+            "end_use_segment_id": "Packaging",
+            "payment_terms_id": "30 days",
+            "valid_from": "2023-01-01",
+            "valid_to": "2023-12-31",
+            "mappint_type": "1",
+            "req_id": "3, 4",
+            "am_id": "",
+            "request_name": "NR202405170001"
+        },
+        "priceDetails": [
+            {
+                "req_id": "NR202405170001",
+                "grade": "Premium",
+                "fsc": "Y",
+                "grade_type": "TypeA",
+                "gsm_range_from": "80",
+                "gsm_range_to": "100",
+                "agreed_price": "500",
+                "special_discount": "10",
+                "reel_discount": "5",
+                "pack_upcharge": "2.5",
+                "tpc": "1.5",
+                "offline_discount": "0.5",
+                "net_nsr": "470",
+                "old_net_nsr": "460",
+                "id": "2"
+            }
+        ]
+    }
+]
+3. Use react-super-responsive-table for populating the data. 
+4. Headers of table are data coming from consolidatedRequest.
+5. Headers can be choosen or removed by selecting in a dropdown. 
+6. There should be a search functionality.
+7. There should be a sort functionality. 
+
+
+
+
+Fetch customers:
+
+1. Fetch all values from customer_table.
+2. Fetch Category column.
+3. If category contains CUST he is customer.
+4. If category contains CONS he is consignee.
+5. If category contains end_use it is end_use.
+6. API input will be 1 for customer,2 for consigee and 3 for end_use.
+7. Return value from 6. 
+8. Write nodejs api with mvc and mssql
+
+
+
+
+
+More information : 
+1. Fetch values from role_matrix.
+2. 
