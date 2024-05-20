@@ -1,54 +1,55 @@
-import React, { useEffect, useState } from "react";
+/* eslint-disable react/prop-types */
+/* eslint-disable no-sparse-arrays */
+import { useEffect, useState } from "react";
 import { Typography, Box, MenuItem, Button, Menu } from "@mui/material";
-
 import CreateRequestModal from "../../Role_AM/Screens/PriceChangeRequests/RequestModal";
 import DataTable from "./DataTable";
-import { backend_url, statusFilters } from "../../util";
 import { useSession } from "../../Login_Controller/SessionContext";
+import { backend_url, statusFilters } from "../../util";
 
 // Initial dummy data with status
-const initialData = [
-  {
-    id: 1,
-    status: "Draft",
-    requestId: "RQ-101",
-    refReq: "REF-501",
-    startDate: "2022-01-01",
-    endDate: "2022-01-15",
-    plant: "Plant 1",
-    customer: "Pratik",
-    consignee: "Sirisha",
-    created_date: "2024-03-12:17:03:00",
-    created_by: "Pratik",
-  },
-  // Add more dummy data as needed
-];
+// const initialData = [
+//   {
+//     id: 1,
+//     status: "Draft",
+//     requestId: "RQ-101",
+//     refReq: "REF-501",
+//     startDate: "2022-01-01",
+//     endDate: "2022-01-15",
+//     plant: "Plant 1",
+//     customer: "Pratik",
+//     consignee: "Sirisha",
+//     created_date: "2024-03-12:17:03:00",
+//     created_by: "Pratik",
+//   },
+//   // Add more dummy data as needed
+// ];
 
 // Column configurations
-const initialColumns = [
-  { id: "requestId", label: "Request ID" },
-  { id: "refReq", label: "Ref Req" },
-  { id: "startDate", label: "Start Date" },
-  { id: "endDate", label: "End Date" },
-  { id: "plant", label: "Plant" },
-  { id: "customer", label: "Customer" },
-  { id: "consignee", label: "Consignee" },
-  { id: "created_date", label: "Created Date" },
-  { id: "created_by", label: "Created By" },
-  { id: "actions", label: "Actions", alwaysVisible: true }, // Actions column
-];
+// const initialColumns = [
+//   { id: "requestId", label: "Request ID" },
+//   { id: "refReq", label: "Ref Req" },
+//   { id: "startDate", label: "Start Date" },
+//   { id: "endDate", label: "End Date" },
+//   { id: "plant", label: "Plant" },
+//   { id: "customer", label: "Customer" },
+//   { id: "consignee", label: "Consignee" },
+//   { id: "created_date", label: "Created Date" },
+//   { id: "created_by", label: "Created By" },
+//   { id: "actions", label: "Actions", alwaysVisible: true }, // Actions column
+// ];
 
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
-  p: 4,
-};
+// const modalStyle = {
+//   position: "absolute",
+//   top: "50%",
+//   left: "50%",
+//   transform: "translate(-50%, -50%)",
+//   width: 400,
+//   bgcolor: "background.paper",
+//   border: "2px solid #000",
+//   boxShadow: 24,
+//   p: 4,
+// };
 
 // Status filter action items
 
@@ -77,11 +78,11 @@ function PriceChangeRequest({ role, isAM }) {
   const [filterdId, setFilterdId] = useState(0);
 
   const employee_id = session.employee_id;
-  const [data, setData] = useState(initialData);
-  const [selectedColumns, setSelectedColumns] = useState(
-    initialColumns.filter((col) => !col.alwaysVisible).map((col) => col.id)
-  );
-  const [searchTerm, setSearchTerm] = useState("");
+  // const [data, setData] = useState(initialData);
+  // const [selectedColumns, setSelectedColumns] = useState(
+  //   initialColumns.filter((col) => !col.alwaysVisible).map((col) => col.id)
+  // );
+  // const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("Pending");
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -102,23 +103,23 @@ function PriceChangeRequest({ role, isAM }) {
     console.log("Create Request action triggered");
   };
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value.toLowerCase());
-  };
+  // const handleSearchChange = (event) => {
+  //   setSearchTerm(event.target.value.toLowerCase());
+  // };
 
-  const handleRefresh = () => {
-    setSearchTerm("");
-    setActiveFilter("");
-    // Reset selected columns except those marked as alwaysVisible
-    setSelectedColumns(
-      initialColumns.filter((col) => !col.alwaysVisible).map((col) => col.id)
-    );
-  };
+  // const handleRefresh = () => {
+  //   setSearchTerm("");
+  //   setActiveFilter("");
+  //   // Reset selected columns except those marked as alwaysVisible
+  //   setSelectedColumns(
+  //     initialColumns.filter((col) => !col.alwaysVisible).map((col) => col.id)
+  //   );
+  // };
 
-  const handleColumnSelectionChange = (event) => {
-    const value = event.target.value;
-    setSelectedColumns(typeof value === "string" ? value.split(",") : value);
-  };
+  // const handleColumnSelectionChange = (event) => {
+  //   const value = event.target.value;
+  //   setSelectedColumns(typeof value === "string" ? value.split(",") : value);
+  // };
 
   const handleFilterClick = (filter, newfilterdId) => {
     setActiveFilter(activeFilter === filter ? "" : filter);
@@ -126,21 +127,21 @@ function PriceChangeRequest({ role, isAM }) {
   };
 
   // Apply both status filter and search term
-  const filteredData = data.filter(
-    (item) =>
-      (activeFilter ? item.status === activeFilter : true) &&
-      initialColumns
-        .filter((col) => selectedColumns.includes(col.id) || col.alwaysVisible)
-        .some(
-          (column) =>
-            item[column.id] &&
-            item[column.id].toString().toLowerCase().includes(searchTerm)
-        )
-  );
+  // const filteredData = data.filter(
+  //   (item) =>
+  //     (activeFilter ? item.status === activeFilter : true) &&
+  //     initialColumns
+  //       .filter((col) => selectedColumns.includes(col.id) || col.alwaysVisible)
+  //       .some(
+  //         (column) =>
+  //           item[column.id] &&
+  //           item[column.id].toString().toLowerCase().includes(searchTerm)
+  //       )
+  // );
 
   const [modalOpen, setModalOpen] = useState(false);
 
-  const handleOpenModal = () => setModalOpen(true);
+  // const handleOpenModal = () => setModalOpen(true);
   const deleteIdsFromDb = async (ids) => {
     try {
       const response = await fetch(`${backend_url}api/delete_ids`, {
@@ -617,10 +618,10 @@ function PriceChangeRequest({ role, isAM }) {
     }
   };
 
-  const handleCopyRequest = () => {
-    handleClose(); // Close the menu
-    console.log("Copy Request action triggered");
-  };
+  // const handleCopyRequest = () => {
+  //   handleClose(); // Close the menu
+  //   console.log("Copy Request action triggered");
+  // };
 
   const handleMergeRequest = () => {
     handleClose(); // Close the menu

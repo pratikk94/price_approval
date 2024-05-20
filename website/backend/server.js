@@ -2,7 +2,7 @@ const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const fileRoutes = require("./fileRoutes"); // Import the router
-
+const url = require("./config");
 const sql = require("mssql");
 const cors = require("cors");
 const multer = require("multer");
@@ -10,7 +10,7 @@ const fs = require("fs");
 const nodemailer = require("nodemailer");
 const upload = multer({ storage: multer.memoryStorage() });
 const corsOptions = {
-  origin: "http://localhost:5173", // or the specific origin you want to allow
+  origin: "http://" + url + ":5173", // or the specific origin you want to allow
   credentials: true, // allowing credentials (cookies, session)
 };
 const timeZone = "Asia/Kolkata";
@@ -24,10 +24,10 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  //password: "SayaliK20311",
-  //server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  password: "12345",
-  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "SayaliK20311",
+  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  //password: "12345",
+  //server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
   database: "PriceApprovalSystem",
   options: {
@@ -3959,6 +3959,6 @@ app.put("/api/update-request-ids", async (req, res) => {
 //   }
 // });
 
-app.listen(PORT, () => {
+app.listen(PORT, url, () => {
   console.log(`Server is running on port ${PORT}`);
 });

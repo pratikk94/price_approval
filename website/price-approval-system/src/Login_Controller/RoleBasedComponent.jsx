@@ -3,7 +3,7 @@ import React from "react";
 import { useSession } from "./SessionContext";
 import AppAM from "../App/AccountManagerApp"; // Your component for users with the AM role
 import AppBM from "../App/BusinessAdminApp"; // Your component for users with the BM role
-import AppRM from "../App/ApproversApp"; // Your component for users with the RM role
+import AppRM from "../App/App"; // Your component for users with the RM role
 import AppNSM from "../App/ApproversAppNSM_HDSM";
 import AppValidator from "../App/ValidatorApp";
 import { backend_url } from "../util";

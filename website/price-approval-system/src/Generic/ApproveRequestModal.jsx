@@ -1,9 +1,15 @@
+/* eslint-disable react/prop-types */
 // ApproveRequestModal.jsx
-import React from "react";
+
 import { Modal } from "@mui/material";
 import Customer from "../components_mvc/Customer";
+import { useSession } from "../Login_Controller/SessionContext";
 
 const ApproveRequestModal = ({ open, handleClose }) => {
+  const { session } = useSession();
+
+  console.log(session.region);
+
   return (
     <Modal
       open={open}
@@ -28,7 +34,8 @@ const ApproveRequestModal = ({ open, handleClose }) => {
         <p id="modal-modal-description">
           Select a customer to approve the request.
         </p>
-        <Customer role={1} salesOffice={"Sales office corporate"} />
+        <Customer role={1} salesOffice={session.region} />
+        <Customer role={2} salesOffice={session.region} />
       </div>
     </Modal>
   );

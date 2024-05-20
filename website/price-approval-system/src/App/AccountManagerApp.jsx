@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+/* eslint-disable react/prop-types */
+import { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -11,12 +12,11 @@ import {
   Box,
   CssBaseline,
   Divider,
-  TextField,
+  // TextField,
 } from "@mui/material";
 import Dashboard from "../Role_AM/Screens/Dashboard";
-import PriceChangeRequests from "../components/common/PriceRequest";
-import RequestsHistory from "../Role_AM/Screens/RequestHistory";
 import ReportsAndAnalysis from "../Role_AM/Screens/ReportsAndAnalysis";
+import ParentComponent from "../Generic/Main";
 
 const drawerWidth = 240;
 
@@ -27,7 +27,7 @@ function ResponsiveDrawer({ logout }) {
     { text: "Dashboard", component: <Dashboard /> },
     {
       text: "Price Requests",
-      component: <PriceChangeRequests role={"AM"} isAM={true} />,
+      component: <ParentComponent />,
     },
     // { text: "Requests History", component: <RequestsHistory /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },

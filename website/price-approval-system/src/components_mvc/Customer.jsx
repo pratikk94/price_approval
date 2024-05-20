@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
+import { backend_mvc } from "../util";
 
 const CustomerDropdown = ({ salesOffice, role, onCustomerSelect }) => {
   const [customers, setCustomers] = useState([]);
@@ -7,7 +8,7 @@ const CustomerDropdown = ({ salesOffice, role, onCustomerSelect }) => {
 
   useEffect(() => {
     fetch(
-      `http://localhost:3000/api/customers/${role}?salesOffice=${encodeURIComponent(
+      `${backend_mvc}/api/customers/${role}?salesOffice=${encodeURIComponent(
         salesOffice
       )}`
     )

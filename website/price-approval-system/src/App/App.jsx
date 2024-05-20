@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+/* eslint-disable react/prop-types */
+import { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -11,21 +12,22 @@ import {
   Box,
   CssBaseline,
   Divider,
-  TextField,
+  // TextField,
   IconButton,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useTheme, useMediaQuery } from "@mui/material";
-import Dashboard from "../../src/Role_Approvers_RM/Screens/Dashboard";
+import Dashboard from "../Role_Approvers_RM/Screens/Dashboard";
 
-import ReportsAndAnalysis from "../../src/Role_Approvers_RM/Screens/ReportsAndAnalytics";
+import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
 import ParentComponent from "../Generic/Main";
+import { useSession } from "../Login_Controller/SessionContext";
 function ResponsiveDrawer({ logout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activePane, setActivePane] = useState("Dashboard"); // Initialize with "Dashboard" or whichever is default
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
+  const { session } = useSession();
   const drawerWidth = 240;
 
   const handleDrawerToggle = () => {
@@ -82,7 +84,7 @@ function ResponsiveDrawer({ logout }) {
             Logo
           </Typography>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Regional Manager
+            {session.role}
           </Typography>
           <Button color="inherit" onClick={logout}>
             Logout

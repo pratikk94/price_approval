@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const cors = require("cors");
+const url = require("./utils");
 const ruleRoutes = require("./routes/ruleRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 const priceRequestConroller = require("./controllers/priceRequestController");
@@ -15,7 +16,7 @@ const customerRoutes = require("./routes/customerRoutes");
 // const nodemailer = require("nodemailer");
 // const upload = multer({ storage: multer.memoryStorage() });
 const corsOptions = {
-  origin: "http://localhost:5173", // or the specific origin you want to allow
+  origin: "http://" + url + ":5173", // or the specific origin you want to allow
   credentials: true, // allowing credentials (cookies, session)
 };
 app.use(cors(corsOptions));
@@ -30,4 +31,4 @@ app.use("/api", dataRoutes);
 app.use("/api/roles", roleRoutes); // Mount the dataRoutes on the '/api' path
 app.use("/api", customerRoutes);
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, url, () => console.log(`Server running on port ${PORT}`));

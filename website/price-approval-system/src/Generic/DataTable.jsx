@@ -1,8 +1,9 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Button, TablePagination } from "@mui/material";
+import { TablePagination } from "@mui/material";
 
 import {
   Box,
@@ -24,6 +25,7 @@ import {
   Checkbox,
   ListItemText,
 } from "@mui/material";
+import { useSession } from "../Login_Controller/SessionContext";
 
 function DraggableHeader({
   header,
@@ -72,7 +74,7 @@ function DraggableHeader({
   );
 }
 
-function ResponsiveTable({ handleOpen }) {
+function ResponsiveTable() {
   const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [selectedHeaders, setSelectedHeaders] = useState([]);
@@ -83,10 +85,10 @@ function ResponsiveTable({ handleOpen }) {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-
+  const { session } = useSession();
   useEffect(() => {
     axios
-      .get("http://localhost:3000/api/data/RM")
+      .get("http://192.168.1.101:3000/api/data/" + session.role)
       .then((response) => {
         setData(response.data);
         if (response.data.length > 0) {
@@ -98,7 +100,7 @@ function ResponsiveTable({ handleOpen }) {
         }
       })
       .catch((error) => console.error("Error fetching data:", error));
-  }, []);
+  }, [session.role]);
 
   const moveColumn = useCallback(
     (dragIndex, hoverIndex) => {
@@ -155,9 +157,6 @@ function ResponsiveTable({ handleOpen }) {
 
   return (
     <>
-      <Button variant="contained" color="primary" onClick={handleOpen}>
-        Open Modal
-      </Button>
       <DndProvider backend={HTML5Backend}>
         <Paper sx={{ width: "100%", overflowX: "auto" }}>
           <Box

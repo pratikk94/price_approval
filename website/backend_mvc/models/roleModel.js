@@ -8,6 +8,7 @@ const poolPromise = new sql.ConnectionPool(config)
     return pool;
   })
   .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
+
 const getRoleDetails = async (role) => {
   try {
     const pool = await poolPromise;
