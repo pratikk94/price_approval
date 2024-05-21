@@ -17,7 +17,7 @@ import DateSelector from "../../../components/common/DateSelector";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import RemarkBox from "../../../components/common/RemarkBox";
-import { backend_url } from "../../../util";
+import { backend_mvc, backend_url } from "../../../util";
 import { useSession } from "../../../Login_Controller/SessionContext";
 import AlertBox from "../../../components/common/AlertBox";
 import FileHandling from "../../../components/common/FileHandling";
@@ -166,12 +166,13 @@ const CreateRequestModal = ({
         );
         formData["remarks"] = remarks;
         formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
-        formData["fsc"] = fsc == "Y" ? 1 : 0;
 
         formData["priceTable"] = tableRowsData;
         console.log(formData["priceTable"]);
+
         setStopExecution(false);
         for (let i = 0; i < tableRowsData.length; i++) {
+          tableRowsData[i]["fsc"] = fsc;
           console.log(tableRowsData[i]);
           console.log(tableRowsData[i]["grade"] == "");
           console.log(tableRowsData[i]["gradeType"] == "");
@@ -216,9 +217,12 @@ const CreateRequestModal = ({
           }
 
           if (
-            parseInt(tableRowsData[i]["gsmFrom"]) <=
+            parseInt(tableRowsData[i]["gsmFrom"]) >=
             parseInt(tableRowsData[i]["gsmTo"])
           ) {
+            console.log(typeof parseInt(tableRowsData[i]["gsmFrom"]));
+            console.log(tableRowsData[i]["gsmFrom"]);
+            console.log(tableRowsData[i]["gsmTo"]);
             setErrorMessage(
               "GSM From should be less than GSM To for Row " + (i + 1)
             );
@@ -242,7 +246,7 @@ const CreateRequestModal = ({
         console.log(stopExecution);
         if (!stopExecution) {
           if (validFrom < validTo) {
-            submitFormData(formData);
+            submitFormDataMVC(formData);
             //handleConfirm();
           } else {
             setShowSuccess(false);
@@ -423,6 +427,70 @@ const CreateRequestModal = ({
     } catch (error) {
       console.error("Failed to send data:", error);
     }
+  };
+
+  const submitFormDataMVC = async (formData) => {
+    console.log("In here SFD");
+    console.log(selectedConsigneeIDs);
+    try {
+      // Update formData based on whether it's a new submission or an edit
+      formData = {
+        am_id: session.employee_id,
+        customers: selectedCustomers.map((item) => item.value).join(","), // Assuming `customers` is an array in your formData
+        consignees: selectedConsignees.map((item) => item.value).join(","), // Assuming `consignees` is an array in your formData
+        endUse: endUse["value"].toString(),
+        plant: plant.map((item) => item.value.toString()).toString(),
+        endUseSegment: "seg1",
+        validFrom: validFrom,
+        validTo: validTo,
+        paymentTerms: paymentTerms,
+        oneToOneMapping: checkBoxEnabled ? (isChecked ? 1 : 2) : 2,
+        prices: tableRowsData, // Assuming `prices` is an array in your formData
+      };
+
+      // Send the formData to your backend
+      const response = await fetch(`${backend_mvc}process-price-request`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const oldRequestIds =
+        JSON.parse(localStorage.getItem("request_ids")) || [];
+      const requestData = await response.json();
+      console.log(requestData["id"]);
+      if (oldRequestIds.length > 0) {
+        updateRequestIds(oldRequestIds, requestData["id"])
+          .then((response) => {
+            console.log("Update successful:", response);
+            // Handle further actions like notifying the user
+          })
+          .catch((error) => {
+            console.error("Failed to update request IDs:", error);
+            // Handle error (e.g., showing error message to the user)
+          });
+      }
+      // Check for HTTP errors
+      if (!response.ok) {
+        setShowSuccess(false);
+        setErrorMessage(
+          `Failed to create request due to HTTP error! \n Reason : ${response.status}`
+        );
+        throw new Error(`HTTP error! status: ${response.status}`);
+      } else {
+        setShowSuccess(true);
+        setOpenModal(true);
+      }
+      // Extract the JSON body from the response (it should contain the requestId)
+
+      localStorage.removeItem("request_ids");
+
+      // ... existing code ...
+    } catch (error) {
+      console.error("Failed to send data:", error);
+    }
+    // ... existing code ...
   };
 
   const CheckCheckBox = () => {
