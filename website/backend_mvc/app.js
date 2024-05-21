@@ -9,6 +9,7 @@ const priceRequestConroller = require("./controllers/priceRequestController");
 const dataRoutes = require("./routes/dataRoutes");
 const roleRoutes = require("./routes/roleRoutes");
 const customerRoutes = require("./routes/customerRoutes");
+const requestRoutes = require("./routes/requestRoutes");
 // const timeZone = "Asia/Kolkata";
 // const { format, toZonedTime } = require("date-fns-tz");
 // const { listenerCount } = require("events");
@@ -30,5 +31,6 @@ app.use("/api", transactionRoutes);
 app.use("/api", dataRoutes);
 app.use("/api/roles", roleRoutes); // Mount the dataRoutes on the '/api' path
 app.use("/api", customerRoutes);
+app.use("/api", requestRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, url, () => console.log(`Server running on port ${PORT}`));

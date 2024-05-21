@@ -20,7 +20,7 @@ router.get(
 router.get("/transactions-all/:role", transactionController.getTransactions);
 
 router.post(
-  "/transactions-add/:requestId/:roleId/:role",
+  "/transactions-add/:requestId/:region/:action/:lastUpdatedById/:lastUpdatedByRole",
   transactionController.acceptTransaction
 );
 

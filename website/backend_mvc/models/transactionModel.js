@@ -1,6 +1,7 @@
 const sql = require("mssql");
 const config = require("../../backend_mvc/config");
-
+const url = require("../utils");
+const axios = require("axios");
 // Make sure to maintain a connection pool instead of connecting in each function
 const poolPromise = new sql.ConnectionPool(config)
   .connect()
@@ -116,12 +117,12 @@ async function isValidRole(lastUpdatedByRole, currentlyPendingWith) {
 
     const levels = levelsResult.recordset.map((row) => row.level);
 
+    console.log(levels);
+    console.log(lastUpdatedByRole);
     // Check if last_updated_by_role is at any of these levels
     const checkRoleValidity = `
           SELECT COUNT(1) as Count FROM rule_mvc
-          WHERE approver = '${lastUpdatedByRole}' AND level IN (${levels.join(
-      ", "
-    )})
+          WHERE approver = '${lastUpdatedByRole}' AND level <= ${levels[0]}
       `;
     const validityResult = await sql.query(checkRoleValidity);
     console.log(validityResult.recordset[0].Count);
@@ -133,6 +134,8 @@ async function isValidRole(lastUpdatedByRole, currentlyPendingWith) {
 }
 
 async function acceptTransaction(
+  region,
+  action,
   requestId,
   lastUpdatedById,
   lastUpdatedByRole
@@ -163,6 +166,7 @@ async function acceptTransaction(
 
     console.log(lastUpdatedByRole, currentRole);
     const result = await isValidRole(lastUpdatedByRole, currentRole);
+    console.log("In here");
     console.log(result);
     if (!result) {
       return {
@@ -217,7 +221,23 @@ async function acceptTransaction(
         }
       }
 
-      return { success: true, message: "Transactions added successfully." };
+      const response = await axios.post(
+        `http://${url}:3000/api/update-status`,
+        {
+          current_role: lastUpdatedByRole,
+          region: region, // You would need to adjust this as per actual requirements
+          action: action, // Assuming action is to be passed as 1 for approve (example)
+          req_id: requestId, // This is a mockup; adjust as needed
+        }
+      );
+
+      // Handle response from the update-status API
+      console.log("Update status API response:", response.data);
+
+      return {
+        success: true,
+        message: "Transactions added and status updated successfully.",
+      };
     }
   } catch (err) {
     console.error("Database connection error:", err);

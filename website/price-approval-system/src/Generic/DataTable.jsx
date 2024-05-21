@@ -26,6 +26,7 @@ import {
   ListItemText,
 } from "@mui/material";
 import { useSession } from "../Login_Controller/SessionContext";
+import { backend_mvc } from "../util";
 
 function DraggableHeader({
   header,
@@ -88,15 +89,18 @@ function ResponsiveTable() {
   const { session } = useSession();
   useEffect(() => {
     axios
-      .get("http://192.168.1.101:3000/api/data/" + session.role)
+      .get(`http:/${backend_mvc}:3000/api/data/` + session.role)
       .then((response) => {
-        setData(response.data);
-        if (response.data.length > 0) {
-          const initialHeaders = Object.keys(
-            response.data[0].consolidatedRequest
-          );
-          setHeaders(initialHeaders);
-          setSelectedHeaders(initialHeaders);
+        if (response.data.length === 0) {
+          setData(response.data);
+          if (response.data.length > 0) {
+            const initialHeaders = Object.keys(
+              response.data[0].consolidatedRequest
+            );
+            setHeaders(initialHeaders);
+
+            setSelectedHeaders(initialHeaders);
+          }
         }
       })
       .catch((error) => console.error("Error fetching data:", error));

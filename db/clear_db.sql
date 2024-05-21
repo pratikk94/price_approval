@@ -21,6 +21,12 @@ TRUNCATE TABLE [request_status];
 TRUNCATE TABLE [files];  
 TRUNCATE TABLE [remarks]; 
 
+CREATE TABLE requests_mvc (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    req_id NVARCHAR(255),
+    status INT,
+    pending TINYINT
+);
 
 /*
 Redundat tables

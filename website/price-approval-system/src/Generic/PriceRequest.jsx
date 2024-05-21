@@ -60,22 +60,22 @@ function PriceChangeRequest(rules, employee_id) {
   if (rules.rules.can_initiate == 1) {
     statusFiltersValues = [
       ...statusFiltersValues,
-      Array.from(statusFilters.values())[4],
+      Array.from(statusFilters.values())[0], //draft
+      Array.from(statusFilters.values())[6], //approved
     ];
   }
 
   if (rules.rules.can_rework == 1) {
     statusFiltersValues = [
       ...statusFiltersValues,
-      Array.from(statusFilters.values())[6],
-      Array.from(statusFilters.values())[0],
+      Array.from(statusFilters.values())[4], //rework
     ];
   }
 
   if (rules.rules.can_approve == 1) {
     statusFiltersValues = [
       ...statusFiltersValues,
-      Array.from(statusFilters.values())[1],
+      Array.from(statusFilters.values())[1], //pending
     ];
   }
   const [filterdId, setFilterdId] = useState(0);

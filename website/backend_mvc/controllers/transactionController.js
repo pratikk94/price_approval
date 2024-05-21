@@ -82,13 +82,17 @@ async function getTransactions(req, res) {
 
 async function acceptTransaction(req, res) {
   const requestId = req.params.requestId;
-  const roleId = req.params.roleId;
-  const role = req.params.role;
+  const region = req.params.region;
+  const action = req.params.action;
+  const lastUpdatedById = req.params.lastUpdatedById;
+  const lastUpdatedByRole = req.params.lastUpdatedByRole;
   try {
     const result = await transactionModel.acceptTransaction(
+      region,
+      action,
       requestId,
-      roleId,
-      role
+      lastUpdatedById,
+      lastUpdatedByRole
     );
     if (result.success) {
       res.json({

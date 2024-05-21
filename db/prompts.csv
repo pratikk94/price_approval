@@ -186,9 +186,16 @@ Fetch customers:
 8. Write nodejs api with mvc and mssql
 
 
-
-
-
-More information : 
-1. Fetch values from role_matrix.
-2. 
+Write to requests_status_mvc
+1. Take input as currently_role and region.
+2. Take input as action. 1 for approve 2 for rework. 3 for rejected.
+3. From region and role, query table rule_mvc.
+4. Fetch the level of role associatd with current role name it as l1.
+5. If input action is 1 
+    a. Add to table requests_status_mvc values status as 0 and pending as l1+1
+    b. If l1+1 does not exists make status as 1 and pending with as -1
+6. If input action is 3
+    a. Add to table requests_status_mvc values status as 3 and rejected by l1.
+7. If input action is 2
+    a. If current_approver level is 2 make status as 2 and pending with 1
+    b. If current_approver level is more than 2 status is and pending with 2. 
