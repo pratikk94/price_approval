@@ -347,10 +347,17 @@ async function fetchData(role) {
 
     // For each transaction, fetch and consolidate request details
     for (let transaction of transactionsResult.recordset) {
+      console.log(transaction.request_id);
       const requestResult = await sql.query(`
-              SELECT *
-              FROM price_approval_requests
-              WHERE request_name = '${transaction.request_id}'
+      SELECT 
+      c.name AS customer_name, 
+      consignee.name AS consignee_name, 
+      enduse.name AS enduse_name,*
+  FROM price_approval_requests par
+  JOIN customer c ON par.customer_id = c.id
+  JOIN customer consignee ON par.consignee_id = consignee.id
+  JOIN customer enduse ON par.end_use_id = enduse.id
+ WHERE request_name = '${transaction.request_id}'
           `);
 
       const consolidated = requestResult.recordset.reduce((acc, row) => {
