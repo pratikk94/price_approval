@@ -37,7 +37,11 @@ async function processTransaction(req, res) {
 
     priceRequestModel.addTransactionToTable(requestId, am_id);
 
-    res.json({ message: "Transaction processed successfully", data: result });
+    res.json({
+      message: "Transaction processed successfully",
+      data: result,
+      id: requestId,
+    });
   } catch (error) {
     console.error("Error processing transaction:", error);
     res.status(500).send("Failed to process transaction");

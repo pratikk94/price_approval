@@ -443,10 +443,13 @@ const CreateRequestModal = ({
         endUseSegment: "seg1",
         validFrom: validFrom,
         validTo: validTo,
-        paymentTerms: paymentTerms,
+        paymentTerms: paymentTerms["value"].toString(),
         oneToOneMapping: checkBoxEnabled ? (isChecked ? 1 : 2) : 2,
         prices: tableRowsData, // Assuming `prices` is an array in your formData
       };
+      formData["prices"] = tableRowsData;
+      console.log(tableRowsData);
+      console.log(formData);
 
       // Send the formData to your backend
       const response = await fetch(`${backend_mvc}process-price-request`, {

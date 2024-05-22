@@ -1,10 +1,9 @@
-/* eslint-disable react/prop-types */
 import React, { useState, useEffect, useCallback } from "react";
+import PriceRequestModal from "../Generic/ViewModal";
 import axios from "axios";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { TablePagination } from "@mui/material";
-
+import { TablePagination, IconButton } from "@mui/material";
 import {
   Box,
   Table,
@@ -25,6 +24,8 @@ import {
   Checkbox,
   ListItemText,
 } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
+import ViewIcon from "@mui/icons-material/Visibility";
 import { useSession } from "../Login_Controller/SessionContext";
 import { backend_mvc } from "../util";
 
@@ -87,20 +88,30 @@ function ResponsiveTable() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const { session } = useSession();
+  const [open, setOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+
+  const handleOpen = (row) => {
+    setSelectedRow(row);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   useEffect(() => {
     axios
-      .get(`http:/${backend_mvc}:3000/api/data/` + session.role)
+      .get(`${backend_mvc}api/data/` + session.role)
       .then((response) => {
-        if (response.data.length === 0) {
+        if (response.data.length > 0) {
           setData(response.data);
-          if (response.data.length > 0) {
-            const initialHeaders = Object.keys(
-              response.data[0].consolidatedRequest
-            );
-            setHeaders(initialHeaders);
-
-            setSelectedHeaders(initialHeaders);
-          }
+          const initialHeaders = Object.keys(
+            response.data[0].consolidatedRequest
+          );
+          initialHeaders.push("Actions");
+          setHeaders(initialHeaders);
+          setSelectedHeaders(initialHeaders);
         }
       })
       .catch((error) => console.error("Error fetching data:", error));
@@ -134,30 +145,36 @@ function ResponsiveTable() {
     }
   };
 
-  const filteredData = data
-    .filter((row) =>
-      selectedHeaders.some((header) =>
-        row.consolidatedRequest[header]
-          .toString()
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      )
-    )
-    .sort(
-      (a, b) =>
-        (a.consolidatedRequest[sortHeader] < b.consolidatedRequest[sortHeader]
-          ? -1
-          : 1) * (sortDirection === "asc" ? 1 : -1)
-    );
-
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setPage(0); // Reset to first page
   };
+
+  const handleViewAction = (rowData) => {
+    console.log("View action for:", rowData);
+    handleOpen(rowData);
+    // Implement your view logic here
+  };
+
+  const handleDownloadAction = (rowData) => {
+    console.log("Download action for:", rowData);
+    // Implement your download logic here
+  };
+
+  const actionButtons = (rowData) => (
+    <TableCell>
+      <IconButton onClick={() => handleViewAction(rowData)}>
+        <ViewIcon />
+      </IconButton>
+      <IconButton onClick={() => handleDownloadAction(rowData)}>
+        <DownloadIcon />
+      </IconButton>
+    </TableCell>
+  );
 
   return (
     <>
@@ -219,14 +236,16 @@ function ResponsiveTable() {
                         <TableCell component="th" scope="row">
                           {header}
                         </TableCell>
-                        {filteredData.map((row, rowIndex) => (
+                        {data.map((row, rowIndex) => (
                           <TableCell key={rowIndex}>
-                            {row.consolidatedRequest[header]}
+                            {header === "Actions"
+                              ? actionButtons(row)
+                              : row.consolidatedRequest[header]}
                           </TableCell>
                         ))}
                       </TableRow>
                     ))
-                  : filteredData
+                  : data
                       .slice(
                         page * rowsPerPage,
                         page * rowsPerPage + rowsPerPage
@@ -235,7 +254,9 @@ function ResponsiveTable() {
                         <TableRow key={index}>
                           {selectedHeaders.map((header) => (
                             <TableCell key={header}>
-                              {row.consolidatedRequest[header]}
+                              {header === "Actions"
+                                ? actionButtons(row)
+                                : row.consolidatedRequest[header]}
                             </TableCell>
                           ))}
                         </TableRow>
@@ -245,7 +266,7 @@ function ResponsiveTable() {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={filteredData.length}
+              count={data.length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
@@ -254,6 +275,11 @@ function ResponsiveTable() {
           </TableContainer>
         </Paper>
       </DndProvider>
+      <PriceRequestModal
+        open={open}
+        handleClose={handleClose}
+        data={selectedRow ?? []}
+      />
     </>
   );
 }

@@ -114,8 +114,8 @@ async function insertTransactions(data) {
 
     // Determine which function to call based on the mapping type
     const mappingFunction = oneToOneMapping
-      ? insertCombinationsOneToOne
-      : insertCombinationsOneToMany;
+      ? insertCombinationsOneToMany
+      : insertCombinationsOneToOne;
 
     // Call the appropriate mapping function with the split data
     const result = await mappingFunction(
@@ -181,11 +181,11 @@ async function insertPrices(data, request_id) {
               reel_discount, pack_upcharge, TPC, offline_discount, net_nsr, old_net_nsr) 
               VALUES 
               ('${request_id}',      '${item.fsc}',          '${item.grade}', 
-              '${item.grade_type}',       '${item.gsm_range_from}', 
-              '${item.gsm_range_to}',     '${item.agreed_price}', 
-              '${item.special_discount}', '${item.reel_discount}', 
-              '${item.pack_upcharge}',    '${item.TPC}',          '${item.offline_discount}', 
-              '${item.net_nsr}',          '${item.old_net_nsr}')
+              '${item.gradeType}',       '${item.gsmFrom}', 
+              '${item.gsmTo}',     '${item.agreedPrice}', 
+              '${item.specialDiscount}', '${item.reelDiscount}', 
+              '${item.packUpCharge}',    '${item.tpc}',          '${item.offlineDiscount}', 
+              '${item.netNSR}',          '${item.oldNetNSR}')
           `
       );
     }
@@ -349,16 +349,21 @@ async function fetchData(role) {
     for (let transaction of transactionsResult.recordset) {
       console.log(transaction.request_id);
       const requestResult = await sql.query(`
-      SELECT 
-      c.name AS customer_name, 
-      consignee.name AS consignee_name, 
-      enduse.name AS enduse_name,*
-  FROM price_approval_requests par
-  JOIN customer c ON par.customer_id = c.id
-  JOIN customer consignee ON par.consignee_id = consignee.id
-  JOIN customer enduse ON par.end_use_id = enduse.id
- WHERE request_name = '${transaction.request_id}'
-          `);
+              SELECT 
+              request_name,
+              c.name AS customer_name, 
+              consignee.name AS consignee_name, 
+              enduse.name AS enduse_name,
+              plant,
+              valid_from,
+              valid_to,
+              payment_terms_id
+                FROM price_approval_requests par
+                JOIN customer c ON par.customer_id = c.id
+                JOIN customer consignee ON par.consignee_id = consignee.id
+                JOIN customer enduse ON par.end_use_id = enduse.id
+              WHERE request_name = '${transaction.request_id}'
+      `);
 
       const consolidated = requestResult.recordset.reduce((acc, row) => {
         Object.keys(row).forEach((key) => {

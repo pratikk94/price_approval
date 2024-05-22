@@ -12,15 +12,15 @@ TRUNCATE TABLE [files];
 TRUNCATE TABLE [remarks]; 
 
 MVC
-
+TRUNCATE TABLE [rule_mvc];
+TRUNCATE TABLE [requests_mvc]
 TRUNCATE TABLE [price_approval_requests];
 TRUNCATE TABLE [price_approval_requests_price_table];
 TRUNCATE TABLE [transaction_mvc];
-TRUNCATE TABLE [rule_mvc];
 TRUNCATE TABLE [request_status]; 
 TRUNCATE TABLE [files];  
 TRUNCATE TABLE [remarks]; 
-
+    
 CREATE TABLE requests_mvc (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     req_id NVARCHAR(255),
