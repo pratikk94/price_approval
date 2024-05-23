@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -19,14 +19,12 @@ import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import RemarkBox from "../../../components/common/RemarkBox";
 import { backend_mvc, backend_url } from "../../../util";
 import { useSession } from "../../../Login_Controller/SessionContext";
-import AlertBox from "../../../components/common/AlertBox";
 import FileHandling from "../../../components/common/FileHandling";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { green, red } from "@mui/material/colors";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { format, toZonedTime } from "date-fns-tz";
-import HistoryModal from "../../../Role_Business_Admin/Components/RequestHistoryModal";
-
+import axios from "axios";
 const style = {
   position: "absolute",
   top: "10%",
@@ -100,6 +98,23 @@ const CreateRequestModal = ({
     setCheckBoxEnabled(true);
     setIsChecked(true);
     setOpenOneToOneModal(false);
+  };
+
+  const fetchHistory = async (grade) => {
+    try {
+      const response = await axios.get(
+        `${backend_mvc}api/history-requests?/history-requests?customerIds=${selectedCustomers
+          .map((item) => item.value)
+          .join(",")}&consigneeIds=${selectedConsignees
+          .map((item) => item.value)
+          .join(",")}&plantIds=${plant
+          .map((item) => item.value)
+          .join(",")}&grade=${grade}`
+      );
+      return response;
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
   };
 
   const handleConfirm = () => {
@@ -664,7 +679,6 @@ const CreateRequestModal = ({
               />
 
               <SpacingWrapper space="12px" />
-
               <SpacingWrapper space="61.5px" />
             </Grid>
           </Grid>
@@ -679,6 +693,7 @@ const CreateRequestModal = ({
             disableSubmit={setDisableSubmit}
             prices={priceDetails}
             fscCode={fsc}
+            fetchHistory={fetchHistory}
           />
           <SpacingWrapper space="24px" />
           <Typography>Attachment</Typography>

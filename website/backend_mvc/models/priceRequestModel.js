@@ -303,10 +303,11 @@ async function fetchConsolidatedRequest(requestId) {
   }
 }
 
-async function fetchData(role) {
+async function fetchData(role, status) {
   try {
     await sql.connect(config);
-
+    const statusSTR =
+      status == 0 ? "AND currently_pending_with = '${role}'" : "";
     // Use advanced query to get transactions pending with the given role
     const transactionsResult = await sql.query(
       `
@@ -334,12 +335,12 @@ async function fetchData(role) {
               AND current_status = RelatedTransactions.current_status
               AND id != RelatedTransactions.id
           )
-          AND currently_pending_with = '${role}'
+          ${statusSTR}
           UNION
           SELECT *
           FROM transaction_mvc
           WHERE id IN (SELECT maxId FROM MaxDetails)
-          AND currently_pending_with = '${role}';
+          ${statusSTR}
       `
     );
 
@@ -362,7 +363,8 @@ async function fetchData(role) {
                 JOIN customer c ON par.customer_id = c.id
                 JOIN customer consignee ON par.consignee_id = consignee.id
                 JOIN customer enduse ON par.end_use_id = enduse.id
-              WHERE request_name = '${transaction.request_id}'
+                JOIN requests_mvc rs ON par.request_name = rs.req_id
+              WHERE request_name = '${transaction.request_id}' and rs.status = '${status}'
       `);
 
       const consolidated = requestResult.recordset.reduce((acc, row) => {

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect, useCallback } from "react";
 import PriceRequestModal from "../Generic/ViewModal";
 import axios from "axios";
@@ -27,8 +28,9 @@ import {
 import DownloadIcon from "@mui/icons-material/Download";
 import ViewIcon from "@mui/icons-material/Visibility";
 import { useSession } from "../Login_Controller/SessionContext";
-import { backend_mvc } from "../util";
 
+import BlockIcon from "@mui/icons-material/Block";
+import MoreTimeIcon from "@mui/icons-material/MoreTime";
 function DraggableHeader({
   header,
   index,
@@ -76,7 +78,7 @@ function DraggableHeader({
   );
 }
 
-function ResponsiveTable() {
+function ResponsiveTable({ url, rule }) {
   const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [selectedHeaders, setSelectedHeaders] = useState([]);
@@ -90,6 +92,32 @@ function ResponsiveTable() {
   const { session } = useSession();
   const [open, setOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedRows, setSelectedRows] = useState([]);
+
+  const handleRowClick = (id) => {
+    const selectedIndex = selectedRows.indexOf(id);
+    let newSelected = [];
+
+    if (selectedIndex === -1) {
+      // Not currently selected, add the id to the selected array
+      newSelected = newSelected.concat(selectedRows, id);
+    } else if (selectedIndex === 0) {
+      // If it's the first item, slice off the rest
+      newSelected = newSelected.concat(selectedRows.slice(1));
+    } else if (selectedIndex === selectedRows.length - 1) {
+      // If it's the last item, slice off before it
+      newSelected = newSelected.concat(selectedRows.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      // It's somewhere in the middle, remove it
+      newSelected = newSelected.concat(
+        selectedRows.slice(0, selectedIndex),
+        selectedRows.slice(selectedIndex + 1)
+      );
+    }
+    setSelectedRows(newSelected);
+  };
+
+  const isSelected = (id) => selectedRows.indexOf(id) !== -1;
 
   const handleOpen = (row) => {
     setSelectedRow(row);
@@ -101,10 +129,14 @@ function ResponsiveTable() {
   };
 
   useEffect(() => {
+    console.log("URL_IS " + url);
+    console.log(url);
+
     axios
-      .get(`${backend_mvc}api/data/` + session.role)
+      .get(`${url}`)
       .then((response) => {
-        if (response.data.length > 0) {
+        if (response.data.length > 1) {
+          console.log(response.data);
           setData(response.data);
           const initialHeaders = Object.keys(
             response.data[0].consolidatedRequest
@@ -115,7 +147,7 @@ function ResponsiveTable() {
         }
       })
       .catch((error) => console.error("Error fetching data:", error));
-  }, [session.role]);
+  }, [session.role, status]);
 
   const moveColumn = useCallback(
     (dragIndex, hoverIndex) => {
@@ -165,14 +197,31 @@ function ResponsiveTable() {
     // Implement your download logic here
   };
 
+  console.log(rule["rules"]);
+
   const actionButtons = (rowData) => (
     <TableCell>
-      <IconButton onClick={() => handleViewAction(rowData)}>
-        <ViewIcon />
-      </IconButton>
-      <IconButton onClick={() => handleDownloadAction(rowData)}>
-        <DownloadIcon />
-      </IconButton>
+      <span style={{ display: "flex" }}>
+        <IconButton onClick={() => handleViewAction(rowData)}>
+          <ViewIcon />
+        </IconButton>
+        <IconButton onClick={() => handleDownloadAction(rowData)}>
+          <DownloadIcon />
+        </IconButton>
+
+        {rule["rules"].can_initiate == 1 ? (
+          <>
+            <IconButton onClick={() => handleDownloadAction(rowData)}>
+              <BlockIcon />
+            </IconButton>
+            <IconButton onClick={() => handleDownloadAction(rowData)}>
+              <MoreTimeIcon />
+            </IconButton>
+          </>
+        ) : (
+          <p>HA!</p>
+        )}
+      </span>
     </TableCell>
   );
 
@@ -214,6 +263,18 @@ function ResponsiveTable() {
               {!isMobile && (
                 <TableHead>
                   <TableRow>
+                    <TableCell padding="checkbox">
+                      {/* <Checkbox
+                        indeterminate={
+                          selectedRows.length > 0 &&
+                          selectedRows.length < data.length
+                        }
+                        checked={
+                          data.length > 0 && selectedRows.length === data.length
+                        }
+                        onChange={handleSelectAllClick}
+                      /> */}
+                    </TableCell>
                     {selectedHeaders.map((header, index) => (
                       <DraggableHeader
                         key={header}
@@ -231,13 +292,13 @@ function ResponsiveTable() {
               )}
               <TableBody>
                 {isMobile
-                  ? selectedHeaders.map((header, index) => (
-                      <TableRow key={index}>
+                  ? data.map((row, rowIndex) => (
+                      <TableRow key={rowIndex}>
                         <TableCell component="th" scope="row">
-                          {header}
+                          {row.consolidatedRequest[selectedHeaders[0]]}
                         </TableCell>
-                        {data.map((row, rowIndex) => (
-                          <TableCell key={rowIndex}>
+                        {selectedHeaders.slice(1).map((header) => (
+                          <TableCell key={header}>
                             {header === "Actions"
                               ? actionButtons(row)
                               : row.consolidatedRequest[header]}
@@ -251,7 +312,16 @@ function ResponsiveTable() {
                         page * rowsPerPage + rowsPerPage
                       )
                       .map((row, index) => (
-                        <TableRow key={index}>
+                        <TableRow
+                          key={row.request_id}
+                          selected={isSelected(row.request_id)}
+                          onClick={() => handleRowClick(row.request_id)}
+                          role="checkbox"
+                          aria-checked={isSelected(row.request_id)}
+                        >
+                          <TableCell padding="checkbox">
+                            <Checkbox checked={isSelected(row.request_id)} />
+                          </TableCell>
                           {selectedHeaders.map((header) => (
                             <TableCell key={header}>
                               {header === "Actions"
@@ -279,6 +349,7 @@ function ResponsiveTable() {
         open={open}
         handleClose={handleClose}
         data={selectedRow ?? []}
+        rule={rule}
       />
     </>
   );

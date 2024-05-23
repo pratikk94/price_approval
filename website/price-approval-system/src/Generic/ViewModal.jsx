@@ -15,7 +15,7 @@ import {
 import DoneIcon from "@mui/icons-material/Done";
 import CloseIcon from "@mui/icons-material/Close";
 import ReplayIcon from "@mui/icons-material/Replay";
-import { backend_mvc, backend_url } from "../util";
+import { backend_mvc } from "../util";
 
 import ReactModal from "react-modal";
 import { IconButton } from "@mui/material";
@@ -25,6 +25,7 @@ import HistoryModal from "../components/common/History";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import FileHandling from "../components/common/FileHandling";
 import { useSession } from "../Login_Controller/SessionContext";
+import { green } from "@mui/material/colors";
 function PriceTable({ price }) {
   console.log(price);
   return price ? (
@@ -82,13 +83,13 @@ function formatDate(dateString) {
   });
 }
 
-function PriceViewModal({ open, handleClose, data }) {
+function PriceViewModal({ open, handleClose, data, rule }) {
   console.log(`Opened VSM:${open}`);
   const { session } = useSession();
   const employee_id = session.employee_id;
 
   console.log(data);
-  const id = data["request_name"];
+  const id = data.request_id;
   const updateStatus = (newStatus) => {
     let reportData = {
       request_id: id, // Example reportId
@@ -147,6 +148,7 @@ function PriceViewModal({ open, handleClose, data }) {
       setShowSuccess(false);
       handleCloseModal();
     }, 2000); // Close the modal and hide success message after 2 seconds
+    console.log("Update Status V:", updateStatusV);
     updateStatus(updateStatusV);
     window.location.reload();
   };
@@ -247,47 +249,52 @@ function PriceViewModal({ open, handleClose, data }) {
               </>
             ) : null} */}
               <br />
-              <IconButton
-                onClick={() => {
-                  setUpdateStatusV((e) => {
-                    handleConfirm(1);
-                    return 1;
-                  });
-                  setShowSuccess(false);
-                }}
-              >
-                <DoneIcon />
-              </IconButton>
-              <IconButton
-                onClick={() => {
-                  setShowSuccess(false);
-                  setErrorMessage(
-                    "Are you sure you want to reject this request?"
-                  );
-                  setOpenModal(true);
-                  setUpdateStatusV((e) => {
-                    // handleConfirm(2);
-                    return 2;
-                  });
-                }}
-              >
-                <CloseIcon />
-              </IconButton>
-              <IconButton
-                onClick={() => {
-                  setShowSuccess(false);
-                  setErrorMessage(
-                    "Are you sure you want to send this request for rework?"
-                  );
-                  setOpenModal(true);
-                  setUpdateStatusV((e) => {
-                    // handleConfirm(3);
-                    return 3;
-                  });
-                }}
-              >
-                <ReplayIcon />
-              </IconButton>
+              {rule.can_approve ? (
+                <>
+                  <IconButton
+                    onClick={() => {
+                      setUpdateStatusV((e) => {
+                        //handleConfirm(1);
+                        return 1;
+                      });
+                      setOpenModal(true);
+                      setShowSuccess(true);
+                    }}
+                  >
+                    <DoneIcon />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      setShowSuccess(false);
+                      setErrorMessage(
+                        "Are you sure you want to reject this request?"
+                      );
+                      setOpenModal(true);
+                      setUpdateStatusV((e) => {
+                        // handleConfirm(2);
+                        return 2;
+                      });
+                    }}
+                  >
+                    <CloseIcon />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      setShowSuccess(false);
+                      setErrorMessage(
+                        "Are you sure you want to send this request for rework?"
+                      );
+                      setOpenModal(true);
+                      setUpdateStatusV((e) => {
+                        // handleConfirm(3);
+                        return 3;
+                      });
+                    }}
+                  >
+                    <ReplayIcon />
+                  </IconButton>
+                </>
+              ) : null}
               <HistoryModal reqId={id} />
               <button onClick={handleClose}>Close</button>
             </>
@@ -319,7 +326,7 @@ function PriceViewModal({ open, handleClose, data }) {
         >
           <>
             {showSuccess ? (
-              <Box sx={{ mt: 2, color: color[500] }}>
+              <Box sx={{ mt: 2, color: green[500] }}>
                 <CheckCircleOutlineIcon
                   sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
                 />

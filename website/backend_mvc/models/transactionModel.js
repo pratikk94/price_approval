@@ -191,7 +191,14 @@ async function acceptTransaction(
       );
 
       // Construct and insert new transactions based on the number of approvers found
-      if (approversResult.recordset.length === 1) {
+      if (action == 2) {
+        await sql.query(
+          `
+              INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+              VALUES ('${requestId}', '${rule_id}', 'Rejected', 'Rejected', '${currentRole}','${lastUpdatedById}', GETDATE())
+          `
+        );
+      } else if (approversResult.recordset.length === 1) {
         const { approver } = approversResult.recordset[0];
         const newStatus = `${approver}0_${currentRole}1`;
 

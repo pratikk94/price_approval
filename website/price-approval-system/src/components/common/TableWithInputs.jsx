@@ -7,6 +7,15 @@ import {
   Grid,
   Typography,
   MenuItem,
+  Modal,
+  TableContainer,
+  Paper,
+  TableHead,
+  Table,
+  TableRow,
+  TableCell,
+  TableBody,
+  Tab,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -17,6 +26,7 @@ import { backend_url } from "../../util";
 import { HeadsetRounded, SellOutlined } from "@mui/icons-material";
 import SpacingWrapper from "../util/SpacingWrapper";
 import { v4 as uuidv4 } from "uuid";
+import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 function TableWithInputs({
   setTableRowsDataFunction,
   fscCode,
@@ -25,12 +35,16 @@ function TableWithInputs({
   prices,
   disabled,
   isExtension,
+  fetchHistory,
 }) {
   const [grades, setGrades] = useState([]);
   const [selectedGrade, setSelectedGrade] = useState("");
   const [fsc, setFSC] = useState(fscCode);
   const [gradeType, setGradeType] = useState(null);
   const [ids, setIds] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [historyData, setHistoryData] = useState([]);
+
   console.log(fscCode);
   // Options for the dropdown
   const options = [
@@ -662,19 +676,38 @@ function TableWithInputs({
                   }
                 />
               </td> */}
+
               <td className="tAction">
-                <Button
-                  className="tAction"
-                  variant="outlined"
-                  color="error"
-                  disabled={disabled || isExtension}
-                  onClick={() => deleteRow(row.id)}
-                  sx={{
-                    border: "none",
-                  }}
-                >
-                  <DeleteIcon />
-                </Button>
+                <span style={{ display: "flex", justifyContent: "center" }}>
+                  <Button
+                    className="tAction"
+                    variant="outlined"
+                    color="error"
+                    disabled={disabled || isExtension}
+                    onClick={() => deleteRow(row.id)}
+                    sx={{
+                      border: "none",
+                    }}
+                  >
+                    <DeleteIcon />
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    sx={{
+                      border: "none",
+                    }}
+                    onClick={async () => {
+                      console.log(row.grade);
+                      let response = await fetchHistory(row.grade);
+                      console.log(response.data);
+                      setHistoryData(response.data);
+                      setOpen(true);
+                    }}
+                  >
+                    <WorkHistoryIcon />
+                  </Button>
+                </span>
               </td>
             </tr>
           ))}
@@ -688,6 +721,54 @@ function TableWithInputs({
           <AddCircleIcon />
         </Button>
       </div>
+      <Modal open={open} onClose={() => setOpen(false)}>
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "60%",
+            backgroundColor: "white", // Changed from 'background.paper' to 'white'
+            border: "2px solid #000",
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                {/* Replace with your actual column headers */}
+                <TableRow>
+                  <TableCell>Request Id</TableCell>
+                  <TableCell>Agreed Price</TableCell>
+                  <TableCell>Special Discount</TableCell>
+                  <TableCell>Reel Discount</TableCell>
+                  <TableCell>TPC</TableCell>
+                  <TableCell>Offline Discount</TableCell>
+                  <TableCell>Net NSR</TableCell>
+                  {/* ... other headers */}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historyData.map((row) => (
+                  <TableRow key={row.req_id}>
+                    <TableCell>{row.req_id}</TableCell>
+                    <TableCell>{row.agreed_price}</TableCell>
+                    <TableCell>{row.special_discount}</TableCell>
+                    <TableCell>{row.reel_discount}</TableCell>
+                    <TableCell>{row.tpc}</TableCell>
+                    <TableCell>{row.offline_discount}</TableCell>
+                    <TableCell>{row.net_nsr}</TableCell>
+
+                    {/* ... other cells */}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+      </Modal>
     </>
   );
 }

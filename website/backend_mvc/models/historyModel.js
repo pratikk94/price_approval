@@ -17,7 +17,12 @@ exports.findRequests = async ({
   const request = new sql.Request(pool);
 
   // Start building the SQL query dynamically based on provided parameters.
-  let query = `SELECT * FROM price_approval_requests WHERE`;
+  let query = `SELECT * 
+  FROM price_approval_requests_price_table 
+  INNER JOIN requests_mvc ON price_approval_requests_price_table.req_id = requests_mvc.req_id
+  WHERE grade = '${grade}' 
+  AND requests_mvc.status = 1
+  AND requests_mvc.req_id IN (SELECT DISTINCT (request_name) FROM price_approval_requests WHERE`;
 
   // Array to hold individual conditions to be joined later.
   let conditions = [];
@@ -29,7 +34,7 @@ exports.findRequests = async ({
     conditions.push(`consignee_id IN ('${consigneeIdsArray.join("', '")}')`);
   }
   if (plantIdsArray.length) {
-    conditions.push(`plant_id IN ('${plantIdsArray.join("', '")}')`);
+    conditions.push(`plant IN ('${plantIdsArray.join("', '")}')`);
   }
   if (endUseId) {
     conditions.push(`end_use_id = '${endUseId}'`);
@@ -41,10 +46,16 @@ exports.findRequests = async ({
   // Check if there are any conditions to append, otherwise select all records.
   if (conditions.length) {
     query += ` ${conditions.join(" AND ")}`;
+    query += ")";
   } else {
     // If no parameters are provided, the user might expect all records or an error.
     // This depends on your API design; here we select all records.
-    query = `SELECT * FROM price_approval_requests`;
+    query = `SELECT * 
+    FROM price_approval_requests_price_table 
+    INNER JOIN requests_mvc ON price_approval_requests_price_table.req_id = requests_mvc.req_id
+    WHERE grade = '${grade}' 
+    AND requests_mvc.status = 1
+    AND requests_mvc.req_id IN (SELECT DISTINCT(request_name) FROM price_approval_requests)`;
   }
 
   try {

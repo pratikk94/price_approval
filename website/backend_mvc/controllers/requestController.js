@@ -25,9 +25,10 @@ exports.updateRequestStatus = async (req, res) => {
       const { level } = roleInfo.recordset[0];
       let status = 0;
       let pendingWith = level + 1;
-
+      console.log(action);
+      console.log(typeof action);
       switch (action) {
-        case 1: // Approve
+        case "1": // Approve
           const nextLevelExists = await pool
             .request()
             .input("nextLevel", sql.Int, pendingWith)
@@ -36,10 +37,10 @@ exports.updateRequestStatus = async (req, res) => {
             );
           if (nextLevelExists.recordset[0].LevelExists === 0) {
             status = 1;
-            pendingWith = -1;
+            pendingWith = 0;
           }
           break;
-        case 2: // Rework
+        case "2": // Rework
           if (level === 2) {
             status = 2;
             pendingWith = 1;
@@ -48,7 +49,7 @@ exports.updateRequestStatus = async (req, res) => {
             pendingWith = 2;
           }
           break;
-        case 3: // Reject
+        case "3": // Reject
           status = 3;
           pendingWith = level; // indicates who rejected it
           break;

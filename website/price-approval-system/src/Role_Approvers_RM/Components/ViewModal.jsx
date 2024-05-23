@@ -96,6 +96,7 @@ function PriceViewModal({
   isEditable,
   role,
   mode,
+  rule,
 }) {
   const { session } = useSession();
   const employee_id = session.employee_id;
@@ -256,48 +257,50 @@ function PriceViewModal({
               request_id={data.request_name}
               setUpdateRemarks={setUpdateRemarks}
             />
-
-            <IconButton
-              onClick={() => {
-                setUpdateStatusV((e) => {
-                  handleConfirm(1);
-                  return 1;
-                });
-                setShowSuccess(false);
-              }}
-            >
-              <DoneIcon />
-            </IconButton>
-            <IconButton
-              onClick={() => {
-                setShowSuccess(false);
-                setErrorMessage(
-                  "Are you sure you want to reject this request?"
-                );
-                setOpenModal(true);
-                setUpdateStatusV((e) => {
-                  // handleConfirm(2);
-                  return 2;
-                });
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-            <IconButton
-              onClick={() => {
-                setShowSuccess(false);
-                setErrorMessage(
-                  "Are you sure you want to send this request for rework?"
-                );
-                setOpenModal(true);
-                setUpdateStatusV((e) => {
-                  // handleConfirm(3);
-                  return 3;
-                });
-              }}
-            >
-              <ReplayIcon />
-            </IconButton>
+            {rule.can_approve == 1}
+            <>
+              <IconButton
+                onClick={() => {
+                  setUpdateStatusV((e) => {
+                    handleConfirm(1);
+                    return 1;
+                  });
+                  setShowSuccess(false);
+                }}
+              >
+                <DoneIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  setShowSuccess(false);
+                  setErrorMessage(
+                    "Are you sure you want to reject this request?"
+                  );
+                  setOpenModal(true);
+                  setUpdateStatusV((e) => {
+                    // handleConfirm(2);
+                    return 2;
+                  });
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  setShowSuccess(false);
+                  setErrorMessage(
+                    "Are you sure you want to send this request for rework?"
+                  );
+                  setOpenModal(true);
+                  setUpdateStatusV((e) => {
+                    // handleConfirm(3);
+                    return 3;
+                  });
+                }}
+              >
+                <ReplayIcon />
+              </IconButton>
+            </>
           </>
         ) : null}
         <HistoryModal reqId={id} />

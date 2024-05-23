@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { Typography, Box, MenuItem, Button, Menu } from "@mui/material";
 
 import DataTable from "./DataTable";
-import { backend_url, statusFilters } from "../util";
+import { backend_mvc, backend_url, statusFilters } from "../util";
 
 import CreateRequestModal from "../Role_AM/Screens/PriceChangeRequests/RequestModal";
+import { useSession } from "../Login_Controller/SessionContext";
 
 // Initial dummy data with status
 // const initialData = [
@@ -176,20 +177,16 @@ function PriceChangeRequest(rules, employee_id) {
     ReturnDataTable();
   }, [filterdId]);
 
+  const { session } = useSession();
+
   const ReturnDataTable = () => {
-    if (filterdId == 0) {
+    console.log(filterdId);
+    if (filterdId == 3) {
       // console.log("Filterred ID is 1");
       return (
         <DataTable
-          isAM={true}
-          action_id={"AM"}
-          mode={mode}
-          sendMode={setMode}
-          rework={true}
-          url={
-            backend_url +
-            `api/fetch_request_am_with_status?employeeId=${employee_id}&status=3`
-          }
+          url={`${backend_mvc}api/data/` + session.role + "/0"}
+          rule={rules}
         />
       );
     }
@@ -198,15 +195,8 @@ function PriceChangeRequest(rules, employee_id) {
       // console.log("Filterred ID is 1");
       return (
         <DataTable
-          isAM={true}
-          action_id={"AM"}
-          approve={true}
-          url={
-            backend_url +
-            `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
-          }
-          sendMode={setMode}
-          mode={mode}
+          url={`${backend_mvc}api/data/` + session.role + "/1"}
+          rule={rules}
         />
       );
     }
@@ -215,12 +205,8 @@ function PriceChangeRequest(rules, employee_id) {
       // console.log("Filterred ID is 4");
       return (
         <DataTable
-          isAM={true}
-          action_id={"AM"}
-          rework={true}
-          url={backend_url + `api/get_draft?employeeId=${employee_id}`}
-          sendMode={setMode}
-          mode={mode}
+          url={`${backend_mvc}api/data/` + session.role + "/0"}
+          rule={rules}
         />
       );
     }
@@ -338,8 +324,8 @@ function PriceChangeRequest(rules, employee_id) {
           </div>
         ) : null}
       </Box>
-      {/* {ReturnDataTable()} */}
-      <DataTable />
+      {ReturnDataTable()}
+      {/* <DataTable/> */}
     </div>
   );
 }
