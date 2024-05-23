@@ -152,6 +152,8 @@ function PriceViewModal({ open, handleClose, data, rule }) {
     updateStatus(updateStatusV);
     window.location.reload();
   };
+  console.log(rule);
+  console.log(rule.rules.can_approve);
 
   return (
     data["consolidatedRequest"] && (
@@ -214,7 +216,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
               <RemarkBox request_id={data.request_name} />
 
               <br />
-              {rule.can_approve ? (
+              {rule.rules.can_approve ? (
                 <>
                   <IconButton
                     onClick={() => {

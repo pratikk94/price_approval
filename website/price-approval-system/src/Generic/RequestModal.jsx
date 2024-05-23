@@ -315,8 +315,6 @@ const CreateRequestModal = ({
     return response.json();
   };
 
-  console.log(editData);
-
   useEffect(() => {
     if (editData == undefined) {
       return;
@@ -573,12 +571,12 @@ const CreateRequestModal = ({
     setOpenOneToOneModal(false);
   };
 
-  console.log(openModal);
+  console.log(open);
 
   return (
     <>
       <Modal
-        open={openModal}
+        open={open}
         onClose={(event, reason) => {
           if (reason !== "backdropClick" && reason !== "escapeKeyDown") {
             handleClose();

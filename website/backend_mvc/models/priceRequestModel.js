@@ -1,7 +1,13 @@
 // models/transactionModel.js
 const sql = require("mssql");
 const config = require("../../backend_mvc/config");
-
+const poolPromise = new sql.ConnectionPool(config)
+  .connect()
+  .then((pool) => {
+    console.log("Connected to MSSQL");
+    return pool;
+  })
+  .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
 async function getCurrentDateRequestId() {
   const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD format
   console.log("CurrentDate->", currentDate);
@@ -242,6 +248,15 @@ async function addTransactionToTable(requestId, userId) {
           VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}', 'RM0A1', 'RM', '${currentTime}')
       `
     );
+    const pool = await poolPromise;
+    await pool
+      .request()
+      .input("status", sql.Int, 0)
+      .input("pendingWith", sql.Int, 2)
+      .input("req_id", sql.VarChar, requestId)
+      .query(
+        "INSERT INTO requests_mvc (status, pending, req_id) VALUES (@status, @pendingWith, @req_id)"
+      );
 
     return { success: true, message: "Transaction successfully added." };
   } catch (err) {
@@ -306,8 +321,9 @@ async function fetchConsolidatedRequest(requestId) {
 async function fetchData(role, status) {
   try {
     await sql.connect(config);
+    console.log(`Status is:${status}`);
     const statusSTR =
-      status == 0 ? "AND currently_pending_with = '${role}'" : "";
+      status == 0 ? "AND currently_pending_with = '" + role + "'" : "";
     // Use advanced query to get transactions pending with the given role
     const transactionsResult = await sql.query(
       `
@@ -345,7 +361,6 @@ async function fetchData(role, status) {
     );
 
     let details = [];
-
     // For each transaction, fetch and consolidate request details
     for (let transaction of transactionsResult.recordset) {
       console.log(transaction.request_id);

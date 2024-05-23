@@ -90,6 +90,7 @@ function PriceChangeRequest(rules, employee_id) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const [mode, setMode] = useState("0");
+  const [modalOpen, setModalOpen] = useState(false);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -100,7 +101,6 @@ function PriceChangeRequest(rules, employee_id) {
 
   // Assuming this is the function triggered by "Create Request"
   const handleCreateRequest = () => {
-    setModalOpen(true);
     handleClose(); // Close the dropdown menu
     // Your existing logic for handling a request creation
     console.log("Create Request action triggered");
@@ -142,8 +142,6 @@ function PriceChangeRequest(rules, employee_id) {
   //       )
   // );
 
-  const [modalOpen, setModalOpen] = useState(false);
-
   // const handleOpenModal = () => setModalOpen(true);
   const deleteIdsFromDb = async (ids) => {
     try {
@@ -173,26 +171,42 @@ function PriceChangeRequest(rules, employee_id) {
     //window.location.reload();
   };
 
+  const [component, setComponent] = useState(null);
+
   useEffect(() => {
-    ReturnDataTable();
-  }, [filterdId]);
-
-  const { session } = useSession();
-
-  const ReturnDataTable = () => {
-    console.log(filterdId);
-    if (filterdId == 3) {
-      // console.log("Filterred ID is 1");
-      return (
+    // ReturnDataTable();
+    console.log("Working" + filterdId);
+    //Completely Approved
+    if (statusFiltersValues[filterdId] == "Approved") {
+      console.log("Filterred ID is 1");
+      setComponent(
+        <DataTable
+          url={`${backend_mvc}api/data/` + session.role + "/1"}
+          rule={rules}
+        />
+      );
+    }
+    // Rework
+    else {
+      console.log("Pending");
+      setComponent(
         <DataTable
           url={`${backend_mvc}api/data/` + session.role + "/0"}
           rule={rules}
         />
       );
     }
+  }, [filterdId]);
+
+  const { session } = useSession();
+
+  const ReturnDataTable = () => {
+    console.log(filterdId);
+    console.log(statusFiltersValues[filterdId]);
+
     //Completely Approved
-    if (filterdId == 1) {
-      // console.log("Filterred ID is 1");
+    if (statusFiltersValues[filterdId] == "Approved") {
+      console.log("Filterred ID is 1");
       return (
         <DataTable
           url={`${backend_mvc}api/data/` + session.role + "/1"}
@@ -201,7 +215,7 @@ function PriceChangeRequest(rules, employee_id) {
       );
     }
     // Rework
-    if (filterdId == 2) {
+    else {
       // console.log("Filterred ID is 4");
       return (
         <DataTable
@@ -297,7 +311,12 @@ function PriceChangeRequest(rules, employee_id) {
               open={open}
               onClose={handleClose}
             >
-              <MenuItem onClick={handleCreateRequest}>
+              <MenuItem
+                onClick={() => {
+                  setModalOpen(true);
+                  handleCreateRequest();
+                }}
+              >
                 Create New Request
               </MenuItem>
               <MenuItem onClick={handleMergeRequest}>Merge Request</MenuItem>
@@ -315,7 +334,7 @@ function PriceChangeRequest(rules, employee_id) {
           </div>
         ) : null}
       </Box>
-      {ReturnDataTable()}
+      {component}
       {/* <DataTable/> */}
     </div>
   );

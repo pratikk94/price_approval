@@ -140,7 +140,7 @@ function ResponsiveTable({ url, rule }) {
     axios
       .get(`${url}`)
       .then((response) => {
-        if (response.data.length > 1) {
+        if (response.data) {
           console.log(response.data);
           setData(response.data);
           const initialHeaders = Object.keys(
@@ -152,7 +152,7 @@ function ResponsiveTable({ url, rule }) {
         }
       })
       .catch((error) => console.error("Error fetching data:", error));
-  }, [session.role, status]);
+  }, [session.role, status, url]);
 
   const moveColumn = useCallback(
     (dragIndex, hoverIndex) => {
@@ -230,9 +230,7 @@ function ResponsiveTable({ url, rule }) {
               <MoreTimeIcon />
             </IconButton>
           </>
-        ) : (
-          <p>HA!</p>
-        )}
+        ) : null}
       </span>
     </TableCell>
   );
@@ -363,12 +361,16 @@ function ResponsiveTable({ url, rule }) {
         data={selectedRow ?? []}
         rule={rule}
       />
-      <CreateRequestModal
-        open={editOpen}
-        handleClose={handleEditClose}
-        editData={selectedRow}
-        rule={rule}
-      />
+      {editOpen ? (
+        <CreateRequestModal
+          open={editOpen}
+          handleClose={handleEditClose}
+          editData={selectedRow}
+          rule={rule}
+        />
+      ) : (
+        <> </>
+      )}
     </>
   );
 }
