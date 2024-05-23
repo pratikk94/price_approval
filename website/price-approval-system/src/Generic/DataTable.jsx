@@ -31,6 +31,7 @@ import { useSession } from "../Login_Controller/SessionContext";
 
 import BlockIcon from "@mui/icons-material/Block";
 import MoreTimeIcon from "@mui/icons-material/MoreTime";
+import CreateRequestModal from "./RequestModal";
 function DraggableHeader({
   header,
   index,
@@ -93,7 +94,7 @@ function ResponsiveTable({ url, rule }) {
   const [open, setOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
-
+  const [editOpen, setEditOpen] = useState(false);
   const handleRowClick = (id) => {
     const selectedIndex = selectedRows.indexOf(id);
     let newSelected = [];
@@ -126,6 +127,10 @@ function ResponsiveTable({ url, rule }) {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleEditClose = () => {
+    setEditOpen(false);
   };
 
   useEffect(() => {
@@ -211,7 +216,14 @@ function ResponsiveTable({ url, rule }) {
 
         {rule["rules"].can_initiate == 1 ? (
           <>
-            <IconButton onClick={() => handleDownloadAction(rowData)}>
+            <IconButton
+              onClick={() => {
+                console.log("Blocked clicked");
+                setSelectedRow(rowData);
+                console.log(rowData);
+                setEditOpen(true);
+              }}
+            >
               <BlockIcon />
             </IconButton>
             <IconButton onClick={() => handleDownloadAction(rowData)}>
@@ -349,6 +361,12 @@ function ResponsiveTable({ url, rule }) {
         open={open}
         handleClose={handleClose}
         data={selectedRow ?? []}
+        rule={rule}
+      />
+      <CreateRequestModal
+        open={editOpen}
+        handleClose={handleEditClose}
+        editData={selectedRow}
         rule={rule}
       />
     </>

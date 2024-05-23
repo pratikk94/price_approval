@@ -6,7 +6,7 @@ import { Typography, Box, MenuItem, Button, Menu } from "@mui/material";
 import DataTable from "./DataTable";
 import { backend_mvc, backend_url, statusFilters } from "../util";
 
-import CreateRequestModal from "../Role_AM/Screens/PriceChangeRequests/RequestModal";
+import CreateRequestModal from "./RequestModal";
 import { useSession } from "../Login_Controller/SessionContext";
 
 // Initial dummy data with status
@@ -300,20 +300,11 @@ function PriceChangeRequest(rules, employee_id) {
               <MenuItem onClick={handleCreateRequest}>
                 Create New Request
               </MenuItem>
-              {/* <MenuItem onClick={handleCopyRequest}>Copy Request</MenuItem> */}
-              {activeFilter == "Completely Approved" ? (
-                <>
-                  <MenuItem onClick={handleMergeRequest}>
-                    Merge Request
-                  </MenuItem>
-                  <MenuItem onClick={handleBlockRequest}>
-                    Block Request
-                  </MenuItem>
-                  <MenuItem onClick={handleExtensionOrPreclosure}>
-                    Extension or Preclosure
-                  </MenuItem>
-                </>
-              ) : null}
+              <MenuItem onClick={handleMergeRequest}>Merge Request</MenuItem>
+              {/* <MenuItem onClick={handleBlockRequest}>Block Request</MenuItem>
+              <MenuItem onClick={handleExtensionOrPreclosure}>
+                Extension or Preclosure
+              </MenuItem> */}
             </Menu>
 
             <CreateRequestModal

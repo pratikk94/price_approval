@@ -27,7 +27,6 @@ import FileHandling from "../components/common/FileHandling";
 import { useSession } from "../Login_Controller/SessionContext";
 import { green } from "@mui/material/colors";
 function PriceTable({ price }) {
-  console.log(price);
   return price ? (
     <>
       <TableContainer component={Paper}>
@@ -104,6 +103,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
 
     console.log(reportData);
     console.log(apiUrl);
+
     fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -212,42 +212,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                 <FileHandling requestId={data.request_name} />
               )}
               <RemarkBox request_id={data.request_name} />
-              {/* {isEditable ? (
-              <>
-                <IconButton
-                  onClick={() => {
-                    setUpdateStatusV(1);
-                    handleConfirm();
-                  }}
-                >
-                  <DoneIcon />
-                </IconButton>
-                <IconButton
-                  onClick={() => {
-                    setShowSuccess(false);
-                    setErrorMessage(
-                      "Are you sure you want to reject this request?"
-                    );
-                    setOpenModal(true);
-                    setUpdateStatusV(2);
-                  }}
-                >
-                  <CloseIcon />
-                </IconButton>
-                <IconButton
-                  onClick={() => {
-                    setShowSuccess(false);
-                    setErrorMessage(
-                      "Are you sure you want to send this request for rework?"
-                    );
-                    setOpenModal(true);
-                    setUpdateStatusV(3);
-                  }}
-                >
-                  <ReplayIcon />
-                </IconButton>
-              </>
-            ) : null} */}
+
               <br />
               {rule.can_approve ? (
                 <>
