@@ -48,6 +48,52 @@ async function processTransaction(req, res) {
   }
 }
 
+async function processPrevApprovedTransaction(req, res) {
+  try {
+    const {
+      customers,
+      consignees,
+      endUse,
+      plant,
+      endUseSegment,
+      validFrom,
+      validTo,
+      paymentTerms,
+      oneToOneMapping,
+      prices,
+      am_id,
+    } = req.body;
+
+    const requestId = await transactionModel.handleNewRequest();
+    console.log("requestId", requestId); // Debugging output (requestId value
+    const result = await transactionModel.insertTransactions({
+      customers,
+      consignees,
+      endUse,
+      plant,
+      endUseSegment,
+      validFrom,
+      validTo,
+      paymentTerms,
+      oneToOneMapping,
+      requestId,
+      prices,
+      am_id,
+    });
+
+    priceRequestModel.addTransactionToTable(requestId, am_id);
+
+    res.json({
+      message: "Transaction processed successfully",
+      data: result,
+      id: requestId,
+    });
+  } catch (error) {
+    console.error("Error processing transaction:", error);
+    res.status(500).send("Failed to process transaction");
+  }
+}
+
 async function getPriceApprovalData(req, res) {
   const { requestId } = req.params; // Assuming request_id is passed as a URL parameter
 
@@ -63,4 +109,5 @@ async function getPriceApprovalData(req, res) {
 module.exports = {
   processTransaction,
   getPriceApprovalData,
+  proprocessPrevApprovedTransaction,
 };

@@ -4,7 +4,7 @@ import PriceRequestModal from "../Generic/ViewModal";
 import axios from "axios";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { TablePagination, IconButton } from "@mui/material";
+import { TablePagination, IconButton, Typography } from "@mui/material";
 import {
   Box,
   Table,
@@ -95,6 +95,8 @@ function ResponsiveTable({ url, rule }) {
   const [selectedRow, setSelectedRow] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [editOpen, setEditOpen] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [isExtension, setIsExtension] = useState(false);
   const handleRowClick = (id) => {
     const selectedIndex = selectedRows.indexOf(id);
     let newSelected = [];
@@ -222,11 +224,20 @@ function ResponsiveTable({ url, rule }) {
                 setSelectedRow(rowData);
                 console.log(rowData);
                 setEditOpen(true);
+                setIsBlocked(true);
               }}
             >
               <BlockIcon />
             </IconButton>
-            <IconButton onClick={() => handleDownloadAction(rowData)}>
+            <IconButton
+              onClick={() => {
+                console.log("Extension clicked");
+                setSelectedRow(rowData);
+                console.log(rowData);
+                setEditOpen(true);
+                setIsExtension(true);
+              }}
+            >
               <MoreTimeIcon />
             </IconButton>
           </>
@@ -273,18 +284,7 @@ function ResponsiveTable({ url, rule }) {
               {!isMobile && (
                 <TableHead>
                   <TableRow>
-                    <TableCell padding="checkbox">
-                      {/* <Checkbox
-                        indeterminate={
-                          selectedRows.length > 0 &&
-                          selectedRows.length < data.length
-                        }
-                        checked={
-                          data.length > 0 && selectedRows.length === data.length
-                        }
-                        onChange={handleSelectAllClick}
-                      /> */}
-                    </TableCell>
+                    <TableCell padding="checkbox">x</TableCell>
                     {selectedHeaders.map((header, index) => (
                       <DraggableHeader
                         key={header}
@@ -303,18 +303,27 @@ function ResponsiveTable({ url, rule }) {
               <TableBody>
                 {isMobile
                   ? data.map((row, rowIndex) => (
-                      <TableRow key={rowIndex}>
-                        <TableCell component="th" scope="row">
-                          {row.consolidatedRequest[selectedHeaders[0]]}
-                        </TableCell>
-                        {selectedHeaders.slice(1).map((header) => (
-                          <TableCell key={header}>
-                            {header === "Actions"
-                              ? actionButtons(row)
-                              : row.consolidatedRequest[header]}
-                          </TableCell>
+                      <Box key={rowIndex} p={2} mb={1} boxShadow={1}>
+                        {selectedHeaders.map((header) => (
+                          <Typography key={header} variant="body2">
+                            <strong>{header}: </strong>
+                            {row.consolidatedRequest[header]}
+                          </Typography>
                         ))}
-                      </TableRow>
+                        <Box
+                          mt={2}
+                          display="flex"
+                          justifyContent="space-between"
+                        >
+                          <IconButton onClick={() => handleViewAction(row)}>
+                            <ViewIcon />
+                          </IconButton>
+                          <IconButton onClick={() => handleDownloadAction(row)}>
+                            <DownloadIcon />
+                          </IconButton>
+                          {/* Additional buttons here */}
+                        </Box>
+                      </Box>
                     ))
                   : data
                       .slice(
@@ -367,6 +376,8 @@ function ResponsiveTable({ url, rule }) {
           handleClose={handleEditClose}
           editData={selectedRow}
           rule={rule}
+          isBlocked={isBlocked}
+          isExtension={isExtension}
         />
       ) : (
         <> </>

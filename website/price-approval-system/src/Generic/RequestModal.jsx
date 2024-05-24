@@ -58,6 +58,7 @@ const CreateRequestModal = ({
   editData,
   mode,
   parentId,
+  isBlocked,
   isCopyOrMerged,
   isExtension,
 }) => {
@@ -69,7 +70,7 @@ const CreateRequestModal = ({
   const [validFrom, setValidFrom] = useState([]);
   const [validTo, setValidTo] = useState([]);
   const [fsc, setFSC] = useState(
-    editData != undefined ? editData["fsc"] == 1 : 0
+    editData != undefined ? editData.priceDetails[0].fsc == 1 : 0
   );
   const [priceDetails, setPriceDetails] = useState([]); // Assuming this is an array of objects with the structure { price: number, ...
   const [remarks, setRemarks] = useState([]);
@@ -329,18 +330,18 @@ const CreateRequestModal = ({
     console.log(`DATA-> ${data}`);
     console.log(data);
     setReqId(data.request_name);
-
+    console.log(data.consignee_ids);
     // Update states
-    setSelectedConsigneeIDs(data.consignee_id);
-    setSelectedCustomerIDs(data.customer_id);
+    setSelectedConsigneeIDs(data.consignee_ids);
+    setSelectedCustomerIDs(data.customer_ids);
     // con    sole.log(data.consignee_id);
     setSelectedEndUseIDs(data.end_use_id);
     setEndUse({
       value: data.end_use_id,
-      label: `End Use ${data.end_use_id}`,
+      label: `End Use ${data.enduse_name}`,
     });
     // Assumption: plant, paymentTermsId are singular values, not lists
-    setPlant([{ value: data.plant, label: `Plant ${data.plant}` }]);
+    setPlant(data.plant);
     setPaymentTerms({
       value: data.payment_terms_id,
       label: `Terms ${data.payment_terms_id}`,
@@ -350,15 +351,16 @@ const CreateRequestModal = ({
     console.log(data.valid_to);
 
     setValidFrom(data.valid_from);
-    // if (isExtension) {
-    //   setValidTo(data.valid_to);
-    // }
-    setFSC(editData.priceDetails.fsc == "1" ? "Y" : "N");
+    setValidTo(data.valid_to);
+
+    setFSC(editData.priceDetails[0].fsc);
+    console.log(editData.priceDetails[0]);
     console.log(editData.priceDetails[0].fsc);
     setOpenModal(true);
     //setMap(data.mappint_type);
     // if (!isCopyOrMerged) {
-    //   setPriceDetails(data.price); // Assuming this directly maps to your price details state structure
+    console.log(editData.priceDetails);
+    setPriceDetails(editData.priceDetails); // Assuming this directly maps to your price details state structure
     // }
   }, [editData]);
 
@@ -383,74 +385,74 @@ const CreateRequestModal = ({
     return tempAttachments;
   };
 
-  const submitFormData = async (formData) => {
-    console.log("In here SFD");
-    try {
-      // Update formData based on whether it's a new submission or an edit
-      formData["isNew"] = true;
-      const tempRequestIds = await fetchTempRequestIds();
-      const tempAttachments = await fetchTempAttachments();
-      console.log(tempRequestIds.length);
-      if (tempRequestIds.length > 0) {
-        formData.tempRequestIds = [tempRequestIds];
-      }
-      if (editData) {
-        formData["parentReqId"] = parentId; // Assuming `reqId` is defined somewhere in your component as the current request ID
-        formData["isNew"] = false;
-        formData["mode"] = mode; // Assuming `mode` is defined and indicates the type of operation (new, edit, etc.)
-        formData["isAM"] = session.role === "AM"; // Assuming `session` is defined and contains the user's role
-      }
-      console.log(formData);
+  // const submitFormData = async (formData) => {
+  //   console.log("In here SFD");
+  //   try {
+  //     // Update formData based on whether it's a new submission or an edit
+  //     formData["isNew"] = true;
+  //     const tempRequestIds = await fetchTempRequestIds();
+  //     const tempAttachments = await fetchTempAttachments();
+  //     console.log(tempRequestIds.length);
+  //     if (tempRequestIds.length > 0) {
+  //       formData.tempRequestIds = [tempRequestIds];
+  //     }
+  //     if (editData) {
+  //       formData["parentReqId"] = parentId; // Assuming `reqId` is defined somewhere in your component as the current request ID
+  //       formData["isNew"] = false;
+  //       formData["mode"] = mode; // Assuming `mode` is defined and indicates the type of operation (new, edit, etc.)
+  //       formData["isAM"] = session.role === "AM"; // Assuming `session` is defined and contains the user's role
+  //     }
+  //     console.log(formData);
 
-      // Send the formData to your backend
-      const response = await fetch(`${backend_url}api/add_price_request`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+  //     // Send the formData to your backend
+  //     const response = await fetch(`${backend_url}api/add_price_request`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(formData),
+  //     });
 
-      const oldRequestIds =
-        JSON.parse(localStorage.getItem("request_ids")) || [];
-      const requestData = await response.json();
-      console.log(requestData["id"]);
-      if (oldRequestIds.length > 0) {
-        updateRequestIds(oldRequestIds, requestData["id"])
-          .then((response) => {
-            console.log("Update successful:", response);
-            // Handle further actions like notifying the user
-          })
-          .catch((error) => {
-            console.error("Failed to update request IDs:", error);
-            // Handle error (e.g., showing error message to the user)
-          });
-      }
-      // Check for HTTP errors
-      if (!response.ok) {
-        setShowSuccess(false);
-        setErrorMessage(
-          `Failed to create request due to HTTP error! \n Reason : ${response.status}`
-        );
-        throw new Error(`HTTP error! status: ${response.status}`);
-      } else {
-        setShowSuccess(true);
-        setOpenModal(true);
-      }
-      // Extract the JSON body from the response (it should contain the requestId)
+  //     const oldRequestIds =
+  //       JSON.parse(localStorage.getItem("request_ids")) || [];
+  //     const requestData = await response.json();
+  //     console.log(requestData["id"]);
+  //     if (oldRequestIds.length > 0) {
+  //       updateRequestIds(oldRequestIds, requestData["id"])
+  //         .then((response) => {
+  //           console.log("Update successful:", response);
+  //           // Handle further actions like notifying the user
+  //         })
+  //         .catch((error) => {
+  //           console.error("Failed to update request IDs:", error);
+  //           // Handle error (e.g., showing error message to the user)
+  //         });
+  //     }
+  //     // Check for HTTP errors
+  //     if (!response.ok) {
+  //       setShowSuccess(false);
+  //       setErrorMessage(
+  //         `Failed to create request due to HTTP error! \n Reason : ${response.status}`
+  //       );
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     } else {
+  //       setShowSuccess(true);
+  //       setOpenModal(true);
+  //     }
+  //     // Extract the JSON body from the response (it should contain the requestId)
 
-      localStorage.removeItem("request_ids");
+  //     localStorage.removeItem("request_ids");
 
-      // Assuming you have state or methods to handle UI updates post-submission
-      // setScenarioId(newRequestId); // Example: Update state with the new request ID
-      // setOpenAlert(true); // Example: Show an alert or notification about the successful operation
+  //     // Assuming you have state or methods to handle UI updates post-submission
+  //     // setScenarioId(newRequestId); // Example: Update state with the new request ID
+  //     // setOpenAlert(true); // Example: Show an alert or notification about the successful operation
 
-      // Optional: Redirect or fetch new data based on the new request ID
-      // window.location.reload(); // Might not be needed if you're handling UI updates more reactively
-    } catch (error) {
-      console.error("Failed to send data:", error);
-    }
-  };
+  //     // Optional: Redirect or fetch new data based on the new request ID
+  //     // window.location.reload(); // Might not be needed if you're handling UI updates more reactively
+  //   } catch (error) {
+  //     console.error("Failed to send data:", error);
+  //   }
+  // };
 
   const submitFormDataMVC = async (formData) => {
     console.log("In here SFD");
@@ -599,7 +601,7 @@ const CreateRequestModal = ({
               <SpacingWrapper space="12px" />
               <Typography>Customer * </Typography>
               <CustomerSelect
-                disabled={mode > 1 || isExtension}
+                disabled={isBlocked || isExtension}
                 id={1}
                 name={"Customer"}
                 customerState={setSelectedCustomers}
@@ -613,7 +615,9 @@ const CreateRequestModal = ({
               <FormControlLabel
                 control={
                   <Checkbox
-                    disabled={mode > 1 ? false : !checkBoxEnabled}
+                    disabled={
+                      (mode > 1 ? false : !checkBoxEnabled) || isBlocked
+                    }
                     icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
                     checkedIcon={<CheckBoxIcon fontSize="medium" />}
                     checked={isChecked}
@@ -626,7 +630,7 @@ const CreateRequestModal = ({
               <Typography>End Use</Typography>
               <CustomerSelect
                 id={3}
-                disabled={mode > 1 || isExtension}
+                disabled={mode > 1 || isExtension || isBlocked}
                 name={"End Use"}
                 customerState={setSelectedCustomers}
                 consigneeState={setSelectedConsignees}
@@ -640,12 +644,12 @@ const CreateRequestModal = ({
               <Plant
                 setSelection={setPlant}
                 editedData={plant}
-                disabled={mode > 1 || isExtension}
+                disabled={mode > 1 || isExtension || isBlocked}
               />
               <SpacingWrapper space="12px" />
               <Typography>Payment Terms *</Typography>
               <PaymentTerms
-                disabled={mode > 1 || isExtension}
+                disabled={mode > 1 || isExtension || isBlocked}
                 setSelection={setPaymentTerms}
                 editedData={paymentTerms}
               />
@@ -653,7 +657,7 @@ const CreateRequestModal = ({
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <DateSelector
-                    disabled={mode > 1 || isExtension}
+                    disabled={mode > 1 || isExtension || isBlocked}
                     name={"Valid From * "}
                     setSelection={setValidFrom}
                     editedData={validFrom}
@@ -661,7 +665,7 @@ const CreateRequestModal = ({
                 </Grid>
                 <Grid item xs={6}>
                   <DateSelector
-                    disabled={isExtension}
+                    disabled={isBlocked}
                     name={"Valid To * "}
                     setSelection={setValidTo}
                     editedData={validTo}
@@ -676,7 +680,7 @@ const CreateRequestModal = ({
 
               <CustomerSelect
                 id={2}
-                disabled={mode > 1 || isExtension}
+                disabled={mode > 1 || isExtension || isBlocked}
                 name={"Consignee"}
                 customerState={setSelectedCustomers}
                 consigneeState={setSelectedConsignees}
@@ -695,7 +699,7 @@ const CreateRequestModal = ({
 
           <TableWithInputs
             isExtension={isExtension}
-            disabled={mode > 1 || isExtension}
+            disabled={mode > 1 || isExtension || isBlocked}
             setTableRowsDataFunction={setTableRowsDataFunction}
             setFSCCode={setFSC}
             disableSubmit={setDisableSubmit}
@@ -708,7 +712,7 @@ const CreateRequestModal = ({
 
           <FileHandling
             requestId={
-              isCopyOrMerged || isExtension
+              isBlocked || isCopyOrMerged || isExtension
                 ? ""
                 : editData != undefined
                 ? editData[0] != undefined
@@ -720,7 +724,7 @@ const CreateRequestModal = ({
 
           <RemarkBox
             request_id={
-              isCopyOrMerged || isExtension
+              isBlocked || isCopyOrMerged || isExtension
                 ? ""
                 : editData != undefined
                 ? editData[0] != undefined

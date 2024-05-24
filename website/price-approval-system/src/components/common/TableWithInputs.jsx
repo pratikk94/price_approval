@@ -362,7 +362,7 @@ function TableWithInputs({
         control={
           <Checkbox
             disabled={isExtension}
-            checked={fsc == "Y" ? true : false}
+            checked={fscCode == "Y" ? true : false}
             onChange={handleFSCChange}
             icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
             checkedIcon={<CheckBoxIcon fontSize="medium" />}

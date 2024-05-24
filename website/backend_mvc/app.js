@@ -27,6 +27,10 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.post("/process-price-request", priceRequestConroller.processTransaction);
+app.post(
+  "/process-pre-approved-price-request",
+  priceRequestConroller.processPrevApprovedTransaction
+);
 app.use("/api", ruleRoutes);
 app.use("/api", transactionRoutes);
 app.use("/api", dataRoutes);

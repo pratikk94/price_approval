@@ -54,10 +54,11 @@ import { useSession } from "../Login_Controller/SessionContext";
 // };
 
 // Status filter action items
-
+``;
 function PriceChangeRequest(rules, employee_id) {
   let statusFiltersValues = [];
-  console.log(rules.rules);
+  console.log(rules);
+
   if (rules.rules.can_initiate == 1) {
     statusFiltersValues = [
       ...statusFiltersValues,
@@ -196,7 +197,7 @@ function PriceChangeRequest(rules, employee_id) {
         />
       );
     }
-  }, [filterdId]);
+  }, [filterdId, rules]);
 
   const { session } = useSession();
 

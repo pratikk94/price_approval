@@ -368,8 +368,11 @@ async function fetchData(role, status) {
               SELECT 
               request_name,
               c.name AS customer_name, 
+              customer_id AS customer_ids,
               consignee.name AS consignee_name, 
+              consignee_id AS consignee_ids,
               enduse.name AS enduse_name,
+              end_use_id,
               plant,
               valid_from,
               valid_to,
@@ -381,38 +384,40 @@ async function fetchData(role, status) {
                 JOIN requests_mvc rs ON par.request_name = rs.req_id
               WHERE request_name = '${transaction.request_id}' and rs.status = '${status}'
       `);
+      if (requestResult.recordset.length > 0) {
+        const consolidated = requestResult.recordset.reduce((acc, row) => {
+          Object.keys(row).forEach((key) => {
+            if (!(key in acc)) acc[key] = new Set();
+            if (row[key] != null) {
+              row[key]
+                .toString()
+                .split(",")
+                .forEach((value) => {
+                  if (value.trim() !== "") acc[key].add(value.trim());
+                });
+            }
+          });
+          return acc;
+        }, {});
 
-      const consolidated = requestResult.recordset.reduce((acc, row) => {
-        Object.keys(row).forEach((key) => {
-          if (!(key in acc)) acc[key] = new Set();
-          if (row[key] != null) {
-            row[key]
-              .toString()
-              .split(",")
-              .forEach((value) => {
-                if (value.trim() !== "") acc[key].add(value.trim());
-              });
-          }
+        Object.keys(consolidated).forEach((key) => {
+          consolidated[key] = Array.from(consolidated[key]).join(", ");
         });
-        return acc;
-      }, {});
 
-      Object.keys(consolidated).forEach((key) => {
-        consolidated[key] = Array.from(consolidated[key]).join(", ");
-      });
+        // Fetch price details with the maximum ID
 
-      // Fetch price details with the maximum ID
-      const priceResult = await sql.query(`
+        const priceResult = await sql.query(`
               SELECT *
               FROM price_approval_requests_price_table
               WHERE req_id = '${transaction.request_id}' AND id = (SELECT MAX(id) FROM price_approval_requests_price_table WHERE req_id = '${transaction.request_id}')
           `);
 
-      details.push({
-        request_id: transaction.request_id,
-        consolidatedRequest: consolidated,
-        priceDetails: priceResult.recordset,
-      });
+        details.push({
+          request_id: transaction.request_id,
+          consolidatedRequest: consolidated,
+          priceDetails: priceResult.recordset,
+        });
+      }
     }
 
     return details;

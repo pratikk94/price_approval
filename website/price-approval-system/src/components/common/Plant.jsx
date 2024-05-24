@@ -6,19 +6,19 @@ const Plant = ({ setSelection, editedData, disabled }) => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   //console.log(editedData);
-  useEffect(() => {
-    // Map selectedCustomersToEdit to the format { label, value } if customers are loaded
-    //console.log(selectedCustomersToEdit);
-    // if (editedData && customers.length > 0) {
-    //   const selected = editedData
-    //     .map((customerCode) => {
-    //       const foundCustomer = customers.find((c) => c.value === customerCode);
-    //       return foundCustomer || null; // Ensure that we return null for not found customers to filter them out later
-    //     })
-    //     .filter(Boolean); // Remove any nulls (in case a customer code doesn't match)
-    setSelectedCustomers(editedData);
-    console.log(editedData);
-  }, [editedData, customers]);
+  // useEffect(() => {
+  //   // Map selectedCustomersToEdit to the format { label, value } if customers are loaded
+  //   //console.log(selectedCustomersToEdit);
+  //   // if (editedData && customers.length > 0) {
+  //   //   const selected = editedData
+  //   //     .map((customerCode) => {
+  //   //       const foundCustomer = customers.find((c) => c.value === customerCode);
+  //   //       return foundCustomer || null; // Ensure that we return null for not found customers to filter them out later
+  //   //     })
+  //   //     .filter(Boolean); // Remove any nulls (in case a customer code doesn't match)
+  //   setSelectedCustomers();
+  //   console.log(editedData);
+  // }, [editedData, customers]);
   // Function to fetch customers from the API
   const fetch_plants = async () => {
     try {
@@ -30,6 +30,18 @@ const Plant = ({ setSelection, editedData, disabled }) => {
         value: customer.code,
       }));
       setCustomers(customerOptions);
+      console.log(customerOptions);
+      if (editedData.toString().split(",")) {
+        const initialSelectedCustomers = customerOptions.filter((customer) => {
+          return editedData
+            .toString()
+            .split(",")
+            .map(Number)
+            .includes(customer.value);
+        });
+        console.log(initialSelectedCustomers);
+        setSelectedCustomers(initialSelectedCustomers);
+      }
     } catch (error) {
       console.error("Error fetching customer data:", error);
     }
@@ -37,7 +49,7 @@ const Plant = ({ setSelection, editedData, disabled }) => {
 
   useEffect(() => {
     fetch_plants();
-  }, []);
+  }, [editedData]);
 
   const handleChange = (selectedOptions) => {
     if (!disabled) {
