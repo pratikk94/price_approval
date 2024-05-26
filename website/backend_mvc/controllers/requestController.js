@@ -38,6 +38,7 @@ exports.updateRequestStatus = async (req, res) => {
           if (nextLevelExists.recordset[0].LevelExists === 0) {
             status = 1;
             pendingWith = 0;
+            updatePreApprovedRequestStatus(req_id);
           }
           break;
         case "2": // Rework
@@ -102,3 +103,37 @@ exports.updateRequestStatus = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+async function updatePreApprovedRequestStatus(requestName) {
+  try {
+    await sql.connect(config); // replace 'config' with your actual configuration object
+
+    // Fetch the parent_request_name
+    const parentRequestResult = await sql.query(`
+      SELECT parent_request_name,request_name
+      FROM price_approval_requests
+      WHERE request_name LIKE '${requestName.substring(1)}%'
+    `);
+
+    if (parentRequestResult.recordset.length > 0) {
+      const parentRequestName =
+        parentRequestResult.recordset[0].parent_request_name;
+      const newStatus = parentRequestResult.recordset[0].request_name[0];
+
+      console.log(newStatus);
+
+      // Update the status of req_id in the requests_mvc table
+      const updateResult = await sql.query(`
+        UPDATE requests_mvc
+        SET status = '${newStatus}'
+        WHERE parent_request_name = '${parentRequestName}'
+      `);
+
+      console.log(updateResult);
+    } else {
+      console.log("No matching parent_request_name found");
+    }
+  } catch (err) {
+    console.error("Database connection error:", err);
+  }
+}

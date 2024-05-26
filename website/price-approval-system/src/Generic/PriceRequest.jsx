@@ -8,6 +8,7 @@ import { backend_mvc, backend_url, statusFilters } from "../util";
 
 import CreateRequestModal from "./RequestModal";
 import { useSession } from "../Login_Controller/SessionContext";
+import { set } from "date-fns";
 
 // Initial dummy data with status
 // const initialData = [
@@ -92,6 +93,8 @@ function PriceChangeRequest(rules, employee_id) {
   const open = Boolean(anchorEl);
   const [mode, setMode] = useState("0");
   const [modalOpen, setModalOpen] = useState(false);
+  const [rows, setRows] = useState([]);
+  const [copyOrMege, setCopyOrMerge] = useState(false);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -184,6 +187,7 @@ function PriceChangeRequest(rules, employee_id) {
         <DataTable
           url={`${backend_mvc}api/data/` + session.role + "/1"}
           rule={rules}
+          setRows={handleRowsSelection}
         />
       );
     }
@@ -194,12 +198,17 @@ function PriceChangeRequest(rules, employee_id) {
         <DataTable
           url={`${backend_mvc}api/data/` + session.role + "/0"}
           rule={rules}
+          setRows={handleRowsSelection}
         />
       );
     }
   }, [filterdId, rules]);
 
   const { session } = useSession();
+
+  const handleRowsSelection = (selectedRows) => {
+    setRows(selectedRows);
+  };
 
   const ReturnDataTable = () => {
     console.log(filterdId);
@@ -250,17 +259,35 @@ function PriceChangeRequest(rules, employee_id) {
   const handleMergeRequest = () => {
     handleClose(); // Close the menu
     console.log("Merge Request action triggered");
+    setCopyOrMerge(true);
   };
 
-  const handleBlockRequest = () => {
+  const handleCopyRequest = () => {
     handleClose(); // Close the menu
-    console.log("Block Request action triggered");
+    console.log("Copy Request action triggered");
+    setCopyOrMerge(true);
+    const mergedRows = rows.reduce((accumulator, row) => {
+      // Check if the fsc and mapping variables match any existing entry in the accumulator
+      const existingEntry = accumulator.find(
+        (accRow) => accRow.fsc === row.fsc && accRow.mapping === row.mapping
+      );
+
+      // If there's no match, add the current row to the accumulator
+      if (!existingEntry) {
+        return [...accumulator, row];
+      }
+
+      // If there's a match, don't add the current row to the accumulator
+      return accumulator;
+    }, []);
+    setRows(mergedRows);
   };
 
-  const handleExtensionOrPreclosure = () => {
-    handleClose(); // Close the menu
-    console.log("Extension or Preclosure action triggered");
+  const handleEditClose = () => {
+    setCopyOrMerge(false);
   };
+
+  console.log("Rows", rows);
 
   return (
     <div style={{ width: "80vw", height: "96vh" }}>
@@ -320,11 +347,9 @@ function PriceChangeRequest(rules, employee_id) {
               >
                 Create New Request
               </MenuItem>
+              <MenuItem onClick={handleCopyRequest}>Copy Request</MenuItem>
+
               <MenuItem onClick={handleMergeRequest}>Merge Request</MenuItem>
-              {/* <MenuItem onClick={handleBlockRequest}>Block Request</MenuItem>
-              <MenuItem onClick={handleExtensionOrPreclosure}>
-                Extension or Preclosure
-              </MenuItem> */}
             </Menu>
 
             <CreateRequestModal
@@ -336,6 +361,19 @@ function PriceChangeRequest(rules, employee_id) {
         ) : null}
       </Box>
       {component}
+      {copyOrMege && rows.length > 0 ? (
+        <CreateRequestModal
+          open={copyOrMege}
+          handleClose={handleEditClose}
+          editData={rows[0]}
+          rule={rules}
+          isBlocked={false}
+          isExtension={false}
+          // parentId={rows[0].request_id}
+        />
+      ) : (
+        <> </>
+      )}
       {/* <DataTable/> */}
     </div>
   );

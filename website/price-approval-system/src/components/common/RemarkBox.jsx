@@ -17,7 +17,7 @@ import SendIcon from "@mui/icons-material/Send";
 import { backend_url } from "../../util";
 import { useSession } from "../../Login_Controller/SessionContext";
 
-function RemarkBox({ request_id, setUpdateRemarks }) {
+function RemarkBox({ request_id, setRemark }) {
   const [remarks, setRemarks] = useState([]);
   const [remarkText, setRemarkText] = useState("");
   const { session } = useSession();
@@ -47,7 +47,7 @@ function RemarkBox({ request_id, setUpdateRemarks }) {
           value={remarkText}
           onChange={(e) => {
             setRemarkText(e.target.value);
-            setUpdateRemarks(e.target.value);
+            setRemark(e.target.value);
           }}
           placeholder="Type your remark..."
         />

@@ -500,7 +500,7 @@ function TableWithInputs({
                     } else {
                       disableSubmit(false);
                     } // Assuming e contains the selected option
-                    // setSelectedGrade(e); // Assuming e is the option object
+                    setSelectedGrade(e); // Assuming e is the option object
                     console.log(e.label, e.profitCenter); // Debugging
                   }}
                 />

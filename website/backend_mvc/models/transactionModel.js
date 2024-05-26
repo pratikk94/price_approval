@@ -138,7 +138,7 @@ async function acceptTransaction(
   action,
   requestId,
   lastUpdatedById,
-  lastUpdatedByRole
+  lastUpdatedByRole,
 ) {
   try {
     await sql.connect(config);

@@ -86,7 +86,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
   console.log(`Opened VSM:${open}`);
   const { session } = useSession();
   const employee_id = session.employee_id;
-
+  const [remarks, setRemarks] = useState([]);
   console.log(data);
   const id = data.request_id;
   const updateStatus = (newStatus) => {
@@ -97,6 +97,8 @@ function PriceViewModal({ open, handleClose, data, rule }) {
     };
     console.log("New Status: ", newStatus);
     console.log(reportData);
+    console.log(remarks);
+
     const apiUrl = `${backend_mvc}api/transactions-add/${data.request_id}/${session.region}/${newStatus}/${employee_id}/${session.role}`;
 
     reportData["role"] = session.role;
@@ -149,6 +151,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
       handleCloseModal();
     }, 2000); // Close the modal and hide success message after 2 seconds
     console.log("Update Status V:", updateStatusV);
+
     updateStatus(updateStatusV);
     window.location.reload();
   };
@@ -213,13 +216,25 @@ function PriceViewModal({ open, handleClose, data, rule }) {
               {data.request_name != undefined && (
                 <FileHandling requestId={data.request_name} />
               )}
-              <RemarkBox request_id={data.request_name} />
+              <RemarkBox
+                request_id={data.request_name}
+                setRemark={setRemarks}
+              />
 
               <br />
               {rule.rules.can_approve ? (
                 <>
                   <IconButton
                     onClick={() => {
+                      if (remarks.length < 11) {
+                        setOpenModal(true);
+                        setShowSuccess(false);
+
+                        setErrorMessage(
+                          "Please enter a remark before updating the status."
+                        );
+                        return;
+                      }
                       setUpdateStatusV((e) => {
                         //handleConfirm(1);
                         return 1;
@@ -232,6 +247,15 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                   </IconButton>
                   <IconButton
                     onClick={() => {
+                      if (remarks.length < 11) {
+                        setOpenModal(true);
+                        setShowSuccess(false);
+
+                        setErrorMessage(
+                          "Please enter a remark before updating the status."
+                        );
+                        return;
+                      }
                       setShowSuccess(false);
                       setErrorMessage(
                         "Are you sure you want to reject this request?"
@@ -247,6 +271,15 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                   </IconButton>
                   <IconButton
                     onClick={() => {
+                      if (remarks.length < 11) {
+                        setOpenModal(true);
+                        setShowSuccess(false);
+
+                        setErrorMessage(
+                          "Please enter a remark before updating the status."
+                        );
+                        return;
+                      }
                       setShowSuccess(false);
                       setErrorMessage(
                         "Are you sure you want to send this request for rework?"
@@ -326,7 +359,9 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={handleConfirm}
+                    onClick={() => {
+                      setOpenModal(false);
+                    }}
                     sx={{ mt: 2 }}
                   >
                     Confirm

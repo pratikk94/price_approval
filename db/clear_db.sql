@@ -28,6 +28,13 @@ CREATE TABLE requests_mvc (
     pending TINYINT
 );
 
+CREATE TABLE pre_approved_request_status_mvc (
+    id INT PRIMARY KEY IDENTITY,
+    request_name NVARCHAR(MAX),
+    aret_request_name NVARCHAR(MAX)
+);
+
+
 /*
 Redundat tables
 category

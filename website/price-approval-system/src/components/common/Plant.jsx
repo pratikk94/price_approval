@@ -49,7 +49,7 @@ const Plant = ({ setSelection, editedData, disabled }) => {
 
   useEffect(() => {
     fetch_plants();
-  }, [editedData]);
+  }, []);
 
   const handleChange = (selectedOptions) => {
     if (!disabled) {

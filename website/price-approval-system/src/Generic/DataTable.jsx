@@ -79,7 +79,7 @@ function DraggableHeader({
   );
 }
 
-function ResponsiveTable({ url, rule }) {
+function ResponsiveTable({ url, rule, setRows }) {
   const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [selectedHeaders, setSelectedHeaders] = useState([]);
@@ -97,27 +97,28 @@ function ResponsiveTable({ url, rule }) {
   const [editOpen, setEditOpen] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isExtension, setIsExtension] = useState(false);
+
   const handleRowClick = (id) => {
-    const selectedIndex = selectedRows.indexOf(id);
+    const row = data.find((item) => item.request_id === id); // Find the row in the data array
+    if (!row) return; // If no row found, exit the function
+
+    const selectedIndex = selectedRows.findIndex(
+      (item) => item.request_id === id
+    );
     let newSelected = [];
 
     if (selectedIndex === -1) {
-      // Not currently selected, add the id to the selected array
-      newSelected = newSelected.concat(selectedRows, id);
-    } else if (selectedIndex === 0) {
-      // If it's the first item, slice off the rest
-      newSelected = newSelected.concat(selectedRows.slice(1));
-    } else if (selectedIndex === selectedRows.length - 1) {
-      // If it's the last item, slice off before it
-      newSelected = newSelected.concat(selectedRows.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      // It's somewhere in the middle, remove it
-      newSelected = newSelected.concat(
-        selectedRows.slice(0, selectedIndex),
-        selectedRows.slice(selectedIndex + 1)
-      );
+      // Row is not currently selected, add the full row to the selected array
+      newSelected = [...selectedRows, row];
+    } else {
+      // Row is currently selected, remove it from the array
+      newSelected = selectedRows.filter((item) => item.request_id !== id);
     }
+
     setSelectedRows(newSelected);
+    // Also update any other state that depends on selectedRows here, if necessary
+    console.log(newSelected);
+    setRows(newSelected);
   };
 
   const isSelected = (id) => selectedRows.indexOf(id) !== -1;
@@ -284,7 +285,7 @@ function ResponsiveTable({ url, rule }) {
               {!isMobile && (
                 <TableHead>
                   <TableRow>
-                    <TableCell padding="checkbox">x</TableCell>
+                    <TableCell padding="checkbox" />
                     {selectedHeaders.map((header, index) => (
                       <DraggableHeader
                         key={header}
@@ -378,6 +379,7 @@ function ResponsiveTable({ url, rule }) {
           rule={rule}
           isBlocked={isBlocked}
           isExtension={isExtension}
+          parentId={selectedRow.request_id}
         />
       ) : (
         <> </>

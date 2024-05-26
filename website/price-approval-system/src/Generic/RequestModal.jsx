@@ -93,7 +93,7 @@ const CreateRequestModal = ({
   const [openOneToOneModal, setOpenOneToOneModal] = useState(false);
   const timeZone = "Asia/Kolkata";
   const [showSuccess, setShowSuccess] = useState(false);
-  const [openModal, setOpenModal] = useState(open);
+  const [openModal, setOpenModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const handleOpen = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
@@ -136,22 +136,26 @@ const CreateRequestModal = ({
     setShowSuccess(false);
     event.preventDefault();
     console.log(endUse);
-    const checkForEndUse =
-      endUse != undefined
-        ? endUse["value"] != undefined
-          ? true
-          : false
-        : false;
-    console.log(checkForEndUse);
+    console.log(plant);
+    console.log(remarks);
+    // const checkForEndUse =
+    //   endUse != undefined
+    //     ? endUse["value"] != undefined
+    //       ? true
+    //       : false
+    //     : false;
+    // console.log(checkForEndUse);
     if (
       validFrom != "" &&
       validTo != "" &&
       paymentTerms != undefined &&
       selectedCustomers.length > 0 &&
       selectedConsignees.length > 0 &&
-      checkForEndUse
+      remarks.length > 10
+      // && checkForEndUse
     ) {
       console.log(endUse);
+      console.log(plant);
       if (paymentTerms.length == 0) {
         setErrorMessage("Please select Payment Terms");
       } else {
@@ -161,11 +165,9 @@ const CreateRequestModal = ({
         formData["consigneeIds"] = selectedConsignees
           .map((item) => item.value)
           .join(",");
-        formData["endUseIds"] = endUse["value"].toString();
+        formData["endUseIds"] = endUse.value;
         formData["endUseSegmentIds"] = ["seg1"].toString();
-        formData["plants"] = plant
-          .map((item) => item.value.toString())
-          .toString();
+        formData["plants"] = plant;
         formData["paymentTermsId"] = paymentTerms["value"].toString();
 
         formData["validFrom"] = format(
@@ -259,23 +261,25 @@ const CreateRequestModal = ({
         setShowSuccess(true);
         formData["isDraft"] = draft;
         formData["am_id"] = employee_id;
-
+        console.log(parentId);
+        formData["oldRequestId"] = parentId;
         const val = JSON.stringify(formData);
         console.log(stopExecution);
+        console.log(formData);
         if (!stopExecution) {
           if (validFrom < validTo) {
             submitFormDataMVC(formData);
             //handleConfirm();
           } else {
             setShowSuccess(false);
-            setOpenModal(true);
+            //setOpenModal(true);
             setErrorMessage(
               "Valid To date should be greater than Valid From date"
             );
           }
         } else {
           setShowSuccess(false);
-          setOpenModal(true);
+          //setOpenModal(true);
         }
       }
     } else if (selectedCustomers.length == 0) {
@@ -290,6 +294,8 @@ const CreateRequestModal = ({
       setErrorMessage("Please select Valid To date");
     } else if (endUse.length == 0) {
       setErrorMessage("Please select End Use");
+    } else if (remarks.length < 11) {
+      setErrorMessage("Please add a remark with atleast 10 characters ");
     } else {
       console.log("All checks met");
     }
@@ -320,7 +326,7 @@ const CreateRequestModal = ({
     if (editData == undefined) {
       return;
     }
-    setOpenModal(true);
+    //setOpenModal(true);
     console.log(editData.consolidatedRequest);
 
     console.log("in here");
@@ -356,7 +362,7 @@ const CreateRequestModal = ({
     setFSC(editData.priceDetails[0].fsc);
     console.log(editData.priceDetails[0]);
     console.log(editData.priceDetails[0].fsc);
-    setOpenModal(true);
+    //setOpenModal(true);
     //setMap(data.mappint_type);
     // if (!isCopyOrMerged) {
     console.log(editData.priceDetails);
@@ -455,35 +461,56 @@ const CreateRequestModal = ({
   // };
 
   const submitFormDataMVC = async (formData) => {
-    console.log("In here SFD");
     console.log(selectedConsigneeIDs);
+
     try {
+      let action = "N";
+
+      if (isBlocked) {
+        console.log("In here");
+        action = "B";
+      }
+      if (isExtension) {
+        action = "E";
+      }
+      if (isCopyOrMerged) {
+        action = "C";
+      }
       // Update formData based on whether it's a new submission or an edit
       formData = {
         am_id: session.employee_id,
         customers: selectedCustomers.map((item) => item.value).join(","), // Assuming `customers` is an array in your formData
         consignees: selectedConsignees.map((item) => item.value).join(","), // Assuming `consignees` is an array in your formData
-        endUse: endUse["value"].toString(),
-        plant: plant.map((item) => item.value.toString()).toString(),
+        endUse: endUse != undefined ? endUse.value : enduse, //endUse["value"].toString(),
+        plant: Array.isArray(plant)
+          ? plant.map((item) => item.value.toString()).toString()
+          : plant.toString(),
         endUseSegment: "seg1",
         validFrom: validFrom,
         validTo: validTo,
         paymentTerms: paymentTerms["value"].toString(),
         oneToOneMapping: checkBoxEnabled ? (isChecked ? 1 : 2) : 2,
         prices: tableRowsData, // Assuming `prices` is an array in your formData
+        action: action,
+        oldRequestId: parentId,
       };
       formData["prices"] = tableRowsData;
       console.log(tableRowsData);
       console.log(formData);
-
+      console.log(action);
       // Send the formData to your backend
-      const response = await fetch(`${backend_mvc}process-price-request`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        action == "N"
+          ? `${backend_mvc}process-price-request`
+          : `${backend_mvc}process-pre-approved-price-request`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
       const oldRequestIds =
         JSON.parse(localStorage.getItem("request_ids")) || [];
       const requestData = await response.json();
@@ -723,6 +750,7 @@ const CreateRequestModal = ({
           />
 
           <RemarkBox
+            setRemark={setRemarks}
             request_id={
               isBlocked || isCopyOrMerged || isExtension
                 ? ""

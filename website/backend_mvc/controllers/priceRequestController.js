@@ -1,7 +1,8 @@
 // controllers/transactionController.js
 const priceRequestModel = require("../models/priceRequestModel");
 const transactionModel = require("../models/priceRequestModel");
-
+const sql = require("mssql");
+const config = require("../config");
 async function processTransaction(req, res) {
   try {
     const {
@@ -62,8 +63,10 @@ async function processPrevApprovedTransaction(req, res) {
       oneToOneMapping,
       prices,
       am_id,
+      action,
+      oldRequestId,
     } = req.body;
-
+    console.log("oldRequestId", oldRequestId);
     const requestId = await transactionModel.handleNewRequest();
     console.log("requestId", requestId); // Debugging output (requestId value
     const result = await transactionModel.insertTransactions({
@@ -82,6 +85,8 @@ async function processPrevApprovedTransaction(req, res) {
     });
 
     priceRequestModel.addTransactionToTable(requestId, am_id);
+
+    pushDataToTable(requestId, action + oldRequestId.substring(1));
 
     res.json({
       message: "Transaction processed successfully",
@@ -106,8 +111,25 @@ async function getPriceApprovalData(req, res) {
   }
 }
 
+async function pushDataToTable(requestName, parentRequestName) {
+  try {
+    await sql.connect(config); // replace 'config' with your actual configuration object
+
+    const query = `
+      INSERT INTO pre_approved_request_status_mvc (request_name, parent_request_name)
+      VALUES ('${requestName}','${parentRequestName}')
+    `;
+
+    const result = await sql.query(query);
+
+    console.log(result);
+  } catch (err) {
+    console.error("Database connection error:", err);
+  }
+}
+
 module.exports = {
   processTransaction,
   getPriceApprovalData,
-  proprocessPrevApprovedTransaction,
+  processPrevApprovedTransaction,
 };

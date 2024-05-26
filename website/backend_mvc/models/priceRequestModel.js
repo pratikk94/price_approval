@@ -8,6 +8,7 @@ const poolPromise = new sql.ConnectionPool(config)
     return pool;
   })
   .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
+
 async function getCurrentDateRequestId() {
   const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD format
   console.log("CurrentDate->", currentDate);
