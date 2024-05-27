@@ -1,8 +1,11 @@
 {
   "dependencies": {
     "axios": "^1.7.1",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
+    "ejs": "^3.1.10",
     "express": "^4.19.2",
+    "express-session": "^1.18.0",
     "morgan": "^1.10.0",
     "mssql": "^10.0.2"
   }

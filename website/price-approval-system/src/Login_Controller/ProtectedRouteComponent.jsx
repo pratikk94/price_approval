@@ -1,17 +1,14 @@
 // ProtectedRoute.js
 import React from "react";
-import { Navigate, Outlet, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useSession } from "./SessionContext";
-import AppAM from "../App/AccountManagerApp"; // Your component for users with the AM role
-import AppBM from "../App/BusinessAdminApp"; // Your component for users with the BM role
 import App from "../App/App"; // Your component for users with the RM role
-import AppNSM from "../App/ApproversAppNSM_HDSM";
-import AppValidator from "../App/ValidatorApp";
-import { backend_url } from "../util";
+import { backend_mvc } from "../util";
 
 const ProtectedRoute = () => {
   const { session, setSession } = useSession();
   const navigate = useNavigate();
+
   if (session.loading) {
     return <div>Loading...</div>; // Or some loading component
   }
@@ -22,41 +19,40 @@ const ProtectedRoute = () => {
 
   const logout = async () => {
     console.log("Logging out");
-    const response = await fetch(`${backend_url}api/logout`, {
-      credentials: "include",
-    });
-    const data = await response.json();
-    console.log(data);
-    if (data.loggedOut) {
-      localStorage.removeItem("request_id");
-      localStorage.removeItem("request_ids");
-      setSession({ loggedIn: false, role: null }); // Update session context
-      navigate("/login"); // Redirect to login page
-    } else {
-      // Handle logout error
-      console.error("Logout failed");
+    try {
+      const response = await fetch(`${backend_mvc}/api/logout`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout request failed");
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      if (data.loggedOut) {
+        localStorage.removeItem("request_id");
+        localStorage.removeItem("request_ids");
+        setSession({
+          loggedIn: false,
+          role: null,
+          region: null,
+          employee_id: null,
+        }); // Update session context
+        navigate("/login"); // Redirect to login page
+      } else {
+        // Handle logout error
+        console.error("Logout failed");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
     }
   };
-  // Render different apps based on the role
+
+  // Render the main app component
   return <App logout={logout} />;
-  // switch (session.role) {
-  //   case "AM":
-  //     return <AppAM logout={logout} />;
-  //   case "RM":
-  //     return <AppRM logout={logout} />;
-  //   case "NSM":
-  //   case "NSMT":
-  //     return <AppNSM type="NSM" logout={logout} />;
-  //   case "HDSM":
-  //     return <AppNSM type="HDSM" logout={logout} />;
-  //   case "VP":
-  //   case "Validator":
-  //     return <AppValidator logout={logout} />;
-  //   case "BAM":
-  //     return <AppBM logout={logout} />;
-  //   default:
-  //     return <Outlet />; // Or render some default page or component
-  // }
 };
 
 export default ProtectedRoute;
