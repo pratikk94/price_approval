@@ -11,6 +11,7 @@ const roleRoutes = require("./routes/roleRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const requestRoutes = require("./routes/requestRoutes");
 const historyRoutes = require("./routes/historyRoutes");
+const remarksRoutes = require("./routes/remarkRoutes");
 // const timeZone = "Asia/Kolkata";
 // const { format, toZonedTime } = require("date-fns-tz");
 // const { listenerCount } = require("events");
@@ -38,5 +39,6 @@ app.use("/api/roles", roleRoutes); // Mount the dataRoutes on the '/api' path
 app.use("/api", customerRoutes);
 app.use("/api", requestRoutes);
 app.use("/api", historyRoutes);
+app.use("/api", remarksRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, url, () => console.log(`Server running on port ${PORT}`));
