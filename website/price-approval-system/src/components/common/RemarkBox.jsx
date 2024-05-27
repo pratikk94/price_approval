@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable react/prop-types */
+import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
   Button,
@@ -13,24 +14,31 @@ import {
   TableRow,
 } from "@mui/material";
 import Spacewrapper from "../util/SpacingWrapper";
-import SendIcon from "@mui/icons-material/Send";
-import { backend_url } from "../../util";
-import { useSession } from "../../Login_Controller/SessionContext";
+import { backend_mvc } from "../../util";
 
 function RemarkBox({ request_id, setRemark }) {
   const [remarks, setRemarks] = useState([]);
   const [remarkText, setRemarkText] = useState("");
-  const { session } = useSession();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState("");
-  const [editId, setEditId] = useState(null);
+
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     // Fetch remarks data using the new API logic
-    fetch(`${backend_url}api/remarks?request_id=${request_id}`)
+    fetch(`${backend_mvc}api/fetch-remarks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        request_id: request_id,
+      }),
+    })
       .then((response) => response.json())
-      .then((data) => setRemarks(data))
+      .then((data) => {
+        setRemarks(data);
+        console.log("Remarks data:", data);
+        console.log(request_id);
+      })
       .catch((error) => console.error("Error fetching remarks:", error));
   }, [request_id]);
 
@@ -66,12 +74,13 @@ function RemarkBox({ request_id, setRemark }) {
           <TableBody>
             {latestRemark && (
               <TableRow key={latestRemark.id}>
-                <TableCell>{latestRemark.text}</TableCell>
-                <TableCell>{latestRemark.authorId}</TableCell>
+                <TableCell>{latestRemark.comment}</TableCell>
+                <TableCell>{latestRemark.user_id}</TableCell>
                 <TableCell>
-                  {formatDistanceToNow(new Date(latestRemark.timestamp), {
+                  {latestRemark.created_at}
+                  {/* {formatDistanceToNow(new Date(latestRemark.timestamp), {
                     addSuffix: true,
-                  })}
+                  })} */}
                 </TableCell>
               </TableRow>
             )}

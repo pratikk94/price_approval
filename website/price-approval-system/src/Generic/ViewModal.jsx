@@ -89,6 +89,36 @@ function PriceViewModal({ open, handleClose, data, rule }) {
   const [remarks, setRemarks] = useState([]);
   console.log(data);
   const id = data.request_id;
+
+  const handleAddRemark = () => {
+    const postData = {
+      request_id: data.request_id,
+      comment: remarks,
+      user_id: session.employee_id,
+    };
+
+    console.log(postData);
+
+    fetch(`${backend_mvc}api/remarks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(postData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const newRemark = {
+          // id: data.request_id,
+          request_id: data.request_name,
+          comment: remarks,
+          user_id: session.employee_id,
+          // created_at: new Date(),
+        };
+        setRemarks([newRemark, ...remarks]);
+        //setUpdateRemarks("");
+      })
+      .catch((error) => console.error("Error posting remark:", error));
+  };
+
   const updateStatus = (newStatus) => {
     let reportData = {
       request_id: id, // Example reportId
@@ -105,7 +135,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
 
     console.log(reportData);
     console.log(apiUrl);
-
+    handleAddRemark();
     fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -118,6 +148,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
         console.log("Success:", data);
         handleOpen();
         setShowSuccess(true);
+
         switch (newStatus) {
           case 2:
             setSuccessMessage("Request rejected succesfully!");
@@ -216,10 +247,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
               {data.request_name != undefined && (
                 <FileHandling requestId={data.request_name} />
               )}
-              <RemarkBox
-                request_id={data.request_name}
-                setRemark={setRemarks}
-              />
+              <RemarkBox request_id={data.request_id} setRemark={setRemarks} />
 
               <br />
               {rule.rules.can_approve ? (

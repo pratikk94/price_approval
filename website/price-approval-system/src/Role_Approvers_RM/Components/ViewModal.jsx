@@ -14,7 +14,7 @@ import {
 import DoneIcon from "@mui/icons-material/Done";
 import CloseIcon from "@mui/icons-material/Close";
 import ReplayIcon from "@mui/icons-material/Replay";
-import { backend_url } from "../../util";
+import { backend_mvc, backend_url } from "../../util";
 import axios from "axios";
 import ReactModal from "react-modal";
 import { IconButton } from "@mui/material";
@@ -180,7 +180,9 @@ function PriceViewModal({
       remarkAuthorId: session.employee_id,
     };
 
-    fetch(`${backend_url}api/remarks`, {
+    console.log(postData);
+
+    fetch(`${backend_mvc}api/remarks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(postData),
@@ -188,11 +190,11 @@ function PriceViewModal({
       .then((response) => response.json())
       .then((data) => {
         const newRemark = {
-          id: data.id,
-          requestId: data.request_name,
-          comment: data.remarksText,
+          // id: data.request_id,
+          request_id: data.request_name,
+          comment: updateRemarks,
           user_id: session.employee_id,
-          created_at: new Date(),
+          // created_at: new Date(),
         };
         setRemarks([newRemark, ...remarks]);
         //setUpdateRemarks("");

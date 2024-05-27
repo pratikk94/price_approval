@@ -24,10 +24,10 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  // password: "SayaliK20311",
-  // server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  password: "12345",
-  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "SayaliK20311",
+  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  // password: "12345",
+  // server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
   database: "PriceApprovalSystem",
   options: {
@@ -3838,7 +3838,7 @@ app.get("/api/remarks", async (req, res) => {
     
       ),
       ParentRequests AS (
-          SELECT req_id,request_name
+          SELECT req_id
           FROM [request_status]
           WHERE parent_req_id IN (SELECT parent_req_id FROM RelevantRequests)
       )
