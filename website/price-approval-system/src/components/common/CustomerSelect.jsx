@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
-import { backend_url } from "../../util";
+import { backend_mvc, backend_url } from "../../util";
 import { useSession } from "../../Login_Controller/SessionContext";
 
 const CustomerSelect = ({
@@ -21,12 +21,12 @@ const CustomerSelect = ({
 
     const fetchCustomers = async () => {
       const response = await fetch(
-        `${backend_url}api/fetch_customers?type=${id}&&region=${session.region}`
+        `${backend_mvc}api/customers/${id}/${session.region}`
       );
       const data = await response.json();
       const formattedData = data.map((customer) => ({
-        value: customer.code,
-        label: `${customer.name} (${customer.code})`,
+        value: customer.Code,
+        label: `${customer.Name} (${customer.Code})`,
       }));
       setCustomers(formattedData);
 
