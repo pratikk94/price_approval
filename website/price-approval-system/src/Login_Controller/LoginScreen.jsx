@@ -5,40 +5,41 @@ import { backend_mvc } from "../util";
 
 const LoginScreen = () => {
   const [employeeId, setEmployeeId] = useState("");
-  const { setSession } = useSession();
+  const { session, setSession } = useSession();
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    console.log(employeeId);
-    console.log(JSON.stringify({ employee_id: employeeId }));
-
     try {
       const response = await fetch(`${backend_mvc}api/login/${employeeId}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
+      if (!response.ok) throw new Error("Network response was not ok");
 
       const data = await response.json();
-      console.log(data);
-
       if (data.loggedIn) {
+        const newSession = {
+          loggedIn: true,
+          role: data.role,
+          region: data.region,
+          employee_id: employeeId,
+        };
+        localStorage.setItem("session", JSON.stringify(newSession)); // Save session to local storage
+
         setSession({
+          ...session,
           loggedIn: true,
           role: data.role,
           region: data.region,
           employee_id: employeeId,
         });
-        navigate("/"); // Navigate to the home page
+        navigate("/");
       } else {
         alert("Issue in Login. Contact business admin");
       }
     } catch (error) {
-      console.error("There was a problem with the fetch operation:", error);
+      console.error("Login error:", error);
       alert(
         "There was an issue with the login process. Please try again later."
       );

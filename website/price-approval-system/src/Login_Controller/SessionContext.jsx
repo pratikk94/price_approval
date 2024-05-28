@@ -1,18 +1,20 @@
-// SessionContext.js
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
-const SessionContext = createContext();
+const SessionContext = createContext({
+  session: { loading: true, loggedIn: false },
+  setSession: () => {},
+});
 
 export const SessionProvider = ({ children }) => {
   const [session, setSession] = useState({ loading: true, loggedIn: false });
 
-  // Assume you fetch session data here and update the session state accordingly
-  // This is just an example
   useEffect(() => {
-    // Simulate a session fetch
-    setTimeout(() => {
-      setSession({ loading: false, loggedIn: false }); // Update with actual session data
-    }, 1000);
+    const savedSession = localStorage.getItem("session");
+    if (savedSession) {
+      setSession({ ...JSON.parse(savedSession), loading: false });
+    } else {
+      setSession((s) => ({ ...s, loading: false }));
+    }
   }, []);
 
   return (
@@ -22,4 +24,10 @@ export const SessionProvider = ({ children }) => {
   );
 };
 
-export const useSession = () => useContext(SessionContext);
+export const useSession = () => {
+  const context = useContext(SessionContext);
+  if (context === undefined) {
+    throw new Error("useSession must be used within a SessionProvider");
+  }
+  return context;
+};
