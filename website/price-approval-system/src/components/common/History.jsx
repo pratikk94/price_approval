@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Typography, Paper } from "@mui/material";
 import axios from "axios";
 import { backend_mvc } from "../../util";
-import moment from "moment";
+// import moment from "moment";
 
 const MessagesComponent = ({ reqId }) => {
   const [messages, setMessages] = useState([]);
@@ -16,9 +16,10 @@ const MessagesComponent = ({ reqId }) => {
         );
         console.log(response.data);
         const formattedData = response.data.data.map((transaction) => {
-          const dateFormatted = moment(transaction.created_at).format(
-            "DD/M/YY HH:mm:ss"
-          );
+          const dateFormatted = transaction.created_at;
+          // moment(transaction.created_at).format(
+          //   "DD/M/YY HH:mm:ss"
+          // );
           return {
             ...transaction,
             created_at: dateFormatted,

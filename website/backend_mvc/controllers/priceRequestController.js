@@ -3,6 +3,7 @@ const priceRequestModel = require("../models/priceRequestModel");
 const transactionModel = require("../models/priceRequestModel");
 const sql = require("mssql");
 const config = require("../config");
+const { updatePreApprovedRequestStatus } = require("./requestController");
 async function processTransaction(req, res) {
   try {
     const {
@@ -67,6 +68,11 @@ async function processPrevApprovedTransaction(req, res) {
       oldRequestId,
     } = req.body;
     console.log("oldRequestId", oldRequestId);
+    console.log("Action is ", action);
+    if (action == "R") {
+      console.log("In update");
+      updatePreApprovedRequestStatus(oldRequestId, -1);
+    }
     const requestId = await transactionModel.handleNewRequest();
     console.log("requestId", requestId); // Debugging output (requestId value
     const result = await transactionModel.insertTransactions({

@@ -8,7 +8,7 @@ import { backend_mvc, backend_url, statusFilters } from "../util";
 
 import CreateRequestModal from "./RequestModal";
 import { useSession } from "../Login_Controller/SessionContext";
-import { set } from "date-fns";
+// import { set } from "date-fns";
 
 // Initial dummy data with status
 // const initialData = [
@@ -190,6 +190,16 @@ function PriceChangeRequest(rules, employee_id) {
           setRows={handleRowsSelection}
         />
       );
+    } else if (statusFiltersValues[filterdId] == "Rework") {
+      console.log("Filterred ID is 1");
+      setComponent(
+        <DataTable
+          url={`${backend_mvc}api/data/` + session.role + "/3"}
+          rule={rules}
+          setRows={handleRowsSelection}
+          isRework={true}
+        />
+      );
     }
     // Rework
     else {
@@ -210,46 +220,54 @@ function PriceChangeRequest(rules, employee_id) {
     setRows(selectedRows);
   };
 
-  const ReturnDataTable = () => {
-    console.log(filterdId);
-    console.log(statusFiltersValues[filterdId]);
+  // const ReturnDataTable = () => {
+  //   console.log(filterdId);
+  //   console.log(statusFiltersValues[filterdId]);
 
-    //Completely Approved
-    if (statusFiltersValues[filterdId] == "Approved") {
-      console.log("Filterred ID is 1");
-      return (
-        <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/1"}
-          rule={rules}
-        />
-      );
-    }
-    // Rework
-    else {
-      // console.log("Filterred ID is 4");
-      return (
-        <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/0"}
-          rule={rules}
-        />
-      );
-    }
-    // Blocked
-    // if (filterdId == 5) {
-    //   // console.log("Filterred ID is 1");
-    //   return (
-    //     <DataTable
-    //       isAM={true}
-    //       action_id={role}
-    //       sendMode={setMode}
-    //       url={
-    //         backend_url +
-    //         `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
-    //       }
-    //     />
-    //   );
-    // }
-  };
+  //   //Completely Approved
+  //   if (statusFiltersValues[filterdId] == "Approved") {
+  //     console.log("Filterred ID is 1");
+  //     return (
+  //       <DataTable
+  //         url={`${backend_mvc}api/data/` + session.role + "/1"}
+  //         rule={rules}
+  //       />
+  //     );
+  //   } else if (statusFiltersValues[filterdId] == "Rework") {
+  //     return (
+  //       <DataTable
+  //         url={`${backend_mvc}api/data/` + session.role + "/3"}
+  //         rule={rules}
+  //       />
+  //     );
+  //   }
+
+  //   // Rework
+  //   else {
+  //     // console.log("Filterred ID is 4");
+  //     return (
+  //       <DataTable
+  //         url={`${backend_mvc}api/data/` + session.role + "/0"}
+  //         rule={rules}
+  //       />
+  //     );
+  //   }
+  //   // Blocked
+  //   // if (filterdId == 5) {
+  //   //   // console.log("Filterred ID is 1");
+  //   //   return (
+  //   //     <DataTable
+  //   //       isAM={true}
+  //   //       action_id={role}
+  //   //       sendMode={setMode}
+  //   //       url={
+  //   //         backend_url +
+  //   //         `api/fetch_request_am_with_status?employeeId=${employee_id}&status=5`
+  //   //       }
+  //   //     />
+  //   //   );
+  //   // }
+  // };
 
   // const handleCopyRequest = () => {
   //   handleClose(); // Close the menu

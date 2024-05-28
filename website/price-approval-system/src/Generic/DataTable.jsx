@@ -79,7 +79,7 @@ function DraggableHeader({
   );
 }
 
-function ResponsiveTable({ url, rule, setRows }) {
+function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [selectedHeaders, setSelectedHeaders] = useState([]);
@@ -97,6 +97,8 @@ function ResponsiveTable({ url, rule, setRows }) {
   const [editOpen, setEditOpen] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isExtension, setIsExtension] = useState(false);
+
+  console.log("Rework is " + isRework);
 
   const handleRowClick = (id) => {
     const row = data.find((item) => item.request_id === id); // Find the row in the data array
@@ -197,6 +199,9 @@ function ResponsiveTable({ url, rule, setRows }) {
   const handleViewAction = (rowData) => {
     console.log("View action for:", rowData);
     handleOpen(rowData);
+    if (isRework) {
+      setEditOpen(true);
+    }
     // Implement your view logic here
   };
 
@@ -217,7 +222,7 @@ function ResponsiveTable({ url, rule, setRows }) {
           <DownloadIcon />
         </IconButton>
 
-        {rule["rules"].can_initiate == 1 ? (
+        {rule["rules"].can_initiate == 1 && !isRework ? (
           <>
             <IconButton
               onClick={() => {
@@ -365,13 +370,17 @@ function ResponsiveTable({ url, rule, setRows }) {
           </TableContainer>
         </Paper>
       </DndProvider>
-      <PriceRequestModal
-        open={open}
-        handleClose={handleClose}
-        data={selectedRow ?? []}
-        rule={rule}
-      />
-      {editOpen ? (
+      {!isRework ? (
+        <PriceRequestModal
+          open={open}
+          handleClose={handleClose}
+          data={selectedRow ?? []}
+          rule={rule}
+        />
+      ) : (
+        <></>
+      )}
+      {(editOpen || isRework) && selectedRow != undefined ? (
         <CreateRequestModal
           open={editOpen}
           handleClose={handleEditClose}
@@ -380,6 +389,7 @@ function ResponsiveTable({ url, rule, setRows }) {
           isBlocked={isBlocked}
           isExtension={isExtension}
           parentId={selectedRow.request_id}
+          isRework={isRework}
         />
       ) : (
         <> </>

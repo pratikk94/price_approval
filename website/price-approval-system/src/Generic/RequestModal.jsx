@@ -61,6 +61,7 @@ const CreateRequestModal = ({
   isBlocked,
   isCopyOrMerged,
   isExtension,
+  isRework,
 }) => {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [selectedConsignees, setSelectedConsignees] = useState([]);
@@ -130,6 +131,8 @@ const CreateRequestModal = ({
     // }, 2000); // Close the modal and hide success message after 2 seconds
   };
   const [errorMessage, setErrorMessage] = useState("");
+
+  console.log("Rework" + isRework);
 
   const handleFormSubmit = (event, draft = false) => {
     handleOpen();
@@ -475,6 +478,9 @@ const CreateRequestModal = ({
       }
       if (isCopyOrMerged) {
         action = "C";
+      }
+      if (isRework) {
+        action = "R";
       }
       // Update formData based on whether it's a new submission or an edit
       formData = {

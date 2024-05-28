@@ -20,7 +20,7 @@ const ProtectedRoute = () => {
   const logout = async () => {
     console.log("Logging out");
     try {
-      const response = await fetch(`${backend_mvc}/api/logout`, {
+      const response = await fetch(`${backend_mvc}api/logout`, {
         method: "GET",
         credentials: "include",
       });

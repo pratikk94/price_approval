@@ -98,7 +98,7 @@ function PriceViewModal({
   mode,
   rule,
 }) {
-  conosle.log("RULE_S", rule);
+  console.log("RULE_S", rule);
   const { session } = useSession();
   const employee_id = session.employee_id;
   console.log(data);

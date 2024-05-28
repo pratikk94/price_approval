@@ -49,6 +49,7 @@ exports.updateRequestStatus = async (req, res) => {
             status = 2;
             pendingWith = 2;
           }
+          updatePreApprovedRequestStatus(req_id, -1);
           break;
         case "3": // Reject
           status = 3;
@@ -104,15 +105,16 @@ exports.updateRequestStatus = async (req, res) => {
   }
 };
 
-async function updatePreApprovedRequestStatus(requestName) {
+exports.updatePreApprovedRequestStatus = async (requestName, action) => {
   try {
     await sql.connect(config); // replace 'config' with your actual configuration object
 
+    console.log("LIKE QUERY IS " + requestName.substring(1));
     // Fetch the parent_request_name
     const parentRequestResult = await sql.query(`
       SELECT parent_request_name,request_name
-      FROM price_approval_requests
-      WHERE request_name LIKE '${requestName.substring(1)}%'
+      FROM pre_approved_request_status_mvc
+      WHERE parent_request_name LIKE '%${requestName.substring(1)}'
     `);
 
     if (parentRequestResult.recordset.length > 0) {
@@ -121,12 +123,19 @@ async function updatePreApprovedRequestStatus(requestName) {
       const newStatus = parentRequestResult.recordset[0].request_name[0];
 
       console.log(newStatus);
-
+      console.log(`Requestname is ${requestName}`);
+      console.log(` UPDATE [PriceApprovalSystem].[dbo].[requests_mvc]
+      SET [status] = '${action}'
+      WHERE [id] = (SELECT TOP 1 [id] FROM [PriceApprovalSystem].[dbo].[requests_mvc]
+              WHERE [req_id] = '${requestName}'
+              ORDER BY [id] DESC);  `);
       // Update the status of req_id in the requests_mvc table
       const updateResult = await sql.query(`
-        UPDATE requests_mvc
-        SET status = '${newStatus}'
-        WHERE parent_request_name = '${parentRequestName}'
+      UPDATE [PriceApprovalSystem].[dbo].[requests_mvc]
+      SET [status] = '${action}'
+      WHERE [id] = (SELECT TOP 1 [id] FROM [PriceApprovalSystem].[dbo].[requests_mvc]
+              WHERE [req_id] = '${requestName}'
+              ORDER BY [id] DESC);        
       `);
 
       console.log(updateResult);
@@ -136,4 +145,4 @@ async function updatePreApprovedRequestStatus(requestName) {
   } catch (err) {
     console.error("Database connection error:", err);
   }
-}
+};
