@@ -38,13 +38,13 @@ function TableWithInputs({
   fetchHistory,
 }) {
   const [grades, setGrades] = useState([]);
-  const [selectedGrade, setSelectedGrade] = useState("");
+  const [selectedGrade, setSelectedGrade] = useState(prices.grade);
   const [fsc, setFSC] = useState(fscCode);
   const [gradeType, setGradeType] = useState(null);
   const [ids, setIds] = useState([]);
   const [open, setOpen] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-
+  console.log(prices);
   console.log(fscCode);
   // Options for the dropdown
   const options = [

@@ -379,7 +379,8 @@ const CreateRequestModal = ({
       label: `End Use ${data.enduse_name}`,
     });
     // Assumption: plant, paymentTermsId are singular values, not lists
-    setPlant(data.plant);
+    console.log(data.plant.length > 1 ? data.plant : [data.plant]);
+    setPlant(data.plant.length > 1 ? data.plant : [data.plant]);
     setPaymentTerms({
       value: data.payment_terms_id,
       label: `Terms ${data.payment_terms_id}`,
@@ -637,7 +638,7 @@ const CreateRequestModal = ({
   };
 
   console.log(open);
-
+  console.log(plant);
   return (
     <>
       <Modal

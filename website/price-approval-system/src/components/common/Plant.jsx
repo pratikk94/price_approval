@@ -31,16 +31,11 @@ const Plant = ({ setSelection, editedData, disabled }) => {
       }));
       setCustomers(customerOptions);
       console.log(customerOptions);
-      if (editedData.toString().split(",")) {
-        const initialSelectedCustomers = customerOptions.filter((customer) => {
-          return editedData
-            .toString()
-            .split(",")
-            .map(Number)
-            .includes(customer.value);
-        });
-        console.log(initialSelectedCustomers);
-        setSelectedCustomers(initialSelectedCustomers);
+      console.log(editedData);
+      if (editedData.length > 0) {
+        const result = editedData.map((id) => customerOptions[id]);
+        setSelectedCustomers(result);
+        console.log(result);
       }
     } catch (error) {
       console.error("Error fetching customer data:", error);
@@ -49,7 +44,7 @@ const Plant = ({ setSelection, editedData, disabled }) => {
 
   useEffect(() => {
     fetch_plants();
-  }, []);
+  }, [editedData]);
 
   const handleChange = (selectedOptions) => {
     if (!disabled) {
