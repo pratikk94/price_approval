@@ -26,6 +26,7 @@ import { green, red } from "@mui/material/colors";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { format, toZonedTime } from "date-fns-tz";
 import axios from "axios";
+import PlantC from "../components/common/PlantC";
 const style = {
   position: "absolute",
   top: "10%",
@@ -705,11 +706,18 @@ const CreateRequestModal = ({
               />
               <SpacingWrapper space="12px" />
               <Typography>Plant </Typography>
-              <Plant
-                setSelection={setPlant}
-                editedData={plant}
-                disabled={mode > 1 || isExtension || isBlocked}
-              />
+              {editData ? (
+                <Plant
+                  setSelection={setPlant}
+                  editedData={plant}
+                  disabled={mode > 1 || isExtension || isBlocked}
+                />
+              ) : (
+                <PlantC
+                  setSelection={setPlant}
+                  disabled={mode > 1 || isExtension || isBlocked}
+                />
+              )}
               <SpacingWrapper space="12px" />
               <Typography>Payment Terms *</Typography>
               <PaymentTerms
