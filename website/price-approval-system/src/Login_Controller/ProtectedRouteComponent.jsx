@@ -1,15 +1,16 @@
+// ProtectedRoute.js
 import React from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useSession } from "./SessionContext";
-import App from "../App/App"; // Adjust the path if needed
+import App from "../App/App"; // Your component for users with the RM role
 import { backend_mvc } from "../util";
 
 const ProtectedRoute = () => {
-  const { session } = useSession();
+  const { session, setSession } = useSession();
   const navigate = useNavigate();
 
   if (session.loading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>; // Or some loading component
   }
 
   if (!session.loggedIn) {
@@ -23,20 +24,26 @@ const ProtectedRoute = () => {
         method: "GET",
         credentials: "include",
       });
-      if (!response.ok) throw new Error("Logout request failed");
+
+      if (!response.ok) {
+        throw new Error("Logout request failed");
+      }
 
       const data = await response.json();
-      if (data.loggedOut) {
-        localStorage.removeItem("session"); // Clear session from local storage
+      console.log(data);
 
+      if (data.loggedOut) {
+        localStorage.removeItem("request_id");
+        localStorage.removeItem("request_ids");
         setSession({
           loggedIn: false,
           role: null,
           region: null,
           employee_id: null,
-        });
-        navigate("/login");
+        }); // Update session context
+        navigate("/login"); // Redirect to login page
       } else {
+        // Handle logout error
         console.error("Logout failed");
       }
     } catch (error) {
@@ -44,6 +51,7 @@ const ProtectedRoute = () => {
     }
   };
 
+  // Render the main app component
   return <App logout={logout} />;
 };
 

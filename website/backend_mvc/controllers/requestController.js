@@ -9,7 +9,7 @@ const poolPromise = new sql.ConnectionPool(config)
   })
   .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
 
-exports.updateRequestStatus = async (req, res) => {
+const updateRequestStatus = async (req, res) => {
   const { current_role, region, action, req_id } = req.body;
   try {
     const pool = await poolPromise;
@@ -105,7 +105,7 @@ exports.updateRequestStatus = async (req, res) => {
   }
 };
 
-exports.updatePreApprovedRequestStatus = async (requestName, action) => {
+const updatePreApprovedRequestStatus = async (requestName, action) => {
   try {
     await sql.connect(config); // replace 'config' with your actual configuration object
 
@@ -146,3 +146,5 @@ exports.updatePreApprovedRequestStatus = async (requestName, action) => {
     console.error("Database connection error:", err);
   }
 };
+
+module.exports = { updateRequestStatus, updatePreApprovedRequestStatus };

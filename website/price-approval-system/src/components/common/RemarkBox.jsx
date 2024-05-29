@@ -97,9 +97,10 @@ function RemarkBox({ request_id, setRemark }) {
                   <TableCell>{remark.text}</TableCell>
                   <TableCell>{remark.authorId}</TableCell>
                   <TableCell>
-                    {formatDistanceToNow(new Date(remark.timestamp), {
+                    {remark.timestamp}
+                    {/* {formatDistanceToNow(new Date(remark.timestamp), {
                       addSuffix: true,
-                    })}
+                    })} */}
                   </TableCell>
                 </TableRow>
               ))}
