@@ -339,9 +339,10 @@ function TableWithInputs({
 
     setFSC((e) => {
       // fetch_grades(e ? 0 : 1);
-      setFSCCode(e ? "N" : "Y");
+      console.log("FSC Code Change" + e);
+      setFSCCode(e == "N" ? "Y" : "N");
       alert("FSC Code change will require Grade selection again");
-      return e ? "N" : "Y";
+      return e == "N" ? "Y" : "N";
     });
   }
 

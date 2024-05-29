@@ -123,7 +123,8 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
     setRows(newSelected);
   };
 
-  const isSelected = (id) => selectedRows.indexOf(id) !== -1;
+  const isSelected = (id) =>
+    selectedRows.some((item) => item.request_id === id);
 
   const handleOpen = (row) => {
     setSelectedRow(row);
@@ -280,7 +281,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
               </Select>
             </FormControl>
             <TextField
-              label="Search"
+              label=""
               value={searchTerm}
               onChange={handleSearchChange}
             />

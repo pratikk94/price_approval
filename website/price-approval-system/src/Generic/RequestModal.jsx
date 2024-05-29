@@ -71,7 +71,7 @@ const CreateRequestModal = ({
   const [validFrom, setValidFrom] = useState([]);
   const [validTo, setValidTo] = useState([]);
   const [fsc, setFSC] = useState(
-    editData != undefined ? editData.priceDetails[0].fsc == 1 : 0
+    editData != undefined ? editData.priceDetails[0].fsc == "Y" : "N"
   );
   const [priceDetails, setPriceDetails] = useState([]); // Assuming this is an array of objects with the structure { price: number, ...
   const [remarks, setRemarks] = useState([]);
@@ -131,6 +131,35 @@ const CreateRequestModal = ({
     // }, 2000); // Close the modal and hide success message after 2 seconds
   };
   const [errorMessage, setErrorMessage] = useState("");
+
+  const handleAddRemark = (reqId) => {
+    const postData = {
+      request_id: reqId,
+      comment: remarks,
+      user_id: session.employee_id,
+    };
+
+    console.log(postData);
+
+    fetch(`${backend_mvc}api/remarks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(postData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const newRemark = {
+          // id: data.request_id,
+          request_id: data.request_name,
+          comment: remarks,
+          user_id: session.employee_id,
+          // created_at: new Date(),
+        };
+        setRemarks([newRemark, ...remarks]);
+        //setUpdateRemarks("");
+      })
+      .catch((error) => console.error("Error posting remark:", error));
+  };
 
   console.log("Rework" + isRework);
 
@@ -521,6 +550,7 @@ const CreateRequestModal = ({
         JSON.parse(localStorage.getItem("request_ids")) || [];
       const requestData = await response.json();
       console.log(requestData["id"]);
+      handleAddRemark(requestData["id"]);
       if (oldRequestIds.length > 0) {
         updateRequestIds(oldRequestIds, requestData["id"])
           .then((response) => {

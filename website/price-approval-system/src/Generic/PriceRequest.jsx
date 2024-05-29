@@ -88,7 +88,7 @@ function PriceChangeRequest(rules, employee_id) {
   //   initialColumns.filter((col) => !col.alwaysVisible).map((col) => col.id)
   // );
   // const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState("Pending");
+  const [activeFilter, setActiveFilter] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const [mode, setMode] = useState("0");
@@ -129,8 +129,10 @@ function PriceChangeRequest(rules, employee_id) {
   // };
 
   const handleFilterClick = (filter, newfilterdId) => {
-    setActiveFilter(activeFilter === filter ? "" : filter);
-    setFilterdId(newfilterdId); // Toggle filter
+    if (newfilterdId != filterdId) {
+      setActiveFilter(activeFilter === filter ? "" : filter);
+      setFilterdId(newfilterdId);
+    } // Toggle filter
   };
 
   // Apply both status filter and search term
@@ -192,6 +194,7 @@ function PriceChangeRequest(rules, employee_id) {
       );
     } else if (statusFiltersValues[filterdId] == "Rework") {
       console.log("Filterred ID is 1");
+      setActiveFilter("Rework");
       setComponent(
         <DataTable
           url={`${backend_mvc}api/data/` + session.role + "/3"}
@@ -204,6 +207,7 @@ function PriceChangeRequest(rules, employee_id) {
     // Rework
     else {
       console.log("Pending");
+      setActiveFilter("Pending");
       setComponent(
         <DataTable
           url={`${backend_mvc}api/data/` + session.role + "/0"}

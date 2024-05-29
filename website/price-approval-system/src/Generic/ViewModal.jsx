@@ -269,6 +269,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                       });
                       setOpenModal(true);
                       setShowSuccess(true);
+                      setSuccessMessage("Request approved successfully!");
                     }}
                   >
                     <DoneIcon />

@@ -94,10 +94,10 @@ function RemarkBox({ request_id, setRemark }) {
             {showDropdown &&
               olderRemarks.map((remark) => (
                 <TableRow key={remark.id}>
-                  <TableCell>{remark.text}</TableCell>
-                  <TableCell>{remark.authorId}</TableCell>
+                  <TableCell>{remark.comment}</TableCell>
+                  <TableCell>{remark.user_id}</TableCell>
                   <TableCell>
-                    {remark.timestamp}
+                    {remark.created_at}
                     {/* {formatDistanceToNow(new Date(remark.timestamp), {
                       addSuffix: true,
                     })} */}
