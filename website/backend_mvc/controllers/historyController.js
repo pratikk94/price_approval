@@ -1,8 +1,10 @@
 const historyModel = require("../models/historyModel");
-exports.getHistoryRequests = async (req, res) => {
+const getHistoryRequests = async (req, res) => {
+  console.log(req.query);
+  const customer_id = req.query["/history-requests?customerIds"];
   try {
     const data = {
-      customerIds: req.query.customerIds,
+      customerIds: customer_id,
       consigneeIds: req.query.consigneeIds,
       endUseId: req.query.endUseId,
       plantIds: req.query.plantIds,
@@ -16,4 +18,7 @@ exports.getHistoryRequests = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
+};
+module.exports = {
+  getHistoryRequests,
 };

@@ -107,7 +107,7 @@ const CreateRequestModal = ({
   const fetchHistory = async (grade) => {
     try {
       const response = await axios.get(
-        `${backend_mvc}api/history-requests?/history-requests?customerIds=${selectedCustomers
+        `${backend_mvc}api/history?/history-requests?customerIds=${selectedCustomers
           .map((item) => item.value)
           .join(",")}&consigneeIds=${selectedConsignees
           .map((item) => item.value)

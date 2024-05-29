@@ -38,7 +38,6 @@ const updateRequestStatus = async (req, res) => {
           if (nextLevelExists.recordset[0].LevelExists === 0) {
             status = 1;
             pendingWith = 0;
-            updatePreApprovedRequestStatus(req_id);
           }
           break;
         case "2": // Rework
@@ -66,7 +65,9 @@ const updateRequestStatus = async (req, res) => {
         .query(
           "INSERT INTO requests_mvc (status, pending, req_id) VALUES (@status, @pendingWith, @req_id)"
         );
-
+      if (pendingWith == 0) {
+        updatePreApprovedRequestStatus(req_id, 1);
+      }
       res.json({
         message: "Request status updated successfully",
         status,
@@ -117,20 +118,19 @@ const updatePreApprovedRequestStatus = async (requestName, action) => {
       WHERE parent_request_name LIKE '%${requestName.substring(1)}'
     `);
 
-    if (parentRequestResult.recordset.length > 0) {
-      const parentRequestName =
-        parentRequestResult.recordset[0].parent_request_name;
-      const newStatus = parentRequestResult.recordset[0].request_name[0];
+    // const parentRequestName =
+    //   parentRequestResult.recordset[0].parent_request_name;
+    // const newStatus = parentRequestResult.recordset[0].request_name[0];
 
-      console.log(newStatus);
-      console.log(`Requestname is ${requestName}`);
-      console.log(` UPDATE [PriceApprovalSystem].[dbo].[requests_mvc]
+    // console.log(newStatus);
+    console.log(`Requestname is ${requestName}`);
+    console.log(` UPDATE [PriceApprovalSystem].[dbo].[requests_mvc]
       SET [status] = '${action}'
       WHERE [id] = (SELECT TOP 1 [id] FROM [PriceApprovalSystem].[dbo].[requests_mvc]
               WHERE [req_id] = '${requestName}'
               ORDER BY [id] DESC);  `);
-      // Update the status of req_id in the requests_mvc table
-      const updateResult = await sql.query(`
+    // Update the status of req_id in the requests_mvc table
+    const updateResult = await sql.query(`
       UPDATE [PriceApprovalSystem].[dbo].[requests_mvc]
       SET [status] = '${action}'
       WHERE [id] = (SELECT TOP 1 [id] FROM [PriceApprovalSystem].[dbo].[requests_mvc]
@@ -138,10 +138,7 @@ const updatePreApprovedRequestStatus = async (requestName, action) => {
               ORDER BY [id] DESC);        
       `);
 
-      console.log(updateResult);
-    } else {
-      console.log("No matching parent_request_name found");
-    }
+    console.log(updateResult);
   } catch (err) {
     console.error("Database connection error:", err);
   }

@@ -754,7 +754,7 @@ function TableWithInputs({
               <TableBody>
                 {historyData.map((row) => (
                   <TableRow key={row.req_id}>
-                    <TableCell>{row.req_id}</TableCell>
+                    <TableCell>{row.req_id[0]}</TableCell>
                     <TableCell>{row.agreed_price}</TableCell>
                     <TableCell>{row.special_discount}</TableCell>
                     <TableCell>{row.reel_discount}</TableCell>

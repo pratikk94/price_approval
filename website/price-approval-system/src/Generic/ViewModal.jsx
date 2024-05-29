@@ -18,7 +18,7 @@ import ReplayIcon from "@mui/icons-material/Replay";
 import { backend_mvc } from "../util";
 
 import ReactModal from "react-modal";
-import { IconButton } from "@mui/material";
+import { IconButton, Modal } from "@mui/material";
 import RemarkBox from "../components/common/RemarkBox";
 import HistoryModal from "../components/common/History";
 
@@ -26,7 +26,33 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import FileHandling from "../components/common/FileHandling";
 import { useSession } from "../Login_Controller/SessionContext";
 import { green } from "@mui/material/colors";
-function PriceTable({ price }) {
+import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
+import axios from "axios";
+function PriceTable({ price, selectedConsignees, selectedCustomers, plant }) {
+  const [historyData, setHistoryData] = useState([]);
+  const [open, setOpen] = useState(false);
+
+  console.log(
+    "Values are " + selectedConsignees.split(",") + selectedCustomers + plant
+  );
+
+  console.log(selectedConsignees.split(","));
+
+  console.log(selectedCustomers.split(",").map((item) => item.value));
+  const fetchHistory = async (grade) => {
+    try {
+      let url = `${backend_mvc}api/history?/history-requests?customerIds=${selectedCustomers.split(
+        ","
+      )}&consigneeIds=${selectedConsignees.split(",")}&plantIds=${plant.split(
+        ","
+      )}&grade=${grade}`;
+      url = url.replace(" ", "");
+      const response = await axios.get(url);
+      return response;
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    }
+  };
   return price ? (
     <>
       <TableContainer component={Paper}>
@@ -43,6 +69,7 @@ function PriceTable({ price }) {
               <TableCell align="center">TPC</TableCell>
               <TableCell align="center">Offline Discount</TableCell>
               <TableCell align="center">Net NSR</TableCell>
+              <TableCell align="center">Actions</TableCell>
               {/* <TableCell align="center">Old Net NSR</TableCell> */}
             </TableRow>
           </TableHead>
@@ -61,12 +88,79 @@ function PriceTable({ price }) {
                 <TableCell align="right">{row.tpc}</TableCell>
                 <TableCell align="right">{row.offline_discount}</TableCell>
                 <TableCell align="right">{row.net_nsr}</TableCell>
-                {/* <TableCell align="right">{row.old_net_nsr}</TableCell> */}
+                <TableCell align="right">
+                  <span style={{ display: "flex", justifyContent: "center" }}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      sx={{
+                        border: "none",
+                      }}
+                      onClick={async () => {
+                        console.log(row.grade);
+                        let response = await fetchHistory(row.grade);
+                        console.log(response.data);
+                        setHistoryData(response.data);
+                        setOpen(true);
+                      }}
+                    >
+                      <WorkHistoryIcon />
+                    </Button>
+                  </span>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+      <Modal open={open} onClose={() => setOpen(false)}>
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "60%",
+            backgroundColor: "white", // Changed from 'background.paper' to 'white'
+            border: "2px solid #000",
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                {/* Replace with your actual column headers */}
+                <TableRow>
+                  <TableCell>Request Id</TableCell>
+                  <TableCell>Agreed Price</TableCell>
+                  <TableCell>Special Discount</TableCell>
+                  <TableCell>Reel Discount</TableCell>
+                  <TableCell>TPC</TableCell>
+                  <TableCell>Offline Discount</TableCell>
+                  <TableCell>Net NSR</TableCell>
+                  {/* ... other headers */}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {historyData.map((row) => (
+                  <TableRow key={row.req_id}>
+                    <TableCell>{row.req_id[0]}</TableCell>
+                    <TableCell>{row.agreed_price}</TableCell>
+                    <TableCell>{row.special_discount}</TableCell>
+                    <TableCell>{row.reel_discount}</TableCell>
+                    <TableCell>{row.tpc}</TableCell>
+                    <TableCell>{row.offline_discount}</TableCell>
+                    <TableCell>{row.net_nsr}</TableCell>
+
+                    {/* ... other cells */}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+      </Modal>
     </>
   ) : null;
 }
@@ -188,7 +282,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
   };
   console.log(rule);
   console.log(rule.rules.can_approve);
-
+  console.log(data["consolidatedRequest"]);
   return (
     data["consolidatedRequest"] && (
       <>
@@ -243,7 +337,12 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                     : "One to many"}
                 </Typography>
               </div>
-              <PriceTable price={data.priceDetails} />
+              <PriceTable
+                price={data.priceDetails}
+                selectedConsignees={data.consolidatedRequest.consignee_ids}
+                selectedCustomers={data["consolidatedRequest"].customer_ids}
+                plant={data.consolidatedRequest.plant}
+              />
               {data.request_name != undefined && (
                 <FileHandling requestId={data.request_name} />
               )}
