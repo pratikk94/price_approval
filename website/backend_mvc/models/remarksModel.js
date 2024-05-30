@@ -12,21 +12,53 @@ const poolPromise = new sql.ConnectionPool(config)
 async function getRemarksWithRequests(request_id) {
   try {
     const pool = await poolPromise;
-    const result = await pool.request().query(`
-      SELECT 
-        DISTINCT r.request_id,
-        r.id,
-        r.user_id,
-        r.comment,
-        r.created_at
-      FROM 
-        dbo.Remarks AS r
-      INNER JOIN 
-        dbo.requests_mvc AS req
-      ON 
-        r.request_id = req.req_id
-      WHERE r.request_id = '${request_id}'
-    `);
+    const query1 = `WITH RequestHierarchy AS (
+      SELECT
+          request_name AS request_id,
+          parent_request_name
+      FROM
+          dbo.pre_approved_request_status_mvc
+      WHERE
+          request_name = '${request_id}'  -- Your specified request ID
+  
+      UNION ALL
+  
+      SELECT
+          REPLACE(parent_request_name, 'RR', 'NR') AS request_id,  -- Transform parent request name
+          NULL AS parent_request_name  -- Assuming there's only one level of parent
+      FROM
+          dbo.pre_approved_request_status_mvc
+      WHERE
+          request_name = '${request_id}'
+  )
+  SELECT DISTINCT
+      r.request_id,
+      r.id,
+      r.user_id,
+      r.comment,
+      r.created_at
+  FROM 
+      dbo.Remarks AS r
+  INNER JOIN
+      RequestHierarchy rh ON r.request_id = rh.request_id;
+  `;
+
+    const query2 = `SELECT 
+  DISTINCT r.request_id,
+  r.id,
+  r.user_id,
+  r.comment,
+  r.created_at
+FROM 
+  dbo.Remarks AS r
+INNER JOIN 
+  dbo.requests_mvc AS req
+ON 
+  r.request_id = req.req_id
+WHERE r.request_id = '${request_id}'`;
+    let result = await pool.request().query(query1);
+    if (result.recordset.length == 0)
+      result = await pool.request().query(query2);
     return result.recordset;
   } catch (err) {
     console.error("SQL error", err);

@@ -706,10 +706,10 @@ const CreateRequestModal = ({
               />
               <SpacingWrapper space="12px" />
               <Typography>Plant </Typography>
-              {editData ? (
+              {editData || isRework ? (
                 <Plant
                   setSelection={setPlant}
-                  editedData={plant}
+                  editedData={Array.isArray(plant) ? plant : plant.split(",")}
                   disabled={mode > 1 || isExtension || isBlocked}
                 />
               ) : (

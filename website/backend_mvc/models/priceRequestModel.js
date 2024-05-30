@@ -325,7 +325,8 @@ async function fetchData(role, status) {
     console.log(`Status is:${status}`);
     const statusSTR =
       status == 0 ? "AND currently_pending_with = '" + role + "'" : "";
-    const statusIM = status == 0 ? "status !=1" : "status = " + status;
+    const statusIM =
+      status == 0 ? "status !=1 and status != -1" : "status = " + status;
 
     // Use advanced query to get transactions pending with the given role
     const transactionsResult = await sql.query(
@@ -376,54 +377,13 @@ async function fetchData(role, status) {
       `
     );
 
-    console.log(`WITH LatestRequests AS (
-      SELECT 
-          req_id, 
-          status, 
-          ROW_NUMBER() OVER (PARTITION BY req_id ORDER BY id DESC) AS rn
-      FROM [PriceApprovalSystem].[dbo].[requests_mvc]
-  ),
-  FilteredRequests AS (
-      SELECT req_id
-      FROM LatestRequests
-      WHERE rn = 1 AND status != 1
-  ),
-  MaxIds AS (
-      SELECT MAX(id) AS maxId, request_id
-      FROM transaction_mvc
-      WHERE request_id IN (SELECT req_id FROM FilteredRequests)
-      GROUP BY request_id
-  ),
-  MaxDetails AS (
-      SELECT m.maxId, m.request_id, t.current_status
-      FROM transaction_mvc t
-      INNER JOIN MaxIds m ON t.id = m.maxId
-  ),
-  RelatedTransactions AS (
-      SELECT t.*
-      FROM transaction_mvc t
-      INNER JOIN MaxDetails m ON t.request_id = m.request_id AND t.current_status = m.current_status
-  )
-  SELECT *
-  FROM RelatedTransactions
-  WHERE EXISTS (
-      SELECT 1
-      FROM transaction_mvc
-      WHERE request_id = RelatedTransactions.request_id
-      AND current_status = RelatedTransactions.current_status
-      AND id != RelatedTransactions.id
-  )
-  ${statusSTR}
-  UNION
-  SELECT *
-  FROM transaction_mvc
-  WHERE id IN (SELECT maxId FROM MaxDetails)
-  ${statusSTR};
-   `);
-
     let details = [];
     // For each transaction, fetch and consolidate request details
-    for (let transaction of transactionsResult.recordset) {
+    let uniqueTransactions = transactionsResult.recordset.filter(
+      (value, index, self) =>
+        self.findIndex((t) => t.request_id === value.request_id) === index
+    );
+    for (let transaction of uniqueTransactions) {
       console.log(transaction.request_id);
       const requestResult = await sql.query(`
               SELECT 

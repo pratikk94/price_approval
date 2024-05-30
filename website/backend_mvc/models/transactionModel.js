@@ -138,7 +138,7 @@ async function acceptTransaction(
   action,
   requestId,
   lastUpdatedById,
-  lastUpdatedByRole,
+  lastUpdatedByRole
 ) {
   try {
     await sql.connect(config);
@@ -196,6 +196,21 @@ async function acceptTransaction(
           `
               INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
               VALUES ('${requestId}', '${rule_id}', 'Rejected', 'Rejected', '${currentRole}','${lastUpdatedById}', GETDATE())
+          `
+        );
+      }
+      if (action == 3) {
+        if (currentRole != "RM")
+          await sql.query(
+            `
+              INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+              VALUES ('${requestId}', '${rule_id}', 'Rework', 'RM', '${currentRole}','${lastUpdatedById}', GETDATE())
+          `
+          );
+        await sql.query(
+          `
+              INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+              VALUES ('${requestId}', '${rule_id}', 'Rework', 'AM', '${currentRole}','${lastUpdatedById}', GETDATE())
           `
         );
       } else if (approversResult.recordset.length === 1) {

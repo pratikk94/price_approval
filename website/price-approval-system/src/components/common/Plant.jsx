@@ -43,8 +43,10 @@ const Plant = ({ setSelection, editedData, disabled }) => {
   };
 
   useEffect(() => {
-    fetch_plants();
-  }, [editedData]);
+    if (!disabled) fetch_plants();
+  }, [disabled, editedData]);
+
+  console.log(editedData);
 
   const handleChange = (selectedOptions) => {
     if (!disabled) {

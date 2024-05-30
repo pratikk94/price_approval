@@ -41,7 +41,6 @@ const PlantC = ({ setSelection, editedData, disabled }) => {
     fetch_plants();
   }, []);
 
-
   const handleChange = (selectedOptions) => {
     if (!disabled) {
       setSelectedCustomers(selectedOptions);
@@ -68,4 +67,3 @@ const PlantC = ({ setSelection, editedData, disabled }) => {
 };
 
 export default PlantC;
- 

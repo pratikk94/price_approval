@@ -34,6 +34,11 @@ const MessagesComponent = ({ reqId }) => {
     fetchData();
   }, [reqId]);
 
+  function setStatus(status) {
+    if (status == "Rework" || status == "Rejecet") return status;
+    else return null;
+  }
+
   return (
     <Paper elevation={3} style={{ padding: 20 }}>
       <Typography variant="h5" gutterBottom>
@@ -42,7 +47,13 @@ const MessagesComponent = ({ reqId }) => {
       <div>
         {messages.map((transaction, index) => (
           <p key={index}>
-            Last updated by: {transaction.last_updated_by_id} on{" "}
+            Update :{" "}
+            {transaction.last_updated_by_id.toString().includes("(AM)")
+              ? "Request was raised"
+              : setStatus(transaction.current_status) == null
+              ? "Request was approved."
+              : "Request put for " + setStatus(transaction.current_status)}{" "}
+            . Last updated by: {transaction.last_updated_by_id} on .
             {transaction.created_at}
             <br />
           </p>
