@@ -1,5 +1,5 @@
 // ProtectedRoute.js
-import React from "react";
+
 import { Navigate, useNavigate } from "react-router-dom";
 import { useSession } from "./SessionContext";
 import App from "../App/App"; // Your component for users with the RM role

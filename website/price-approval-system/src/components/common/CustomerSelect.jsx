@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Select from "react-select";
-import { backend_mvc, backend_url } from "../../util";
+import { backend_mvc } from "../../util";
 import { useSession } from "../../Login_Controller/SessionContext";
 
 const CustomerSelect = ({

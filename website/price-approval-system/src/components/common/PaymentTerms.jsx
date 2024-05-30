@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Select from "react-select";
 import { backend_url } from "../../util";
 
+// eslint-disable-next-line react/prop-types
 const PaymentTerms = ({ setSelection, editedData, disabled }) => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
