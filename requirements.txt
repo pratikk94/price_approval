@@ -1,20 +1,11 @@
 Things to do                            
 
-Date : 24/3/2024
-1.  grade type :  reel or sheet or bobbins. (pending)
-2.  Emailing. (pending)
-3.  Validations. (pending)
-4.  Flow server. (done)
-5.  Flow frontend. (done)
-6.  Create request. Merge Copy (pending)
-7.  Downlaod reports in PDF. (pending)
-8.  Export to xls. (pending)
-9.  Master table data push. (pending)
-10. File uplaod. (pending)
-11. Remarks (pending)
-12. Make env for backend.(pending)
-13. Make stored procedures for new queries in backend. (pending)
-
-
 Date : 28/5/2024
-1. Get all history for everyone.
+1. Get all history for everyone. (done)
+
+Date : 31/5/2024
+1. Payment terms auto-populate.
+2. Plants. (done)
+3. History fix for all.
+4. Disable dropdown for non-editable fields. (done)
+5. UI changes in weekends. 

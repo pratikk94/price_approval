@@ -33,9 +33,11 @@ const Plant = ({ setSelection, editedData, disabled }) => {
       console.log(customerOptions);
       console.log(editedData);
       if (editedData != undefined) {
-        const result = editedData.map((id) => customerOptions[id]);
+        const result = customerOptions.filter((customer) =>
+          editedData.split(",").map(Number).includes(customer.value)
+        );
+
         setSelectedCustomers(result);
-        console.log(result);
       }
     } catch (error) {
       console.error("Error fetching customer data:", error);
@@ -59,7 +61,7 @@ const Plant = ({ setSelection, editedData, disabled }) => {
     <Select
       style={{ margintop: "10px" }}
       isMulti
-      disabled={disabled}
+      isDisabled={disabled}
       name="customers"
       options={customers}
       value={selectedCustomers}

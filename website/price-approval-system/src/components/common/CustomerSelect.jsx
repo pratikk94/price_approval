@@ -72,7 +72,7 @@ const CustomerSelect = ({
   return id != 3 ? (
     <Select
       isMulti
-      disabled={disabled}
+      isDisabled={disabled}
       name={name}
       options={customers}
       value={selectedOptions}
@@ -83,7 +83,7 @@ const CustomerSelect = ({
     />
   ) : (
     <Select
-      disabled={disabled}
+      isDisabled={disabled}
       name={name}
       options={customers}
       value={selectedOptions}

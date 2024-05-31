@@ -381,7 +381,7 @@ const CreateRequestModal = ({
     });
     // Assumption: plant, paymentTermsId are singular values, not lists
     console.log(data.plant.length > 1 ? data.plant : [data.plant]);
-    setPlant(data.plant.length > 1 ? data.plant : [data.plant]);
+    setPlant(data.plant);
     setPaymentTerms({
       value: data.payment_terms_id,
       label: `Terms ${data.payment_terms_id}`,
@@ -709,7 +709,7 @@ const CreateRequestModal = ({
               {editData || isRework ? (
                 <Plant
                   setSelection={setPlant}
-                  editedData={Array.isArray(plant) ? plant : plant.split(",")}
+                  editedData={plant}
                   disabled={mode > 1 || isExtension || isBlocked}
                 />
               ) : (

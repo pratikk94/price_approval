@@ -44,6 +44,7 @@ const PaymentTerms = ({ setSelection, editedData, disabled }) => {
 
   return (
     <Select
+      isDisabled={disabled}
       style={{ margintop: "10px" }}
       name="customers"
       options={customers}
