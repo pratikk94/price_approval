@@ -164,6 +164,28 @@ async function acceptTransaction(
     //   };
     // }
 
+    if (lastUpdatedByRole == "Validator") {
+      await sql.query(
+        `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
+              VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
+          `
+      );
+
+      const response = await axios.post(
+        `http://${url}:3000/api/update-status`,
+        {
+          current_role: lastUpdatedByRole,
+          region: region, // You would need to adjust this as per actual requirements
+          action: action, // Assuming action is to be passed as 1 for approve (example)
+          req_id: requestId, // This is a mockup; adjust as needed
+        }
+      );
+      return {
+        success: true,
+        message: "Transactions added and status updated successfully.",
+      };
+    }
+
     console.log(lastUpdatedByRole, currentRole);
     const result = await isValidRole(lastUpdatedByRole, currentRole);
     console.log("In here");

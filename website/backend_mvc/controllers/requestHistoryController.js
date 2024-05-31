@@ -10,6 +10,7 @@ async function fetchTransactionsByRequestId(req, res) {
 
     // Check if any transaction has status == 1 and modify the message
     const accepted = transactions.some((t) => t.status === 1);
+
     const message = accepted
       ? "Request accepted"
       : "Transactions fetched successfully";
