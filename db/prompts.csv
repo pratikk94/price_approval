@@ -199,3 +199,18 @@ Write to requests_status_mvc
 7. If input action is 2
     a. If current_approver level is 2 make status as 2 and pending with 1
     b. If current_approver level is more than 2 status is and pending with 2. 
+
+
+************************* Auto populate of pay terms ********************************
+
+1. User will enter a list of customers say (c1,c2,c3)
+2. User will enter a list of consignees say (co1,co2,co3)
+3. User will enter a list of end_use say (e1,e2,e3)
+4. Make all 27 permutations with customers,consignees and end_use and query the table payment_terms_master.
+5. if either of customer or consignee of end_use is not present in payment_terms_master, then assume all ids are allowed.
+6. for example if customer id is c1, consignee_id is null, and end_use_segment_id is null, that means if payment terms for above row is 3 then irrespective of value of consignee or enduse the payment term of customer c1 will be 3.
+7. If customer id is c1, consignee_id is co1, and end_use_segment_id is null, that means if payment terms for above row is 6 then irrespective of value of enduse the payment term of customer c1 and consignee co1 will be 6.
+8. If customer id is c1, consignee_id is co1, and end_use_segment_id is e1, that means if payment terms for above row is 9 then the payment term of customer c1, consignee co1 and end_use e1 will be 9. 
+9. If a certain combinations does not exist in payment_terms_master, then the payment term will be 5.
+10. Calculate the above for all 27 permutations and populate the table payment_terms_auto_populate function.
+11. Fetch lowest value of payment_terms_auto_populate and return it, if no value is present return 5.    
