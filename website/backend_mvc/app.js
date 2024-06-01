@@ -9,7 +9,6 @@ const corsOptions = {
   credentials: true, // allowing credentials (cookies, session)
 };
 app.use(cors(corsOptions));
-
 const ruleRoutes = require("./routes/ruleRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 const priceRequestConroller = require("./controllers/priceRequestController");
@@ -21,6 +20,7 @@ const historyRoutes = require("./routes/historyRoutes");
 const remarksRoutes = require("./routes/remarkRoutes");
 const authRoutes = require("./routes/authRoutes");
 const requestHistoryRoutes = require("./routes/requestHistoryRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 // const timeZone = "Asia/Kolkata";
 // const { format, toZonedTime } = require("date-fns-tz");
 // const { listenerCount } = require("events");
@@ -54,5 +54,6 @@ app.use("/api", requestRoutes);
 app.use("/api", historyRoutes);
 app.use("/api", remarksRoutes);
 app.use("/api", requestHistoryRoutes);
+app.use("/api", paymentRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, url, () => console.log(`Server running on port ${PORT}`));
