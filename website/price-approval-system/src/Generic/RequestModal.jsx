@@ -724,6 +724,9 @@ const CreateRequestModal = ({
                 disabled={mode > 1 || isExtension || isBlocked}
                 setSelection={setPaymentTerms}
                 editedData={paymentTerms}
+                customers={selectedCustomers}
+                consignees={selectedConsignees}
+                endUses={endUse}
               />
               <SpacingWrapper space="12px" />
               <Grid container spacing={2}>

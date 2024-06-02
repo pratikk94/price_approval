@@ -1,20 +1,24 @@
-// controllers/paymentController.js
 const paymentModel = require("../models/paymentModel");
 
-const fetchMinPaymentDetails = async (req, res) => {
+async function getLowestPaymentTerm(req, res) {
   try {
     const { customers, consignees, endUses } = req.body;
-    const paymentDetails = await paymentModel.calculateMinPaymentTerm(
+    const lowestPaymentTerm = await paymentModel.fetchLowestPaymentTermDetails(
       customers,
       consignees,
       endUses
     );
-    res.json(paymentDetails);
-  } catch (err) {
-    res.status(500).send(err.message);
+    res.json({
+      lowestPaymentTerm: lowestPaymentTerm || "Payment within 30 days",
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Error fetching payment terms",
+      error: error.message,
+    });
   }
-};
+}
 
 module.exports = {
-  fetchMinPaymentDetails,
+  getLowestPaymentTerm,
 };
