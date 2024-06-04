@@ -144,4 +144,28 @@ const updatePreApprovedRequestStatus = async (requestName, action) => {
   }
 };
 
-module.exports = { updateRequestStatus, updatePreApprovedRequestStatus };
+const addADraft = async (requestName) => {
+  try {
+    await sql.connect(config); // replace 'config' with your actual configuration object
+
+    const query = `
+    DECLARE @request_id VARCHAR(255) = '${requestName}'; -- replace with your actual request_id
+
+    DECLARE @parent_request_id VARCHAR(255) = STUFF(@request_id, 1, 1, 'D');
+    
+    INSERT INTO pre_approved_request_status_mvc (request_name, parent_request_name)
+    VALUES (@request_id, @parent_request_id);
+    `;
+
+    const result = await sql.query(query);
+    updatePreApprovedRequestStatus(requestName, -2);
+    console.log(result);
+  } catch (err) {
+    console.error("Database connection error:", err);
+  }
+};
+module.exports = {
+  updateRequestStatus,
+  updatePreApprovedRequestStatus,
+  addADraft,
+};

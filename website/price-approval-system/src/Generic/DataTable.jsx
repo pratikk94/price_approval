@@ -264,7 +264,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
             mb={2}
           >
             <FormControl>
-              <InputLabel id="select-label">Headers</InputLabel>
+              {/* <InputLabel id="select-label">Headers</InputLabel> */}
               <Select
                 labelId="select-label"
                 multiple
@@ -275,7 +275,12 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                 {headers.map((header) => (
                   <MenuItem key={header} value={header}>
                     <Checkbox checked={selectedHeaders.indexOf(header) > -1} />
-                    <ListItemText primary={header} />
+                    <ListItemText
+                      primary={
+                        header.replace("_", " ").charAt(0).toUpperCase() +
+                        header.replace("_", " ").slice(1)
+                      }
+                    />
                   </MenuItem>
                 ))}
               </Select>
@@ -294,8 +299,14 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                     <TableCell padding="checkbox" />
                     {selectedHeaders.map((header, index) => (
                       <DraggableHeader
-                        key={header}
-                        header={header}
+                        key={
+                          header.replace("_", " ").charAt(0).toUpperCase() +
+                          header.replace("_", " ").slice(1)
+                        }
+                        header={
+                          header.replace("_", " ").charAt(0).toUpperCase() +
+                          header.replace("_", " ").slice(1)
+                        }
                         index={index}
                         moveColumn={moveColumn}
                         sortDirection={
@@ -313,7 +324,14 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                       <Box key={rowIndex} p={2} mb={1} boxShadow={1}>
                         {selectedHeaders.map((header) => (
                           <Typography key={header} variant="body2">
-                            <strong>{header}: </strong>
+                            <strong>
+                              {header
+                                .replace("_", " ")
+                                .charAt(0)
+                                .toUpperCase() +
+                                header.replace("_", " ").slice(1)}
+                              :{" "}
+                            </strong>
                             {row.consolidatedRequest[header]}
                           </Typography>
                         ))}

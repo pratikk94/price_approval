@@ -203,9 +203,18 @@ function PriceChangeRequest(rules, employee_id) {
           isRework={true}
         />
       );
-    }
-    // Rework
-    else {
+    } else if (statusFiltersValues[filterdId] == "Draft") {
+      console.log("Filterred ID is 1");
+      setActiveFilter("Draft");
+      setComponent(
+        <DataTable
+          url={`${backend_mvc}api/data/` + session.role + "/5 "}
+          rule={rules}
+          setRows={handleRowsSelection}
+          isRework={true}
+        />
+      );
+    } else {
       console.log("Pending");
       setActiveFilter("Pending");
       setComponent(

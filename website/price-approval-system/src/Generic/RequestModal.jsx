@@ -179,12 +179,13 @@ const CreateRequestModal = ({
     //     : false;
     // console.log(checkForEndUse);
     if (
-      validFrom != "" &&
-      validTo != "" &&
-      paymentTerms != undefined &&
-      selectedCustomers.length > 0 &&
-      selectedConsignees.length > 0 &&
-      remarks.length > 10
+      (validFrom != "" &&
+        validTo != "" &&
+        paymentTerms != undefined &&
+        selectedCustomers.length > 0 &&
+        selectedConsignees.length > 0 &&
+        remarks.length > 10) ||
+      draft
       // && checkForEndUse
     ) {
       console.log(endUse);
@@ -222,21 +223,16 @@ const CreateRequestModal = ({
 
         formData["priceTable"] = tableRowsData;
         console.log(formData["priceTable"]);
-
+        formData["isDraft"] = draft;
+        formData["am_id"] = employee_id;
+        formData["oldRequestId"] = parentId;
+        if (draft) {
+          submitFormDataMVC(formData);
+          return;
+        }
         setStopExecution(false);
         for (let i = 0; i < tableRowsData.length; i++) {
           tableRowsData[i]["fsc"] = fsc;
-          console.log(tableRowsData[i]);
-          console.log(tableRowsData[i]["grade"] == "");
-          console.log(tableRowsData[i]["gradeType"] == "");
-          console.log(
-            tableRowsData[i]["agreedPrice"] < 1 ||
-              isNaN(tableRowsData[i]["agreedPrice"])
-          );
-          console.log(
-            tableRowsData[i]["specialDiscount"] < 1 ||
-              isNaN(tableRowsData[i]["specialDiscount"])
-          );
           if (tableRowsData[i]["grade"] == "") {
             setErrorMessage("Select Grade for Row " + (i + 1));
             setStopExecution(e, !e);
@@ -290,15 +286,10 @@ const CreateRequestModal = ({
           // return;
         }
 
-        console.log("CP_1");
-        setShowSuccess(true);
         formData["isDraft"] = draft;
         formData["am_id"] = employee_id;
-        console.log(parentId);
         formData["oldRequestId"] = parentId;
-        const val = JSON.stringify(formData);
-        console.log(stopExecution);
-        console.log(formData);
+
         if (!stopExecution) {
           if (validFrom < validTo) {
             submitFormDataMVC(formData);
@@ -497,6 +488,12 @@ const CreateRequestModal = ({
   const submitFormDataMVC = async (formData) => {
     console.log(selectedConsigneeIDs);
 
+    if (formData["isDraft"]) {
+      setIsDraft(true);
+    }
+
+    console.log(formData["isDraft"]);
+
     try {
       let action = "N";
 
@@ -513,6 +510,11 @@ const CreateRequestModal = ({
       if (isRework) {
         action = "R";
       }
+
+      if (formData["isDraft"]) {
+        action = "D";
+      }
+
       // Update formData based on whether it's a new submission or an edit
       formData = {
         am_id: session.employee_id,
@@ -532,6 +534,7 @@ const CreateRequestModal = ({
         oldRequestId: parentId,
       };
       formData["prices"] = tableRowsData;
+      formData["action"] = action;
       console.log(tableRowsData);
       console.log(formData);
       console.log(action);
@@ -638,8 +641,6 @@ const CreateRequestModal = ({
     setOpenOneToOneModal(false);
   };
 
-  console.log(open);
-  console.log(plant);
   return (
     <>
       <Modal

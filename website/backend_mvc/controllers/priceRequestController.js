@@ -3,7 +3,10 @@ const priceRequestModel = require("../models/priceRequestModel");
 const transactionModel = require("../models/priceRequestModel");
 const sql = require("mssql");
 const config = require("../config");
-const { updatePreApprovedRequestStatus } = require("./requestController");
+const {
+  updatePreApprovedRequestStatus,
+  addADraft,
+} = require("./requestController");
 async function processTransaction(req, res) {
   try {
     const {
@@ -73,8 +76,13 @@ async function processPrevApprovedTransaction(req, res) {
       console.log("In update");
       updatePreApprovedRequestStatus(oldRequestId, -1);
     }
+
     const requestId = await transactionModel.handleNewRequest();
     console.log("requestId", requestId); // Debugging output (requestId value
+    if (action == "D") {
+      console.log("In draft");
+      addADraft(requestId);
+    }
     const result = await transactionModel.insertTransactions({
       customers,
       consignees,
@@ -91,8 +99,8 @@ async function processPrevApprovedTransaction(req, res) {
     });
 
     priceRequestModel.addTransactionToTable(requestId, am_id);
-
-    pushDataToTable(requestId, action + oldRequestId.substring(1));
+    if (oldRequestId != undefined)
+      pushDataToTable(requestId, action + oldRequestId.substring(1));
 
     res.json({
       message: "Transaction processed successfully",
