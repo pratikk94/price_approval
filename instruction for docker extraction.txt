@@ -4,5 +4,5 @@ TO DISK = 'Latest170524.bak'
 WITH FORMAT, MEDIANAME = 'YourDatabaseNameBackup', NAME = 'Full Backup of YourDatabaseName';
 
 
-2. EXPORTING .bak
-docker cp 817ff2844624:/var/opt/mssql/data/Latest170524.bak /Users/pratik/Desktop
+    2. EXPORTING .bak
+    docker cp 817ff2844624:/var/opt/mssql/data/Latest170524.bak /Users/pratik/Desktop

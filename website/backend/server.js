@@ -3113,7 +3113,7 @@ app.get("/api/fetch_grade_with_pc", async (req, res) => {
   try {
     pool = await sql.connect(config);
     const result = await pool.request()
-      .query`SELECT id as code,grade as name,FSC_Y_N,Grade_Description,Profit_Centre as profitCenter FROM profit_center where status = 1 and FSC_Y_N = ${fsc}`;
+      .query`SELECT id as code,grade,FSC_Y_N,Grade_Description as name,Profit_Centre as profitCenter FROM profit_center where status = 1 and FSC_Y_N = ${fsc}`;
 
     res.json(result.recordset);
   } catch (err) {

@@ -4,8 +4,16 @@ Date : 28/5/2024
 1. Get all history for everyone. (done)
 
 Date : 31/5/2024
-1. Payment terms auto-populate.
+1. Payment terms auto-populate. (done)
 2. Plants. (done)
 3. History fix for all.
 4. Disable dropdown for non-editable fields. (done)
 5. UI changes in weekends. 
+
+Date: 5/6/2024
+1. Hide left column.
+2. Valid from valid to remvoe time.
+3. Payment terms header as Payment terms.
+4. Remove ids. 
+5. Add rejected status.
+6. what is scrom and how to create scrom compliant?
