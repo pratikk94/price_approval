@@ -28,7 +28,7 @@ import {
 import DownloadIcon from "@mui/icons-material/Download";
 import ViewIcon from "@mui/icons-material/Visibility";
 import { useSession } from "../Login_Controller/SessionContext";
-
+import DownloadModal from "./DownloadModal";
 import BlockIcon from "@mui/icons-material/Block";
 import MoreTimeIcon from "@mui/icons-material/MoreTime";
 import CreateRequestModal from "./RequestModal";
@@ -97,7 +97,9 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   const [editOpen, setEditOpen] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isExtension, setIsExtension] = useState(false);
-
+  const [openDownloadModal, setOpenDownloadModal] = useState(false);
+  const [id, setId] = useState(0);
+  const [downloadRowData, setDownlaodRowData] = useState([]);
   console.log("Rework is " + isRework);
 
   const handleRowClick = (id) => {
@@ -133,6 +135,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
 
   const handleClose = () => {
     setOpen(false);
+    setOpenDownloadModal(false);
   };
 
   const handleEditClose = () => {
@@ -207,7 +210,12 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   };
 
   const handleDownloadAction = (rowData) => {
+    console.log(rowData.request_id);
+    setDownlaodRowData(rowData);
+    setId(rowData.request_id);
     console.log("Download action for:", rowData);
+    setOpenDownloadModal(true);
+
     // Implement your download logic here
   };
 
@@ -399,6 +407,13 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
       ) : (
         <></>
       )}
+      <DownloadModal
+        open={openDownloadModal}
+        onClose={handleClose}
+        id={downloadRowData.request_id}
+        consolidatedRequest={downloadRowData.consolidatedRequest}
+        priceRequest={downloadRowData.priceDetails}
+      />
       {(editOpen || isRework) && selectedRow != undefined ? (
         <CreateRequestModal
           open={editOpen}

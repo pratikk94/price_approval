@@ -25,6 +25,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { green, red } from "@mui/material/colors";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { format, toZonedTime } from "date-fns-tz";
+import moment from "moment-timezone";
 import axios from "axios";
 import PlantC from "../components/common/PlantC";
 const style = {
@@ -204,20 +205,14 @@ const CreateRequestModal = ({
         formData["plants"] = plant;
         formData["paymentTermsId"] = paymentTerms["value"].toString();
 
-        formData["validFrom"] = format(
-          toZonedTime(validFrom, timeZone),
-          "yyyy-MM-dd HH:mm:ssXXX",
-          {
-            timeZone,
-          }
-        );
-        formData["validTo"] = format(
-          toZonedTime(validTo, timeZone),
-          "yyyy-MM-dd HH:mm:ssXXX",
-          {
-            timeZone,
-          }
-        );
+        const today = moment();
+        formData["validFrom"] = validFrom
+          ? moment(validFrom).tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ")
+          : today.tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ");
+
+        formData["validTo"] = validTo
+          ? moment(validTo).tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ")
+          : today.tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ");
         formData["remarks"] = remarks;
         formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
 
@@ -513,28 +508,49 @@ const CreateRequestModal = ({
 
       if (formData["isDraft"]) {
         action = "D";
-      }
+        formData = {
+          am_id: session.employee_id,
+          customers:
+            selectedCustomers.map((item) => item.value).join(",") ?? " ", // Assuming `customers` is an array in your formData
+          consignees:
+            selectedConsignees.map((item) => item.value).join(",") ?? " ", // Assuming `consignees` is an array in your formData
+          endUse: endUse.value ?? "", //endUse["value"].toString(),
+          plant: Array.isArray(plant)
+            ? plant.map((item) => item.value.toString()).toString() ?? " "
+            : plant.toString() ?? " ",
+          endUseSegment: "seg1" ?? " ",
+          validFrom: validFrom,
+          validTo: validTo,
+          paymentTerms: paymentTerms["value"].toString() ?? " ",
+          oneToOneMapping: checkBoxEnabled ? (isChecked ? 1 : 2) : 2,
+          prices: tableRowsData, // Assuming `prices` is an array in your formData
+          action: action ?? " ",
+          oldRequestId: parentId,
+        };
+        formData["prices"] = tableRowsData;
 
-      // Update formData based on whether it's a new submission or an edit
-      formData = {
-        am_id: session.employee_id,
-        customers: selectedCustomers.map((item) => item.value).join(","), // Assuming `customers` is an array in your formData
-        consignees: selectedConsignees.map((item) => item.value).join(","), // Assuming `consignees` is an array in your formData
-        endUse: endUse != undefined ? endUse.value : enduse, //endUse["value"].toString(),
-        plant: Array.isArray(plant)
-          ? plant.map((item) => item.value.toString()).toString()
-          : plant.toString(),
-        endUseSegment: "seg1",
-        validFrom: validFrom,
-        validTo: validTo,
-        paymentTerms: paymentTerms["value"].toString(),
-        oneToOneMapping: checkBoxEnabled ? (isChecked ? 1 : 2) : 2,
-        prices: tableRowsData, // Assuming `prices` is an array in your formData
-        action: action,
-        oldRequestId: parentId,
-      };
-      formData["prices"] = tableRowsData;
-      formData["action"] = action;
+        formData["action"] = action;
+      } else {
+        formData = {
+          am_id: session.employee_id,
+          customers: selectedCustomers.map((item) => item.value).join(","), // Assuming `customers` is an array in your formData
+          consignees: selectedConsignees.map((item) => item.value).join(","), // Assuming `consignees` is an array in your formData
+          endUse: endUse != undefined ? endUse.value : enduse, //endUse["value"].toString(),
+          plant: Array.isArray(plant)
+            ? plant.map((item) => item.value.toString()).toString()
+            : plant.toString(),
+          endUseSegment: "seg1",
+          validFrom: validFrom,
+          validTo: validTo,
+          paymentTerms: paymentTerms["value"].toString(),
+          oneToOneMapping: checkBoxEnabled ? (isChecked ? 1 : 2) : 2,
+          prices: tableRowsData, // Assuming `prices` is an array in your formData
+          action: action,
+          oldRequestId: parentId,
+        };
+        formData["prices"] = tableRowsData;
+        formData["action"] = action;
+      }
       console.log(tableRowsData);
       console.log(formData);
       console.log(action);

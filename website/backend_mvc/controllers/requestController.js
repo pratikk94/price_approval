@@ -108,39 +108,41 @@ const updateRequestStatus = async (req, res) => {
 
 const updatePreApprovedRequestStatus = async (requestName, action) => {
   try {
-    await sql.connect(config); // replace 'config' with your actual configuration object
+    await sql.connect(config);
 
     console.log("LIKE QUERY IS " + requestName.substring(1));
-    // Fetch the parent_request_name
-    const parentRequestResult = await sql.query(`
-      SELECT parent_request_name,request_name
+
+    // Use parameterized queries to prevent SQL injection
+    const parentRequestResult = await sql.query`
+      SELECT parent_request_name, request_name
       FROM pre_approved_request_status_mvc
-      WHERE parent_request_name LIKE '%${requestName.substring(1)}'
-    `);
+      WHERE parent_request_name LIKE '%' + ${requestName.substring(1)} + '%'
+    `;
 
-    // const parentRequestName =
-    //   parentRequestResult.recordset[0].parent_request_name;
-    // const newStatus = parentRequestResult.recordset[0].request_name[0];
+    console.log(`Request name is ${requestName}`);
 
-    // console.log(newStatus);
-    console.log(`Requestname is ${requestName}`);
-    console.log(` UPDATE [PriceApprovalSystem].[dbo].[requests_mvc]
-      SET [status] = '${action}'
-      WHERE [id] = (SELECT TOP 1 [id] FROM [PriceApprovalSystem].[dbo].[requests_mvc]
-              WHERE [req_id] = '${requestName}'
-              ORDER BY [id] DESC);  `);
-    // Update the status of req_id in the requests_mvc table
-    const updateResult = await sql.query(`
+    let pending = "";
+    if (action == 5) {
+      pending = ", [pending] = '1'";
+    }
+
+    // Ensure poolPromise is defined elsewhere in your module
+    const pool = await poolPromise;
+    const query3 = `
       UPDATE [PriceApprovalSystem].[dbo].[requests_mvc]
-      SET [status] = '${action}'
-      WHERE [id] = (SELECT TOP 1 [id] FROM [PriceApprovalSystem].[dbo].[requests_mvc]
-              WHERE [req_id] = '${requestName}'
-              ORDER BY [id] DESC);        
-      `);
+      SET [status] = ${action} ${pending}
+      WHERE [id] = (
+        SELECT TOP 1 [id]
+        FROM [PriceApprovalSystem].[dbo].[requests_mvc]
+        WHERE [req_id] = '${requestName}'
+        ORDER BY [id] DESC
+      );
+    `;
 
-    console.log(updateResult);
-  } catch (err) {
-    console.error("Database connection error:", err);
+    const updateResult2 = await pool.request().query(query3);
+    console.log(updateResult2);
+  } catch (error) {
+    console.error("Error in operation:", error);
   }
 };
 
@@ -158,7 +160,7 @@ const addADraft = async (requestName) => {
     `;
 
     const result = await sql.query(query);
-    updatePreApprovedRequestStatus(requestName, -2);
+    updatePreApprovedRequestStatus(requestName, 5);
     console.log(result);
   } catch (err) {
     console.error("Database connection error:", err);

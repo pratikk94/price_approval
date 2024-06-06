@@ -181,20 +181,30 @@ async function insertPrices(data, request_id) {
   try {
     await sql.connect(config);
     for (const item of data) {
-      await sql.query(
-        `
-              INSERT INTO price_approval_requests_price_table 
-              (req_id, fsc, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, 
-              reel_discount, pack_upcharge, TPC, offline_discount, net_nsr, old_net_nsr) 
-              VALUES 
-              ('${request_id}',      '${item.fsc}',          '${item.grade}', 
-              '${item.gradeType}',       '${item.gsmFrom}', 
-              '${item.gsmTo}',     '${item.agreedPrice}', 
-              '${item.specialDiscount}', '${item.reelDiscount}', 
-              '${item.packUpCharge}',    '${item.tpc}',          '${item.offlineDiscount}', 
-              '${item.netNSR}',          '${item.oldNetNSR}')
-          `
-      );
+      let query =
+        item.fsc == undefined
+          ? `INSERT INTO price_approval_requests_price_table 
+      (req_id, fsc, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, 
+      reel_discount, pack_upcharge, TPC, offline_discount, net_nsr, old_net_nsr) 
+      VALUES 
+      ('${request_id}',      'N',          '${item.grade}', 
+      '${item.gradeType}',       '${item.gsmFrom}', 
+      '${item.gsmTo}',     '${item.agreedPrice}', 
+      '${item.specialDiscount}', '${item.reelDiscount}', 
+      '${item.packUpCharge}',    '${item.tpc}',          '${item.offlineDiscount}', 
+      '${item.netNSR}',          '${item.oldNetNSR}')`
+          : `INSERT INTO price_approval_requests_price_table 
+      (req_id, fsc, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, 
+      reel_discount, pack_upcharge, TPC, offline_discount, net_nsr, old_net_nsr) 
+      VALUES 
+      ('${request_id}',      ${fsc},          '${item.grade}', 
+      '${item.gradeType}',       '${item.gsmFrom}', 
+      '${item.gsmTo}',     '${item.agreedPrice}', 
+      '${item.specialDiscount}', '${item.reelDiscount}', 
+      '${item.packUpCharge}',    '${item.tpc}',          '${item.offlineDiscount}', 
+      '${item.netNSR}',          '${item.oldNetNSR}')`;
+
+      await sql.query(`${query} `);
     }
     // return { success: true, message: "All prices inserted successfully." };
   } catch (err) {
@@ -203,7 +213,7 @@ async function insertPrices(data, request_id) {
   }
 }
 
-async function addTransactionToTable(requestId, userId) {
+async function addTransactionToTable(requestId, userId, isDraft = false) {
   try {
     await sql.connect(config);
 
@@ -243,17 +253,18 @@ async function addTransactionToTable(requestId, userId) {
 
     // Insert into transaction table
     const currentTime = new Date();
-    const result = await sql.query(
-      `
-          INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
-          VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}', 'RM0A1', 'RM', '${currentTime}')
-      `
-    );
+    let query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
+    VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}', 'RM0A1',  'RM', '${currentTime}')`;
+    if (isDraft)
+      query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
+    VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}','AM0','AM', '${currentTime}')`;
+
+    const result = await sql.query(`${query}`);
     const pool = await poolPromise;
     await pool
       .request()
-      .input("status", sql.Int, 0)
-      .input("pendingWith", sql.Int, 2)
+      .input("status", sql.Int, isDraft ? 5 : 0)
+      .input("pendingWith", sql.Int, isDraft ? 1 : 2)
       .input("req_id", sql.VarChar, requestId)
       .query(
         "INSERT INTO requests_mvc (status, pending, req_id) VALUES (@status, @pendingWith, @req_id)"
@@ -327,55 +338,55 @@ async function fetchData(role, status) {
       status == 0 ? "AND currently_pending_with = '" + role + "'" : "";
     const statusIM =
       status == 0 ? "status !=1 and status != -1" : "status = " + status;
+    const query = `
+    WITH LatestRequests AS (
+      SELECT 
+          req_id, 
+          status, 
+          ROW_NUMBER() OVER (PARTITION BY req_id ORDER BY id DESC) AS rn
+      FROM [PriceApprovalSystem].[dbo].[requests_mvc]
+  ),
+  FilteredRequests AS (
+      SELECT req_id
+      FROM LatestRequests
+      WHERE rn = 1 AND ${statusIM}
+  ),
+  MaxIds AS (
+      SELECT MAX(id) AS maxId, request_id
+      FROM transaction_mvc
+      WHERE request_id IN (SELECT req_id FROM FilteredRequests)
+      GROUP BY request_id
+  ),
+  MaxDetails AS (
+      SELECT m.maxId, m.request_id, t.current_status
+      FROM transaction_mvc t
+      INNER JOIN MaxIds m ON t.id = m.maxId
+  ),
+  RelatedTransactions AS (
+      SELECT t.*
+      FROM transaction_mvc t
+      INNER JOIN MaxDetails m ON t.request_id = m.request_id AND t.current_status = m.current_status
+  )
+  SELECT *
+  FROM RelatedTransactions
+  WHERE EXISTS (
+      SELECT 1
+      FROM transaction_mvc
+      WHERE request_id = RelatedTransactions.request_id
+      AND current_status = RelatedTransactions.current_status
+      AND id != RelatedTransactions.id
+  )
+  ${statusSTR}
+  UNION
+  SELECT *
+  FROM transaction_mvc
+  WHERE id IN (SELECT maxId FROM MaxDetails)
+  ${statusSTR};
+    `;
 
+    // console.log(query);
     // Use advanced query to get transactions pending with the given role
-    const transactionsResult = await sql.query(
-      `
-      WITH LatestRequests AS (
-        SELECT 
-            req_id, 
-            status, 
-            ROW_NUMBER() OVER (PARTITION BY req_id ORDER BY id DESC) AS rn
-        FROM [PriceApprovalSystem].[dbo].[requests_mvc]
-    ),
-    FilteredRequests AS (
-        SELECT req_id
-        FROM LatestRequests
-        WHERE rn = 1 AND ${statusIM}
-    ),
-    MaxIds AS (
-        SELECT MAX(id) AS maxId, request_id
-        FROM transaction_mvc
-        WHERE request_id IN (SELECT req_id FROM FilteredRequests)
-        GROUP BY request_id
-    ),
-    MaxDetails AS (
-        SELECT m.maxId, m.request_id, t.current_status
-        FROM transaction_mvc t
-        INNER JOIN MaxIds m ON t.id = m.maxId
-    ),
-    RelatedTransactions AS (
-        SELECT t.*
-        FROM transaction_mvc t
-        INNER JOIN MaxDetails m ON t.request_id = m.request_id AND t.current_status = m.current_status
-    )
-    SELECT *
-    FROM RelatedTransactions
-    WHERE EXISTS (
-        SELECT 1
-        FROM transaction_mvc
-        WHERE request_id = RelatedTransactions.request_id
-        AND current_status = RelatedTransactions.current_status
-        AND id != RelatedTransactions.id
-    )
-    ${statusSTR}
-    UNION
-    SELECT *
-    FROM transaction_mvc
-    WHERE id IN (SELECT maxId FROM MaxDetails)
-    ${statusSTR};
-      `
-    );
+    const transactionsResult = await sql.query(query);
 
     let details = [];
     // For each transaction, fetch and consolidate request details
@@ -385,26 +396,30 @@ async function fetchData(role, status) {
     );
     for (let transaction of uniqueTransactions) {
       console.log(transaction.request_id);
-      const requestResult = await sql.query(`
-              SELECT 
-              request_name,
-              c.name AS customer_name, 
-              customer_id AS customer_ids,
-              consignee.name AS consignee_name, 
-              consignee_id AS consignee_ids,
-              enduse.name AS enduse_name,
-              end_use_id,
-              plant,
-              valid_from,
-              valid_to,
-              payment_terms_id
-                FROM price_approval_requests par
-                JOIN customer c ON par.customer_id = c.id
-                JOIN customer consignee ON par.consignee_id = consignee.id
-                JOIN customer enduse ON par.end_use_id = enduse.id
-                JOIN requests_mvc rs ON par.request_name = rs.req_id
-              WHERE request_name = '${transaction.request_id}' and rs.status = '${status}'
-      `);
+      const query2 = `
+      SELECT 
+      request_name,
+      c.name AS customer_name, 
+      customer_id AS customer_ids,
+      consignee.name AS consignee_name, 
+      consignee_id AS consignee_ids,
+      enduse.name AS enduse_name,
+      end_use_id,
+      plant,
+      valid_from,
+      valid_to,
+      payment_terms_id
+FROM price_approval_requests par
+LEFT JOIN customer c ON par.customer_id = c.id
+LEFT JOIN customer consignee ON par.consignee_id = consignee.id
+LEFT JOIN customer enduse ON par.end_use_id = enduse.id
+JOIN requests_mvc rs ON par.request_name = rs.req_id
+WHERE request_name = '${transaction.request_id}' 
+  AND rs.status = '${status}'
+  AND (par.customer_id <> '' OR par.consignee_id <> '' OR par.end_use_id <> '')
+`;
+      // console.log(query2);
+      const requestResult = await sql.query(query2);
       if (requestResult.recordset.length > 0) {
         const consolidated = requestResult.recordset.reduce((acc, row) => {
           Object.keys(row).forEach((key) => {

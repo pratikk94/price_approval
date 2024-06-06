@@ -98,7 +98,11 @@ async function processPrevApprovedTransaction(req, res) {
       am_id,
     });
 
-    priceRequestModel.addTransactionToTable(requestId, am_id);
+    priceRequestModel.addTransactionToTable(
+      requestId,
+      am_id,
+      (draft = action == "D")
+    );
     if (oldRequestId != undefined)
       pushDataToTable(requestId, action + oldRequestId.substring(1));
 
