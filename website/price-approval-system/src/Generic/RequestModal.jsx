@@ -75,7 +75,9 @@ const CreateRequestModal = ({
   const [fsc, setFSC] = useState(
     editData != undefined ? editData.priceDetails[0].fsc == "Y" : "N"
   );
-  const [priceDetails, setPriceDetails] = useState([]); // Assuming this is an array of objects with the structure { price: number, ...
+  const [priceDetails, setPriceDetails] = useState(
+    editData != undefined ? editData.priceDetails : []
+  ); // Assuming this is an array of objects with the structure { price: number, ...
   const [remarks, setRemarks] = useState([]);
   const [checkBoxEnabled, setCheckBoxEnabled] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -113,9 +115,7 @@ const CreateRequestModal = ({
           .map((item) => item.value)
           .join(",")}&consigneeIds=${selectedConsignees
           .map((item) => item.value)
-          .join(",")}&plantIds=${plant
-          .map((item) => item.value)
-          .join(",")}&grade=${grade}`
+          .join(",")}&plantIds=${plant}&grade=${grade}`
       );
       return response;
     } catch (error) {
@@ -133,6 +133,11 @@ const CreateRequestModal = ({
     // }, 2000); // Close the modal and hide success message after 2 seconds
   };
   const [errorMessage, setErrorMessage] = useState("");
+
+  const handleFSCChange = (e) => {
+    console.log("FSC code is " + e);
+    setFSC(e);
+  };
 
   const handleAddRemark = (reqId) => {
     const postData = {
@@ -164,7 +169,7 @@ const CreateRequestModal = ({
   };
 
   console.log("Rework" + isRework);
-
+  console.log(editData ?? "No data");
   const handleFormSubmit = (event, draft = false) => {
     handleOpen();
     setShowSuccess(false);
@@ -182,6 +187,8 @@ const CreateRequestModal = ({
     if (
       (validFrom != "" &&
         validTo != "" &&
+        endUse != undefined &&
+        endUse.length > 0 &&
         paymentTerms != undefined &&
         selectedCustomers.length > 0 &&
         selectedConsignees.length > 0 &&
@@ -200,7 +207,7 @@ const CreateRequestModal = ({
         formData["consigneeIds"] = selectedConsignees
           .map((item) => item.value)
           .join(",");
-        formData["endUseIds"] = endUse.value;
+        formData["endUseIds"] = endUse[0].value;
         formData["endUseSegmentIds"] = ["seg1"].toString();
         formData["plants"] = plant;
         formData["paymentTermsId"] = paymentTerms["value"].toString();
@@ -215,19 +222,22 @@ const CreateRequestModal = ({
           : today.tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ");
         formData["remarks"] = remarks;
         formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
-
+        tableRowsData[0]["fsc"] = fsc;
         formData["priceTable"] = tableRowsData;
         console.log(formData["priceTable"]);
         formData["isDraft"] = draft;
         formData["am_id"] = employee_id;
         formData["oldRequestId"] = parentId;
+
+        formData["priceTable"] = tableRowsData;
         if (draft) {
+          console.log(formData);
           submitFormDataMVC(formData);
           return;
         }
         setStopExecution(false);
         for (let i = 0; i < tableRowsData.length; i++) {
-          tableRowsData[i]["fsc"] = fsc;
+          console.log("FSC iS " + tableRowsData[i]["fsc"] + " " + fsc);
           if (tableRowsData[i]["grade"] == "") {
             setErrorMessage("Select Grade for Row " + (i + 1));
             setStopExecution(e, !e);
@@ -363,7 +373,7 @@ const CreateRequestModal = ({
     setSelectedEndUseIDs(data.end_use_id);
     setEndUse({
       value: data.end_use_id,
-      label: `End Use ${data.enduse_name}`,
+      label: data.enduse_name,
     });
     // Assumption: plant, paymentTermsId are singular values, not lists
     console.log(data.plant.length > 1 ? data.plant : [data.plant]);
@@ -507,6 +517,7 @@ const CreateRequestModal = ({
       }
 
       if (formData["isDraft"]) {
+        console.log(endUse);
         action = "D";
         formData = {
           am_id: session.employee_id,
@@ -514,7 +525,7 @@ const CreateRequestModal = ({
             selectedCustomers.map((item) => item.value).join(",") ?? " ", // Assuming `customers` is an array in your formData
           consignees:
             selectedConsignees.map((item) => item.value).join(",") ?? " ", // Assuming `consignees` is an array in your formData
-          endUse: endUse.value ?? "", //endUse["value"].toString(),
+          endUse: endUse[0].value,
           plant: Array.isArray(plant)
             ? plant.map((item) => item.value.toString()).toString() ?? " "
             : plant.toString() ?? " ",
@@ -535,7 +546,7 @@ const CreateRequestModal = ({
           am_id: session.employee_id,
           customers: selectedCustomers.map((item) => item.value).join(","), // Assuming `customers` is an array in your formData
           consignees: selectedConsignees.map((item) => item.value).join(","), // Assuming `consignees` is an array in your formData
-          endUse: endUse != undefined ? endUse.value : enduse, //endUse["value"].toString(),
+          endUse: endUse != undefined ? endUse.value : endUse, //endUse["value"].toString(),
           plant: Array.isArray(plant)
             ? plant.map((item) => item.value.toString()).toString()
             : plant.toString(),
@@ -656,7 +667,7 @@ const CreateRequestModal = ({
     setIsChecked(false);
     setOpenOneToOneModal(false);
   };
-
+  console.log(priceDetails);
   return (
     <>
       <Modal
@@ -706,7 +717,7 @@ const CreateRequestModal = ({
                     onChange={handleCheckboxChange}
                   />
                 }
-                label="1 Customers for 1 Consignees only"
+                label="1 Customers mapped to exactly 1 Consignees."
               />{" "}
               <SpacingWrapper space="12px" />
               <Typography>End Use</Typography>
@@ -723,18 +734,15 @@ const CreateRequestModal = ({
               />
               <SpacingWrapper space="12px" />
               <Typography>Plant </Typography>
-              {editData || isRework ? (
-                <Plant
-                  setSelection={setPlant}
-                  editedData={plant}
-                  disabled={mode > 1 || isExtension || isBlocked}
-                />
-              ) : (
-                <PlantC
-                  setSelection={setPlant}
-                  disabled={mode > 1 || isExtension || isBlocked}
-                />
-              )}
+              <Plant
+                setSelection={setPlant}
+                editedData={
+                  editData != undefined
+                    ? editData.consolidatedRequest.plant
+                    : []
+                }
+                disabled={mode > 1 || isExtension || isBlocked}
+              />
               <SpacingWrapper space="12px" />
               <Typography>Payment Terms *</Typography>
               <PaymentTerms
@@ -793,7 +801,7 @@ const CreateRequestModal = ({
             isExtension={isExtension}
             disabled={mode > 1 || isExtension || isBlocked}
             setTableRowsDataFunction={setTableRowsDataFunction}
-            setFSCCode={setFSC}
+            setFSCCode={handleFSCChange}
             disableSubmit={setDisableSubmit}
             prices={priceDetails}
             fscCode={fsc}

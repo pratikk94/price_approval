@@ -22,6 +22,9 @@ const PaymentTerms = ({
     { value: 1, label: "ADV - Advance" },
   ]);
 
+  console.log(typeof customers, typeof consignees, typeof endUses);
+  console.log(customers, consignees, endUses);
+
   // Function to fetch the lowest payment term from the backend API
   const fetchLowestPaymentTerm = async () => {
     try {
@@ -33,7 +36,7 @@ const PaymentTerms = ({
         body: JSON.stringify({
           customers: customers.map((c) => c.value),
           consignees: consignees.map((c) => c.value),
-          endUses: endUses.map((e) => e.value),
+          endUses: Array.isArray(endUses) ? endUses.map((e) => e.value) : [],
         }),
       });
       const result = await response.json();

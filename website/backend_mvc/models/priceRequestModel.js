@@ -180,24 +180,14 @@ async function logTransaction(requestId, am_id) {
 async function insertPrices(data, request_id) {
   try {
     await sql.connect(config);
+    console.log(data);
     for (const item of data) {
-      let query =
-        item.fsc == undefined
-          ? `INSERT INTO price_approval_requests_price_table 
+      let fsc = item.fsc == undefined ? "N" : item.fsc;
+      const query = `INSERT INTO price_approval_requests_price_table 
       (req_id, fsc, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, 
       reel_discount, pack_upcharge, TPC, offline_discount, net_nsr, old_net_nsr) 
       VALUES 
-      ('${request_id}',      'N',          '${item.grade}', 
-      '${item.gradeType}',       '${item.gsmFrom}', 
-      '${item.gsmTo}',     '${item.agreedPrice}', 
-      '${item.specialDiscount}', '${item.reelDiscount}', 
-      '${item.packUpCharge}',    '${item.tpc}',          '${item.offlineDiscount}', 
-      '${item.netNSR}',          '${item.oldNetNSR}')`
-          : `INSERT INTO price_approval_requests_price_table 
-      (req_id, fsc, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, 
-      reel_discount, pack_upcharge, TPC, offline_discount, net_nsr, old_net_nsr) 
-      VALUES 
-      ('${request_id}',      ${fsc},          '${item.grade}', 
+      ('${request_id}',      '${fsc}',          '${item.grade}', 
       '${item.gradeType}',       '${item.gsmFrom}', 
       '${item.gsmTo}',     '${item.agreedPrice}', 
       '${item.specialDiscount}', '${item.reelDiscount}', 

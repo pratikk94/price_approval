@@ -38,14 +38,14 @@ function TableWithInputs({
   fetchHistory,
 }) {
   const [grades, setGrades] = useState([]);
-  const [selectedGrade, setSelectedGrade] = useState(prices.grade);
-  const [fsc, setFSC] = useState(fscCode);
+  const [selectedGrade, setSelectedGrade] = useState("");
+
   const [gradeType, setGradeType] = useState(null);
   const [ids, setIds] = useState([]);
   const [open, setOpen] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   console.log(prices);
-  console.log(fscCode);
+  console.log(prices[0].fsc);
   // Options for the dropdown
   const options = [
     { value: "Reel", label: "Reel" },
@@ -80,19 +80,19 @@ function TableWithInputs({
 
   useEffect(() => {
     fetch_grades();
-  }, [fscCode]);
+  }, [prices[0].fsc]);
 
   useEffect(() => {
     // Set rows based on incoming prices data
     console.log(prices);
-    if (prices && prices.length > 0 && grades.length > 0) {
+    if (prices && prices.length > 0) {
       console.log(prices[0].grade_type);
-      setFSCCode(fscCode);
+      setFSCCode(prices[0].fsc_code);
       const newRows = prices.map((price, index) => {
         const newId = uuidv4(); // Calculate the new ID
 
         console.log(price.grade);
-
+        setSelectedGrade([...grades, price.grade]);
         setIds(ids, [...ids, newId]);
 
         console.log(newId);
@@ -210,8 +210,8 @@ function TableWithInputs({
 
   const fetch_grades = async () => {
     try {
-      const fscM = fscCode;
-      if (fscCode.length == 0) return;
+      const fscM = prices[0].fsc;
+
       console.log("FSC_Code", fscM);
 
       const response = await fetch(
@@ -224,7 +224,7 @@ function TableWithInputs({
         value: customer.code,
         profitCenter: customer.profitCenter,
       }));
-      // console.log(customerOptions);
+      console.log(customerOptions);
 
       setGrades([...customerOptions]);
       console.log("Selected Grade", selectedGrade);
@@ -337,13 +337,7 @@ function TableWithInputs({
   function handleFSCChange(e) {
     // setGrades(e.target.checked ? 1 : 0);
 
-    setFSC((e) => {
-      // fetch_grades(e ? 0 : 1);
-      console.log("FSC Code Change" + e);
-      setFSCCode(e == "N" ? "Y" : "N");
-      alert("FSC Code change will require Grade selection again");
-      return e == "N" ? "Y" : "N";
-    });
+    setFSCCode(e.target.checked ? "Y" : "N");
   }
 
   function isMixPresent(rowData) {
@@ -357,13 +351,15 @@ function TableWithInputs({
     return !(has234 && has5);
   }
 
+  console.log(grades);
+
   return (
     <>
       <FormControlLabel
         control={
           <Checkbox
             disabled={isExtension}
-            checked={fscCode == "Y" ? true : false}
+            checked={prices[0].fsc == "Y" ? true : false}
             onChange={handleFSCChange}
             icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
             checkedIcon={<CheckBoxIcon fontSize="medium" />}
@@ -400,7 +396,9 @@ function TableWithInputs({
                   ? "Pack Upcharge"
                   : option == "TPC"
                   ? "TPC"
-                  : "Offline Discount"
+                  : option == "OfflineDisc"
+                  ? "Offline Discount"
+                  : ""
               }
             />
           </Grid>

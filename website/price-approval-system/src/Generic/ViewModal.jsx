@@ -67,6 +67,7 @@ function PriceTable({ price, selectedConsignees, selectedCustomers, plant }) {
               <TableCell align="center">Special Discount</TableCell>
               <TableCell align="center">Reel Discount</TableCell>
               <TableCell align="center">TPC</TableCell>
+              <TableCell align="center">Pack UpCharge</TableCell>
               <TableCell align="center">Offline Discount</TableCell>
               <TableCell align="center">Net NSR</TableCell>
               <TableCell align="center">Actions</TableCell>
@@ -86,6 +87,7 @@ function PriceTable({ price, selectedConsignees, selectedCustomers, plant }) {
                 <TableCell align="right">{row.special_discount}</TableCell>
                 <TableCell align="right">{row.reel_discount}</TableCell>
                 <TableCell align="right">{row.tpc}</TableCell>
+                <TableCell align="right">{row.pack_upcharge}</TableCell>
                 <TableCell align="right">{row.offline_discount}</TableCell>
                 <TableCell align="right">{row.net_nsr}</TableCell>
                 <TableCell align="right">
@@ -137,8 +139,10 @@ function PriceTable({ price, selectedConsignees, selectedCustomers, plant }) {
                   <TableCell>Special Discount</TableCell>
                   <TableCell>Reel Discount</TableCell>
                   <TableCell>TPC</TableCell>
+                  <TableCell>Pack upcharge</TableCell>
                   <TableCell>Offline Discount</TableCell>
                   <TableCell>Net NSR</TableCell>
+
                   {/* ... other headers */}
                 </TableRow>
               </TableHead>
@@ -150,6 +154,7 @@ function PriceTable({ price, selectedConsignees, selectedCustomers, plant }) {
                     <TableCell>{row.special_discount}</TableCell>
                     <TableCell>{row.reel_discount}</TableCell>
                     <TableCell>{row.tpc}</TableCell>
+                    <TableCell>{row.pack_upcharge}</TableCell>
                     <TableCell>{row.offline_discount}</TableCell>
                     <TableCell>{row.net_nsr}</TableCell>
 
@@ -329,12 +334,12 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                   <br />
                   Valid To: {formatDate(data.consolidatedRequest.valid_to)}
                   <br />
-                  FSC: {data.priceDetails[0].fsc == 1 ? "Yes" : "No"}
+                  FSC: {data.priceDetails[0].fsc == "Y " ? "Yes" : "No"}
                   <br />
                   Mapping Type:{" "}
                   {data.consolidatedRequest.mappint_type == 1
-                    ? "One to one"
-                    : "One to many"}
+                    ? "One to one mapping"
+                    : "One to many mapping"}
                 </Typography>
               </div>
               <PriceTable

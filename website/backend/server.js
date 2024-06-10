@@ -24,10 +24,10 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  password: "SayaliK20311",
-  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  // password: "12345",
-  // server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  // password: "SayaliK20311",
+  // server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "12345",
+  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
   database: "PriceApprovalSystem",
   options: {
@@ -3110,11 +3110,14 @@ app.get("/api/fetch_defined_rule", async (req, res) => {
 app.get("/api/fetch_grade_with_pc", async (req, res) => {
   let pool = null;
   const fsc = req.query.fsc;
+  if (fsc == undefined)
+    return res.status(400).json({ message: "FSC is required" });
   try {
     pool = await sql.connect(config);
-    const result = await pool.request()
-      .query`SELECT id as code,grade,FSC_Y_N,Grade_Description as name,Profit_Centre as profitCenter FROM profit_center where status = 1 and FSC_Y_N = ${fsc}`;
+    const query = `SELECT id as code,grade,FSC_Y_N,Grade_Description as name,Profit_Centre as profitCenter FROM profit_center where status = 1 and FSC_Y_N = '${fsc}'`;
+    const result = await pool.request().query(query);
 
+    console.log(result);
     res.json(result.recordset);
   } catch (err) {
     console.error("SQL error", err);

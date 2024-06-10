@@ -5,22 +5,8 @@ import { backend_url } from "../../util";
 const Plant = ({ setSelection, editedData, disabled }) => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomers, setSelectedCustomers] = useState([]);
-  //console.log(editedData);
-  // useEffect(() => {
-  //   // Map selectedCustomersToEdit to the format { label, value } if customers are loaded
-  //   //console.log(selectedCustomersToEdit);
-  //   // if (editedData && customers.length > 0) {
-  //   //   const selected = editedData
-  //   //     .map((customerCode) => {
-  //   //       const foundCustomer = customers.find((c) => c.value === customerCode);
-  //   //       return foundCustomer || null; // Ensure that we return null for not found customers to filter them out later
-  //   //     })
-  //   //     .filter(Boolean); // Remove any nulls (in case a customer code doesn't match)
-  //   setSelectedCustomers();
-  //   console.log(editedData);
-  // }, [editedData, customers]);
-  // Function to fetch customers from the API
-  const fetch_plants = async () => {
+
+  const fetch_plants = async (disabled) => {
     try {
       const response = await fetch(`${backend_url}api/fetch_plants`); // Adjust the API path as needed
       const data = await response.json();
@@ -32,20 +18,20 @@ const Plant = ({ setSelection, editedData, disabled }) => {
       setCustomers(customerOptions);
       console.log(customerOptions);
       console.log(editedData);
-      if (editedData != undefined) {
-        const result = customerOptions.filter((customer) =>
-          editedData.split(",").map(Number).includes(customer.value)
-        );
-
-        setSelectedCustomers(result);
-      }
+      // if (disabled) {
+      const result = customerOptions.filter((customer) =>
+        editedData.split(",").map(Number).includes(customer.value)
+      );
+      console.log(result);
+      setSelectedCustomers(result);
+      // }
     } catch (error) {
       console.error("Error fetching customer data:", error);
     }
   };
 
   useEffect(() => {
-    if (!disabled) fetch_plants();
+    fetch_plants(disabled);
   }, [disabled, editedData]);
 
   console.log(editedData);

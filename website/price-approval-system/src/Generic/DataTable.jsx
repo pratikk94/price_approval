@@ -220,7 +220,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   };
 
   console.log(rule["rules"]);
-
+  
   const actionButtons = (rowData) => (
     <TableCell>
       <span style={{ display: "flex" }}>
