@@ -16,15 +16,14 @@ const Plant = ({ setSelection, editedData, disabled }) => {
         value: customer.code,
       }));
       setCustomers(customerOptions);
-      console.log(customerOptions);
-      console.log(editedData);
-      // if (disabled) {
-      const result = customerOptions.filter((customer) =>
-        editedData.split(",").map(Number).includes(customer.value)
-      );
-      console.log(result);
-      setSelectedCustomers(result);
-      // }
+
+      if (!disabled && editedData.length > 0) {
+        const result = customerOptions.filter((customer) =>
+          editedData.split(",").map(Number).includes(customer.value)
+        );
+        console.log(result);
+        setSelectedCustomers(result);
+      }
     } catch (error) {
       console.error("Error fetching customer data:", error);
     }
@@ -34,13 +33,10 @@ const Plant = ({ setSelection, editedData, disabled }) => {
     fetch_plants(disabled);
   }, [disabled, editedData]);
 
-  console.log(editedData);
-
   const handleChange = (selectedOptions) => {
-    if (!disabled) {
-      setSelectedCustomers(selectedOptions);
-      setSelection(selectedOptions);
-    }
+    setSelectedCustomers(selectedOptions);
+    setSelection(selectedOptions);
+    console.log(selectedOptions);
   };
 
   return (

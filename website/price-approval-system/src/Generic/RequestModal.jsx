@@ -667,7 +667,7 @@ const CreateRequestModal = ({
     setIsChecked(false);
     setOpenOneToOneModal(false);
   };
-  console.log(priceDetails);
+
   return (
     <>
       <Modal

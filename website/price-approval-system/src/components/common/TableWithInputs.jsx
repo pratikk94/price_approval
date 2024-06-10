@@ -39,13 +39,12 @@ function TableWithInputs({
 }) {
   const [grades, setGrades] = useState([]);
   const [selectedGrade, setSelectedGrade] = useState("");
-
+  const [fsc, setFSC] = useState("");
   const [gradeType, setGradeType] = useState(null);
   const [ids, setIds] = useState([]);
   const [open, setOpen] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  console.log(prices);
-  console.log(prices[0].fsc);
+
   // Options for the dropdown
   const options = [
     { value: "Reel", label: "Reel" },
@@ -79,8 +78,8 @@ function TableWithInputs({
   };
 
   useEffect(() => {
-    fetch_grades();
-  }, [prices[0].fsc]);
+    fetch_grades(prices[0] != undefined ? prices[0].fsc : fsc);
+  }, [fsc]);
 
   useEffect(() => {
     // Set rows based on incoming prices data
@@ -208,10 +207,8 @@ function TableWithInputs({
     return []; // Return an empty array by default if conditions are not met
   };
 
-  const fetch_grades = async () => {
+  const fetch_grades = async (fscM) => {
     try {
-      const fscM = prices[0].fsc;
-
       console.log("FSC_Code", fscM);
 
       const response = await fetch(
@@ -336,7 +333,8 @@ function TableWithInputs({
 
   function handleFSCChange(e) {
     // setGrades(e.target.checked ? 1 : 0);
-
+    console.log(e.target.checked);
+    setFSC(e.target.checked ? "Y" : "N");
     setFSCCode(e.target.checked ? "Y" : "N");
   }
 
@@ -352,14 +350,20 @@ function TableWithInputs({
   }
 
   console.log(grades);
-
+  console.log(fsc);
   return (
     <>
       <FormControlLabel
         control={
           <Checkbox
             disabled={isExtension}
-            checked={prices[0].fsc == "Y" ? true : false}
+            checked={
+              prices[0] != undefined
+                ? prices[0].fsc == "Y"
+                  ? true
+                  : false
+                : fsc == "Y"
+            }
             onChange={handleFSCChange}
             icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
             checkedIcon={<CheckBoxIcon fontSize="medium" />}

@@ -212,3 +212,31 @@ Write to requests_status_mvc
 7. Similarly if If in table payment_terms_master we find record of c1 and co1 and e1 fetch that payment term.
 8. Check for all permutation of customer consigee and enduse. 
 9. After checking it fetch the lowest payment_terms_id
+
+
+*********************  NSM - NSM-T **********************
+1. Pass grade with descriptionto function filter.
+2. Split grade by spaces and focus on first word.
+3. For the given grade(first word) fetch the first digit of profit_center
+4. Call function http://192.168.0.5:3000/api/fetchValuesByParams which has json o/p as 
+[
+    {
+        "id": 1,
+        "params": "NSM       ",
+        "value": "2         ",
+        "status": 1
+    },
+    {
+        "id": 2,
+        "params": "NSM       ",
+        "value": "3         ",
+        "status": 1
+    },
+    {
+        "id": 3,
+        "params": "NSM       ",
+        "value": "4         ",
+        "status": 1
+    }
+]
+5. For the given grade(first word) fetch the first digit of profit_center match with values available and return the 
