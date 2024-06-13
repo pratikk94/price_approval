@@ -1,6 +1,8 @@
 const sql = require("mssql");
 const config = require("../config");
 const poolPromise = new sql.ConnectionPool(config).connect();
+const db = require("../config/db");
+
 
 exports.findRequests = async ({
   customerIds,
@@ -13,14 +15,14 @@ exports.findRequests = async ({
   const consigneeIdsArray = consigneeIds ? consigneeIds.split(",") : [];
   const plantIdsArray = plantIds ? plantIds.split(",") : [];
 
-  const pool = await poolPromise;
-  const request = new sql.Request(pool);
+  // const pool = await poolPromise;
+  // const request = new sql.Request(pool);
 
   // Start building the SQL query dynamically based on provided parameters.
   let query = `SELECT DISTINCT requests_mvc.req_id, requests_mvc.*, price_approval_requests_price_table.*
 FROM price_approval_requests_price_table
 INNER JOIN requests_mvc ON price_approval_requests_price_table.req_id = requests_mvc.req_id
-WHERE price_approval_requests_price_table.grade = '${grade}'
+WHERE price_approval_requests_price_table.grade = @grade
   AND requests_mvc.status = 1
   AND requests_mvc.req_id IN (
       SELECT DISTINCT request_name 
@@ -57,7 +59,7 @@ WHERE price_approval_requests_price_table.grade = '${grade}'
     query = `SELECT DISTINCT requests_mvc.req_id, requests_mvc.*, price_approval_requests_price_table.*
     FROM price_approval_requests_price_table
     INNER JOIN requests_mvc ON price_approval_requests_price_table.req_id = requests_mvc.req_id
-    WHERE price_approval_requests_price_table.grade = '${grade}'
+    WHERE price_approval_requests_price_table.grade = @grade
       AND requests_mvc.status = 1
       AND requests_mvc.req_id IN (
           SELECT DISTINCT request_name 
@@ -65,7 +67,9 @@ WHERE price_approval_requests_price_table.grade = '${grade}'
   }
 
   try {
-    const result = await request.query(query);
+    let result = await db.executeQuery(query,{"grade":grade});
+
+    // const result = await request.query(query,{"grade":grade});
     return result.recordset;
   } catch (error) {
     console.error("Error executing queries:", error);

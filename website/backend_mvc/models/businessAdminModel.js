@@ -1,5 +1,6 @@
 const sql = require("mssql");
 const config = require("../../backend_mvc/config");
+const db = require("../config/db");
 async function getValuesByParams(paramsList) {
   try {
     let pool = await sql.connect(config);
@@ -18,65 +19,62 @@ async function getValuesByParams(paramsList) {
 
 async function getSalesRegion() {
   try {
-    let pool = await sql.connect(config);
+    
     let query = `SELECT [id] as id,[desc] as name from sales_office`;
-
-    let result = await pool.request().query(query);
-    return result.recordset;
+    
+    let result = await db.executeQuery(query);
+    
+    return result.recordsets;
   } catch (err) {
     console.error("SQL error", err);
     throw err;
-  } finally {
-    sql.close();
   }
 }
 
 async function getGradeWithPC(fsc) {
   try {
-    let pool = await sql.connect(config);
-    const query = `SELECT id as code,grade,FSC_Y_N,Grade_Description as name,Profit_Centre as profitCenter 
-    FROM profit_center where status = 1 and FSC_Y_N = '${fsc}'`;
 
-    let result = await pool.request().query(query);
-    return result.recordset;
+    const query = `SELECT id as code,grade,FSC_Y_N,Grade_Description as name,Profit_Centre as profitCenter 
+    FROM profit_center where status = 1 and FSC_Y_N = @fsc`;
+   
+    const inputs = {
+      "fsc": fsc
+    }
+   
+    let result = await db.executeQuery(query, inputs);
+    return result.recordsets;
   } catch (err) {
     console.error("SQL error", err);
     throw err;
-  } finally {
-    sql.close();
   }
 }
 
 
 async function addRule(data) {
   try {
-    console.log(data);
-    const {
-      rule_name,
-      profit_center,
-      region,
-      valid_from,
-      valid_to,
-      active,
-      rm,
-      nsm,
-      hdsm,
-      validator,
-      created_at,
-    } = data;
-    const profitCenterString = profit_center.join(","); // Convert array to string if needed
-    console.log(profitCenterString, "testing........")
-    let pool = await sql.connect(config);
-    const query = `INSERT INTO defined_rules (rule_name, profit_center, region, valid_from, valid_to, active, rm, nsm, hdsm, validator, created_at)
-          VALUES (${rule_name}, ${profitCenterString}, ${region}, ${valid_from}, ${valid_to}, ${active}, ${rm}, ${nsm}, ${hdsm}, ${validator}, ${created_at})`;
 
-    let result = await pool.request().query(query);
-    return result.recordset;
+    const query = `INSERT INTO defined_rules (rule_name, profit_center, region, valid_from, valid_to, active, rm, nsm, hdsm, validator, created_at)
+          VALUES (@rule_name, @profit_center, @region,@valid_from, @valid_to, @active, @rm, @nsm, @hdsm, @validator, @created_at)`;
+
+    const inputs = {
+      "rule_name": data.rule_name,
+      "profit_center": data.profit_center.join(","),
+      "region": data.region,
+      "valid_from": data.valid_from,
+      "valid_to": data.valid_to,
+      "active": data.active,
+      "rm": data.rm,
+      "nsm": data.nsm,
+      "hdsm": data.hdsm,
+      "validator": data.validator,
+      "created_at": data.created_at
+    }
+    
+    let result = await db.executeQuery(query, inputs);
+    return result;
   } catch (err) {
     console.error("SQL error", err);
     throw err;
-  } finally {
-    sql.close();
   }
 }
 

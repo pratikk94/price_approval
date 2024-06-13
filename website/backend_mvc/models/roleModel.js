@@ -1,6 +1,7 @@
 // models/roleModel.js
 const sql = require("mssql");
 const config = require("../../backend_mvc/config");
+const db = require("../config/db");
 const poolPromise = new sql.ConnectionPool(config)
   .connect()
   .then((pool) => {
@@ -24,25 +25,27 @@ const getRoleDetails = async (role) => {
 };
 
 const updateEmployeRole = async (roleDetails) => {
-  const { employee_id, employee_name, role, region, active } = roleDetails;
   try {
-    const pool = await poolPromise;
-    const result = await pool
-      .request()
-      .input("employeeId", sql.NVarChar(255), employee_id)
-      .input("newName", sql.NVarChar(255), employee_name)
-      .input("newRole", sql.NVarChar(255), role)
-      .input("newActive", sql.Int, active)
-      .input("newRegion", sql.NVarChar(255), region).query`UPDATE define_roles
-      SET employee_name = @newName, role = @newRole, region = @newRegion, active=@newActive
-      WHERE employee_id = @employeeId`;
 
-      return ({ message: "Employee role updated successfully", result });
-      // returns the first record or undefined
+    let query = `UPDATE define_roles
+    SET employee_name = @newName, role = @newRole, region = @newRegion, active=@newActive
+    WHERE employee_id = @employeeId`;
+
+    let input = {
+      "employeeId": roleDetails.employee_id,
+      "newName": roleDetails.employee_name,
+      "newRole": roleDetails.role,
+      "newActive": roleDetails.active,
+      "newRegion": roleDetails.region
+    }
+
+    let result = await db.executeQuery(query, input);
+
+    return result;
   } catch (err) {
     console.error("SQL error", err);
     throw err;
   }
 };
 
-module.exports = { getRoleDetails,updateEmployeRole };
+module.exports = { getRoleDetails, updateEmployeRole };

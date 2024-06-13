@@ -1,16 +1,7 @@
 // models/customerModel.js
-const sql = require("mssql");
-const config = require("../../backend_mvc/config");
-const poolPromise = new sql.ConnectionPool(config)
-  .connect()
-  .then((pool) => {
-    console.log("Connected to MSSQL");
-    return pool;
-  })
-  .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
+const db = require("../config/db");
 const getCustomers = async (type, salesOffice) => {
   try {
-    const pool = await poolPromise;
     let query = "";
 
     if (type === 1) {
@@ -22,10 +13,11 @@ const getCustomers = async (type, salesOffice) => {
     }
 
     if (salesOffice) {
-      query += ` AND sales_office = '${salesOffice}'`;
+      query += ` AND sales_office = @salesOffice`;
     }
 
-    const result = await pool.request().query(query);
+    let result = await db.executeQuery(query,{"salesOffice":salesOffice});
+   
     return result.recordset;
   } catch (err) {
     console.error("SQL error", err);
