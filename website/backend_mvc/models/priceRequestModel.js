@@ -432,11 +432,12 @@ WHERE request_name = '${transaction.request_id}'
 
         // Fetch price details with the maximum ID
 
-        const priceResult = await sql.query(`
-              SELECT *
-              FROM price_approval_requests_price_table
-              WHERE req_id = '${transaction.request_id}' AND id = (SELECT MAX(id) FROM price_approval_requests_price_table WHERE req_id = '${transaction.request_id}')
-          `);
+        const priceResult = await sql.query(`SELECT PAQ.*, PC.Grade,BAV.[key],BAV.status 
+              FROM price_approval_requests_price_table PAQ 
+              INNER JOIN profit_center PC ON PAQ.grade = PC.Grade
+              INNER JOIN business_admin_variables BAV ON BAV.value = LEFT(CAST(ABS(PC.Profit_Centre) AS VARCHAR(10)), 1) 
+              and PAQ.req_id = '${transaction.request_id}' and BAV.[key] = '${role}'
+              `)
 
         details.push({
           request_id: transaction.request_id,
@@ -445,7 +446,7 @@ WHERE request_name = '${transaction.request_id}'
         });
       }
     }
-
+    console.log(details, "fetch details...")
     return details;
   } catch (err) {
     console.error("Database operation failed:", err);

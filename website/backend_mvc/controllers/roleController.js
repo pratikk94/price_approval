@@ -1,5 +1,5 @@
 // controllers/roleController.js
-const { getRoleDetails } = require("../models/roleModel");
+const { getRoleDetails, updateEmployeRole } = require("../models/roleModel");
 
 const fetchRoleDetails = async (req, res) => {
   const role = req.params.role;
@@ -21,4 +21,20 @@ const fetchRoleDetails = async (req, res) => {
   }
 };
 
-module.exports = { fetchRoleDetails };
+const updateEmployeeRole = async (req, res) => {
+  try {
+    const emplotyeeDetails = await updateEmployeRole(req.body)
+    res.send(emplotyeeDetails);
+
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error accessing the database",
+        error: error.message,
+      });
+  }
+
+}
+module.exports = { fetchRoleDetails, updateEmployeeRole };
