@@ -47,14 +47,12 @@ const MessagesComponent = ({ reqId }) => {
       <div>
         {messages.map((transaction, index) => (
           <p key={index}>
-            Update :{" "}
             {transaction.last_updated_by_id.toString().includes("(AM)")
               ? "Request was raised"
               : setStatus(transaction.current_status) == null
               ? "Request was approved."
               : "Request put for " + setStatus(transaction.current_status)}{" "}
-            . Last updated by: {transaction.last_updated_by_id} on .
-            {transaction.created_at}
+            by {transaction.last_updated_by_id} on .{transaction.created_at}
             <br />
           </p>
         ))}

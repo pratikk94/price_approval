@@ -408,7 +408,7 @@ WHERE request_name = '${transaction.request_id}'
   AND rs.status = '${status}'
   AND (par.customer_id <> '' OR par.consignee_id <> '' OR par.end_use_id <> '')
 `;
-      // console.log(query2);
+      console.log(query2);
       const requestResult = await sql.query(query2);
       if (requestResult.recordset.length > 0) {
         const consolidated = requestResult.recordset.reduce((acc, row) => {
@@ -432,12 +432,20 @@ WHERE request_name = '${transaction.request_id}'
 
         // Fetch price details with the maximum ID
 
-        const priceResult = await sql.query(`SELECT PAQ.*, PC.Grade,BAV.[key],BAV.status 
+        const priceResult =
+          await sql.query(`SELECT PAQ.*, PC.Grade,BAV.[key],BAV.status 
               FROM price_approval_requests_price_table PAQ 
               INNER JOIN profit_center PC ON PAQ.grade = PC.Grade
               INNER JOIN business_admin_variables BAV ON BAV.value = LEFT(CAST(ABS(PC.Profit_Centre) AS VARCHAR(10)), 1) 
               and PAQ.req_id = '${transaction.request_id}' and BAV.[key] = '${role}'
-              `)
+              `);
+
+        console.log(`SELECT PAQ.*, PC.Grade,BAV.[key],BAV.status 
+              FROM price_approval_requests_price_table PAQ 
+              INNER JOIN profit_center PC ON PAQ.grade = PC.Grade
+              INNER JOIN business_admin_variables BAV ON BAV.value = LEFT(CAST(ABS(PC.Profit_Centre) AS VARCHAR(10)), 1) 
+              and PAQ.req_id = '${transaction.request_id}' and BAV.[key] = '${role}'
+              `);
 
         details.push({
           request_id: transaction.request_id,
@@ -446,7 +454,7 @@ WHERE request_name = '${transaction.request_id}'
         });
       }
     }
-    console.log(details, "fetch details...")
+    console.log(details, "fetch details...");
     return details;
   } catch (err) {
     console.error("Database operation failed:", err);

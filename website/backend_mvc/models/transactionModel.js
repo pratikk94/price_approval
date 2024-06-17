@@ -288,6 +288,7 @@ async function acceptTransaction(
     return { success: false, message: err.message };
   }
 }
+
 module.exports = {
   getTransactionByRequestId,
   getTransactionsPendingWithRole,

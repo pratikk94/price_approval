@@ -188,7 +188,7 @@ const CreateRequestModal = ({
       (validFrom != "" &&
         validTo != "" &&
         endUse != undefined &&
-        endUse.length > 0 &&
+        endUse["value"] > 0 &&
         paymentTerms != undefined &&
         selectedCustomers.length > 0 &&
         selectedConsignees.length > 0 &&
@@ -207,7 +207,7 @@ const CreateRequestModal = ({
         formData["consigneeIds"] = selectedConsignees
           .map((item) => item.value)
           .join(",");
-        formData["endUseIds"] = endUse[0].value;
+        formData["endUseIds"] = endUse["value"];
         formData["endUseSegmentIds"] = ["seg1"].toString();
         formData["plants"] = plant;
         formData["paymentTermsId"] = paymentTerms["value"].toString();

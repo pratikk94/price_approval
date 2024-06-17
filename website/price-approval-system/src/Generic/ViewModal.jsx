@@ -16,7 +16,7 @@ import DoneIcon from "@mui/icons-material/Done";
 import CloseIcon from "@mui/icons-material/Close";
 import ReplayIcon from "@mui/icons-material/Replay";
 import { backend_mvc } from "../util";
-
+import Spacewrapper from "../components/util/SpacingWrapper";
 import ReactModal from "react-modal";
 import { IconButton, Modal } from "@mui/material";
 import RemarkBox from "../components/common/RemarkBox";
@@ -217,7 +217,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
       })
       .catch((error) => console.error("Error posting remark:", error));
   };
-
+  console.log(data);
   const updateStatus = (newStatus) => {
     let reportData = {
       request_id: id, // Example reportId
@@ -348,37 +348,73 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                 selectedCustomers={data["consolidatedRequest"].customer_ids}
                 plant={data.consolidatedRequest.plant}
               />
-              {data.request_name != undefined && (
-                <FileHandling requestId={data.request_name} />
+              {data.request_id != undefined && (
+                <FileHandling requestId={data.request_id} />
               )}
-              <RemarkBox request_id={data.request_id} setRemark={setRemarks} />
-
-              <br />
+              <Spacewrapper space="24px" />
               {rule.rules.can_approve ? (
-                <>
-                  <IconButton
-                    onClick={() => {
-                      if (remarks.length < 11) {
-                        setOpenModal(true);
-                        setShowSuccess(false);
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <div>
+                    <Button
+                      variant="contained"
+                      onClick={() => {
+                        if (remarks.length < 11) {
+                          setOpenModal(true);
+                          setShowSuccess(false);
 
+                          setErrorMessage(
+                            "Please enter a remark before updating the status."
+                          );
+                          return;
+                        }
+                        setUpdateStatusV((e) => {
+                          //handleConfirm(1);
+                          return 1;
+                        });
+                        setOpenModal(true);
+                        setShowSuccess(true);
+                        setSuccessMessage("Request approved successfully!");
+                      }}
+                    >
+                      {/* <DoneIcon /> */}
+                      Approve
+                    </Button>
+                    <Button
+                      style={{ marginLeft: "40px" }}
+                      variant="contained"
+                      onClick={() => {
+                        if (remarks.length < 11) {
+                          setOpenModal(true);
+                          setShowSuccess(false);
+
+                          setErrorMessage(
+                            "Please enter a remark before updating the status."
+                          );
+                          return;
+                        }
+                        setShowSuccess(false);
                         setErrorMessage(
-                          "Please enter a remark before updating the status."
+                          "Are you sure you want to send this request for rework?"
                         );
-                        return;
-                      }
-                      setUpdateStatusV((e) => {
-                        //handleConfirm(1);
-                        return 1;
-                      });
-                      setOpenModal(true);
-                      setShowSuccess(true);
-                      setSuccessMessage("Request approved successfully!");
+                        setOpenModal(true);
+                        setUpdateStatusV((e) => {
+                          // handleConfirm(3);
+                          return 3;
+                        });
+                      }}
+                    >
+                      Rework
+                      {/* <ReplayIcon /> */}
+                    </Button>
+                  </div>
+                  <Button
+                    style={{
+                      backgroundColor: "#f00",
+                      color: "#fff",
                     }}
-                  >
-                    <DoneIcon />
-                  </IconButton>
-                  <IconButton
+                    variant="contained"
                     onClick={() => {
                       if (remarks.length < 11) {
                         setOpenModal(true);
@@ -400,34 +436,15 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                       });
                     }}
                   >
-                    <CloseIcon />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => {
-                      if (remarks.length < 11) {
-                        setOpenModal(true);
-                        setShowSuccess(false);
-
-                        setErrorMessage(
-                          "Please enter a remark before updating the status."
-                        );
-                        return;
-                      }
-                      setShowSuccess(false);
-                      setErrorMessage(
-                        "Are you sure you want to send this request for rework?"
-                      );
-                      setOpenModal(true);
-                      setUpdateStatusV((e) => {
-                        // handleConfirm(3);
-                        return 3;
-                      });
-                    }}
-                  >
-                    <ReplayIcon />
-                  </IconButton>
-                </>
+                    {/* <CloseIcon /> */}
+                    Reject
+                  </Button>
+                </div>
               ) : null}
+              <Spacewrapper space="24px" />
+              <RemarkBox request_id={data.request_id} setRemark={setRemarks} />
+
+              <br />
               <HistoryModal reqId={id} />
               <button onClick={handleClose}>Close</button>
             </>

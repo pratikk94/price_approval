@@ -39,7 +39,7 @@ function TableWithInputs({
 }) {
   const [grades, setGrades] = useState([]);
   const [selectedGrade, setSelectedGrade] = useState("");
-  const [fsc, setFSC] = useState("");
+  const [fsc, setFSC] = useState("N");
   const [gradeType, setGradeType] = useState(null);
   const [ids, setIds] = useState([]);
   const [open, setOpen] = useState(false);
