@@ -73,7 +73,11 @@ const CreateRequestModal = ({
   const [validFrom, setValidFrom] = useState([]);
   const [validTo, setValidTo] = useState([]);
   const [fsc, setFSC] = useState(
-    editData != undefined ? editData.priceDetails[0].fsc == "Y" : "N"
+    editData != undefined
+      ? editData.priceDetails[0] != undefined
+        ? editData.priceDetails[0].fsc == "Y"
+        : "N"
+      : "N"
   );
   const [priceDetails, setPriceDetails] = useState(
     editData != undefined ? editData.priceDetails : []
@@ -389,13 +393,10 @@ const CreateRequestModal = ({
     setValidFrom(data.valid_from);
     setValidTo(data.valid_to);
 
-    setFSC(editData.priceDetails[0].fsc);
-    console.log(editData.priceDetails[0]);
-    console.log(editData.priceDetails[0].fsc);
-    //setOpenModal(true);
-    //setMap(data.mappint_type);
-    // if (!isCopyOrMerged) {
-    console.log(editData.priceDetails);
+    setFSC(
+      editData.priceDetails[0] != undefined ? editData.priceDetails[0].fsc : "N"
+    );
+
     setPriceDetails(editData.priceDetails); // Assuming this directly maps to your price details state structure
     // }
   }, [editData]);

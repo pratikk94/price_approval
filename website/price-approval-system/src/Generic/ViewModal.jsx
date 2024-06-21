@@ -12,13 +12,13 @@ import {
   Paper,
   Button,
 } from "@material-ui/core";
-import DoneIcon from "@mui/icons-material/Done";
-import CloseIcon from "@mui/icons-material/Close";
-import ReplayIcon from "@mui/icons-material/Replay";
+// import DoneIcon from "@mui/icons-material/Done";
+// import CloseIcon from "@mui/icons-material/Close";
+// import ReplayIcon from "@mui/icons-material/Replay";
 import { backend_mvc } from "../util";
 import Spacewrapper from "../components/util/SpacingWrapper";
 import ReactModal from "react-modal";
-import { IconButton, Modal } from "@mui/material";
+// import { IconButton, Modal } from "@mui/material";
 import RemarkBox from "../components/common/RemarkBox";
 import HistoryModal from "../components/common/History";
 
@@ -28,6 +28,7 @@ import { useSession } from "../Login_Controller/SessionContext";
 import { green } from "@mui/material/colors";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import axios from "axios";
+import { Modal } from "@mui/material";
 function PriceTable({ price, selectedConsignees, selectedCustomers, plant }) {
   const [historyData, setHistoryData] = useState([]);
   const [open, setOpen] = useState(false);

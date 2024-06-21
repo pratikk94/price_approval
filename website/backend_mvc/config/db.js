@@ -18,17 +18,16 @@ const config = {
 };
 
 async function connect() {
-    try {
-        const pool = await sql.connect(config)
-        console.log('Connected to Database');
-        return pool;
-    } catch (error) {
-        console.log('Databse connection error', error);
-        throw error;
-    }
+  try {
+    const pool = await sql.connect(config);
+    console.log("Connected to Database");
+    return pool;
+  } catch (error) {
+    console.log("Databse connection error", error);
+    throw error;
+  }
 }
-async function executeQuery(query, inputs = {}) {
-    try {
+async function executeQuery(query, inputs = {}) { try {
         const pool = await connect();
         const request = pool.request();
         if (inputs) {
