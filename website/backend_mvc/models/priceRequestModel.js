@@ -80,7 +80,7 @@ async function insertCombinationsOneToMany(
     for (const customer of customers) {
       for (const consignee of consignees) {
         for (const plant of plants) {
-          await request.query(`
+          let result = await request.query(`
                       INSERT INTO price_approval_requests (
                           customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
                           valid_from, valid_to, payment_terms_id, request_name, mappint_type) 
@@ -90,11 +90,13 @@ async function insertCombinationsOneToMany(
                           '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
                           '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping})
                   `);
+          // Add audit log for the INSERT operation
+          console.log(result.recordset[0],"testing...........")
+          await addAuditLog('price_approval_requests', result.recordset[0].req_id, 'INSERT', null);
         }
       }
     }
-    // Add audit log for the INSERT operation
-    await addAuditLog('price_approval_requests', result.recordset[0].id, 'INSERT', null);
+
     await transaction.commit();
     return {
       success: true,
@@ -265,11 +267,13 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
       query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
     OUTPUT INSERTED.*
     VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}','AM0','AM', '${currentTime}')`;
+
+    const result = await sql.query(`${query}`);
+    // console.log(result.recordset[0],"result.......")
     // Add audit log for the update operation
     await addAuditLog('transaction_mvc', result.recordset[0].id, 'INSERT', null);
-    const result = await sql.query(`${query}`);
     const pool = await poolPromise;
-    await pool
+    let result1 = await pool
       .request()
       .input("status", sql.Int, isDraft ? 5 : 0)
       .input("pendingWith", sql.Int, isDraft ? 1 : 2)
@@ -277,8 +281,9 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
       .query(
         "INSERT INTO requests_mvc (status, pending, req_id)OUTPUT INSERTED.* VALUES (@status, @pendingWith, @req_id)"
       );
+    // console.log(result1.recordset[0],"result1.......")
     // Add audit log for the update operation
-    await addAuditLog('requests_mvc', results.recordset[0].id, 'INSERT', null);
+    await addAuditLog('requests_mvc', result1.recordset[0].id, 'INSERT', null);
     return { success: true, message: "Transaction successfully added." };
   } catch (err) {
     console.error("Database operation failed:", err);
