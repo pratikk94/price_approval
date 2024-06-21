@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "./SessionContext";
 import { backend_mvc } from "../util";
-
+import image from "/2869279.jpg";
 const LoginScreen = () => {
   const [employeeId, setEmployeeId] = useState("");
   const { session, setSession } = useSession();
@@ -47,7 +47,7 @@ const LoginScreen = () => {
   };
 
   return (
-    <div>
+    <div style={{ backgroundImage: `url(${image})` }}>
       <input
         type="text"
         placeholder="Employee ID"
