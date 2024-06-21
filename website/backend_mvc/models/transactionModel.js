@@ -1,24 +1,30 @@
-const sql = require("mssql");
-const config = require("../../backend_mvc/config");
+// const sql = require("mssql");
+// const config = require("../../backend_mvc/config");
 const url = require("../utils");
 const axios = require("axios");
-// Make sure to maintain a connection pool instead of connecting in each function
-const poolPromise = new sql.ConnectionPool(config)
-  .connect()
-  .then((pool) => {
-    console.log("Connected to MSSQL");
-    return pool;
-  })
-  .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
+const db = require("../config/db");
+const { addAuditLog } = require("../utils/auditTrails");
+
+// // Make sure to maintain a connection pool instead of connecting in each function
+// const poolPromise = new sql.ConnectionPool(config)
+//   .connect()
+//   .then((pool) => {
+//     console.log("Connected to MSSQL");
+//     return pool;
+//   })
+//   .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
 
 const getTransactionsByRole = async (approver, pendingWith) => {
   try {
-    const pool = await poolPromise;
-    const result = await pool
-      .request()
-      .query(
-        `SELECT * FROM transaction_mvc WHERE currently_pending_with = '${pendingWith}' AND last_updated_by_role = '${approver}'`
-      );
+    // const pool = await poolPromise;
+    // const result = await pool
+    //   .request()
+    //   .query(
+    //     `SELECT * FROM transaction_mvc WHERE currently_pending_with = '${pendingWith}' AND last_updated_by_role = '${approver}'`
+    //   );
+    const query = `SELECT * FROM transaction_mvc WHERE currently_pending_with = @pendingWith AND last_updated_by_role = @approver`;
+    let result = await db.executeQuery(query, { "pendingWith": pendingWith, "approver": approver });
+
     return result.recordset;
   } catch (err) {
     console.error("Database connection error:", err);
@@ -28,12 +34,14 @@ const getTransactionsByRole = async (approver, pendingWith) => {
 
 const getTransactionByRequestId = async (requestId) => {
   try {
-    const pool = await poolPromise;
-    const result = await pool
-      .request()
-      .query(
-        `SELECT TOP 1 * FROM transaction_mvc WHERE request_id = '${requestId}' ORDER BY id DESC`
-      );
+    // const pool = await poolPromise;
+    // const result = await pool
+    //   .request()
+    //   .query(
+    //     `SELECT TOP 1 * FROM transaction_mvc WHERE request_id = '${requestId}' ORDER BY id DESC`
+    //   );
+    const query = `SELECT TOP 1 * FROM transaction_mvc WHERE request_id = @requestId ORDER BY id DESC`;
+    let result = await db.executeQuery(query, { "requestId": requestId });
     return result.recordset[0];
   } catch (err) {
     console.error("Database connection error:", err);
@@ -43,12 +51,15 @@ const getTransactionByRequestId = async (requestId) => {
 
 const getTransactionsPendingWithRole = async (role) => {
   try {
-    const pool = await poolPromise;
-    const result = await pool
-      .request()
-      .query(
-        `SELECT * FROM transaction_mvc WHERE currently_pending_with = '${role}'`
-      );
+    // const pool = await poolPromise;
+    // const result = await pool
+    //   .request()
+    //   .query(
+    //     `SELECT * FROM transaction_mvc WHERE currently_pending_with = '${role}'`
+    //   );
+    const query = `SELECT * FROM transaction_mvc WHERE currently_pending_with = @role`;
+    let result = await db.executeQuery(query, { "role": role });
+
     console.log(result.recordset);
     return result.recordset;
   } catch (err) {
@@ -59,8 +70,8 @@ const getTransactionsPendingWithRole = async (role) => {
 
 async function fetchTransactions(role) {
   try {
-    await sql.connect(config);
-    const result = await sql.query(
+    // await sql.connect(config);
+    const query =
       `
             WITH MaxIds AS (
                 SELECT MAX(id) AS maxId, request_id
@@ -86,14 +97,14 @@ async function fetchTransactions(role) {
                 AND current_status = RelatedTransactions.current_status
                 AND id != RelatedTransactions.id
             )
-            AND currently_pending_with = '${role}'
+            AND currently_pending_with = @role
             UNION
             SELECT *
             FROM transaction_mvc
             WHERE id IN (SELECT maxId FROM MaxDetails)
-            AND currently_pending_with = '${role}';
+            AND currently_pending_with = @role;
         `
-    );
+    let result = await db.executeQuery(query, { "role": role });
     return result.recordset;
   } catch (err) {
     console.error("Database connection error:", err);
@@ -103,13 +114,18 @@ async function fetchTransactions(role) {
 
 async function isValidRole(lastUpdatedByRole, currentlyPendingWith) {
   try {
-    await sql.connect(config);
+    // await sql.connect(config);
     // Fetch levels for the currently pending with role
-    const levelsResult = await sql.query(
-      `
-          SELECT level FROM rule_mvc WHERE approver = '${currentlyPendingWith}'
-      `
-    );
+    // const levelsResult = await sql.query(
+    //   `
+    //       SELECT level FROM rule_mvc WHERE approver = '${currentlyPendingWith}'
+    //   `
+    // );
+    const query = `
+    SELECT level FROM rule_mvc WHERE approver = @currentlyPendingWith
+`
+    let levelsResult = await db.executeQuery(query, { "currentlyPendingWith": currentlyPendingWith });
+
 
     if (levelsResult.recordset.length === 0) {
       return false; // No roles found at the same level.
@@ -120,11 +136,19 @@ async function isValidRole(lastUpdatedByRole, currentlyPendingWith) {
     console.log(levels);
     console.log(lastUpdatedByRole);
     // Check if last_updated_by_role is at any of these levels
+    // const checkRoleValidity = `
+    //       SELECT COUNT(1) as Count FROM rule_mvc
+    //       WHERE approver = '${lastUpdatedByRole}' AND level <= ${levels[0]}
+    //   `;
+    // const validityResult = await sql.query(checkRoleValidity);
+
     const checkRoleValidity = `
-          SELECT COUNT(1) as Count FROM rule_mvc
-          WHERE approver = '${lastUpdatedByRole}' AND level <= ${levels[0]}
-      `;
-    const validityResult = await sql.query(checkRoleValidity);
+    SELECT COUNT(1) as Count FROM rule_mvc
+    WHERE approver = '${lastUpdatedByRole}' AND level <= ${levels[0]}
+`;
+
+    let validityResult = await db.executeQuery(checkRoleValidity, {});
+
     console.log(validityResult.recordset[0].Count);
     return validityResult.recordset[0].Count > 0;
   } catch (err) {
@@ -141,17 +165,25 @@ async function acceptTransaction(
   lastUpdatedByRole
 ) {
   try {
-    await sql.connect(config);
+    // await sql.connect(config);
 
     // Fetch the transaction with the highest ID for the provided request_id
-    const transactionResult = await sql.query(
-      `
-          SELECT TOP 1 id, currently_pending_with , rule_id
-          FROM transaction_mvc
-          WHERE request_id = '${requestId}'
-          ORDER BY id DESC
-      `
-    );
+    // const transactionResult = await sql.query(
+    //   `
+    //       SELECT TOP 1 id, currently_pending_with , rule_id
+    //       FROM transaction_mvc
+    //       WHERE request_id = '${requestId}'
+    //       ORDER BY id DESC
+    //   `
+    // );
+    const query = `
+    SELECT TOP 1 id, currently_pending_with , rule_id
+    FROM transaction_mvc
+    WHERE request_id = @requestId
+    ORDER BY id DESC
+`
+    let transactionResult = await db.executeQuery(query, { "requestId": requestId });
+
 
     let { currently_pending_with: currentRole, rule_id } =
       transactionResult.recordset[0];
@@ -165,12 +197,19 @@ async function acceptTransaction(
     // }
 
     if (lastUpdatedByRole == "Validator") {
-      await sql.query(
+      // await sql.query(
+      //   `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
+      //         VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
+      //     `
+      // );
+      let query1 =
         `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
-              VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
-          `
-      );
-
+        OUTPUT INSERTED.* 
+            VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
+        `
+      await db.executeQuery(query1, {});
+      // Add audit log for the update operation
+      await addAuditLog('transaction_mvc', query1.recordset[0].id, 'INSERT', null);
       const response = await axios.post(
         `http://${url}:3000/api/update-status`,
         {
@@ -180,6 +219,7 @@ async function acceptTransaction(
           req_id: requestId, // This is a mockup; adjust as needed
         }
       );
+
       return {
         success: true,
         message: "Transactions added and status updated successfully.",
@@ -200,68 +240,123 @@ async function acceptTransaction(
         currentRole != lastUpdatedByRole ? lastUpdatedByRole : currentRole;
 
       // Fetch approvers with a higher level from the rules_mvc table
-      const approversResult = await sql.query(
-        `
+      // const approversResult = await sql.query(
+      //   `
+      // SELECT approver, level
+      // FROM rule_mvc
+      // WHERE rule_id = '${rule_id}' AND level = (
+      //     SELECT level + 1
+      //     FROM rule_mvc
+      //     WHERE approver = '${currentRole}' AND rule_id = '${rule_id}'
+      // )
+      // `
+      // );
+      const query = `
       SELECT approver, level
       FROM rule_mvc
-      WHERE rule_id = '${rule_id}' AND level = (
+      WHERE rule_id = @rule_id AND level = (
           SELECT level + 1
           FROM rule_mvc
-          WHERE approver = '${currentRole}' AND rule_id = '${rule_id}'
+          WHERE approver = @currentRole AND rule_id = @rule_id
       )
       `
-      );
+      const approversResult = await db.executeQuery(query, { "rule_id": rule_id, "currentRole": currentRole });
+
 
       // Construct and insert new transactions based on the number of approvers found
       if (action == 2) {
-        await sql.query(
+        // await sql.query(
+        //   `
+        //       INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+        //       VALUES ('${requestId}', '${rule_id}', 'Rejected', 'Rejected', '${currentRole}','${lastUpdatedById}', GETDATE())
+        //   `
+        // );
+        let query =
           `
-              INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-              VALUES ('${requestId}', '${rule_id}', 'Rejected', 'Rejected', '${currentRole}','${lastUpdatedById}', GETDATE())
-          `
-        );
+            INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+            OUTPUT INSERTED.* 
+            VALUES (@requestId, @rule_id, 'Rejected', 'Rejected', @currentRole,@lastUpdatedById, GETDATE())
+        `
+        await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+        // Add audit log for the update operation
+        await addAuditLog('transaction_mvc', query.recordset[0].id, 'INSERT', null);
       }
       if (action == 3) {
-        if (currentRole != "RM")
-          await sql.query(
+        // if (currentRole != "RM")
+        //   await sql.query(
+        //     `
+        //       INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+        //       VALUES ('${requestId}', '${rule_id}', 'Rework', 'RM', '${currentRole}','${lastUpdatedById}', GETDATE())
+        //   `
+        //   );
+        // await sql.query(
+        //   `
+        //       INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+        //       VALUES ('${requestId}', '${rule_id}', 'Rework', 'AM', '${currentRole}','${lastUpdatedById}', GETDATE())
+        //   `
+        // );
+        if (currentRole != "RM") {
+          let query = `
+        INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+        OUTPUT INSERTED.*
+              VALUES (@requestId, @rule_id, 'Rework', 'RM', @currentRole,@lastUpdatedById, GETDATE())`
+          await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+          // Add audit log for the update operation
+          await addAuditLog('transaction_mvc', query.recordset[0].id, 'INSERT', null);
+        } else {
+          let query =
             `
               INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-              VALUES ('${requestId}', '${rule_id}', 'Rework', 'RM', '${currentRole}','${lastUpdatedById}', GETDATE())
+              OUTPUT INSERTED.*
+              VALUES (@requestId, @rule_id, 'Rework', 'AM', '@currentRole,@lastUpdatedById, GETDATE())
           `
-          );
-        await sql.query(
-          `
-              INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-              VALUES ('${requestId}', '${rule_id}', 'Rework', 'AM', '${currentRole}','${lastUpdatedById}', GETDATE())
-          `
-        );
+          await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+          // Add audit log for the update operation
+          await addAuditLog('transaction_mvc', query.recordset[0].id, 'INSERT', null);
+        }
       } else if (approversResult.recordset.length === 1) {
         const { approver } = approversResult.recordset[0];
         const newStatus = `${approver}0_${currentRole}1`;
 
-        await sql.query(
+        // await sql.query(
+        //   `
+        //       INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+        //       VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
+        //   `
+        // );
+        let query =
           `
               INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-              VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
+              OUTPUT INSERTED.* 
+              VALUES (@requestId, rule_id, @newStatus, @approver, @currentRole, @lastUpdatedById, GETDATE())
           `
-        );
+        await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "newStatus": newStatus, "approver": approver, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+        // Add audit log for the update operation
+        await addAuditLog('transaction_mvc', query.recordset[0].id, 'INSERT', null);
       } else if (approversResult.recordset.length > 1) {
         for (const { approver } of approversResult.recordset) {
           const newStatus =
             approversResult.recordset.reduce(
               (acc, { approver }, index, array) => {
-                return `${acc}${approver}0${
-                  index < array.length - 1 ? "_" : ""
-                }`;
+                return `${acc}${approver}0${index < array.length - 1 ? "_" : ""
+                  }`;
               },
               ""
             ) + `${currentRole}1`;
 
-          await sql.query(
+          // await sql.query(
+          //   `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
+          //         VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
+          //     `
+          // );
+          let query =
             `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
-                  VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
-              `
-          );
+          OUTPUT INSERTED.*
+                VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole,@lastUpdatedById, GETDATE())
+            `
+          await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "newStatus": newStatus, "approver": approver, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+          // Add audit log for the update operation
+          await addAuditLog('transaction_mvc', query.recordset[0].id, 'INSERT', null);
         }
       }
 

@@ -1,17 +1,20 @@
 // remarksModel.js
-const sql = require("mssql");
-const config = require("../config"); // Assuming your config file is named dbConfig.js
-const poolPromise = new sql.ConnectionPool(config)
-  .connect()
-  .then((pool) => {
-    console.log("Connected to MSSQL");
-    return pool;
-  })
-  .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
+// const sql = require("mssql");
+// const config = require("../config"); // Assuming your config file is named dbConfig.js
+// const poolPromise = new sql.ConnectionPool(config)
+//   .connect()
+//   .then((pool) => {
+//     console.log("Connected to MSSQL");
+//     return pool;
+//   })
+//   .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
+
+const db = require("../config/db");
+const { addAuditLog } = require("../utils/auditTrails");
 
 async function getRemarksWithRequests(request_id) {
   try {
-    const pool = await poolPromise;
+    // const pool = await poolPromise;
     const query1 = `WITH RequestHierarchy AS (
       SELECT
           request_name AS request_id,
@@ -56,9 +59,11 @@ INNER JOIN
 ON 
   r.request_id = req.req_id
 WHERE r.request_id = '${request_id}'`;
-    let result = await pool.request().query(query1);
+    let result = await db.executeQuery(query1);
+    // let result = await pool.request().query(query1);
     if (result.recordset.length == 0)
-      result = await pool.request().query(query2);
+      // result = await pool.request().query(query2);
+      result = await db.executeQuery(query2);
     return result.recordset;
   } catch (err) {
     console.error("SQL error", err);
@@ -68,13 +73,21 @@ WHERE r.request_id = '${request_id}'`;
 
 async function postRemark(remarkData) {
   try {
-    await sql.connect(config);
+    // await sql.connect(config);
     const { request_id, user_id, comment } = remarkData;
-    const result = await sql.query(`
-        INSERT INTO dbo.Remarks (request_id, user_id, comment, created_at)
-        VALUES ('${request_id}', '${user_id}', '${comment}', GETDATE())
-        SELECT SCOPE_IDENTITY() as id
-      `);
+    // const result = await sql.query(`
+    //   INSERT INTO dbo.Remarks (request_id, user_id, comment, created_at)
+    //   VALUES ('${request_id}', '${user_id}', '${comment}', GETDATE())
+    //   SELECT SCOPE_IDENTITY() as id
+    // `);
+    let query = `INSERT INTO dbo.Remarks (request_id, user_id, comment, created_at)
+    OUTPUT INSERTED.*
+    VALUES ('${request_id}', '${user_id}', '${comment}', GETDATE())
+    SELECT SCOPE_IDENTITY() as id
+  `
+    const result = await db.executeQuery(query, { "request_id": request_id, "user_id": user_id, "comment": comment });
+    // Add audit log for the update operation
+    await addAuditLog('Remarks', result.recordset[0].id, 'INSERT', null);
     return result.recordset[0].id; // Returns the new remark ID
   } catch (err) {
     console.error("SQL error", err);

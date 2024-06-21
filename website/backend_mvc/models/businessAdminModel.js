@@ -1,20 +1,22 @@
-const sql = require("mssql");
-const config = require("../../backend_mvc/config");
+// const sql = require("mssql");
+// const config = require("../../backend_mvc/config");
 const db = require("../config/db");
+const { addAuditLog } = require("../utils/auditTrails");
+
 async function getValuesByParams(paramsList) {
   try {
-    let pool = await sql.connect(config);
+    // let pool = await sql.connect(config);
     let paramsString = paramsList.map((param) => `'${param}'`).join(",");
     let query = `SELECT [id], [params], [value], [status] FROM [dbo].[business_admin] WHERE [params] IN (${paramsString})`;
 
-    let result = await pool.request().query(query);
+    // let result = await pool.request().query(query);
+    let result = await db.executeQuery(query);
+
     return result.recordset;
   } catch (err) {
     console.error("SQL error", err);
     throw err;
-  } finally {
-    sql.close();
-  }
+  } 
 }
 
 async function getSalesRegion() {
@@ -50,7 +52,8 @@ async function getGradeWithPC(fsc) {
 async function addRule(data) {
   try {
     const query = `INSERT INTO defined_rules (rule_name, profit_center, region, valid_from, valid_to, active, rm, nsm, hdsm, validator, created_at)
-          VALUES (@rule_name, @profit_center, @region,@valid_from, @valid_to, @active, @rm, @nsm, @hdsm, @validator, @created_at)`;
+    OUTPUT INSERTED.* 
+    VALUES (@rule_name, @profit_center, @region,@valid_from, @valid_to, @active, @rm, @nsm, @hdsm, @validator, @created_at)`;
 
     const inputs = {
       rule_name: data.rule_name,
@@ -67,6 +70,9 @@ async function addRule(data) {
     };
 
     let result = await db.executeQuery(query, inputs);
+     // Add audit log for the update operation
+     await addAuditLog('defined_rules', result.recordset[0].id, 'INSERT', null);
+
     return result;
   } catch (err) {
     console.error("SQL error", err);

@@ -1,6 +1,6 @@
-const sql = require("mssql");
-const config = require("../config");
-const poolPromise = new sql.ConnectionPool(config).connect();
+// const sql = require("mssql");
+// const config = require("../config");
+// const poolPromise = new sql.ConnectionPool(config).connect();
 const db = require("../config/db");
 
 

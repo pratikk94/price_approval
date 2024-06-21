@@ -1,6 +1,8 @@
 // models/transactionModel.js
 const sql = require("mssql");
+const db = require("../config/db");
 const config = require("../../backend_mvc/config");
+const { addAuditLog } = require("../utils/auditTrails");
 const poolPromise = new sql.ConnectionPool(config)
   .connect()
   .then((pool) => {
@@ -12,10 +14,13 @@ const poolPromise = new sql.ConnectionPool(config)
 async function getCurrentDateRequestId() {
   const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD format
   console.log("CurrentDate->", currentDate);
-  await sql.connect(config);
-  const result = await sql.query(
-    `SELECT MAX(request_name) AS maxRequestId FROM price_approval_requests WHERE request_name LIKE 'NR${currentDate}%'`
-  );
+  // await sql.connect(config);
+  // const result = await sql.query(
+  //   `SELECT MAX(request_name) AS maxRequestId FROM price_approval_requests WHERE request_name LIKE 'NR${currentDate}%'`
+  // );
+  let query = `SELECT MAX(request_name) AS maxRequestId FROM price_approval_requests WHERE request_name LIKE 'NR${currentDate}%'`
+  let result = await db.executeQuery(query);
+
   if (result.recordset[0].maxRequestId) {
     const nextId = parseInt(result.recordset[0].maxRequestId.slice(10)) + 1;
     return `NR${currentDate}${nextId.toString().padStart(4, "0")}`;
@@ -37,6 +42,7 @@ async function insertCombinationsOneToOne(customers, consignees, plants, data) {
                   INSERT INTO price_approval_requests (
                       customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
                       valid_from, valid_to, payment_terms_id, request_name,mappint_type) 
+                      OUTPUT INSERTED.*
                   VALUES (
                       '${customers[i]}', '${consignees[i]}', '${data.endUse}', '${plant}', 
                       '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
@@ -44,6 +50,8 @@ async function insertCombinationsOneToOne(customers, consignees, plants, data) {
               `);
       }
     }
+    // Add audit log for the INSERT operation
+    await addAuditLog('price_approval_requests', result.recordset[0].id, 'INSERT', null);
 
     await transaction.commit();
     return {
@@ -76,6 +84,7 @@ async function insertCombinationsOneToMany(
                       INSERT INTO price_approval_requests (
                           customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
                           valid_from, valid_to, payment_terms_id, request_name, mappint_type) 
+                          OUTPUT INSERTED.*
                       VALUES (
                           '${customer}', '${consignee}', '${data.endUse}', '${plant}', 
                           '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
@@ -84,7 +93,8 @@ async function insertCombinationsOneToMany(
         }
       }
     }
-
+    // Add audit log for the INSERT operation
+    await addAuditLog('price_approval_requests', result.recordset[0].id, 'INSERT', null);
     await transaction.commit();
     return {
       success: true,
@@ -179,13 +189,14 @@ async function logTransaction(requestId, am_id) {
 
 async function insertPrices(data, request_id) {
   try {
-    await sql.connect(config);
+    // await sql.connect(config);
     console.log(data);
     for (const item of data) {
       let fsc = item.fsc == undefined ? "N" : item.fsc;
       const query = `INSERT INTO price_approval_requests_price_table 
       (req_id, fsc, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, 
       reel_discount, pack_upcharge, TPC, offline_discount, net_nsr, old_net_nsr) 
+      OUTPUT INSERTED.*
       VALUES 
       ('${request_id}',      '${fsc}',          '${item.grade}', 
       '${item.gradeType}',       '${item.gsmFrom}', 
@@ -194,7 +205,11 @@ async function insertPrices(data, request_id) {
       '${item.packUpCharge}',    '${item.tpc}',          '${item.offlineDiscount}', 
       '${item.netNSR}',          '${item.oldNetNSR}')`;
 
-      await sql.query(`${query} `);
+      // await sql.query(`${query} `);
+      let result = await db.executeQuery(query);
+      // Add audit log for the INSERT operation
+      await addAuditLog('price_approval_requests_price_table', result.recordset[0].id, 'INSERT', null);
+
     }
     // return { success: true, message: "All prices inserted successfully." };
   } catch (err) {
@@ -244,11 +259,14 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
     // Insert into transaction table
     const currentTime = new Date();
     let query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
+    OUTPUT INSERTED.*
     VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}', 'RM0A1',  'RM', '${currentTime}')`;
     if (isDraft)
       query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
+    OUTPUT INSERTED.*
     VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}','AM0','AM', '${currentTime}')`;
-
+    // Add audit log for the update operation
+    await addAuditLog('transaction_mvc', result.recordset[0].id, 'INSERT', null);
     const result = await sql.query(`${query}`);
     const pool = await poolPromise;
     await pool
@@ -257,9 +275,10 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
       .input("pendingWith", sql.Int, isDraft ? 1 : 2)
       .input("req_id", sql.VarChar, requestId)
       .query(
-        "INSERT INTO requests_mvc (status, pending, req_id) VALUES (@status, @pendingWith, @req_id)"
+        "INSERT INTO requests_mvc (status, pending, req_id)OUTPUT INSERTED.* VALUES (@status, @pendingWith, @req_id)"
       );
-
+    // Add audit log for the update operation
+    await addAuditLog('requests_mvc', results.recordset[0].id, 'INSERT', null);
     return { success: true, message: "Transaction successfully added." };
   } catch (err) {
     console.error("Database operation failed:", err);

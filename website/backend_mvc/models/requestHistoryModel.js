@@ -1,10 +1,12 @@
 //Request history.js
-const sql = require("mssql");
-const config = require("../config"); // Assuming your config file is named dbConfig.js
+// const sql = require("mssql");
+// const config = require("../config"); // Assuming your config file is named dbConfig.js
+
+const db = require("../config/db");
 
 async function getTransactionsByRequestId(requestId) {
   try {
-    await sql.connect(config);
+    // await sql.connect(config);
     console.log(`Request id is ${requestId}`);
 
     // Fetch all parent request IDs, recursively adjusting each to start with 'N'
@@ -21,8 +23,8 @@ async function getTransactionsByRequestId(requestId) {
         WHERE 
           request_name = '${currentRequestId}'
       `;
-      const parentIdResult = await new sql.Request().query(fetchParentIdQuery);
-
+      // const parentIdResult = await new sql.Request().query(fetchParentIdQuery);
+      const parentIdResult  = await db.executeQuery(fetchParentIdQuery,{"currentRequestId":currentRequestId});
       if (
         parentIdResult.recordset.length > 0 &&
         parentIdResult.recordset[0].parent_request_name
@@ -80,9 +82,10 @@ async function getTransactionsByRequestId(requestId) {
             rn = 1
       `;
 
-      const transactionResult = await new sql.Request().query(
-        transactionHistoryQuery
-      );
+      // const transactionResult = await new sql.Request().query(
+      //   transactionHistoryQuery
+      // );
+      const transactionResult  = await db.executeQuery(transactionHistoryQuery);
       allTransactions.push(...transactionResult.recordset); // Spread operator to flatten the results
     }
 
