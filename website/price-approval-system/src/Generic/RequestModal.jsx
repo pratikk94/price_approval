@@ -191,11 +191,11 @@ const CreateRequestModal = ({
     if (
       (validFrom != "" &&
         validTo != "" &&
-        endUse != undefined &&
-        endUse["value"] > 0 &&
+        // endUse != undefined &&
+        // endUse["value"] > 0 &&
         paymentTerms != undefined &&
         selectedCustomers.length > 0 &&
-        selectedConsignees.length > 0 &&
+        // selectedConsignees.length > 0 &&
         remarks.length > 10) ||
       draft
       // && checkForEndUse
@@ -526,7 +526,7 @@ const CreateRequestModal = ({
             selectedCustomers.map((item) => item.value).join(",") ?? " ", // Assuming `customers` is an array in your formData
           consignees:
             selectedConsignees.map((item) => item.value).join(",") ?? " ", // Assuming `consignees` is an array in your formData
-          endUse: endUse[0].value,
+          endUse: endUse != undefined ? endUse.value : endUse, //endUse["value"].toString(),
           plant: Array.isArray(plant)
             ? plant.map((item) => item.value.toString()).toString() ?? " "
             : plant.toString() ?? " ",

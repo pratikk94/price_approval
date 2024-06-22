@@ -3721,14 +3721,7 @@ app.get("/api/files/:request_id", async (req, res) => {
   try {
     const { request_id } = req.params;
     await sql.connect(config);
-    const query = ` SELECT 
-      *
-  FROM 
-      files f
-      WHERE request_id = @requestId
-  
-  
-  `;
+    const query = ` SELECT * FROM files f WHERE request_id = @requestId`;
     const request = new sql.Request();
     request.input("requestId", sql.NVarChar, request_id);
     const result = await request.query(query);

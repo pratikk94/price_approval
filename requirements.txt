@@ -6,65 +6,64 @@ Date : 28/5/2024
 Date : 31/5/2024
 1. Payment terms auto-populate. (done)
 2. Plants. (done)
-3. History fix for all. 
-
+3. History fix for all. (done - Haneef)
 4. Disable dropdown for non-editable fields. (done)
 5. UI changes in weekends. 
 
 Date: 5/6/2024
-1. Hide left column.
-2. Valid from valid to remvoe time.
-3. Payment terms header as Payment terms.
-4. Remove ids. 
-5. Add rejected status.
-6. what is scrom and how to create scrom compliant?
+1. Hide left column.(pending)
+2. Valid from valid to remvoe time. (pending)
+3. Payment terms header as Payment terms.(pending)
+4. Remove ids. (pending)
+5. Add rejected status.(pending)
+6. what is scrom and how to create scrom compliant? (NON PAS)
 
 
 Date: 17/6/2024
-1. 3 columns Actions, Action by and Action date.
+1. 3 columns Actions, Action by and Action date.(pending)
 
 
 Date: 19/6/2024
 Observations Pratik:
-1. Check which tab opens and what is shown on landing page.
-2. Showing rework instrad of pending for RM.
+1. Check which tab opens and what is shown on landing page. (pending)
+2. Showing rework instrad of pending for RM. (pending)
 
 OBSERVATIONS Sirisha:
-1. Rejected tab not available for AM
-2. No option to remove End Use once selected
-3. When Invalid mix of grades is selected, although alert comes, invalid grade is still selected. It should actually make the field blank
-4. No option to delete the attachment once uploaded. User should have the option to delete before submission
-5. Also when a file is uploaded and clicked on Upload again and again by mistake, the same file is being added so many times
-6. Request getting submitted when 'Save As Draft' is chosen
-7. Place a star beside GSM From to indicate it is a mandatory field
-8. GSM To & End Use are made mandatory. Y??
-9. GSM From & GSM To can be a same number. But system is throwing error
+1. Rejected tab not available for AM (pending)
+2. No option to remove End Use once selected (pending)
+3. When Invalid mix of grades is selected, although alert comes, invalid grade is still selected. It should actually make the field blank (why?)
+4. No option to delete the attachment once uploaded. User should have the option to delete before submission (pending)
+5. Also when a file is uploaded and clicked on Upload again and again by mistake, the same file is being added so many times (pending)
+6. Request getting submitted when 'Save As Draft' is chosen (done)
+7. Place a star beside GSM From to indicate it is a mandatory field (done)
+8. GSM To & End Use are made mandatory. Y?? (Removed. Done).
+9. GSM From & GSM To can be a same number. But system is throwing error (done)
 10. Headings of the List View to be freezed
-11. 3 rows of Price Details entered in the Request. But for the approvers only last line item is visible (2nd one)
+11. 3 rows of Price Details entered in the Request. But for the approvers only last line item is visible (2nd one) (done)
 12. Price values should not accept minus symbol.
-13. Attachments not going to approvers
-14. When a paragraph is pasted in Remarks, request didnt go to RM.
-15. Draft: Currently 'Save As Draft' is clickable on a request only when atleast one price value is selected. Remove this validation. Moreover, request not auto-saving to Draft
-16. Draft: Request not going to Draft tab. No record created
-17. Download request button not working
-18. View Request - Behaviour of FSC and Customer-Consignee mapping getting reversed Ex: FSC even when ticked, is showing 'No'
-19. View Request - Packupcharge has a value but not showing up in Price tables for approvers
-20. Re-work - Remarks & attachments not carried forward when request sent back for re-work
-21. Re-work - Transaction History shows Validator approved, when he actually sent back fro re-work
-22. Re-work - Parent Request Id is changing
+13. Attachments not going to approvers (done)
+14. When a paragraph is pasted in Remarks, request didnt go to RM. (done)
+15. Draft: Currently 'Save As Draft' is clickable on a request only when atleast one price value is selected. Remove this validation. Moreover, request not auto-saving to Draft (why?)
+16. Draft: Request not going to Draft tab. No record created (done)
+17. Download request button not working (done)
+18. View Request - Behaviour of FSC and Customer-Consignee mapping getting reversed Ex: FSC even when ticked, is showing 'No' (done)
+19. View Request - Packupcharge has a value but not showing up in Price tables for approvers (done)
+20. Re-work - Remarks & attachments not carried forward when request sent back for re-work (pending)
+21. Re-work - Transaction History shows Validator approved, when he actually sent back fro re-work (pending)
+22. Re-work - Parent Request Id is changing (pending)
 23. Extension/Preclosure - Grade/Grade Type should not be open for editing. (Currently open)
-24. Block - FSC, Pricing Conditions, Grade, Grade Type not greyed out
-25. Copy Request - Price values shouldnt get copied.
-26. When copy request has been sent for Re-work, Remarks & Attachments not getting carrid forward
-27. When grades belonging to profit centre 5 is selected, request not going to NSM-T
-28. Consignee should not be mandatory
-29. Plant dropdown not populating for selection
+24. Block - FSC, Pricing Conditions, Grade, Grade Type not greyed out (pending)
+25. Copy Request - Price values shouldnt get copied.(pending)
+26. When copy request has been sent for Re-work, Remarks & Attachments not getting carrid forward (pending)
+27. When grades belonging to profit centre 5 is selected, request not going to NSM-T (done)
+28. Consignee should not be mandatory (done)
+29. Plant dropdown not populating for selection (done)
 30. Payment Terms by default should show both code & name (Currently showing only Name)
 31. FSC popup not required when when FSC is checked the 1st time. This popup is needed only when a grade is selected and then decide to change FSC.
-32. Popup messages for Draft, Rework etc should be changed
-33. Re-Work - Offline Discount option appearing twice
+32. Popup messages for Draft, Rework etc should be changed (pending)
+33. Re-Work - Offline Discount option appearing twice (pending)
 
 
 Date 22/6/2024
 Observations Pratik:
-1. Attachments not getting saved at all.
+1. Attachments not getting saved at all. (done)

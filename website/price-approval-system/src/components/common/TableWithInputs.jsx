@@ -419,7 +419,7 @@ function TableWithInputs({
               <center>Grade Type *</center>
             </th>
             <th>
-              <center>GSM From</center>
+              <center>GSM From *</center>
             </th>
             <th>
               <center>GSM To</center>

@@ -1,0 +1,11 @@
+24/6/2024
+Haneef : 
+
+1. Attachments. Fail when we put request for rework.
+2. Valid from valid to remvoe time. (backend task)
+
+
+23/6/2024
+Pratik:
+1. Attachments single add for staright flow. (Done).
+2. 
