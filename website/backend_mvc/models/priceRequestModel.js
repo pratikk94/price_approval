@@ -257,16 +257,16 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
     }
 
     const { rule_id } = validRule.recordset[0];
-
+ 
     // Insert into transaction table
-    const currentTime = new Date();
+    // const currentTime = new Date();
     let query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
     OUTPUT INSERTED.*
-    VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}', 'RM0A1',  'RM', '${currentTime}')`;
+    VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}', 'RM0A1',  'RM', GETDATE())`;
     if (isDraft)
       query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
     OUTPUT INSERTED.*
-    VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}','AM0','AM', '${currentTime}')`;
+    VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}','AM0','AM', GETDATE())`;
 
     const result = await sql.query(`${query}`);
     // console.log(result.recordset[0],"result.......")
