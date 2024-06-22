@@ -79,12 +79,13 @@ async function getTransactionsByRequestId(requestId) {
         INNER JOIN
             dbo.define_roles as dr ON rt.last_updated_by_id = dr.employee_id
         WHERE
-            rn = 1
+            rn = 1 ORDER BY rt.id ASC
       `;
 
       // const transactionResult = await new sql.Request().query(
       //   transactionHistoryQuery
       // );
+      console.log(transactionHistoryQuery)
       const transactionResult  = await db.executeQuery(transactionHistoryQuery);
       allTransactions.push(...transactionResult.recordset); // Spread operator to flatten the results
     }

@@ -272,6 +272,7 @@ async function acceptTransaction(
 
       // Construct and insert new transactions based on the number of approvers found
       if (action == 2) {
+        console.log(action,"testing....................................")
         // await sql.query(
         //   `
         //       INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
@@ -338,7 +339,7 @@ async function acceptTransaction(
           `
               INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
               OUTPUT INSERTED.* 
-              VALUES (@requestId, rule_id, @newStatus, @approver, @currentRole, @lastUpdatedById, GETDATE())
+              VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole, @lastUpdatedById, GETDATE())
           `
         let result = await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "newStatus": newStatus, "approver": approver, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
         
