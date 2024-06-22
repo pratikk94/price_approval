@@ -499,9 +499,7 @@ const CreateRequestModal = ({
     }
 
     console.log(formData["isDraft"]);
-    if (fetchTempAttachments().length > 0) {
-      formData["tempAttachmentId"] = fetchTempAttachments();
-    }
+
     try {
       let action = "N";
 
@@ -542,6 +540,11 @@ const CreateRequestModal = ({
           oldRequestId: parentId,
         };
         formData["prices"] = tableRowsData;
+        const attachmentId = await fetchTempAttachments();
+        if (attachmentId > 0) {
+          formData["tempAttachmentId"] = attachmentId;
+        }
+        console.log(attachmentId);
 
         formData["action"] = action;
       } else {
@@ -564,6 +567,11 @@ const CreateRequestModal = ({
         };
         formData["prices"] = tableRowsData;
         formData["action"] = action;
+        const attachmentId = await fetchTempAttachments();
+        if (attachmentId > 0) {
+          formData["tempAttachmentId"] = attachmentId;
+        }
+        console.log(attachmentId);
       }
       console.log(tableRowsData);
       console.log(formData);

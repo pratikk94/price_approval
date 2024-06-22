@@ -213,6 +213,7 @@ async function changeAttachmentIds(tempAttachmentIds, newRequestId) {
     console.log(typeof tempAttachmentIds);
     if (tempAttachmentIds != undefined) {
       // Make sure `config` is defined with your DB credentials
+      tempAttachmentIds = tempAttachmentIds.split(",");
       const promises = tempAttachmentIds.map((tempId) => {
         console.log(
           `Temp ids are ${tempId} and New request id is ${newRequestId}`
@@ -222,11 +223,11 @@ async function changeAttachmentIds(tempAttachmentIds, newRequestId) {
           .input("newRequestId", sql.NVarChar, newRequestId)
           .input("tempId", sql.NVarChar, tempId.toString())
           .query(
-            `UPDATE files SET request_id = @newRequestId WHERE id = @tempId;`
+            `UPDATE files SET request_id = @newRequestId WHERE request_id = @tempId;`
           );
       });
+      await Promise.all(promises);
     }
-    await Promise.all(promises);
 
     console.log(
       `All tempAttachmentIds have been updated to the new request_id: ${newRequestId}`
@@ -341,13 +342,7 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
     // console.log(result1.recordset[0],"result1.......")
     // Add audit log for the update operation
     await addAuditLog("requests_mvc", result1.recordset[0].id, "INSERT", null);
-    if (tempAttachmentId != null && tempAttachmentId != undefined) {
-      changeAttachmentIds(tempAttachmentId, req_name)
-        .then(() => console.log("Attachment ID updated successfully."))
-        .catch((error) =>
-          console.error("Error updating Attachment ID:", error)
-        );
-    }
+
     return { success: true, message: "Transaction successfully added." };
   } catch (err) {
     console.error("Database operation failed:", err);

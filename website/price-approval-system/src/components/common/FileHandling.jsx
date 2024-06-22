@@ -19,7 +19,7 @@ export default function FileHandling({ requestId }) {
   console.log("Stored request id:", storedRequestId);
 
   const fetchFiles = useCallback(() => {
-    fetch(`${backend_url}api/files/${storedRequestId}`) // Corrected for dynamic backend_url usage
+    fetch(`${backend_url}api/files/${requestId ?? storedRequestId}`) // Corrected for dynamic backend_url usage
       .then((res) => res.json())
       .then((data) => {
         setFiles(data);
