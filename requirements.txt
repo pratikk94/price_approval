@@ -6,7 +6,8 @@ Date : 28/5/2024
 Date : 31/5/2024
 1. Payment terms auto-populate. (done)
 2. Plants. (done)
-3. History fix for all.
+3. History fix for all. 
+
 4. Disable dropdown for non-editable fields. (done)
 5. UI changes in weekends. 
 
@@ -62,3 +63,8 @@ OBSERVATIONS Sirisha:
 31. FSC popup not required when when FSC is checked the 1st time. This popup is needed only when a grade is selected and then decide to change FSC.
 32. Popup messages for Draft, Rework etc should be changed
 33. Re-Work - Offline Discount option appearing twice
+
+
+Date 22/6/2024
+Observations Pratik:
+1. Attachments not getting saved at all.

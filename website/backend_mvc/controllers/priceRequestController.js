@@ -7,6 +7,7 @@ const {
   updatePreApprovedRequestStatus,
   addADraft,
 } = require("./requestController");
+
 async function processTransaction(req, res) {
   try {
     const {
@@ -21,6 +22,7 @@ async function processTransaction(req, res) {
       oneToOneMapping,
       prices,
       am_id,
+      tempAttachmentId,
     } = req.body;
 
     const requestId = await transactionModel.handleNewRequest();
@@ -38,6 +40,7 @@ async function processTransaction(req, res) {
       requestId,
       prices,
       am_id,
+      tempAttachmentId,
     });
 
     priceRequestModel.addTransactionToTable(requestId, am_id);

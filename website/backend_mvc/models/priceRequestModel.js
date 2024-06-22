@@ -18,7 +18,7 @@ async function getCurrentDateRequestId() {
   // const result = await sql.query(
   //   `SELECT MAX(request_name) AS maxRequestId FROM price_approval_requests WHERE request_name LIKE 'NR${currentDate}%'`
   // );
-  let query = `SELECT MAX(request_name) AS maxRequestId FROM price_approval_requests WHERE request_name LIKE 'NR${currentDate}%'`
+  let query = `SELECT MAX(request_name) AS maxRequestId FROM price_approval_requests WHERE request_name LIKE 'NR${currentDate}%'`;
   let result = await db.executeQuery(query);
 
   if (result.recordset[0].maxRequestId) {
@@ -51,7 +51,12 @@ async function insertCombinationsOneToOne(customers, consignees, plants, data) {
       }
     }
     // Add audit log for the INSERT operation
-    await addAuditLog('price_approval_requests', result.recordset[0].id, 'INSERT', null);
+    await addAuditLog(
+      "price_approval_requests",
+      result.recordset[0].id,
+      "INSERT",
+      null
+    );
 
     await transaction.commit();
     return {
@@ -91,8 +96,13 @@ async function insertCombinationsOneToMany(
                           '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping})
                   `);
           // Add audit log for the INSERT operation
-          console.log(result.recordset[0],"testing...........")
-          await addAuditLog('price_approval_requests', result.recordset[0].req_id, 'INSERT', null);
+          console.log(result.recordset[0], "testing...........");
+          await addAuditLog(
+            "price_approval_requests",
+            result.recordset[0].req_id,
+            "INSERT",
+            null
+          );
         }
       }
     }
@@ -122,6 +132,7 @@ async function insertTransactions(data) {
     requestId,
     prices, // Assume prices is an array
     am_id,
+    tempAttachmentId,
   } = data;
 
   const customerList = customers.split(",");
@@ -163,6 +174,10 @@ async function insertTransactions(data) {
       throw new Error("Invalid input: prices must be an array");
     }
 
+    changeAttachmentIds(tempAttachmentId, requestId)
+      .then(() => console.log("Attachment ID updated successfully."))
+      .catch((error) => console.error("Error updating Attachment ID:", error));
+
     // Example function to log a transaction record
     await logTransaction(requestId, am_id);
 
@@ -189,6 +204,39 @@ async function logTransaction(requestId, am_id) {
   // `);
 }
 
+async function changeAttachmentIds(tempAttachmentIds, newRequestId) {
+  let pool = null;
+  try {
+    pool = await sql.connect(config);
+    console.log(`${tempAttachmentIds}`);
+    console.log(`New request id ${newRequestId}`);
+    console.log(typeof tempAttachmentIds);
+    if (tempAttachmentIds != undefined) {
+      // Make sure `config` is defined with your DB credentials
+      const promises = tempAttachmentIds.map((tempId) => {
+        console.log(
+          `Temp ids are ${tempId} and New request id is ${newRequestId}`
+        );
+        return pool
+          .request()
+          .input("newRequestId", sql.NVarChar, newRequestId)
+          .input("tempId", sql.NVarChar, tempId.toString())
+          .query(
+            `UPDATE files SET request_id = @newRequestId WHERE id = @tempId;`
+          );
+      });
+    }
+    await Promise.all(promises);
+
+    console.log(
+      `All tempAttachmentIds have been updated to the new request_id: ${newRequestId}`
+    );
+  } catch (error) {
+    console.error("Failed to update request IDs:", error);
+    throw error; // Rethrow or handle as needed
+  }
+}
+
 async function insertPrices(data, request_id) {
   try {
     // await sql.connect(config);
@@ -210,8 +258,12 @@ async function insertPrices(data, request_id) {
       // await sql.query(`${query} `);
       let result = await db.executeQuery(query);
       // Add audit log for the INSERT operation
-      await addAuditLog('price_approval_requests_price_table', result.recordset[0].id, 'INSERT', null);
-
+      await addAuditLog(
+        "price_approval_requests_price_table",
+        result.recordset[0].id,
+        "INSERT",
+        null
+      );
     }
     // return { success: true, message: "All prices inserted successfully." };
   } catch (err) {
@@ -257,7 +309,7 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
     }
 
     const { rule_id } = validRule.recordset[0];
- 
+
     // Insert into transaction table
     // const currentTime = new Date();
     let query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
@@ -271,7 +323,12 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
     const result = await sql.query(`${query}`);
     // console.log(result.recordset[0],"result.......")
     // Add audit log for the update operation
-    await addAuditLog('transaction_mvc', result.recordset[0].id, 'INSERT', null);
+    await addAuditLog(
+      "transaction_mvc",
+      result.recordset[0].id,
+      "INSERT",
+      null
+    );
     const pool = await poolPromise;
     let result1 = await pool
       .request()
@@ -283,7 +340,14 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
       );
     // console.log(result1.recordset[0],"result1.......")
     // Add audit log for the update operation
-    await addAuditLog('requests_mvc', result1.recordset[0].id, 'INSERT', null);
+    await addAuditLog("requests_mvc", result1.recordset[0].id, "INSERT", null);
+    if (tempAttachmentId != null && tempAttachmentId != undefined) {
+      changeAttachmentIds(tempAttachmentId, req_name)
+        .then(() => console.log("Attachment ID updated successfully."))
+        .catch((error) =>
+          console.error("Error updating Attachment ID:", error)
+        );
+    }
     return { success: true, message: "Transaction successfully added." };
   } catch (err) {
     console.error("Database operation failed:", err);

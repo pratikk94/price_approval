@@ -499,7 +499,9 @@ const CreateRequestModal = ({
     }
 
     console.log(formData["isDraft"]);
-
+    if (fetchTempAttachments().length > 0) {
+      formData["tempAttachmentId"] = fetchTempAttachments();
+    }
     try {
       let action = "N";
 
@@ -584,6 +586,7 @@ const CreateRequestModal = ({
       const requestData = await response.json();
       console.log(requestData["id"]);
       handleAddRemark(requestData["id"]);
+
       if (oldRequestIds.length > 0) {
         updateRequestIds(oldRequestIds, requestData["id"])
           .then((response) => {

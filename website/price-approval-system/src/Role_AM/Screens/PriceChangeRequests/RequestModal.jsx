@@ -447,6 +447,7 @@ const CreateRequestModal = ({
   const submitFormDataMVC = async (formData) => {
     console.log("In here SFD");
     console.log(selectedConsigneeIDs);
+    const tempAttachments = await fetchTempAttachments();
     try {
       // Update formData based on whether it's a new submission or an edit
       formData = {
@@ -464,6 +465,9 @@ const CreateRequestModal = ({
       };
       formData["prices"] = tableRowsData;
       console.log(tableRowsData);
+      if (tempRequestIds.length > 0) {
+        formData.tempRequestIds = [tempAttachments];
+      }
       console.log(formData);
 
       // Send the formData to your backend

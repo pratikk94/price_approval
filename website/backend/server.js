@@ -24,10 +24,10 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  password: "SayaliK20311",
-  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  // password: "12345",
-  // server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  //password: "SayaliK20311",
+  //server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: "12345",
+  server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
   database: "PriceApprovalSystem",
   options: {
