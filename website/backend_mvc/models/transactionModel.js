@@ -4,6 +4,7 @@ const url = require("../utils");
 const axios = require("axios");
 const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
+const { requestStatus } = require("../utils/updateRequestStatus");
 
 // // Make sure to maintain a connection pool instead of connecting in each function
 // const poolPromise = new sql.ConnectionPool(config)
@@ -207,18 +208,24 @@ async function acceptTransaction(
         OUTPUT INSERTED.* 
             VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
         `
-      await db.executeQuery(query1, {});
+      let result = await db.executeQuery(query1, {});
+
+      console.log(result.recordset[0],"Validator testing")
       // Add audit log for the update operation
-      await addAuditLog('transaction_mvc', query1.recordset[0].id, 'INSERT', null);
-      const response = await axios.post(
-        `http://${url}:3000/api/update-status`,
-        {
-          current_role: lastUpdatedByRole,
-          region: region, // You would need to adjust this as per actual requirements
-          action: action, // Assuming action is to be passed as 1 for approve (example)
-          req_id: requestId, // This is a mockup; adjust as needed
-        }
-      );
+      await addAuditLog('transaction_mvc', result.recordset[0].id, 'INSERT', null);
+      // const response = await axios.post(
+      //   `http://${url}:3000/api/update-status`,
+      //   {
+      //     current_role: lastUpdatedByRole,
+      //     region: region, // You would need to adjust this as per actual requirements
+      //     action: action, // Assuming action is to be passed as 1 for approve (example)
+      //     req_id: requestId, // This is a mockup; adjust as needed
+      //   }
+      // );
+
+      const response = await requestStatus(lastUpdatedByRole,region,action,requestId);
+      console.log(response,"check the update data.................")
+
 
       return {
         success: true,
@@ -277,9 +284,11 @@ async function acceptTransaction(
             OUTPUT INSERTED.* 
             VALUES (@requestId, @rule_id, 'Rejected', 'Rejected', @currentRole,@lastUpdatedById, GETDATE())
         `
-        await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+        let result = await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+        
+        console.log(result.recordset[0], "testing tranc action == 2")
         // Add audit log for the update operation
-        await addAuditLog('transaction_mvc', query.recordset[0].id, 'INSERT', null);
+        await addAuditLog('transaction_mvc', result.recordset[0].id, 'INSERT', null);
       }
       if (action == 3) {
         // if (currentRole != "RM")
@@ -296,24 +305,25 @@ async function acceptTransaction(
         //   `
         // );
         if (currentRole != "RM") {
-          let query = `
-        INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-        OUTPUT INSERTED.*
-              VALUES (@requestId, @rule_id, 'Rework', 'RM', @currentRole,@lastUpdatedById, GETDATE())`
-          await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+          let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+          OUTPUT INSERTED.* 
+          VALUES (@requestId, @rule_id, 'Rework', 'RM', @currentRole,@lastUpdatedById, GETDATE())`
+          let result = await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+          
+          console.log(result.recordset[0],"testing RM.................")
           // Add audit log for the update operation
-          await addAuditLog('transaction_mvc', query.recordset[0].id, 'INSERT', null);
-        } else {
-          let query =
-            `
-              INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-              OUTPUT INSERTED.*
-              VALUES (@requestId, @rule_id, 'Rework', 'AM', '@currentRole,@lastUpdatedById, GETDATE())
-          `
-          await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
-          // Add audit log for the update operation
-          await addAuditLog('transaction_mvc', query.recordset[0].id, 'INSERT', null);
+          await addAuditLog('transaction_mvc', result.recordset[0].id, 'INSERT', null);
         }
+          let query =`INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+          OUTPUT INSERTED.* 
+          VALUES (@requestId, @rule_id, 'Rework', 'AM', @currentRole,@lastUpdatedById, GETDATE())
+          `
+          let result1 = await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+          
+          console.log(result1.recordset[0], "testing out side..............")
+          // Add audit log for the update operation
+          await addAuditLog('transaction_mvc', result1.recordset[0].id, 'INSERT', null);
+      
       } else if (approversResult.recordset.length === 1) {
         const { approver } = approversResult.recordset[0];
         const newStatus = `${approver}0_${currentRole}1`;
@@ -330,9 +340,11 @@ async function acceptTransaction(
               OUTPUT INSERTED.* 
               VALUES (@requestId, rule_id, @newStatus, @approver, @currentRole, @lastUpdatedById, GETDATE())
           `
-        await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "newStatus": newStatus, "approver": approver, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+        let result = await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "newStatus": newStatus, "approver": approver, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+        
+        console.log(result.recordset[0],"testing transaction_mvc approversResult.recordset.length === 1")
         // Add audit log for the update operation
-        await addAuditLog('transaction_mvc', query.recordset[0].id, 'INSERT', null);
+        await addAuditLog('transaction_mvc', result.recordset[0].id, 'INSERT', null);
       } else if (approversResult.recordset.length > 1) {
         for (const { approver } of approversResult.recordset) {
           const newStatus =
@@ -354,21 +366,27 @@ async function acceptTransaction(
           OUTPUT INSERTED.*
                 VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole,@lastUpdatedById, GETDATE())
             `
-          await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "newStatus": newStatus, "approver": approver, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+          let result = await db.executeQuery(query, { "requestId": requestId, "rule_id": rule_id, "newStatus": newStatus, "approver": approver, "currentRole": currentRole, "lastUpdatedById": lastUpdatedById });
+          
+          console.log(result.recordset[0],"trasanction testing..............")
           // Add audit log for the update operation
-          await addAuditLog('transaction_mvc', query.recordset[0].id, 'INSERT', null);
+          await addAuditLog('transaction_mvc', result.recordset[0].id, 'INSERT', null);
         }
       }
 
-      const response = await axios.post(
-        `http://${url}:3000/api/update-status`,
-        {
-          current_role: lastUpdatedByRole,
-          region: region, // You would need to adjust this as per actual requirements
-          action: action, // Assuming action is to be passed as 1 for approve (example)
-          req_id: requestId, // This is a mockup; adjust as needed
-        }
-      );
+      // const response = await axios.post(
+      //   `http://${url}:3000/api/update-status`,
+      //   {
+      //     current_role: lastUpdatedByRole,
+      //     region: region, // You would need to adjust this as per actual requirements
+      //     action: action, // Assuming action is to be passed as 1 for approve (example)
+      //     req_id: requestId, // This is a mockup; adjust as needed
+      //   }
+      // );
+
+      const response = await requestStatus(lastUpdatedByRole,region,action,requestId);
+      console.log(response,"check the update data.................")
+
 
       // Handle response from the update-status API
       console.log("Update status API response:", response.data);

@@ -335,7 +335,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                   <br />
                   Valid To: {formatDate(data.consolidatedRequest.valid_to)}
                   <br />
-                  FSC: {data.priceDetails[0].fsc == "Y " ? "Yes" : "No"}
+                  FSC: {data.priceDetails[0]?.fsc == "Y " ? "Yes" : "No"}
                   <br />
                   Mapping Type:{" "}
                   {data.consolidatedRequest.mappint_type == 1
