@@ -5,7 +5,7 @@ const { Readable } = require("stream"); // Correctly import Readable from 'strea
 
 const config = {
   user: "sa",
-  password: "Innominds@123",
+  password: "SayaliK20311",
   server: "localhost",
   port: 1433,
   database: "PriceApprovalSystem",
