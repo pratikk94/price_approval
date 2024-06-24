@@ -65,6 +65,7 @@ function PriceChangeRequest(rules, employee_id) {
       ...statusFiltersValues,
       Array.from(statusFilters.values())[0], //draft
       Array.from(statusFilters.values())[6], //approved
+      Array.from(statusFilters.values())[3], //rejected
     ];
   }
 
@@ -214,14 +215,26 @@ function PriceChangeRequest(rules, employee_id) {
           isRework={true}
         />
       );
-    } else {
-      console.log("Pending");
+    } else if (statusFiltersValues[filterdId] == "Pending") {
+      console.log("Filterred ID is 1");
       setActiveFilter("Pending");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/0"}
+          url={`${backend_mvc}api/data/` + session.role + "/0 "}
           rule={rules}
           setRows={handleRowsSelection}
+          isRework={false}
+        />
+      );
+    } else if (statusFiltersValues[filterdId] == "Rejected") {
+      console.log("Filterred ID is 1");
+      setActiveFilter("Rejected");
+      setComponent(
+        <DataTable
+          url={`${backend_mvc}api/data/` + session.role + "/-2 "}
+          rule={rules}
+          setRows={handleRowsSelection}
+          isRework={false}
         />
       );
     }

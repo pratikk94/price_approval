@@ -483,7 +483,7 @@ function TableWithInputs({
                   name="customers"
                   options={grades}
                   classNamePrefix="select"
-                  disabled={disabled || isExtension}
+                  isDisabled={disabled || isExtension}
                   onChange={(e) => {
                     console.log(rows); // Debugging
                     console.log(
@@ -525,7 +525,7 @@ function TableWithInputs({
                       e.profitCenter
                     );
                   }}
-                  disabled={disabled || isExtension}
+                  isDisabled={disabled || isExtension}
                   options={options}
                   className="tColumnGrade"
                   placeholder=""

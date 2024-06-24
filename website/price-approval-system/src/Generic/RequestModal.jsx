@@ -191,7 +191,7 @@ const CreateRequestModal = ({
     if (
       (validFrom != "" &&
         validTo != "" &&
-        // endUse != undefined &&
+        endUse != undefined &&
         // endUse["value"] > 0 &&
         paymentTerms != undefined &&
         selectedCustomers.length > 0 &&
@@ -811,7 +811,7 @@ const CreateRequestModal = ({
 
           <TableWithInputs
             isExtension={isExtension}
-            disabled={mode > 1 || isExtension || isBlocked}
+            disabled={isExtension || isBlocked}
             setTableRowsDataFunction={setTableRowsDataFunction}
             setFSCCode={handleFSCChange}
             disableSubmit={setDisableSubmit}

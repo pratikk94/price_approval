@@ -629,6 +629,7 @@ function DynamicTable({
                   setEditModalOpen(true);
                   handleEdit(row_id);
                   setId(row_id);
+                  
                   //handleView(row_id);
                   console.log(row_id);
                   setRuleId(row_id);

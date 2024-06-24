@@ -69,20 +69,9 @@ const CustomerSelect = ({
   };
 
   // console.log(disabled);
-  return id != 3 ? (
+  return (
     <Select
       isMulti
-      isDisabled={disabled}
-      name={name}
-      options={customers}
-      value={selectedOptions}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      closeMenuOnSelect={false}
-      placeholder={`Select ${name}`}
-    />
-  ) : (
-    <Select
       isDisabled={disabled}
       name={name}
       options={customers}

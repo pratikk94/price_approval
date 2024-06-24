@@ -1,8 +1,17 @@
-24/6/2024
-Haneef : 
 
+Tasks pending:
 1. Attachments. Fail when we put request for rework.
 2. Valid from valid to remvoe time. (backend task)
+3.  
+4. Get rid of following apis:
+    1. File handling apis.
+    2. Plant api.
+    3. Grade api.
+    4. Update ids.
+    5. Buisness Admin apis.
+
+24/6/2024
+Haneef : 
 
 
 23/6/2024

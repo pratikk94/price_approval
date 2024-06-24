@@ -78,9 +78,7 @@ function MyDocument({ data, consolidatedRequest }) {
             <Text>Plant : {consolidatedRequest.plant}</Text>
             <Text>End Use: {consolidatedRequest.enduse_name}</Text>
 
-            <Text>
-              Payment Terms ID: {consolidatedRequest.payment_terms_id}
-            </Text>
+            <Text>Payment Terms: {consolidatedRequest.payment_terms_id}</Text>
             <Text>Valid From: {consolidatedRequest.valid_from}</Text>
             <Text>Valid To: {consolidatedRequest.valid_to}</Text>
             <Text>FSC: {consolidatedRequest.fsc == 1 ? "Yes" : "No"}</Text>
