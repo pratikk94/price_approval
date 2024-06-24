@@ -24,7 +24,7 @@ app.use(express.json());
 // Configuration object for your SQL Server
 const config = {
   user: "sa",
-  password: "SayaliK20311",
+  password: "Innominds@123",
   server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
   // password: "12345",
   // server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
@@ -2322,7 +2322,7 @@ app.get("/api/fetch_payment_terms", async (req, res) => {
     }
   }
 });
-
+//haneef
 // Api to fetch plants.
 app.get("/api/fetch_plants", async (req, res) => {
   let pool = null;
@@ -2350,7 +2350,7 @@ app.get("/api/fetch_plants", async (req, res) => {
     }
   }
 });
-
+//haneef
 // Api to fetch grade.
 app.get("/api/fetch_grade", async (req, res) => {
   let pool = null;
@@ -3106,7 +3106,7 @@ app.get("/api/fetch_defined_rule", async (req, res) => {
     }
   }
 });
-
+//haneef
 app.get("/api/fetch_grade_with_pc", async (req, res) => {
   let pool = null;
   const fsc = req.query.fsc;
