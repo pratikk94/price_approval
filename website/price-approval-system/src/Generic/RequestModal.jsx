@@ -181,18 +181,20 @@ const CreateRequestModal = ({
     console.log(endUse);
     console.log(plant);
     console.log(remarks);
-    // const checkForEndUse =
-    //   endUse != undefined
-    //     ? endUse["value"] != undefined
-    //       ? true
-    //       : false
-    //     : false;
-    // console.log(checkForEndUse);
+    console.log(endUse[0]);
+
+    const checkForEndUse =
+      endUse != undefined
+        ? endUse[0]["value"] != undefined
+          ? true
+          : false
+        : false;
+    console.log(checkForEndUse);
     if (
       (validFrom != "" &&
         validTo != "" &&
         endUse != undefined &&
-        // endUse["value"] > 0 &&
+        endUse[0]["value"] > 0 &&
         paymentTerms != undefined &&
         selectedCustomers.length > 0 &&
         // selectedConsignees.length > 0 &&
@@ -211,7 +213,7 @@ const CreateRequestModal = ({
         formData["consigneeIds"] = selectedConsignees
           .map((item) => item.value)
           .join(",");
-        formData["endUseIds"] = endUse["value"];
+        formData["endUseIds"] = endUse[0]["value"];
         formData["endUseSegmentIds"] = ["seg1"].toString();
         formData["plants"] = plant;
         formData["paymentTermsId"] = paymentTerms["value"].toString();
@@ -526,7 +528,7 @@ const CreateRequestModal = ({
             selectedCustomers.map((item) => item.value).join(",") ?? " ", // Assuming `customers` is an array in your formData
           consignees:
             selectedConsignees.map((item) => item.value).join(",") ?? " ", // Assuming `consignees` is an array in your formData
-          endUse: endUse != undefined ? endUse.value : endUse, //endUse["value"].toString(),
+          endUse: endUse[0] != undefined ? endUse[0].value : endUse[0], //endUse["value"].toString(),
           plant: Array.isArray(plant)
             ? plant.map((item) => item.value.toString()).toString() ?? " "
             : plant.toString() ?? " ",
@@ -552,7 +554,7 @@ const CreateRequestModal = ({
           am_id: session.employee_id,
           customers: selectedCustomers.map((item) => item.value).join(","), // Assuming `customers` is an array in your formData
           consignees: selectedConsignees.map((item) => item.value).join(","), // Assuming `consignees` is an array in your formData
-          endUse: endUse != undefined ? endUse.value : endUse, //endUse["value"].toString(),
+          endUse: endUse[0] != undefined ? endUse[0].value : endUse[0], //endUse["value"].toString(),
           plant: Array.isArray(plant)
             ? plant.map((item) => item.value.toString()).toString()
             : plant.toString(),
