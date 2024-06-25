@@ -1,16 +1,11 @@
-// controllers/authController.js
 const User = require("../models/userModel");
 
 exports.login = async (req, res) => {
-  //   console.log(req);
   const employee_id = req.params.employee_id;
-  console.log("Employee ID:", employee_id);
   try {
     const user = await User.findUserByEmployeeId(employee_id);
 
     if (user && req.session) {
-      console.log("Employee ID:", employee_id);
-      console.log(user);
       req.session.employee_id = employee_id;
       req.session.role = user.role;
       req.session.region = user.region;

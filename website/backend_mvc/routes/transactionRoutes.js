@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const transactionController = require("../controllers/transactionController");
 const priceRequestController = require("../controllers/priceRequestController");
+
 router.get(
   "/transactions/:requestId/analyze",
   transactionController.analyzeTransaction

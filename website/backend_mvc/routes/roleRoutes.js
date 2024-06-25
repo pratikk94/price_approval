@@ -1,4 +1,3 @@
-// routes/roleRoutes.js
 const express = require("express");
 const router = express.Router();
 const { fetchRoleDetails, updateEmployeeRole } = require("../controllers/roleController");

@@ -1,4 +1,3 @@
-// controllers/roleController.js
 const { getRoleDetails, updateEmployeRole } = require("../models/roleModel");
 
 const fetchRoleDetails = async (req, res) => {

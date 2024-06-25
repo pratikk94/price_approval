@@ -457,7 +457,7 @@ async function fetchData(role, status) {
   ${statusSTR};
     `;
 
-    // console.log(query);
+    console.log(query);
     // Use advanced query to get transactions pending with the given role
     const transactionsResult = await sql.query(query);
 

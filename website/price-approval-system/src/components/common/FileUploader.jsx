@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 
-import { backend_url } from "../../util";
+import { backend_url, backend_mvc } from "../../util";
 
 export default function FileUploader({
   onSuccess,
@@ -37,7 +37,7 @@ export default function FileUploader({
     console.log("Time", Date.now().toString());
     console.log("Form Data", formDataUpload);
     try {
-      const response = await fetch(`${backend_url}api/upload_file`, {
+      const response = await fetch(`${backend_mvc}api/upload_file`, {
         method: "POST",
         // headers: { "Content-Type": "application/json" },
         body: formDataUpload,
