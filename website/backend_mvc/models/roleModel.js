@@ -3,7 +3,7 @@ const { addAuditLog } = require("../utils/auditTrails");
 
 const getRoleDetails = async (role) => {
   try {
-    const result = await db.executeQuery(`EXEC FetchRoleByRoleID @role`, { "role": role });
+    const result = await db.executeQuery(`EXEC FetchRoleByRoleId @role`, { "role": role });
     return result.recordset[0]; // returns the first record or undefined
   } catch (err) {
     console.error("SQL error", err);

@@ -405,61 +405,8 @@ async function fetchConsolidatedRequest(requestId) {
 
 async function fetchData(role, status) {
   try {
-    await sql.connect(config);
-    console.log(`Status is:${status}`);
-    const statusSTR =
-      status == 0 ? "AND currently_pending_with = '" + role + "'" : "";
-    const statusIM =
-      status == 0 ? "status !=1 and status != -1" : "status = " + status;
-    const query = `
-    WITH LatestRequests AS (
-      SELECT 
-          req_id, 
-          status, 
-          ROW_NUMBER() OVER (PARTITION BY req_id ORDER BY id DESC) AS rn
-      FROM [PriceApprovalSystem].[dbo].[requests_mvc]
-  ),
-  FilteredRequests AS (
-      SELECT req_id
-      FROM LatestRequests
-      WHERE rn = 1 AND ${statusIM}
-  ),
-  MaxIds AS (
-      SELECT MAX(id) AS maxId, request_id
-      FROM transaction_mvc
-      WHERE request_id IN (SELECT req_id FROM FilteredRequests)
-      GROUP BY request_id
-  ),
-  MaxDetails AS (
-      SELECT m.maxId, m.request_id, t.current_status
-      FROM transaction_mvc t
-      INNER JOIN MaxIds m ON t.id = m.maxId
-  ),
-  RelatedTransactions AS (
-      SELECT t.*
-      FROM transaction_mvc t
-      INNER JOIN MaxDetails m ON t.request_id = m.request_id AND t.current_status = m.current_status
-  )
-  SELECT *
-  FROM RelatedTransactions
-  WHERE EXISTS (
-      SELECT 1
-      FROM transaction_mvc
-      WHERE request_id = RelatedTransactions.request_id
-      AND current_status = RelatedTransactions.current_status
-      AND id != RelatedTransactions.id
-  )
-  ${statusSTR}
-  UNION
-  SELECT *
-  FROM transaction_mvc
-  WHERE id IN (SELECT maxId FROM MaxDetails)
-  ${statusSTR};
-    `;
-
-    console.log(query);
     // Use advanced query to get transactions pending with the given role
-    const transactionsResult = await sql.query(query);
+    const transactionsResult = await db.executeQuery('EXEC GetTransactionDetails @Status, @Role', { "Status": status, "Role": role });
 
     let details = [];
     // For each transaction, fetch and consolidate request details
@@ -468,31 +415,9 @@ async function fetchData(role, status) {
         self.findIndex((t) => t.request_id === value.request_id) === index
     );
     for (let transaction of uniqueTransactions) {
-      console.log(transaction.request_id);
-      const query2 = `
-      SELECT 
-      request_name,
-      c.name AS customer_name, 
-      customer_id AS customer_ids,
-      consignee.name AS consignee_name, 
-      consignee_id AS consignee_ids,
-      enduse.name AS enduse_name,
-      end_use_id,
-      plant,
-      valid_from,
-      valid_to,
-      payment_terms_id
-FROM price_approval_requests par
-LEFT JOIN customer c ON par.customer_id = c.id
-LEFT JOIN customer consignee ON par.consignee_id = consignee.id
-LEFT JOIN customer enduse ON par.end_use_id = enduse.id
-JOIN requests_mvc rs ON par.request_name = rs.req_id
-WHERE request_name = '${transaction.request_id}' 
-  AND rs.status = '${status}'
-  AND (par.customer_id <> '' OR par.consignee_id <> '' OR par.end_use_id <> '')
-`;
-      console.log(query2);
-      const requestResult = await sql.query(query2);
+
+      const requestResult = await db.executeQuery('EXEC GetPriceApprovalRequests @RequestID, @Status;', { "RequestID": transaction.request_id, "Status": status });
+
       if (requestResult.recordset.length > 0) {
         const consolidated = requestResult.recordset.reduce((acc, row) => {
           Object.keys(row).forEach((key) => {
@@ -514,21 +439,7 @@ WHERE request_name = '${transaction.request_id}'
         });
 
         // Fetch price details with the maximum ID
-
-        const priceResult =
-          await sql.query(`SELECT PAQ.*, PC.Grade,BAV.[key],BAV.status 
-              FROM price_approval_requests_price_table PAQ 
-              INNER JOIN profit_center PC ON PAQ.grade = PC.Grade
-              INNER JOIN business_admin_variables BAV ON BAV.value = LEFT(CAST(ABS(PC.Profit_Centre) AS VARCHAR(10)), 1) 
-              and PAQ.req_id = '${transaction.request_id}' and BAV.[key] = '${role}'
-              `);
-
-        console.log(`SELECT PAQ.*, PC.Grade,BAV.[key],BAV.status 
-              FROM price_approval_requests_price_table PAQ 
-              INNER JOIN profit_center PC ON PAQ.grade = PC.Grade
-              INNER JOIN business_admin_variables BAV ON BAV.value = LEFT(CAST(ABS(PC.Profit_Centre) AS VARCHAR(10)), 1) 
-              and PAQ.req_id = '${transaction.request_id}' and BAV.[key] = '${role}'
-              `);
+        const priceResult = await db.executeQuery('EXEC GetPriceApprovalRequestDetails @RequestID, @Role', { "RequestID": transaction.request_id, "Role": role });
 
         details.push({
           request_id: transaction.request_id,
