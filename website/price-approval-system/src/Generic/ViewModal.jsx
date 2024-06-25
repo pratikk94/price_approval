@@ -331,9 +331,9 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                   <br />
                   Payment Terms ID: {data.consolidatedRequest.payment_terms_id}
                   <br />
-                  Valid From: {formatDate(data.consolidatedRequest.valid_from)}
+                  Valid From: {data.consolidatedRequest.valid_from}
                   <br />
-                  Valid To: {formatDate(data.consolidatedRequest.valid_to)}
+                  Valid To: {data.consolidatedRequest.valid_to}
                   <br />
                   FSC: {data.priceDetails[0]?.fsc == "Y " ? "Yes" : "No"}
                   <br />
@@ -359,6 +359,10 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                 >
                   <div>
                     <Button
+                      style={{
+                        backgroundColor: "#355E3b",
+                        color: "#fff",
+                      }}
                       variant="contained"
                       onClick={() => {
                         if (remarks.length < 11) {
@@ -383,7 +387,11 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                       Approve
                     </Button>
                     <Button
-                      style={{ marginLeft: "40px" }}
+                      style={{
+                        backgroundColor: "#FFC300",
+                        color: "#fff",
+                        marginLeft: "40px",
+                      }}
                       variant="contained"
                       onClick={() => {
                         if (remarks.length < 11) {

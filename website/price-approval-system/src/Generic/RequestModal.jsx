@@ -220,12 +220,12 @@ const CreateRequestModal = ({
 
         const today = moment();
         formData["validFrom"] = validFrom
-          ? moment(validFrom).tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ")
-          : today.tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ");
+          ? moment(validFrom).tz(timeZone).format("YYYY-MM-DD")
+          : today.tz(timeZone).format("YYYY-MM-DD");
 
         formData["validTo"] = validTo
-          ? moment(validTo).tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ")
-          : today.tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ");
+          ? moment(validTo).tz(timeZone).format("YYYY-MM-DD")
+          : today.tz(timeZone).format("YYYY-MM-DD");
         formData["remarks"] = remarks;
         formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
         tableRowsData[0]["fsc"] = fsc;

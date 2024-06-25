@@ -482,8 +482,8 @@ async function fetchData(role, status) {
       enduse.name AS enduse_name,
       end_use_id,
       plant,
-      valid_from,
-      valid_to,
+    CONVERT(VARCHAR, CAST(valid_from AS DATETIME), 103) AS valid_from,
+  CONVERT(VARCHAR, CAST(valid_to AS DATETIME), 103) AS valid_to,
       payment_terms_id
 FROM price_approval_requests par
 LEFT JOIN customer c ON par.customer_id = c.id

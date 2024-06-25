@@ -220,7 +220,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   };
 
   console.log(rule["rules"]);
-  
+
   const actionButtons = (rowData) => (
     <TableCell>
       <span style={{ display: "flex" }}>
@@ -280,17 +280,21 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                 onChange={handleSelectChange}
                 renderValue={(selected) => `${selected.length} selected`}
               >
-                {headers.map((header) => (
-                  <MenuItem key={header} value={header}>
-                    <Checkbox checked={selectedHeaders.indexOf(header) > -1} />
-                    <ListItemText
-                      primary={
-                        header.replace("_", " ").charAt(0).toUpperCase() +
-                        header.replace("_", " ").slice(1)
-                      }
-                    />
-                  </MenuItem>
-                ))}
+                {headers
+                  .filter((header) => !header.includes("_id"))
+                  .map((header) => (
+                    <MenuItem key={header} value={header}>
+                      <Checkbox
+                        checked={selectedHeaders.indexOf(header) > -1}
+                      />
+                      <ListItemText
+                        primary={
+                          header.replace("_", " ").charAt(0).toUpperCase() +
+                          header.replace("_", " ").slice(1)
+                        }
+                      />
+                    </MenuItem>
+                  ))}
               </Select>
             </FormControl>
             <TextField
@@ -305,24 +309,26 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                 <TableHead>
                   <TableRow>
                     <TableCell padding="checkbox" />
-                    {selectedHeaders.map((header, index) => (
-                      <DraggableHeader
-                        key={
-                          header.replace("_", " ").charAt(0).toUpperCase() +
-                          header.replace("_", " ").slice(1)
-                        }
-                        header={
-                          header.replace("_", " ").charAt(0).toUpperCase() +
-                          header.replace("_", " ").slice(1)
-                        }
-                        index={index}
-                        moveColumn={moveColumn}
-                        sortDirection={
-                          sortHeader === header ? sortDirection : false
-                        }
-                        handleSort={handleSort}
-                      />
-                    ))}
+                    {selectedHeaders
+                      .filter((header) => !header.includes("_id"))
+                      .map((header, index) => (
+                        <DraggableHeader
+                          key={
+                            header.replace("_", " ").charAt(0).toUpperCase() +
+                            header.replace("_", " ").slice(1)
+                          }
+                          header={
+                            header.replace("_", " ").charAt(0).toUpperCase() +
+                            header.replace("_", " ").slice(1)
+                          }
+                          index={index}
+                          moveColumn={moveColumn}
+                          sortDirection={
+                            sortHeader === header ? sortDirection : false
+                          }
+                          handleSort={handleSort}
+                        />
+                      ))}
                   </TableRow>
                 </TableHead>
               )}
@@ -330,19 +336,21 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                 {isMobile
                   ? data.map((row, rowIndex) => (
                       <Box key={rowIndex} p={2} mb={1} boxShadow={1}>
-                        {selectedHeaders.map((header) => (
-                          <Typography key={header} variant="body2">
-                            <strong>
-                              {header
-                                .replace("_", " ")
-                                .charAt(0)
-                                .toUpperCase() +
-                                header.replace("_", " ").slice(1)}
-                              :{" "}
-                            </strong>
-                            {row.consolidatedRequest[header]}
-                          </Typography>
-                        ))}
+                        {selectedHeaders
+                          .filter((header) => !header.includes("_id"))
+                          .map((header) => (
+                            <Typography key={header} variant="body2">
+                              <strong>
+                                {header
+                                  .replace("_", " ")
+                                  .charAt(0)
+                                  .toUpperCase() +
+                                  header.replace("_", " ").slice(1)}
+                                :{" "}
+                              </strong>
+                              {row.consolidatedRequest[header]}
+                            </Typography>
+                          ))}
                         <Box
                           mt={2}
                           display="flex"
@@ -374,13 +382,15 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                           <TableCell padding="checkbox">
                             <Checkbox checked={isSelected(row.request_id)} />
                           </TableCell>
-                          {selectedHeaders.map((header) => (
-                            <TableCell key={header}>
-                              {header === "Actions"
-                                ? actionButtons(row)
-                                : row.consolidatedRequest[header]}
-                            </TableCell>
-                          ))}
+                          {selectedHeaders
+                            .filter((header) => !header.includes("_id"))
+                            .map((header) => (
+                              <TableCell key={header}>
+                                {header === "Actions"
+                                  ? actionButtons(row)
+                                  : row.consolidatedRequest[header]}
+                              </TableCell>
+                            ))}
                         </TableRow>
                       ))}
               </TableBody>
