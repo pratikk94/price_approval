@@ -11,6 +11,7 @@
 
 const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
+const { fetchRequestNames } = require("../utils/fetchAllRequestIds");
 
 async function getRemarksWithRequests(request_id) {
   try {
@@ -46,24 +47,22 @@ async function getRemarksWithRequests(request_id) {
       RequestHierarchy rh ON r.request_id = rh.request_id;
   `;
 
+    const requestIds = await fetchRequestNames(request_id);
+
     const query2 = `SELECT 
-  DISTINCT r.request_id,
-  r.id,
-  r.user_id,
-  r.comment,
-  r.created_at
-FROM 
-  dbo.Remarks AS r
-INNER JOIN 
-  dbo.requests_mvc AS req
-ON 
-  r.request_id = req.req_id
-WHERE r.request_id = '${request_id}'`;
-    let result = await db.executeQuery(query1);
+                    DISTINCT r.request_id,
+                    r.id,
+                    r.user_id,
+                    r.comment,
+                    r.created_at
+                  FROM 
+                    dbo.Remarks AS r
+                  WHERE r.request_id in ('${requestIds.join("', '")}')`;
+    //let result = await db.executeQuery(query1);
     // let result = await pool.request().query(query1);
-    if (result.recordset.length == 0)
-      // result = await pool.request().query(query2);
-      result = await db.executeQuery(query2);
+    //if (result.recordset.length == 0)
+    // result = await pool.request().query(query2);
+    result = await db.executeQuery(query2);
     return result.recordset;
   } catch (err) {
     console.error("SQL error", err);
@@ -84,10 +83,14 @@ async function postRemark(remarkData) {
     OUTPUT INSERTED.*
     VALUES ('${request_id}', '${user_id}', '${comment}', GETDATE())
     SELECT SCOPE_IDENTITY() as id
-  `
-    const result = await db.executeQuery(query, { "request_id": request_id, "user_id": user_id, "comment": comment });
+  `;
+    const result = await db.executeQuery(query, {
+      request_id: request_id,
+      user_id: user_id,
+      comment: comment,
+    });
     // Add audit log for the update operation
-    await addAuditLog('Remarks', result.recordset[0].id, 'INSERT', null);
+    await addAuditLog("Remarks", result.recordset[0].id, "INSERT", null);
     return result.recordset[0].id; // Returns the new remark ID
   } catch (err) {
     console.error("SQL error", err);

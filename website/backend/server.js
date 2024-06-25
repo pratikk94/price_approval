@@ -3151,7 +3151,7 @@ app.post("/api/add_price_request", async (req, res) => {
       mappint_type,
       statusUpdatedById,
       tempRequestIds,
-      tempAttachmentId,
+      tempAttachmentIds,
       isAM,
     } = req.body;
     mappint_type != undefined ? (mappint_type = 2) : (mappint_type = 1);
@@ -3244,8 +3244,8 @@ app.post("/api/add_price_request", async (req, res) => {
         .catch((error) => console.error("Error updating Request IDs:", error));
     }
 
-    if (tempAttachmentId != null && tempAttachmentId != undefined) {
-      changeAttachmentIds(tempAttachmentId, req_name)
+    if (tempAttachmentIds != null && tempAttachmentIds != undefined) {
+      changeAttachmentIds(tempAttachmentIds, req_name)
         .then(() => console.log("Attachment ID updated successfully."))
         .catch((error) =>
           console.error("Error updating Attachment ID:", error)

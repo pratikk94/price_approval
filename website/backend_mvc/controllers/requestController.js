@@ -16,11 +16,12 @@ const { requestStatus } = require("../utils/updateRequestStatus");
 const updateRequestStatus = async (req, res) => {
   const { current_role, region, action, req_id } = req.body;
   try {
-   let result = await requestStatus(current_role,region,action,req_id);
-   res.json({message: result.message,
-    status:result.status,
-    pendingWith:result.pendingWith})
-
+    let result = await requestStatus(current_role, region, action, req_id);
+    res.json({
+      message: result.message,
+      status: result.status,
+      pendingWith: result.pendingWith,
+    });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
@@ -28,7 +29,7 @@ const updateRequestStatus = async (req, res) => {
 
 const updatePreApprovedRequestStatus = async (requestName, action) => {
   try {
-    await sql.connect(config);
+    // await sql.connect(config);
 
     console.log("LIKE QUERY IS " + requestName.substring(1));
 
@@ -38,12 +39,12 @@ const updatePreApprovedRequestStatus = async (requestName, action) => {
     //   FROM pre_approved_request_status_mvc
     //   WHERE parent_request_name LIKE '%' + ${requestName.substring(1)} + '%'
     // `;
-    const query = await sql.query`
+    const query = `
       SELECT parent_request_name, request_name
       FROM pre_approved_request_status_mvc
-      WHERE parent_request_name LIKE '%' + ${requestName.substring(1)} + '%'
+      WHERE parent_request_name LIKE '%${requestName.substring(1)}%'
     `;
-
+    console.log(query);
     const parentRequestResult = await db.executeQuery(query);
 
     console.log(`Request name is ${requestName}`);
@@ -66,9 +67,10 @@ const updatePreApprovedRequestStatus = async (requestName, action) => {
       );
     `;
     const updateResult2 = await db.executeQuery(query3);
-
+    console.log(`Updated Result`);
+    console.log(updateResult2);
     // Add audit log for the UPDATE operation
-    await addAuditLog('requests_mvc', updateResult2.recordset[0].id, 'UPDATE', null);
+    await addAuditLog("requests_mvc", 0, "UPDATE", null);
 
     // const updateResult2 = await pool.request().query(query3);
     console.log(updateResult2);
@@ -93,7 +95,12 @@ const addADraft = async (requestName) => {
     const result = await db.executeQuery(query);
 
     // Add audit log for the Insert operation
-    await addAuditLog('pre_approved_request_status_mvc', result.recordset[0].id, 'INSERT', null);
+    await addAuditLog(
+      "pre_approved_request_status_mvc",
+      result.recordset[0].id,
+      "INSERT",
+      null
+    );
 
     // const result = await sql.query(query);
     updatePreApprovedRequestStatus(requestName, 5);

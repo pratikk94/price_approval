@@ -218,7 +218,7 @@ Write to requests_status_mvc
 1. Pass grade with descriptionto function filter.
 2. Split grade by spaces and focus on first word.
 3. For the given grade(first word) fetch the first digit of profit_center
-4. Call function http://192.168.1.101:3000/api/fetchValuesByParams which has json o/p as 
+4. Call function http://192.168.1.102:3000/api/fetchValuesByParams which has json o/p as 
 [
     {
         "id": 1,
@@ -240,3 +240,17 @@ Write to requests_status_mvc
     }
 ]
 5. For the given grade(first word) fetch the first digit of profit_center match with values available and return the 
+
+
+************************* Fetch Parent Req Ids **********************
+1. We have a table pre_approved_request_status_mvc.
+2. Select query on this table with given request_name.
+3. Add request_name to a list.
+4. Fetch parent_request_name.
+5. Add parent_request_name to a list.
+5. Replace the first character with 'N' and use it as request name.
+6. Fetch its parent_request_name with this request name.
+7. Repeat the process till parent_request_name is null.
+8. After reaching null, return the list of request_name.
+
+**********************************************************************

@@ -132,7 +132,7 @@ async function insertTransactions(data) {
     requestId,
     prices, // Assume prices is an array
     am_id,
-    tempAttachmentId,
+    tempAttachmentIds,
   } = data;
 
   const customerList = customers.split(",");
@@ -174,7 +174,7 @@ async function insertTransactions(data) {
       throw new Error("Invalid input: prices must be an array");
     }
 
-    changeAttachmentIds(tempAttachmentId, requestId)
+    changeAttachmentIds(tempAttachmentIds, requestId)
       .then(() => console.log("Attachment ID updated successfully."))
       .catch((error) => console.error("Error updating Attachment ID:", error));
 
@@ -213,7 +213,10 @@ async function changeAttachmentIds(tempAttachmentIds, newRequestId) {
     console.log(typeof tempAttachmentIds);
     if (tempAttachmentIds != undefined) {
       // Make sure `config` is defined with your DB credentials
-      tempAttachmentIds = tempAttachmentIds.split(",");
+      tempAttachmentIds =
+        typeof tempAttachmentIds == "string"
+          ? tempAttachmentIds.split(",")
+          : tempAttachmentIds;
       const promises = tempAttachmentIds.map((tempId) => {
         console.log(
           `Temp ids are ${tempId} and New request id is ${newRequestId}`
