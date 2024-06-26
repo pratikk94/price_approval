@@ -204,3 +204,63 @@ BEGIN
       AND (ptm.end_use_id IN (SELECT end_use_id FROM @EndUses) OR ptm.end_use_id IS NULL)
     GROUP BY pt.terms;
 END;
+
+
+CREATE PROCEDURE GetFilesByRequestId
+    @requestId NVARCHAR(50) 
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT * 
+    FROM files f 
+    WHERE f.request_id = @requestId;
+END;
+
+
+CREATE PROCEDURE GetBusinessAdminData
+    @queryType VARCHAR(255),
+    @fsc CHAR(10) = NULL
+AS
+BEGIN
+    IF @queryType = 'payment_terms'
+    BEGIN
+        -- Result Set 1: Payment Terms
+        SELECT terms AS name, payment_terms_id AS code
+        FROM payment_terms;
+    END
+    ELSE IF @queryType = 'plant'
+    BEGIN
+        -- Result Set 2: Plants
+        SELECT name, id AS code
+        FROM plant;
+    END
+    ELSE IF @queryType = 'grade'
+    BEGIN
+        -- Result Set 3: Materials
+        SELECT grade AS name, id AS code
+        FROM material
+        WHERE fsc = @fsc;
+    END
+    ELSE IF @queryType = 'user_master'
+    BEGIN
+        -- Result Set 4: Employees without roles
+        SELECT um.employee_name AS name, um.employee_id AS id
+        FROM user_master um
+        LEFT JOIN define_roles dr ON um.employee_id = dr.employee_id
+        WHERE dr.employee_id IS NULL;
+    END
+    ELSE IF @queryType = 'role'
+    BEGIN
+        -- Result Set 5: Roles
+        SELECT *
+        FROM roles;
+    END
+    ELSE IF @queryType = 'region'
+    BEGIN
+        -- Result Set 6: Regions
+        SELECT *
+        FROM region;
+    END
+END;
+GO

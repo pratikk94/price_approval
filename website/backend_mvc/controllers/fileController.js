@@ -17,6 +17,22 @@ async function uploadFileDetails(req, res) {
   }
 }
 
+async function fetchFileByRequestId(req, res) {
+  try {
+    const result = await fileModel.fetchFileByRequest(req.params.request_id);
+    console.log(result.recordset);
+    if (result.recordset.length > 0) {
+      res.json(result.recordset);
+    } else {
+      res.status(404).send("No files found for the provided request_id.");
+    }
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).send("Failed to fetch data due to server error.");
+  }
+}
+
 module.exports = {
-    uploadFileDetails
+    uploadFileDetails,
+    fetchFileByRequestId
 };

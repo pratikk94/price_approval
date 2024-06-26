@@ -12,6 +12,19 @@ async function uploadFile(originalname, buffer, request_id) {
     }
 }
 
+async function fetchFileByRequest(request_id) {
+    try {
+        // const query = `INSERT INTO files (request_id, file_name, file_data) VALUES (@requestId, @name, @data);`;
+        let result = await db.executeQuery(`EXEC GetFilesByRequestId @requestId`, { "requestId": request_id });
+        // Send the results as a response
+        return result;
+    } catch (error) {
+        console.error("An error occurred while fetching plants", error);
+        throw error;
+    }
+}
+
 module.exports = {
-    uploadFile
+    uploadFile,
+    fetchFileByRequest
 };

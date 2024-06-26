@@ -75,9 +75,21 @@ async function addRule(data) {
   }
 }
 
+async function getBusinessAdmin(type,fsc) {
+  try {
+    let result = await db.executeQuery('EXEC GetBusinessAdminData @queryType, @fsc', { "queryType": type, "fsc": fsc ? fsc : null });
+
+    return result;
+  } catch (err) {
+    console.error("SQL error", err);
+    throw err;
+  }
+}
+
 module.exports = {
   getValuesByParams,
   getSalesRegion,
   getGradeWithPC,
   addRule,
+  getBusinessAdmin
 };
