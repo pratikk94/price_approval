@@ -1,9 +1,9 @@
-const { getRoleDetails, updateEmployeRole } = require("../models/roleModel");
+const roleModel = require("../models/roleModel");
 
 const fetchRoleDetails = async (req, res) => {
   const role = req.params.role;
   try {
-    const details = await getRoleDetails(role);
+    const details = await roleModel.getRoleDetails(role);
     if (details) {
       res.json({ success: true, data: details });
     } else {
@@ -22,7 +22,7 @@ const fetchRoleDetails = async (req, res) => {
 
 const updateEmployeeRole = async (req, res) => {
   try {
-    const emplotyeeDetails = await updateEmployeRole(req.body)
+    const emplotyeeDetails = await roleModel.updateEmployeRole(req.body)
     res.send(emplotyeeDetails);
 
   } catch (error) {
@@ -36,4 +36,44 @@ const updateEmployeeRole = async (req, res) => {
   }
 
 }
-module.exports = { fetchRoleDetails, updateEmployeeRole };
+
+const fetchRoleData = async (req, res) => {
+  try {
+    const result = await roleModel.fetchRoleData();
+    console.log(result);
+    res.send(result.recordset);
+
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error accessing the database",
+        error: error.message,
+      });
+  }
+
+}
+
+const fetchRoleById = async (req, res) => {
+  try {
+    const result = await roleModel.fetchRoleData();
+    console.log(result);
+    res.send(result.recordset);
+
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error accessing the database",
+        error: error.message,
+      });
+  }
+
+}
+module.exports = { 
+  fetchRoleDetails, 
+  updateEmployeeRole,
+  fetchRoleData,
+  fetchRoleById };

@@ -54,10 +54,24 @@ async function fetchBusinessAdmin(req, res) {
   }
 }
 
+async function addEmployeeRole(req, res) {
+  try {
+    let { employee_id, employee_name, role, region, created_date, active } =
+    req.body;
+    created_date = created_date ? new Date(created_date) : new Date();
+    const result = await businessAdminModel.addEmployeeRole( employee_id, employee_name, role, region, created_date, active );
+    console.log(result,"testing..............")
+    res.send(result.recordset);
+  } catch (err) {
+    res.status(500).send({ error: "An error occurred while inserting data" });
+  }
+}
+
 module.exports = {
   fetchValuesByParams,
   fetchSalesRegions,
   fetchGradeWithPC,
   addDefinedRule,
-  fetchBusinessAdmin
+  fetchBusinessAdmin,
+  addEmployeeRole
 };
