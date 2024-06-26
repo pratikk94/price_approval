@@ -22,9 +22,9 @@ async function processTransaction(req, res) {
       oneToOneMapping,
       prices,
       am_id,
-      tempAttachmentId,
+      tempAttachmentIds,
     } = req.body;
-
+    console.log("tempAttachmentIds", tempAttachmentIds);
     const requestId = await transactionModel.handleNewRequest();
     console.log("requestId", requestId); // Debugging output (requestId value
     const result = await transactionModel.insertTransactions({
@@ -40,7 +40,7 @@ async function processTransaction(req, res) {
       requestId,
       prices,
       am_id,
-      tempAttachmentId,
+      tempAttachmentIds,
     });
 
     priceRequestModel.addTransactionToTable(requestId, am_id);
@@ -72,7 +72,9 @@ async function processPrevApprovedTransaction(req, res) {
       am_id,
       action,
       oldRequestId,
+      tempAttachmentIds,
     } = req.body;
+    console.log(tempAttachmentIds);
     console.log("oldRequestId", oldRequestId);
     console.log("Action is ", action);
     if (action == "R") {
@@ -99,6 +101,7 @@ async function processPrevApprovedTransaction(req, res) {
       requestId,
       prices,
       am_id,
+      tempAttachmentIds,
     });
 
     priceRequestModel.addTransactionToTable(

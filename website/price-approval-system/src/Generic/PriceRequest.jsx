@@ -334,7 +334,7 @@ function PriceChangeRequest(rules, employee_id) {
   console.log("Rows", rows);
 
   return (
-    <div style={{ width: "80vw", height: "96vh" }}>
+    <div style={{ width: "97vw", height: "96vh" }}>
       <Typography variant="h4" gutterBottom>
         Price Requests
       </Typography>
@@ -362,7 +362,7 @@ function PriceChangeRequest(rules, employee_id) {
                 ...(filter === "Rework" && { mr: 2 }),
               }} // Add space after "Rework"
             >
-              {filter}
+              <Typography variant="h6">{filter}</Typography>
             </Button>
           ))}
         </span>
@@ -374,7 +374,7 @@ function PriceChangeRequest(rules, employee_id) {
               onClick={handleClick}
               variant="contained"
             >
-              + Create request
+              <Typography variant="h5">+ Create request</Typography>
             </Button>
             <Menu
               id="actions-menu"
@@ -389,11 +389,15 @@ function PriceChangeRequest(rules, employee_id) {
                   handleCreateRequest();
                 }}
               >
-                Create New Request
+                <Typography variant="h6">Create New Request</Typography>
               </MenuItem>
-              <MenuItem onClick={handleCopyRequest}>Copy Request</MenuItem>
+              <MenuItem onClick={handleCopyRequest}>
+                <Typography variant="h6">Copy Request</Typography>
+              </MenuItem>
 
-              <MenuItem onClick={handleMergeRequest}>Merge Request</MenuItem>
+              <MenuItem onClick={handleMergeRequest}>
+                <Typography variant="h6">Merge Request</Typography>
+              </MenuItem>
             </Menu>
 
             <CreateRequestModal

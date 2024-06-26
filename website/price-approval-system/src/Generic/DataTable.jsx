@@ -5,6 +5,7 @@ import axios from "axios";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { TablePagination, IconButton, Typography } from "@mui/material";
+import "./DataTable.css";
 import {
   Box,
   Table,
@@ -67,13 +68,18 @@ function DraggableHeader({
   drag(drop(ref));
 
   return (
-    <TableCell ref={preview}>
+    <TableCell
+      ref={preview}
+      sx={{ bgcolor: "#156760", color: "common.white", fontWeight: "bold" }}
+    >
       <TableSortLabel
         active
         direction={sortDirection || "asc"}
         onClick={() => handleSort(header)}
       >
-        {header}
+        <center>
+          <h2>{header}</h2>
+        </center>
       </TableSortLabel>
     </TableCell>
   );
@@ -81,11 +87,12 @@ function DraggableHeader({
 
 function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   const [data, setData] = useState([]);
+  const [order, setOrder] = useState("asc");
+  const [orderBy, setOrderBy] = useState("");
   const [headers, setHeaders] = useState([]);
   const [selectedHeaders, setSelectedHeaders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortDirection, setSortDirection] = useState("asc");
-  const [sortHeader, setSortHeader] = useState("");
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [page, setPage] = useState(0);
@@ -161,7 +168,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
         }
       })
       .catch((error) => console.error("Error fetching data:", error));
-  }, [session.role, status, url]);
+  }, [session.role, url]);
 
   const moveColumn = useCallback(
     (dragIndex, hoverIndex) => {
@@ -182,14 +189,14 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
     setSearchTerm(event.target.value);
   };
 
-  const handleSort = (header) => {
-    if (sortHeader === header) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortHeader(header);
-      setSortDirection("asc");
-    }
-  };
+  // const handleSort = (header) => {
+  //   if (sortHeader === header) {
+  //     setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  //   } else {
+  //     setSortHeader(header);
+  //     setSortDirection("asc");
+  //   }
+  // };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -220,7 +227,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   };
 
   console.log(rule["rules"]);
-  
+
   const actionButtons = (rowData) => (
     <TableCell>
       <span style={{ display: "flex" }}>
@@ -261,17 +268,61 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
     </TableCell>
   );
 
+  const handleSort = (property) => {
+    console.log(`Sorting by ${property}`);
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+    sortData(property, isAsc ? "desc" : "asc");
+  };
+
+  const sortData = (sortBy, sortOrder) => {
+    console.log(`Sorting data by ${sortBy} in ${sortOrder} order`);
+    const sortedData = [...data].sort((a, b) => {
+      if (a["consolidatedRequest"][sortBy] < b["consolidatedRequest"][sortBy]) {
+        return sortOrder === "asc" ? -1 : 1;
+      }
+      if (a["consolidatedRequest"][sortBy] > b["consolidatedRequest"][sortBy]) {
+        return sortOrder === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+    console.log(sortedData);
+    setData(sortedData);
+  };
+
   return (
     <>
       <DndProvider backend={HTML5Backend}>
-        <Paper sx={{ width: "100%", overflowX: "auto" }}>
+        <Paper
+          sx={{
+            width: "100%",
+            overflowX: "auto",
+            boxShadow: 2,
+            borderRadius: 2,
+          }}
+        >
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
             mb={2}
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
+              p: 1,
+              bgcolor: "background.paper",
+              borderRadius: 1,
+            }}
           >
-            <FormControl>
+            <FormControl
+              className="dataTableContainer"
+              alignItems="center"
+              mb={2}
+              sx={{ mb: 2 }}
+            >
               {/* <InputLabel id="select-label">Headers</InputLabel> */}
               <Select
                 labelId="select-label"
@@ -280,49 +331,62 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                 onChange={handleSelectChange}
                 renderValue={(selected) => `${selected.length} selected`}
               >
-                {headers.map((header) => (
-                  <MenuItem key={header} value={header}>
-                    <Checkbox checked={selectedHeaders.indexOf(header) > -1} />
-                    <ListItemText
-                      primary={
-                        header.replace("_", " ").charAt(0).toUpperCase() +
-                        header.replace("_", " ").slice(1)
-                      }
-                    />
-                  </MenuItem>
-                ))}
+                {headers
+                  .filter((header) => !header.includes("_id"))
+                  .map((header) => (
+                    <MenuItem key={header} value={header}>
+                      <Checkbox
+                        checked={selectedHeaders.indexOf(header) > -1}
+                        className="menuItemCheckbox"
+                      />
+                      <ListItemText
+                        primary={
+                          header.replace("_", " ").charAt(0).toUpperCase() +
+                          header.replace("_", " ").slice(1)
+                        }
+                      />
+                    </MenuItem>
+                  ))}
               </Select>
             </FormControl>
             <TextField
               label=""
               value={searchTerm}
               onChange={handleSearchChange}
+              sx={{ mx: 2 }}
             />
           </Box>
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} sx={{ padding: 5 }}>
             <Table>
               {!isMobile && (
                 <TableHead>
                   <TableRow>
-                    <TableCell padding="checkbox" />
-                    {selectedHeaders.map((header, index) => (
-                      <DraggableHeader
-                        key={
-                          header.replace("_", " ").charAt(0).toUpperCase() +
-                          header.replace("_", " ").slice(1)
-                        }
-                        header={
-                          header.replace("_", " ").charAt(0).toUpperCase() +
-                          header.replace("_", " ").slice(1)
-                        }
-                        index={index}
-                        moveColumn={moveColumn}
-                        sortDirection={
-                          sortHeader === header ? sortDirection : false
-                        }
-                        handleSort={handleSort}
-                      />
-                    ))}
+                    <TableCell
+                      padding="checkbox"
+                      sx={{
+                        bgcolor: "green.dark",
+                        color: "common.white",
+                        fontWeight: "bold",
+                      }}
+                    />
+                    {selectedHeaders
+                      .filter((header) => !header.includes("_id"))
+                      .map((header, index) => (
+                        <DraggableHeader
+                          key={
+                            header.replace("_", " ").charAt(0).toUpperCase() +
+                            header.replace("_", " ").slice(1)
+                          }
+                          header={
+                            header.replace("_", " ").charAt(0).toUpperCase() +
+                            header.replace("_", " ").slice(1)
+                          }
+                          index={index}
+                          moveColumn={moveColumn}
+                          sortDirection={orderBy === header ? order : false}
+                          handleSort={() => handleSort(header)}
+                        />
+                      ))}
                   </TableRow>
                 </TableHead>
               )}
@@ -330,29 +394,49 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                 {isMobile
                   ? data.map((row, rowIndex) => (
                       <Box key={rowIndex} p={2} mb={1} boxShadow={1}>
-                        {selectedHeaders.map((header) => (
-                          <Typography key={header} variant="body2">
-                            <strong>
-                              {header
-                                .replace("_", " ")
-                                .charAt(0)
-                                .toUpperCase() +
-                                header.replace("_", " ").slice(1)}
-                              :{" "}
-                            </strong>
-                            {row.consolidatedRequest[header]}
-                          </Typography>
-                        ))}
+                        {selectedHeaders
+                          .filter((header) => !header.includes("_id"))
+                          .map((header) => (
+                            <Typography key={header} variant="body2">
+                              <strong>
+                                {header
+                                  .replace("_", " ")
+                                  .charAt(0)
+                                  .toUpperCase() +
+                                  header.replace("_", " ").slice(1)}
+                                :{" "}
+                              </strong>
+                              {row.consolidatedRequest[header]}
+                            </Typography>
+                          ))}
                         <Box
                           mt={2}
                           display="flex"
                           justifyContent="space-between"
                         >
-                          <IconButton onClick={() => handleViewAction(row)}>
-                            <ViewIcon />
+                          <IconButton
+                            onClick={() => handleViewAction(row)}
+                            sx={{
+                              m: 1,
+                              "&:hover": {
+                                bgcolor: "secondary.light", // theme-based color
+                                transform: "scale(1.1)",
+                              },
+                            }}
+                          >
+                            <ViewIcon sx={{ color: "primary.main" }} />
                           </IconButton>
-                          <IconButton onClick={() => handleDownloadAction(row)}>
-                            <DownloadIcon />
+                          <IconButton
+                            onClick={() => handleDownloadAction(row)}
+                            sx={{
+                              m: 1,
+                              "&:hover": {
+                                bgcolor: "secondary.light", // theme-based color
+                                transform: "scale(1.1)",
+                              },
+                            }}
+                          >
+                            <DownloadIcon sx={{ color: "primary.main" }} />
                           </IconButton>
                           {/* Additional buttons here */}
                         </Box>
@@ -365,6 +449,12 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                       )
                       .map((row, index) => (
                         <TableRow
+                          sx={{
+                            "&:nth-of-type(odd)": { bgcolor: "action.hover" },
+                            "&:nth-of-type(even)": {
+                              bgcolor: "background.default",
+                            },
+                          }}
                           key={row.request_id}
                           selected={isSelected(row.request_id)}
                           onClick={() => handleRowClick(row.request_id)}
@@ -374,13 +464,19 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                           <TableCell padding="checkbox">
                             <Checkbox checked={isSelected(row.request_id)} />
                           </TableCell>
-                          {selectedHeaders.map((header) => (
-                            <TableCell key={header}>
-                              {header === "Actions"
-                                ? actionButtons(row)
-                                : row.consolidatedRequest[header]}
-                            </TableCell>
-                          ))}
+                          {selectedHeaders
+                            .filter((header) => !header.includes("_id"))
+                            .map((header) => (
+                              <TableCell key={header}>
+                                {header === "Actions" ? (
+                                  actionButtons(row)
+                                ) : (
+                                  <Typography variant="h6">
+                                    {row.consolidatedRequest[header]}
+                                  </Typography>
+                                )}
+                              </TableCell>
+                            ))}
                         </TableRow>
                       ))}
               </TableBody>
