@@ -292,9 +292,9 @@ function PriceViewModal({ open, handleClose, data, rule }) {
     updateStatus(updateStatusV);
     window.location.reload();
   };
-  console.log(rule);
-  console.log(rule.rules.can_approve);
-  console.log(data["consolidatedRequest"]);
+  // console.log(rule);
+  // console.log(rule.rules.can_approve);
+  // console.log(data["consolidatedRequest"]);
   return (
     data["consolidatedRequest"] && (
       <>

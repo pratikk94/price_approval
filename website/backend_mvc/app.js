@@ -65,5 +65,6 @@ app.use("/api", plantsRoutes);
 app.use("/api", gradeRoutes);
 app.use("/api", fileRoutes);
 app.use("/api/files", attachmentRoutes);
+app.use("/api/", roleRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, url, () => console.log(`Server running on port ${PORT}`));

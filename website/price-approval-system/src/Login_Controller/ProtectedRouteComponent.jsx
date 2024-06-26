@@ -4,7 +4,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useSession } from "./SessionContext";
 import App from "../App/App"; // Your component for users with the RM role
 import { backend_mvc } from "../util";
-
+import BA from "../BA/App";
 const ProtectedRoute = () => {
   const { session, setSession } = useSession();
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ const ProtectedRoute = () => {
   };
 
   // Render the main app component
-  return <App logout={logout} />;
+  return session.role === "BAM" ? <BA /> : <App logout={logout} />;
 };
 
 export default ProtectedRoute;

@@ -235,7 +235,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
     // Implement your download logic here
   };
 
-  console.log(rule["rules"]);
+  // console.log(rule["rules"] ?? "");
 
   const actionButtons = (rowData) => (
     <div>
