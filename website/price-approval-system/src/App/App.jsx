@@ -29,9 +29,11 @@ function ResponsiveDrawer({ logout }) {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { session } = useSession();
   const drawerWidth = 240;
+  // Assuming other state and variables are defined above
+  const [drawerOpen, setDrawerOpen] = useState(false); // Add this line
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    setDrawerOpen(!drawerOpen);
   };
 
   const drawerItems = [
@@ -69,17 +71,16 @@ function ResponsiveDrawer({ logout }) {
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
         <Toolbar>
-          {isMobile && (
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 2, display: { sm: "none" } }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
+
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Logo
           </Typography>
@@ -92,8 +93,8 @@ function ResponsiveDrawer({ logout }) {
         </Toolbar>
       </AppBar>
       <Drawer
-        variant={isMobile ? "temporary" : "permanent"}
-        open={isMobile ? mobileOpen : true}
+        variant={"temporary"}
+        open={drawerOpen}
         onClose={handleDrawerToggle}
         ModalProps={{
           keepMounted: true, // Better open performance on mobile.
