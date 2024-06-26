@@ -21,15 +21,17 @@ const { format, toZonedTime } = require("date-fns-tz");
 const { listenerCount } = require("events");
 app.use(cors(corsOptions));
 app.use(express.json());
+require("dotenv").config();
 // Configuration object for your SQL Server
+
 const config = {
   user: "sa",
-  password: "SayaliK20311",
+  password: "Innominds@123",
   server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
   // password: "12345",
   // server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
-  database: "PriceApprovalSystem",
+  database: process.env.DB_NAME,
   options: {
     enableArithAbort: true,
     encrypt: true, // Use this if you're on Windows Azure

@@ -48,7 +48,7 @@ async function addDefinedRule(req, res) {
 async function fetchBusinessAdmin(req, res) {
   try {
     const result = await businessAdminModel.getBusinessAdmin(req.params.type,req.params.fsc);
-    res.send(result);
+    res.send(result.recordset);
   } catch (err) {
     res.status(500).send({ error: "An error occurred while inserting data" });
   }
