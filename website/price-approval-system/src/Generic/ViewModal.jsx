@@ -92,7 +92,13 @@ function PriceTable({ price, selectedConsignees, selectedCustomers, plant }) {
                 <TableCell align="right">{row.offline_discount}</TableCell>
                 <TableCell align="right">{row.net_nsr}</TableCell>
                 <TableCell align="right">
-                  <span style={{ display: "flex", justifyContent: "center" }}>
+                  <span
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      backgroundColor: "#FFF",
+                    }}
+                  >
                     <Button
                       variant="outlined"
                       color="primary"
@@ -299,28 +305,38 @@ function PriceViewModal({ open, handleClose, data, rule }) {
           style={{
             content: {
               top: "54%",
-              left: "58%",
-              right: "auto",
-              bottom: "auto",
+              left: "50%",
+              height: "80vh",
+              width: "64vw",
               marginRight: "-50%",
               transform: "translate(-50%, -50%)",
-              backgroundColor: "#FFF", // White background
+              backgroundColor: "#FFF", // Maintaining a white background
               padding: "20px",
-              borderRadius: "10px",
-              maxHeight: "84vh", // Adjust the height as needed
-              maxWidth: "76vw", // Adjust the width as needed
-              // Responsive width
+              borderRadius: "20px", // Increased border radius for a softer look
+              boxShadow:
+                "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)", // Soft shadow for depth
+              border: "1px solid rgba(255, 255, 255, 0.1)", // Subtle border
+              backdropFilter: "blur(10px)", // Soft background blur effect
+              webkitBackdropFilter: "blur(10px)", // For Safari
+              // Ensures no content spills out
+              overflow: "auto",
+              transition: "transform 0.3s ease-out", // Smooth transition for modal appearance
+              // Gradient background for a vibrant look
+              background: "linear-gradient(135deg, #fff,  #004d40)",
             },
             overlay: {
-              backgroundColor: "rgba(0, 0, 0, 0.75)", // Dark overlay
+              backgroundColor: "rgba(0, 0, 0, 0.75)", // Darker overlay for better focus on the modal
+              transition: "opacity 0.3s ease-out", // Smooth transition for the overlay appearance
             },
           }}
         >
-          <h2>Request Details</h2>
+          <p style={{ color: "#323232", fontSize: "4vh" }}>
+            <center>Request Details</center>
+          </p>
           {data ? (
             <>
               <div>
-                <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                <p style={{ color: "#323232", fontSize: "3vh" }}>
                   Customer: {data["consolidatedRequest"].customer_name}
                   <br />
                   Consignee: {data.consolidatedRequest.consignee_name}
@@ -341,7 +357,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                   {data.consolidatedRequest.mappint_type == 1
                     ? "One to one mapping"
                     : "One to many mapping"}
-                </Typography>
+                </p>
               </div>
               <PriceTable
                 price={data.priceDetails}
@@ -455,7 +471,12 @@ function PriceViewModal({ open, handleClose, data, rule }) {
 
               <br />
               <HistoryModal reqId={id} />
-              <button onClick={handleClose}>Close</button>
+              <button
+                onClick={handleClose}
+                style={{ backgroundColor: "#156760" }}
+              >
+                Close
+              </button>
             </>
           ) : null}
         </ReactModal>
@@ -536,7 +557,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                         variant="contained"
                         color="primary"
                         onClick={handleConfirm}
-                        sx={{ mt: 2 }}
+                        sx={{ mt: 2, bgColor: "#156760" }}
                       >
                         Yes
                       </Button>

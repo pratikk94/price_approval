@@ -70,7 +70,16 @@ function DraggableHeader({
   return (
     <TableCell
       ref={preview}
-      sx={{ bgcolor: "#156760", color: "common.white", fontWeight: "bold" }}
+      sx={{
+        bgcolor: "#156760",
+        color: "common.white",
+        fontWeight: "bold",
+        height: "24px !important", // Attempting to override with !important
+        "& .MuiTableSortLabel-root": {
+          // Increasing specificity for potential child components
+          height: "24px !important",
+        },
+      }}
     >
       <TableSortLabel
         active
@@ -78,7 +87,7 @@ function DraggableHeader({
         onClick={() => handleSort(header)}
       >
         <center>
-          <h2>{header}</h2>
+          <h4 style={{ color: "#FFF" }}>{header}</h4>
         </center>
       </TableSortLabel>
     </TableCell>
@@ -229,7 +238,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   console.log(rule["rules"]);
 
   const actionButtons = (rowData) => (
-    <TableCell>
+    <div>
       <span style={{ display: "flex" }}>
         <IconButton onClick={() => handleViewAction(rowData)}>
           <ViewIcon />
@@ -265,7 +274,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
           </>
         ) : null}
       </span>
-    </TableCell>
+    </div>
   );
 
   const handleSort = (property) => {
@@ -356,7 +365,10 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
               sx={{ mx: 2 }}
             />
           </Box>
-          <TableContainer component={Paper} sx={{ padding: 5 }}>
+          <TableContainer
+            component={Paper}
+            sx={{ paddingLeft: 12, paddingRight: 12 }}
+          >
             <Table>
               {!isMobile && (
                 <TableHead>
@@ -393,11 +405,11 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
               <TableBody>
                 {isMobile
                   ? data.map((row, rowIndex) => (
-                      <Box key={rowIndex} p={2} mb={1} boxShadow={1}>
+                      <Box key={rowIndex}>
                         {selectedHeaders
                           .filter((header) => !header.includes("_id"))
                           .map((header) => (
-                            <Typography key={header} variant="body2">
+                            <Typography key={header} variant="p">
                               <strong>
                                 {header
                                   .replace("_", " ")
@@ -471,9 +483,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                                 {header === "Actions" ? (
                                   actionButtons(row)
                                 ) : (
-                                  <Typography variant="h6">
-                                    {row.consolidatedRequest[header]}
-                                  </Typography>
+                                  <p>{row.consolidatedRequest[header]}</p>
                                 )}
                               </TableCell>
                             ))}
