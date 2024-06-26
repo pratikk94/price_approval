@@ -9,7 +9,8 @@ router.post(
 
 router.get("/fetch_sales_regions", businessAdminController.fetchSalesRegions);
 router.get("/fetch_grade_with_pc", businessAdminController.fetchGradeWithPC);
-router.post("/add_defined_rule", businessAdminController.addDefinedRule)
+router.post("/add_defined_rule", businessAdminController.addDefinedRule);
+router.get("/fetch_businessAdmin/:type/:fsc", businessAdminController.fetchBusinessAdmin);
 
 
 

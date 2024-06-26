@@ -27,22 +27,22 @@ async function connect() {
     throw error;
   }
 }
-async function executeQuery(query, inputs = {}) {
-  try {
-    const pool = await connect();
-    const request = pool.request();
-    if (inputs) {
-      for (const key in inputs) {
-        request.input(key, inputs[key]);
-      }
-    }
-    const result = await request.query(query);
-    console.log("Connection pool is open:", pool.connected);
-    return result;
-  } catch (error) {
-    console.error("Database query error:", error);
-    throw error;
-  }
+async function executeQuery(query, inputs = {}) { try {
+        const pool = await connect();
+        const request = pool.request();
+        if (inputs) {
+            for (const key in inputs) {
+                request.input(key, inputs[key]);
+            }
+        }
+        const result = await request.query(query);
+        // const result = await request.execute(query)
+        console.log('Connection pool is open:', pool.connected);
+        return result;
+    } catch (error) {
+        console.error('Database query error:', error);
+        throw error;
+    } 
 }
 
 module.exports = { executeQuery };

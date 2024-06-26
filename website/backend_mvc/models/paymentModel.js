@@ -1,22 +1,7 @@
-// models/paymentModel.js
-// remarksModel.js
-// const sql = require("mssql");
-// const config = require("../config"); // Assuming your config file is named dbConfig.js
-// const poolPromise = new sql.ConnectionPool(config)
-//   .connect()
-//   .then((pool) => {
-//     console.log("Connected to MSSQL successfully! Payment Model");
-//     return pool;
-//   })
-//   .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
-
 const db = require("../config/db");
 
 async function fetchLowestPaymentTermDetails(customers, consignees, endUses) {
   try {
-    // const pool = await poolPromise;
-    // const request = pool.request();
-
     // Convert customer, consignee, and end use lists to string literals for SQL IN clause
     const insertCustomers =
       customers.length > 0
@@ -50,10 +35,13 @@ async function fetchLowestPaymentTermDetails(customers, consignees, endUses) {
     GROUP BY pt.terms;
     `;
 
-    console.log(query);
-
-    // const result = await request.query(query);
     let result = await db.executeQuery(query);
+
+    // let result = await db.executeQuery(`EXEC FindLowestPaymentTermForDynamicIds 
+    //       @InsertCustomers,
+    //       @InsertConsignees,
+    //       @InsertEndUses`,{"InsertCustomers":insertCustomers,
+    //         "InsertConsignees":insertConsignees,"InsertEndUses":insertEndUses});
     if (result.recordset.length) {
       return result.recordset[0];
     } else {

@@ -16,7 +16,7 @@ async function getValuesByParams(paramsList) {
   } catch (err) {
     console.error("SQL error", err);
     throw err;
-  } 
+  }
 }
 
 async function getSalesRegion() {
@@ -34,14 +34,9 @@ async function getSalesRegion() {
 
 async function getGradeWithPC(fsc) {
   try {
-    const query = `SELECT id as code,grade,FSC_Y_N,Grade as name,Profit_Centre as profitCenter 
-    FROM profit_center where status = 1 and FSC_Y_N = @fsc`;
-
-    const inputs = {
-      fsc: fsc,
-    };
-
-    let result = await db.executeQuery(query, inputs);
+    let result = await db.executeQuery('EXEC GetProfitCentersByFSC @fsc', {
+      "fsc": fsc,
+    });
     return result.recordsets;
   } catch (err) {
     console.error("SQL error", err);
@@ -70,8 +65,19 @@ async function addRule(data) {
     };
 
     let result = await db.executeQuery(query, inputs);
-     // Add audit log for the update operation
-     await addAuditLog('defined_rules', result.recordset[0].id, 'INSERT', null);
+    // Add audit log for the update operation
+    await addAuditLog('defined_rules', result.recordset[0].id, 'INSERT', null);
+
+    return result;
+  } catch (err) {
+    console.error("SQL error", err);
+    throw err;
+  }
+}
+
+async function getBusinessAdmin(type,fsc) {
+  try {
+    let result = await db.executeQuery('EXEC GetBusinessAdminData @queryType, @fsc', { "queryType": type, "fsc": fsc ? fsc : null });
 
     return result;
   } catch (err) {
@@ -85,4 +91,5 @@ module.exports = {
   getSalesRegion,
   getGradeWithPC,
   addRule,
+  getBusinessAdmin
 };
