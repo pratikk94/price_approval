@@ -2,15 +2,16 @@ const express = require("express");
 const router = express.Router();
 const sql = require("mssql");
 const { Readable } = require("stream"); // Correctly import Readable from 'stream' module
+require('dotenv').config();
 
 const config = {
-  user: "sa",
-  password: "Innominds@123",
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
   //password: "12345",
   //server: "PRATIK-PC\\PSPD",
-  server: "localhost",
+  server: process.env.DB_SERVER,
   port: 1433,
-  database: "PriceApprovalSystem",
+  database: process.env.DB_NAME,
   options: {
     enableArithAbort: true,
     encrypt: true,
