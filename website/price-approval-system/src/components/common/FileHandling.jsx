@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { backend_url } from "../../util";
+import { backend_mvc, backend_url } from "../../util";
 import FileUploader from "./FileUploader"; // Make sure this path is correct
 import FilesForRequest from "./FileForRequest";
 import { useSession } from "../../Login_Controller/SessionContext";
@@ -19,7 +19,7 @@ export default function FileHandling({ requestId }) {
   console.log("Stored request id:", storedRequestId);
 
   const fetchFiles = useCallback(() => {
-    fetch(`${backend_url}api/files/${requestId ?? storedRequestId}`) // Corrected for dynamic backend_url usage
+    fetch(`${backend_mvc}api/files/${requestId ?? storedRequestId}`) // Corrected for dynamic backend_url usage
       .then((res) => res.json())
       .then((data) => {
         setFiles(data);

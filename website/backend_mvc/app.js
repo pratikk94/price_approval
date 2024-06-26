@@ -31,6 +31,7 @@ const fileRoutes = require("./routes/fileRoutes");
 // const fs = require("fs");
 // const nodemailer = require("nodemailer");
 // const upload = multer({ storage: multer.memoryStorage() });
+const attachmentRoutes = require("./routes/attachmentRoutes");
 
 app.use(
   session({
@@ -63,5 +64,6 @@ app.use("/api", businessAdminRoutes);
 app.use("/api", plantsRoutes);
 app.use("/api", gradeRoutes);
 app.use("/api", fileRoutes);
+app.use("/api/files", attachmentRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, url, () => console.log(`Server running on port ${PORT}`));

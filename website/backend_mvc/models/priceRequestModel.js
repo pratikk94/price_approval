@@ -132,7 +132,7 @@ async function insertTransactions(data) {
     requestId,
     prices, // Assume prices is an array
     am_id,
-    tempAttachmentId,
+    tempAttachmentIds,
   } = data;
 
   const customerList = customers.split(",");
@@ -174,7 +174,7 @@ async function insertTransactions(data) {
       throw new Error("Invalid input: prices must be an array");
     }
 
-    changeAttachmentIds(tempAttachmentId, requestId)
+    changeAttachmentIds(tempAttachmentIds, requestId)
       .then(() => console.log("Attachment ID updated successfully."))
       .catch((error) => console.error("Error updating Attachment ID:", error));
 
@@ -213,7 +213,10 @@ async function changeAttachmentIds(tempAttachmentIds, newRequestId) {
     console.log(typeof tempAttachmentIds);
     if (tempAttachmentIds != undefined) {
       // Make sure `config` is defined with your DB credentials
-      tempAttachmentIds = tempAttachmentIds.split(",");
+      tempAttachmentIds =
+        typeof tempAttachmentIds == "string"
+          ? tempAttachmentIds.split(",")
+          : tempAttachmentIds;
       const promises = tempAttachmentIds.map((tempId) => {
         console.log(
           `Temp ids are ${tempId} and New request id is ${newRequestId}`
@@ -415,9 +418,31 @@ async function fetchData(role, status) {
         self.findIndex((t) => t.request_id === value.request_id) === index
     );
     for (let transaction of uniqueTransactions) {
-
-      const requestResult = await db.executeQuery('EXEC GetPriceApprovalRequests @RequestID, @Status;', { "RequestID": transaction.request_id, "Status": status });
-
+      console.log(transaction.request_id);
+      const query2 = `
+      SELECT 
+      request_name,
+      c.name AS customer_name, 
+      customer_id AS customer_ids,
+      consignee.name AS consignee_name, 
+      consignee_id AS consignee_ids,
+      enduse.name AS enduse_name,
+      end_use_id,
+      plant,
+    CONVERT(VARCHAR, CAST(valid_from AS DATETIME), 103) AS valid_from,
+  CONVERT(VARCHAR, CAST(valid_to AS DATETIME), 103) AS valid_to,
+      payment_terms_id
+FROM price_approval_requests par
+LEFT JOIN customer c ON par.customer_id = c.id
+LEFT JOIN customer consignee ON par.consignee_id = consignee.id
+LEFT JOIN customer enduse ON par.end_use_id = enduse.id
+JOIN requests_mvc rs ON par.request_name = rs.req_id
+WHERE request_name = '${transaction.request_id}' 
+  AND rs.status = '${status}'
+  AND (par.customer_id <> '' OR par.consignee_id <> '' OR par.end_use_id <> '')
+`;
+      console.log(query2);
+      const requestResult = await sql.query(query2);
       if (requestResult.recordset.length > 0) {
         const consolidated = requestResult.recordset.reduce((acc, row) => {
           Object.keys(row).forEach((key) => {

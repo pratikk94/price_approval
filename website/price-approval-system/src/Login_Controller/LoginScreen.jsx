@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "./SessionContext";
 import { backend_mvc } from "../util";
-import image from "/2869279.jpg";
+import "./LoginPage.css";
+import { Typography } from "@mui/material";
+import Card from "@mui/material/Card";
+import CardMedia from "@mui/material/CardMedia";
 const LoginScreen = () => {
   const [employeeId, setEmployeeId] = useState("");
   const { session, setSession } = useSession();
@@ -47,14 +50,33 @@ const LoginScreen = () => {
   };
 
   return (
-    <div style={{ backgroundImage: `url(${image})` }}>
-      <input
-        type="text"
-        placeholder="Employee ID"
-        value={employeeId}
-        onChange={(e) => setEmployeeId(e.target.value)}
-      />
-      <button onClick={handleLogin}>Login</button>
+    <div className="landing-container">
+      <div style={{ height: "16%" }}></div>
+      <Typography variant="h4" className="title">
+        Price Approval System
+      </Typography>
+      <div className="content">
+        <input
+          type="text"
+          placeholder="Employee ID"
+          onChange={(e) => setEmployeeId(e.target.value)}
+          value={employeeId}
+          className="input-field"
+        />
+        <button className="submit-button" onClick={handleLogin}>
+          Login
+        </button>
+      </div>
+      <Card>
+        <CardMedia
+          component="video"
+          src="background.mp4" // Use the correct protocol (http:// or https://)
+          autoPlay
+          muted
+          loop
+          style={{ height: "84vh", width: "100vw" }} // Adjust the size as needed
+        />
+      </Card>
     </div>
   );
 };

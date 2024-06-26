@@ -544,7 +544,7 @@ const CreateRequestModal = ({
         formData["prices"] = tableRowsData;
         const attachmentId = await fetchTempAttachments();
         if (attachmentId > 0) {
-          formData["tempAttachmentId"] = attachmentId;
+          formData["tempAttachmentIds"] = attachmentId;
         }
         console.log(attachmentId);
 
@@ -571,7 +571,7 @@ const CreateRequestModal = ({
         formData["action"] = action;
         const attachmentId = await fetchTempAttachments();
         if (attachmentId > 0) {
-          formData["tempAttachmentId"] = attachmentId;
+          formData["tempAttachmentIds"] = attachmentId;
         }
         console.log(attachmentId);
       }

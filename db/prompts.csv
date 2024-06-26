@@ -240,3 +240,17 @@ Write to requests_status_mvc
     }
 ]
 5. For the given grade(first word) fetch the first digit of profit_center match with values available and return the 
+
+
+************************* Fetch Parent Req Ids **********************
+1. We have a table pre_approved_request_status_mvc.
+2. Select query on this table with given request_name.
+3. Add request_name to a list.
+4. Fetch parent_request_name.
+5. Add parent_request_name to a list.
+5. Replace the first character with 'N' and use it as request name.
+6. Fetch its parent_request_name with this request name.
+7. Repeat the process till parent_request_name is null.
+8. After reaching null, return the list of request_name.
+
+**********************************************************************
