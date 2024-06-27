@@ -305,6 +305,12 @@ async function acceptTransaction(
         //       VALUES ('${requestId}', '${rule_id}', 'Rework', 'AM', '${currentRole}','${lastUpdatedById}', GETDATE())
         //   `
         // );
+        /* TODO
+        For rework fetch all the roles who can rework
+        if role is AM & AM rework and tran go to RM and above
+        If RM rewoek and tran go to all (NSM&HDSM) above levels in pending
+        also check same level(NSM&HDSM)
+        */
         if (currentRole != "RM") {
           let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
           OUTPUT INSERTED.* 

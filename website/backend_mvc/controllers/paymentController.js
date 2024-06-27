@@ -19,6 +19,20 @@ async function getLowestPaymentTerm(req, res) {
   }
 }
 
+
+async function getProfitCenter(req, res) {
+  try {
+    const result = await paymentModel.fetchProfitCenter();
+    res.json(result.recordset);
+  } catch (error) {
+    res.status(500).send({
+      message: "Error fetching payment terms",
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
   getLowestPaymentTerm,
+  getProfitCenter
 };

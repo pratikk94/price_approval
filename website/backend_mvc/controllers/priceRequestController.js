@@ -155,5 +155,5 @@ async function pushDataToTable(requestName, parentRequestName) {
 module.exports = {
   processTransaction,
   getPriceApprovalData,
-  processPrevApprovedTransaction,
+  processPrevApprovedTransaction
 };

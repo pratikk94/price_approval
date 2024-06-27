@@ -279,3 +279,13 @@ BEGIN
     OUTPUT INSERTED.*
     VALUES (@employee_id, @employee_name, @role, @region, @created_by, @created_date, @active);
 END;
+
+
+
+CREATE PROCEDURE FetchProfitCenters
+AS
+BEGIN
+SELECT  *
+    FROM [PriceApprovalSystem].[dbo].[profit_center]
+    ORDER BY Grade ASC;
+END

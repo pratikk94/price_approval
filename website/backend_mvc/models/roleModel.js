@@ -53,8 +53,20 @@ const fetchRoleData = async () => {
   }
 };
 
+const fetchRoleId = async (id) => {
+  try {
+    console.log(id,"check the id.......")
+    let result = await db.executeQuery('EXEC FetchDefinedRoleById @id',{"id":id});
+    return result;
+  } catch (err) {
+    console.error("SQL error", err);
+    throw err;
+  }
+};
+
 module.exports = {
    getRoleDetails, 
    updateEmployeRole, 
-   fetchRoleData 
+   fetchRoleData,
+   fetchRoleId
   };
