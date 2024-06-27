@@ -35,8 +35,8 @@ async function getSalesRegion() {
 
 async function getGradeWithPC(fsc) {
   try {
-    let result = await db.executeQuery('EXEC GetProfitCentersByFSC @fsc', {
-      "fsc": fsc,
+    let result = await db.executeQuery("EXEC GetProfitCentersByFSC @fsc", {
+      fsc: fsc,
     });
     return result.recordsets;
   } catch (err) {
@@ -67,7 +67,7 @@ async function addRule(data) {
 
     let result = await db.executeQuery(query, inputs);
     // Add audit log for the update operation
-    await addAuditLog('defined_rules', result.recordset[0].id, 'INSERT', null);
+    await addAuditLog("defined_rules", result.recordset[0].id, "INSERT", null);
 
     return result;
   } catch (err) {
@@ -78,7 +78,10 @@ async function addRule(data) {
 
 async function getBusinessAdmin(type, fsc) {
   try {
-    let result = await db.executeQuery('EXEC GetBusinessAdminData @queryType, @fsc', { "queryType": type, "fsc": fsc ? fsc : null });
+    let result = await db.executeQuery(
+      "EXEC GetBusinessAdminData @queryType, @fsc",
+      { queryType: type, fsc: fsc ? fsc : null }
+    );
 
     return result;
   } catch (err) {
@@ -87,11 +90,27 @@ async function getBusinessAdmin(type, fsc) {
   }
 }
 
-async function addEmployeeRole(employee_id, employee_name, role, region, created_date, active) {
+async function addEmployeeRole(
+  employee_id,
+  employee_name,
+  role,
+  region,
+  created_date,
+  active
+) {
   try {
     let result = await db.executeQuery(
       `EXEC InsertEmployeeRole @employee_id, @employee_name, @role, @region, @created_by, @created_date, @active`,
-      { "employee_id": employee_id, "employee_name": employee_name, "role": role, "region": region, "created_by": CREATED_BY, "created_date": created_date, "active": active })
+      {
+        employee_id: employee_id,
+        employee_name: employee_name,
+        role: role,
+        region: region,
+        created_by: CREATED_BY,
+        created_date: created_date,
+        active: active,
+      }
+    );
     return result;
   } catch (err) {
     console.error("SQL error", err);
@@ -105,5 +124,5 @@ module.exports = {
   getGradeWithPC,
   addRule,
   getBusinessAdmin,
-  addEmployeeRole
+  addEmployeeRole,
 };
