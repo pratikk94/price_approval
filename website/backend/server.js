@@ -25,9 +25,9 @@ require("dotenv").config();
 // Configuration object for your SQL Server
 
 const config = {
-  user: "sa",
-  password: "SayaliK20311",
-  server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
+  user: process.env.DB_USER,
+  password:  process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER,// You can use 'localhost\\instance' if it's a local SQL Server instance
   // password: "12345",
   // server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,
