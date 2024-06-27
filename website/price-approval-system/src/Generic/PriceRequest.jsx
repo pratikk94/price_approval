@@ -188,7 +188,12 @@ function PriceChangeRequest(rules, employee_id) {
       console.log("Filterred ID is 1");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/1"}
+          url={
+            `${backend_mvc}api/data/` +
+            session.role +
+            "/1/" +
+            session.employee_id
+          }
           rule={rules}
           setRows={handleRowsSelection}
         />
@@ -198,7 +203,12 @@ function PriceChangeRequest(rules, employee_id) {
       setActiveFilter("Rework");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/3"}
+          url={
+            `${backend_mvc}api/data/` +
+            session.role +
+            "/3/" +
+            session.employee_id
+          }
           rule={rules}
           setRows={handleRowsSelection}
           isRework={true}
@@ -209,7 +219,12 @@ function PriceChangeRequest(rules, employee_id) {
       setActiveFilter("Draft");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/5 "}
+          url={
+            `${backend_mvc}api/data/` +
+            session.role +
+            "/5/" +
+            session.employee_id
+          }
           rule={rules}
           setRows={handleRowsSelection}
           isRework={true}
@@ -220,7 +235,12 @@ function PriceChangeRequest(rules, employee_id) {
       setActiveFilter("Pending");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/0 "}
+          url={
+            `${backend_mvc}api/data/` +
+            session.role +
+            "/0/" +
+            session.employee_id
+          }
           rule={rules}
           setRows={handleRowsSelection}
           isRework={false}
@@ -231,7 +251,12 @@ function PriceChangeRequest(rules, employee_id) {
       setActiveFilter("Rejected");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/-2 "}
+          url={
+            `${backend_mvc}api/data/` +
+            session.role +
+            "/-2/" +
+            session.employee_id
+          }
           rule={rules}
           setRows={handleRowsSelection}
           isRework={false}
@@ -358,11 +383,20 @@ function PriceChangeRequest(rules, employee_id) {
               onClick={() => handleFilterClick(filter, index)}
               style={{ marginRight: "1vw" }}
               sx={{
-                mb: 1,
-                ...(filter === "Rework" && { mr: 2 }),
+                bgcolor: activeFilter === filter ? "#156760" : "inherit", // Apply #156760 if variant is "contained"
+                color: activeFilter === filter ? "white" : "inherit", // Apply white if variant is "contained"
+                height: "32px !important", // Attempting to override with !important
+                "& .MuiTableSortLabel-root": {
+                  // Increasing specificity for potential child components
+                  height: "32px !important",
+                },
+                "&:hover": {
+                  bgcolor: activeFilter === filter ? "#134f5c" : "inherit", // Change to a darker shade on hover for "contained"
+                  color: activeFilter === filter ? "#ffffff" : "inherit", // Ensure text color remains white on hover for "contained"
+                },
               }} // Add space after "Rework"
             >
-              <Typography variant="h6">{filter}</Typography>
+              <h4>{filter}</h4>
             </Button>
           ))}
         </span>
@@ -373,8 +407,17 @@ function PriceChangeRequest(rules, employee_id) {
               aria-haspopup="true"
               onClick={handleClick}
               variant="contained"
+              sx={{
+                bgcolor: "#156760", // Apply #156760 if variant is "contained"
+                hover: "#134f5c",
+                height: "32px !important", // Attempting to override with !important
+                "& .MuiTableSortLabel-root": {
+                  // Increasing specificity for potential child components
+                  height: "32px !important",
+                },
+              }}
             >
-              <Typography variant="h5">+ Create request</Typography>
+              <h4>+ Create request</h4>
             </Button>
             <Menu
               id="actions-menu"
@@ -388,15 +431,40 @@ function PriceChangeRequest(rules, employee_id) {
                   setModalOpen(true);
                   handleCreateRequest();
                 }}
+                sx={{
+                  height: "32px !important", // Attempting to override with !important
+                  "& .MuiTableSortLabel-root": {
+                    // Increasing specificity for potential child components
+                    height: "32px !important",
+                  },
+                }}
               >
-                <Typography variant="h6">Create New Request</Typography>
+                <h5>Create New Request</h5>
               </MenuItem>
-              <MenuItem onClick={handleCopyRequest}>
-                <Typography variant="h6">Copy Request</Typography>
+              <MenuItem
+                onClick={handleCopyRequest}
+                sx={{
+                  height: "32px !important", // Attempting to override with !important
+                  "& .MuiTableSortLabel-root": {
+                    // Increasing specificity for potential child components
+                    height: "32px !important",
+                  },
+                }}
+              >
+                <h5>Copy Request</h5>
               </MenuItem>
 
-              <MenuItem onClick={handleMergeRequest}>
-                <Typography variant="h6">Merge Request</Typography>
+              <MenuItem
+                onClick={handleMergeRequest}
+                sx={{
+                  height: "32px !important", // Attempting to override with !important
+                  "& .MuiTableSortLabel-root": {
+                    // Increasing specificity for potential child components
+                    height: "32px !important",
+                  },
+                }}
+              >
+                <h5>Merge Request</h5>
               </MenuItem>
             </Menu>
 

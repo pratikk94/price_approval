@@ -42,6 +42,11 @@ const style = {
 };
 const modalStyle = {
   position: "absolute",
+  // Other styles already defined for modalStyle
+  background: "linear-gradient(135deg, #fff, #004d40)",
+  // Ensure the content inside the modal can scroll if it overflows
+  overflow: "auto",
+  // Add other properties as needed
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
@@ -389,11 +394,11 @@ const CreateRequestModal = ({
       label: `Terms ${data.payment_terms_id}`,
     });
 
-    console.log(data.valid_from);
-    console.log(data.valid_to);
+    console.log(moment(data.valid_from, "DD/MM/YYYY").toDate());
+    console.log(moment(data.valid_to, "DD/MM/YYYY").toDate());
 
-    setValidFrom(data.valid_from);
-    setValidTo(data.valid_to);
+    setValidFrom(moment(data.valid_from, "DD/MM/YYYY").toDate());
+    setValidTo(moment(data.valid_to, "DD/MM/YYYY").toDate());
 
     setFSC(
       editData.priceDetails[0] != undefined ? editData.priceDetails[0].fsc : "N"
@@ -682,6 +687,8 @@ const CreateRequestModal = ({
     setOpenOneToOneModal(false);
   };
 
+  console.log(editData);
+
   return (
     <>
       <Modal
@@ -851,16 +858,16 @@ const CreateRequestModal = ({
 
           {/* <HistoryModal reqId={id} /> */}
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-            <Button
+            <button
               type="submit"
-              variant="contained"
               disabled={disableSubmit}
               onClick={handleFormSubmit}
+              style={{ backgroundColor: "#156760" }}
             >
               Submit
-            </Button>
+            </button>
             <Box>
-              <Button
+              <button
                 variant="contained"
                 onClick={(e) => {
                   setIsDraft((isDraft) => {
@@ -868,18 +875,18 @@ const CreateRequestModal = ({
                     return true;
                   });
                 }}
-                color="primary"
+                style={{ backgroundColor: "#5f5f00" }}
               >
                 Save as draft
-              </Button>
-              <Button
-                sx={{ marginLeft: 4 }}
+              </button>
+              <button
+                style={{ backgroundColor: "#4f0000", marginLeft: "4px" }}
                 onClick={handleClose}
                 color="primary"
                 variant="contained"
               >
                 Close
-              </Button>
+              </button>
             </Box>
           </Box>
         </Box>

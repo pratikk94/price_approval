@@ -681,7 +681,13 @@ function TableWithInputs({
               </td> */}
 
               <td className="tAction">
-                <span style={{ display: "flex", justifyContent: "center" }}>
+                <span
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    backgroundColor: "white",
+                  }}
+                >
                   <Button
                     className="tAction"
                     variant="outlined"

@@ -60,7 +60,9 @@ export default function FileUploader({
   return (
     <div>
       <input type="file" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Upload</button>
+      <button onClick={handleUpload} style={{ backgroundColor: "#156760" }}>
+        Upload
+      </button>
     </div>
   );
 }

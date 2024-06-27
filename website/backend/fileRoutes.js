@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const sql = require("mssql");
 const { Readable } = require("stream"); // Correctly import Readable from 'stream' module
-require('dotenv').config();
+require("dotenv").config();
 
 const config = {
   user: process.env.DB_USER,

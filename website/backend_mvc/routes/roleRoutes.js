@@ -9,4 +9,5 @@ router.get("/data/fetchRoles", roleController.fetchRoleData);
 router.get("/data/fetchRolesId", roleController.fetchRoleById);
 
 
+
 module.exports = router;
