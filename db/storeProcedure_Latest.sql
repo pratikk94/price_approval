@@ -104,8 +104,8 @@ BEGIN
         enduse.name AS enduse_name,
         par.end_use_id,
         par.plant,
-        par.valid_from,
-        par.valid_to,
+        CONVERT(VARCHAR, CAST(valid_from AS DATETIME), 103) AS valid_from,
+        CONVERT(VARCHAR, CAST(valid_to AS DATETIME), 103) AS valid_to,
         par.payment_terms_id
     FROM price_approval_requests par
     LEFT JOIN customer c ON par.customer_id = c.id
