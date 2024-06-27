@@ -40,30 +40,21 @@ const updateEmployeRole = async (roleDetails) => {
   }
 };
 
-// roleModel.js
-const sql = require("mssql");
 
-const config = {
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  server: process.env.DB_SERVER,
-  database: process.env.DB_DATABASE,
-  options: {
-    encrypt: true,
-    enableArithAbort: true,
-  },
-};
-
-async function fetchRoles() {
+const fetchRoleData = async () => {
   try {
-    await sql.connect(config);
-    const result =
-      await sql.query`SELECT TOP (1000) [employee_name], [employee_id], [role], [region], [created_by], [created_date], [active], [id] FROM [PriceApprovalSystem].[dbo].[define_roles]`;
-    return result.recordset;
+    let result = await db.executeQuery('EXEC FetchDefinedRoles');
+    return result;
+
+    
   } catch (err) {
     console.error("SQL error", err);
     throw err;
   }
-}
+};
 
-module.exports = { getRoleDetails, updateEmployeRole, fetchRoles };
+module.exports = {
+   getRoleDetails, 
+   updateEmployeRole, 
+   fetchRoleData 
+  };

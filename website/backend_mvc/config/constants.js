@@ -11,10 +11,12 @@ const DB_CONFIG = {
     port: 1433,
     database: process.env.DB_NAME
 };
+const CREATED_BY = "backend_user";
 
 module.exports = {
     BASE_PATH,
     SESSION_SECRET,
-    DB_CONFIG
+    DB_CONFIG,
+    CREATED_BY
 
 };

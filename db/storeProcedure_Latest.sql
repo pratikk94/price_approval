@@ -264,3 +264,18 @@ BEGIN
     END
 END;
 GO
+
+CREATE PROCEDURE InsertEmployeeRole
+    @employee_id VARCHAR(255),
+    @employee_name VARCHAR(255),
+    @role VARCHAR(100),
+    @region VARCHAR(100),
+    @created_by VARCHAR(255),
+    @created_date DATETIME,
+    @active INT
+AS
+BEGIN
+    INSERT INTO define_roles (employee_id, employee_name, role, region, created_by, created_date, active) 
+    OUTPUT INSERTED.*
+    VALUES (@employee_id, @employee_name, @role, @region, @created_by, @created_date, @active);
+END;
