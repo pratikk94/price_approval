@@ -582,5 +582,5 @@ module.exports = {
   fetchConsolidatedRequest,
   fetchData,
   fetchRequestDetails,
-  addTransactionToTable,
+  addTransactionToTable
 };

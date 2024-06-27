@@ -63,7 +63,7 @@ const fetchRoleData = async (req, res) => {
 
 const fetchRoleById = async (req, res) => {
   try {
-    const result = await roleModel.fetchRoleData();
+    const result = await roleModel.fetchRoleId(req.query.id);
     console.log(result);
     res.send(result.recordset);
 

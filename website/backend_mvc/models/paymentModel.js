@@ -53,6 +53,19 @@ async function fetchLowestPaymentTermDetails(customers, consignees, endUses) {
   }
 }
 
+
+async function fetchProfitCenter() {
+  try {
+    let result = await db.executeQuery(`EXEC FetchProfitCenters`);
+    // Send the results as a response
+    return result;
+  } catch (error) {
+    console.error("An error occurred while fetching plants", error);
+    throw error;
+  }
+}
+
 module.exports = {
   fetchLowestPaymentTermDetails,
+  fetchProfitCenter
 };
