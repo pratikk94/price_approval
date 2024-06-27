@@ -394,11 +394,11 @@ const CreateRequestModal = ({
       label: `Terms ${data.payment_terms_id}`,
     });
 
-    console.log(data.valid_from);
-    console.log(data.valid_to);
+    console.log(moment(data.valid_from, "DD/MM/YYYY").toDate());
+    console.log(moment(data.valid_to, "DD/MM/YYYY").toDate());
 
-    setValidFrom(data.valid_from);
-    setValidTo(data.valid_to);
+    setValidFrom(moment(data.valid_from, "DD/MM/YYYY").toDate());
+    setValidTo(moment(data.valid_to, "DD/MM/YYYY").toDate());
 
     setFSC(
       editData.priceDetails[0] != undefined ? editData.priceDetails[0].fsc : "N"
@@ -686,6 +686,8 @@ const CreateRequestModal = ({
     setIsChecked(false);
     setOpenOneToOneModal(false);
   };
+
+  console.log(editData);
 
   return (
     <>

@@ -29,7 +29,13 @@ async function getCurrentDateRequestId() {
   }
 }
 
-async function insertCombinationsOneToOne(customers, consignees, plants, data) {
+async function insertCombinationsOneToOne(
+  customers,
+  consignees,
+  plants,
+  data,
+  am_id
+) {
   try {
     await sql.connect(config);
     const transaction = new sql.Transaction();
@@ -41,12 +47,12 @@ async function insertCombinationsOneToOne(customers, consignees, plants, data) {
         await request.query(`
                   INSERT INTO price_approval_requests (
                       customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
-                      valid_from, valid_to, payment_terms_id, request_name,mappint_type) 
+                      valid_from, valid_to, payment_terms_id, request_name,mappint_type.,am_id) 
                       OUTPUT INSERTED.*
                   VALUES (
                       '${customers[i]}', '${consignees[i]}', '${data.endUse}', '${plant}', 
                       '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
-                      '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping})
+                      '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping},'${am_id}')
               `);
       }
     }
@@ -74,7 +80,8 @@ async function insertCombinationsOneToMany(
   customers,
   consignees,
   plants,
-  data
+  data,
+  am_id
 ) {
   try {
     await sql.connect(config);
@@ -88,12 +95,12 @@ async function insertCombinationsOneToMany(
           let result = await request.query(`
                       INSERT INTO price_approval_requests (
                           customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
-                          valid_from, valid_to, payment_terms_id, request_name, mappint_type) 
+                          valid_from, valid_to, payment_terms_id, request_name, mappint_type,am_id) 
                           OUTPUT INSERTED.*
                       VALUES (
                           '${customer}', '${consignee}', '${data.endUse}', '${plant}', 
                           '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
-                          '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping})
+                          '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping},'${am_id}')
                   `);
           // Add audit log for the INSERT operation
           console.log(result.recordset[0], "testing...........");
@@ -160,7 +167,8 @@ async function insertTransactions(data) {
         paymentTerms,
         requestId,
         oneToOneMapping,
-      }
+      },
+      am_id
     );
 
     if (!result.success) {
@@ -406,10 +414,18 @@ async function fetchConsolidatedRequest(requestId) {
   }
 }
 
-async function fetchData(role, status) {
+async function fetchData(role, status, id) {
   try {
     // Use advanced query to get transactions pending with the given role
-    const transactionsResult = await db.executeQuery('EXEC GetTransactionDetails @Status, @Role', { "Status": status, "Role": role });
+    const transactionsResult = await db.executeQuery(
+      "EXEC GetTransactionDetails @Status, @Role",
+      { Status: status, Role: role }
+    );
+
+    let am =
+      role == "RM" || role == "AM"
+        ? `AND dr.region IN (SELECT region FROM [PriceApprovalSystem].[dbo].[define_roles] WHERE employee_id = '${id}')`
+        : "";
 
     let details = [];
     // For each transaction, fetch and consolidate request details
@@ -431,15 +447,19 @@ async function fetchData(role, status) {
       plant,
     CONVERT(VARCHAR, CAST(valid_from AS DATETIME), 103) AS valid_from,
   CONVERT(VARCHAR, CAST(valid_to AS DATETIME), 103) AS valid_to,
-      payment_terms_id
+      payment_terms_id,
+      am_id
 FROM price_approval_requests par
 LEFT JOIN customer c ON par.customer_id = c.id
 LEFT JOIN customer consignee ON par.consignee_id = consignee.id
 LEFT JOIN customer enduse ON par.end_use_id = enduse.id
 JOIN requests_mvc rs ON par.request_name = rs.req_id
+JOIN [PriceApprovalSystem].[dbo].[define_roles] dr ON par.am_id = dr.employee_id
 WHERE request_name = '${transaction.request_id}' 
+  ${am}
   AND rs.status = '${status}'
   AND (par.customer_id <> '' OR par.consignee_id <> '' OR par.end_use_id <> '')
+  ;
 `;
       console.log(query2);
       const requestResult = await sql.query(query2);
@@ -464,7 +484,10 @@ WHERE request_name = '${transaction.request_id}'
         });
 
         // Fetch price details with the maximum ID
-        const priceResult = await db.executeQuery('EXEC GetPriceApprovalRequestDetails @RequestID, @Role', { "RequestID": transaction.request_id, "Role": role });
+        const priceResult = await db.executeQuery(
+          "EXEC GetPriceApprovalRequestDetails @RequestID, @Role",
+          { RequestID: transaction.request_id, Role: role }
+        );
 
         details.push({
           request_id: transaction.request_id,

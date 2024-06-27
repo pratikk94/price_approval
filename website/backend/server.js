@@ -26,7 +26,7 @@ require("dotenv").config();
 
 const config = {
   user: "sa",
-  password: "Innominds@123",
+  password: "SayaliK20311",
   server: "localhost", // You can use 'localhost\\instance' if it's a local SQL Server instance
   // password: "12345",
   // server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance

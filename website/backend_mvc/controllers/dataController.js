@@ -2,9 +2,9 @@ const priceRequestModel = require("../models/priceRequestModel");
 
 async function getTransactionData(req, res) {
   try {
-    const { role, status } = req.params; // Assuming these are passed as URL parameters
+    const { role, status, id } = req.params; // Assuming these are passed as URL parameters
     console.log("Role:", role, "Status:", status);
-    const result = await priceRequestModel.fetchData(role, status);
+    const result = await priceRequestModel.fetchData(role, status, id);
     res.json(result);
   } catch (error) {
     console.error("Error fetching data:", error);

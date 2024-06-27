@@ -188,7 +188,12 @@ function PriceChangeRequest(rules, employee_id) {
       console.log("Filterred ID is 1");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/1"}
+          url={
+            `${backend_mvc}api/data/` +
+            session.role +
+            "/1/" +
+            session.employee_id
+          }
           rule={rules}
           setRows={handleRowsSelection}
         />
@@ -198,7 +203,12 @@ function PriceChangeRequest(rules, employee_id) {
       setActiveFilter("Rework");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/3"}
+          url={
+            `${backend_mvc}api/data/` +
+            session.role +
+            "/3/" +
+            session.employee_id
+          }
           rule={rules}
           setRows={handleRowsSelection}
           isRework={true}
@@ -209,7 +219,12 @@ function PriceChangeRequest(rules, employee_id) {
       setActiveFilter("Draft");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/5 "}
+          url={
+            `${backend_mvc}api/data/` +
+            session.role +
+            "/5/" +
+            session.employee_id
+          }
           rule={rules}
           setRows={handleRowsSelection}
           isRework={true}
@@ -220,7 +235,12 @@ function PriceChangeRequest(rules, employee_id) {
       setActiveFilter("Pending");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/0 "}
+          url={
+            `${backend_mvc}api/data/` +
+            session.role +
+            "/0/" +
+            session.employee_id
+          }
           rule={rules}
           setRows={handleRowsSelection}
           isRework={false}
@@ -231,7 +251,12 @@ function PriceChangeRequest(rules, employee_id) {
       setActiveFilter("Rejected");
       setComponent(
         <DataTable
-          url={`${backend_mvc}api/data/` + session.role + "/-2 "}
+          url={
+            `${backend_mvc}api/data/` +
+            session.role +
+            "/-2/" +
+            session.employee_id
+          }
           rule={rules}
           setRows={handleRowsSelection}
           isRework={false}
