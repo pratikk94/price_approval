@@ -289,3 +289,62 @@ SELECT  *
     FROM [PriceApprovalSystem].[dbo].[profit_center]
     ORDER BY Grade ASC;
 END
+
+
+CREATE PROCEDURE UpdateAndInsertRule
+    @RuleData NVARCHAR(MAX)
+AS
+BEGIN
+    -- Start a transaction
+    BEGIN TRANSACTION;
+
+    BEGIN TRY
+    
+        -- Declare a variable to hold the rule_id value
+    DECLARE @selectedValue INT;
+    
+    
+    -- get the rule_id from the rule_mvc table
+    SELECT Top 1 @selectedValue = rule_id FROM rule_mvc WHERE is_active =1;
+
+
+    
+    -- Perform the update operation to set is_active as 0
+        UPDATE rule_mvc SET is_active = 0 WHERE rule_id = @selectedValue;
+        
+            -- Increment the rule_id
+    SET @selectedValue = @selectedValue + 1;
+
+        -- Perform the insert operation
+    INSERT INTO rule_mvc (rule_id, region, approver,level,valid_from,valid_to,is_active)OUTPUT INSERTED.* 
+    SELECT 
+        @selectedValue,
+        JSON_VALUE(value, '$.region'),
+        JSON_VALUE(value, '$.approver'),
+        JSON_VALUE(value, '$.level'),
+        JSON_VALUE(value, '$.valid_from'),
+        JSON_VALUE(value, '$.valid_to'),
+        JSON_VALUE(value, '$.is_active')
+    FROM OPENJSON(@RuleData);
+
+        -- If both operations succeed, commit the transaction
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        -- If there is an error, roll back the transaction
+        ROLLBACK TRANSACTION;
+
+        -- Optionally, you can handle the error or re-throw it
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        DECLARE @ErrorSeverity INT;
+        DECLARE @ErrorState INT;
+
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        -- Raise the error with the original error information
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;

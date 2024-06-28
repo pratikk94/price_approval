@@ -9,4 +9,6 @@ router.get(
 
 router.get("/approvers-by-levels", ruleController.getApproversByLevels);
 
+router.post("/approvers-by-levels", ruleController.postApproversByLevels);
+
 module.exports = router;
