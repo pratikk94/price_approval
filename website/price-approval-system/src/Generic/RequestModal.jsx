@@ -81,8 +81,6 @@ const CreateRequestModal = ({
     editData != undefined
       ? editData.priceDetails[0] != undefined
         ? editData.priceDetails[0].fsc == "Y"
-          ? "Y"
-          : "N"
         : "N"
       : "N"
   );

@@ -40,7 +40,7 @@ function TableWithInputs({
 }) {
   const [grades, setGrades] = useState([]);
   const [selectedGrade, setSelectedGrade] = useState("");
-  const [fsc, setFSC] = useState("");
+  const [fsc, setFSC] = useState("N");
   const [gradeType, setGradeType] = useState(null);
   const [ids, setIds] = useState([]);
   const [open, setOpen] = useState(false);
@@ -79,7 +79,7 @@ function TableWithInputs({
   };
 
   useEffect(() => {
-    fetch_grades(fsc);
+    fetch_grades(prices[0] != undefined ? prices[0].fsc : fsc);
   }, [fsc]);
 
   useEffect(() => {
@@ -335,8 +335,8 @@ function TableWithInputs({
   function handleFSCChange(e) {
     // setGrades(e.target.checked ? 1 : 0);
     console.log(e.target.checked);
-    setFSC(e.target.checked ? "N" : "Y");
-    setFSCCode(e.target.checked ? "N" : "Y");
+    setFSC(e.target.checked ? "Y" : "N");
+    setFSCCode(e.target.checked ? "Y" : "N");
   }
 
   function isMixPresent(rowData) {
@@ -359,7 +359,13 @@ function TableWithInputs({
         control={
           <Checkbox
             disabled={isExtension}
-            checked={fscCode === "N" ? true : false}
+            checked={
+              prices[0] != undefined
+                ? prices[0].fsc == "Y"
+                  ? true
+                  : false
+                : fsc == "Y"
+            }
             onChange={handleFSCChange}
             icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
             checkedIcon={<CheckBoxIcon fontSize="medium" />}

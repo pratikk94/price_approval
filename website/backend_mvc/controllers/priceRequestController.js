@@ -84,42 +84,47 @@ async function processPrevApprovedTransaction(req, res) {
     }
 
     const requestId = await priceRequestModel.handleNewRequest();
+    const resultA = await getRegionAndRoleByEmployeeId(am_id);
+
     console.log("requestId", requestId); // Debugging output (requestId value
     if (action == "D") {
       console.log("In draft");
       addADraft(requestId);
-    }
-
-    const resultA = await getRegionAndRoleByEmployeeId(am_id);
-
-    try {
-      const result = await transactionModel.acceptTransaction(
-        resultA[0]["region"],
-        action,
+      priceRequestModel.addTransactionToTable(
         requestId,
         am_id,
-        resultA[0]["role"]
+        (draft = action == "D")
       );
-      if (result.success) {
-        res.json({
-          message: "Transaction added successfully",
-          currentStatus: result.currentStatus,
-        });
-      } else {
-        res.status(500).send("Failed to process transaction");
-      }
-    } catch (error) {
-      res.status(500).send("Server error while adding transaction");
-      console.error("Error:", error);
-    }
-
-    if (result2.success) {
-      res.json({
-        message: "Transaction added successfully",
-        currentStatus: result.currentStatus,
-      });
     } else {
-      res.status(500).send("Failed to process transaction");
+      try {
+        const result3 = await transactionModel.acceptTransaction(
+          resultA[0]["region"],
+          action,
+          requestId,
+          am_id,
+          resultA[0]["role"],
+          oldRequestId
+        );
+        if (result3.success) {
+          // res.json({
+          //   message: "Transaction added successfully",
+          //   currentStatus: result3.currentStatus,
+          // });
+        } else {
+          // res.status(500).send("Failed to process transaction");
+        }
+      } catch (error) {
+        // res.status(500).send("Server error while adding transaction");
+        // console.error("Error:", error);
+      }
+    }
+    if (resultA.success) {
+      // res.json({
+      //   message: "Transaction added successfully",
+      //   currentStatus: result.currentStatus,
+      // });
+    } else {
+      // res.status(500).send("Failed to process transaction");
     }
 
     const result = await priceRequestModel.insertTransactions({
@@ -138,11 +143,11 @@ async function processPrevApprovedTransaction(req, res) {
       tempAttachmentIds,
     });
 
-    priceRequestModel.addTransactionToTable(
-      requestId,
-      am_id,
-      (draft = action == "D")
-    );
+    // priceRequestModel.addTransactionToTable(
+    //   requestId,
+    //   am_id,
+    //   (draft = action == "D")
+    // );
     if (oldRequestId != undefined)
       pushDataToTable(requestId, action + oldRequestId.substring(1));
 
