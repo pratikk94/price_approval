@@ -81,7 +81,7 @@ const updatePreApprovedRequestStatus = async (requestName, action) => {
 
 const addADraft = async (requestName) => {
   try {
-    await sql.connect(config); // replace 'config' with your actual configuration object
+    // await sql.connect(config); // replace 'config' with your actual configuration object
 
     const query = `
     DECLARE @request_id VARCHAR(255) = '${requestName}'; -- replace with your actual request_id

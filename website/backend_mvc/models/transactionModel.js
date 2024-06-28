@@ -181,7 +181,11 @@ async function acceptTransaction(
     //       ORDER BY id DESC
     //   `
     // );
-    const query = `
+
+    let query = "";
+
+    if (oldRequestId.length > 0) {
+      query = `
     SELECT TOP 1 id, currently_pending_with , rule_id
     FROM transaction_mvc
     WHERE request_id = '${
@@ -189,6 +193,13 @@ async function acceptTransaction(
     }' and currently_pending_with = '${lastUpdatedByRole}'
     ORDER BY id DESC
 `;
+    } else {
+      query = `
+    SELECT TOP 1 id, currently_pending_with , rule_id
+    FROM transaction_mvc
+    WHERE request_id = '${requestId}'
+    ORDER BY id DESC`;
+    }
     console.log(query);
 
     let transactionResult = await db.executeQuery(query);
