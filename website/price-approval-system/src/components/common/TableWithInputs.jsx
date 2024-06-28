@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useRef, useEffect } from "react";
 import "./TableWithInputs.css"; // Make sure to create a CSS file for styles
 import {
@@ -39,7 +40,7 @@ function TableWithInputs({
 }) {
   const [grades, setGrades] = useState([]);
   const [selectedGrade, setSelectedGrade] = useState("");
-  const [fsc, setFSC] = useState("N");
+  const [fsc, setFSC] = useState("");
   const [gradeType, setGradeType] = useState(null);
   const [ids, setIds] = useState([]);
   const [open, setOpen] = useState(false);
@@ -78,7 +79,7 @@ function TableWithInputs({
   };
 
   useEffect(() => {
-    fetch_grades(prices[0] != undefined ? prices[0].fsc : fsc);
+    fetch_grades(fsc);
   }, [fsc]);
 
   useEffect(() => {
@@ -334,8 +335,8 @@ function TableWithInputs({
   function handleFSCChange(e) {
     // setGrades(e.target.checked ? 1 : 0);
     console.log(e.target.checked);
-    setFSC(e.target.checked ? "Y" : "N");
-    setFSCCode(e.target.checked ? "Y" : "N");
+    setFSC(e.target.checked ? "N" : "Y");
+    setFSCCode(e.target.checked ? "N" : "Y");
   }
 
   function isMixPresent(rowData) {
@@ -351,19 +352,14 @@ function TableWithInputs({
 
   console.log(grades);
   console.log(fsc);
+  console.log(prices);
   return (
     <>
       <FormControlLabel
         control={
           <Checkbox
             disabled={isExtension}
-            checked={
-              prices[0] != undefined
-                ? prices[0].fsc == "Y"
-                  ? true
-                  : false
-                : fsc == "Y"
-            }
+            checked={fscCode === "N" ? true : false}
             onChange={handleFSCChange}
             icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
             checkedIcon={<CheckBoxIcon fontSize="medium" />}

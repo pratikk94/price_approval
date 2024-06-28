@@ -1,6 +1,6 @@
 // controllers/transactionController.js
+const transactionModel = require("../models/transactionModel");
 const priceRequestModel = require("../models/priceRequestModel");
-const transactionModel = require("../models/priceRequestModel");
 const sql = require("mssql");
 const config = require("../config");
 const {
@@ -8,6 +8,7 @@ const {
   addADraft,
 } = require("./requestController");
 
+const { getRegionAndRoleByEmployeeId } = require("../utils/fetchDetails");
 async function processTransaction(req, res) {
   try {
     const {
@@ -25,9 +26,9 @@ async function processTransaction(req, res) {
       tempAttachmentIds,
     } = req.body;
     console.log("tempAttachmentIds", tempAttachmentIds);
-    const requestId = await transactionModel.handleNewRequest();
+    const requestId = await priceRequestModel.handleNewRequest();
     console.log("requestId", requestId); // Debugging output (requestId value
-    const result = await transactionModel.insertTransactions({
+    const result = await priceRequestModel.insertTransactions({
       customers,
       consignees,
       endUse,
@@ -82,13 +83,46 @@ async function processPrevApprovedTransaction(req, res) {
       updatePreApprovedRequestStatus(oldRequestId, -1);
     }
 
-    const requestId = await transactionModel.handleNewRequest();
+    const requestId = await priceRequestModel.handleNewRequest();
     console.log("requestId", requestId); // Debugging output (requestId value
     if (action == "D") {
       console.log("In draft");
       addADraft(requestId);
     }
-    const result = await transactionModel.insertTransactions({
+
+    const resultA = await getRegionAndRoleByEmployeeId(am_id);
+
+    try {
+      const result = await transactionModel.acceptTransaction(
+        resultA[0]["region"],
+        action,
+        requestId,
+        am_id,
+        resultA[0]["role"]
+      );
+      if (result.success) {
+        res.json({
+          message: "Transaction added successfully",
+          currentStatus: result.currentStatus,
+        });
+      } else {
+        res.status(500).send("Failed to process transaction");
+      }
+    } catch (error) {
+      res.status(500).send("Server error while adding transaction");
+      console.error("Error:", error);
+    }
+
+    if (result2.success) {
+      res.json({
+        message: "Transaction added successfully",
+        currentStatus: result.currentStatus,
+      });
+    } else {
+      res.status(500).send("Failed to process transaction");
+    }
+
+    const result = await priceRequestModel.insertTransactions({
       customers,
       consignees,
       endUse,
@@ -155,5 +189,5 @@ async function pushDataToTable(requestName, parentRequestName) {
 module.exports = {
   processTransaction,
   getPriceApprovalData,
-  processPrevApprovedTransaction
+  processPrevApprovedTransaction,
 };

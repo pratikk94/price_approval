@@ -81,6 +81,8 @@ const CreateRequestModal = ({
     editData != undefined
       ? editData.priceDetails[0] != undefined
         ? editData.priceDetails[0].fsc == "Y"
+          ? "Y"
+          : "N"
         : "N"
       : "N"
   );
@@ -831,29 +833,11 @@ const CreateRequestModal = ({
           <SpacingWrapper space="24px" />
           <Typography>Attachment</Typography>
 
-          <FileHandling
-            requestId={
-              isBlocked || isCopyOrMerged || isExtension
-                ? ""
-                : editData != undefined
-                ? editData[0] != undefined
-                  ? editData[0].request_name
-                  : ""
-                : ""
-            }
-          />
+          <FileHandling requestId={editData ? editData["request_id"] : ""} />
 
           <RemarkBox
             setRemark={setRemarks}
-            request_id={
-              isBlocked || isCopyOrMerged || isExtension
-                ? ""
-                : editData != undefined
-                ? editData[0] != undefined
-                  ? editData[0].request_name
-                  : ""
-                : ""
-            }
+            request_id={editData ? editData["request_id"] : ""}
           />
 
           {/* <HistoryModal reqId={id} /> */}
