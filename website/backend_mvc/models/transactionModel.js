@@ -166,7 +166,8 @@ async function acceptTransaction(
   action,
   requestId,
   lastUpdatedById,
-  lastUpdatedByRole
+  lastUpdatedByRole,
+  oldRequestId = ""
 ) {
   try {
     // await sql.connect(config);
@@ -183,12 +184,16 @@ async function acceptTransaction(
     const query = `
     SELECT TOP 1 id, currently_pending_with , rule_id
     FROM transaction_mvc
-    WHERE request_id = @requestId
+    WHERE request_id = '${
+      oldRequestId.length > 0 ? oldRequestId : requestId
+    }' and currently_pending_with = '${lastUpdatedByRole}'
     ORDER BY id DESC
 `;
-    let transactionResult = await db.executeQuery(query, {
-      requestId: requestId,
-    });
+    console.log(query);
+
+    let transactionResult = await db.executeQuery(query);
+
+    console.log(transactionResult, "testing.................");
 
     let { currently_pending_with: currentRole, rule_id } =
       transactionResult.recordset[0];

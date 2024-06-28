@@ -93,33 +93,34 @@ async function processPrevApprovedTransaction(req, res) {
     const resultA = await getRegionAndRoleByEmployeeId(am_id);
 
     try {
-      const result = await transactionModel.acceptTransaction(
+      const result3 = await transactionModel.acceptTransaction(
         resultA[0]["region"],
         action,
         requestId,
         am_id,
-        resultA[0]["role"]
+        resultA[0]["role"],
+        oldRequestId
       );
-      if (result.success) {
-        res.json({
-          message: "Transaction added successfully",
-          currentStatus: result.currentStatus,
-        });
+      if (result3.success) {
+        // res.json({
+        //   message: "Transaction added successfully",
+        //   currentStatus: result3.currentStatus,
+        // });
       } else {
-        res.status(500).send("Failed to process transaction");
+        // res.status(500).send("Failed to process transaction");
       }
     } catch (error) {
-      res.status(500).send("Server error while adding transaction");
-      console.error("Error:", error);
+      // res.status(500).send("Server error while adding transaction");
+      // console.error("Error:", error);
     }
 
-    if (result2.success) {
-      res.json({
-        message: "Transaction added successfully",
-        currentStatus: result.currentStatus,
-      });
+    if (resultA.success) {
+      // res.json({
+      //   message: "Transaction added successfully",
+      //   currentStatus: result.currentStatus,
+      // });
     } else {
-      res.status(500).send("Failed to process transaction");
+      // res.status(500).send("Failed to process transaction");
     }
 
     const result = await priceRequestModel.insertTransactions({
@@ -138,11 +139,11 @@ async function processPrevApprovedTransaction(req, res) {
       tempAttachmentIds,
     });
 
-    priceRequestModel.addTransactionToTable(
-      requestId,
-      am_id,
-      (draft = action == "D")
-    );
+    // priceRequestModel.addTransactionToTable(
+    //   requestId,
+    //   am_id,
+    //   (draft = action == "D")
+    // );
     if (oldRequestId != undefined)
       pushDataToTable(requestId, action + oldRequestId.substring(1));
 
