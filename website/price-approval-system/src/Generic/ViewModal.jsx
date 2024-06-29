@@ -507,10 +507,16 @@ function PriceViewModal({ open, handleClose, data, rule }) {
           <>
             {showSuccess ? (
               <Box sx={{ mt: 2, color: green[500] }}>
-                <CheckCircleOutlineIcon
-                  sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
-                />
+                <center>
+                  <img
+                    src="verified.gif"
+                    alt="Verified"
+                    style={{ maxWidth: "100px", marginBottom: "20px" }}
+                  />
+                </center>
+                <br />
                 {success_message}
+                <br />
                 <br />
                 <center>
                   <Button

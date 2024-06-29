@@ -881,16 +881,20 @@ const CreateRequestModal = ({
       >
         <Box sx={style}>
           {showSuccess ? (
-            <Box sx={{ mt: 2, color: green[500] }}>
-              <CheckCircleOutlineIcon
-                sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
+            <Box sx={{ mt: 2, color: green[500], textAlign: "center" }}>
+              <img
+                src="verified.gif"
+                alt="Verified"
+                style={{ maxWidth: "100px", marginBottom: "20px" }}
               />
+              <br />
               Request Created Successfully.
+              <br />
               <Button
                 variant="contained"
                 color="primary"
                 onClick={handleConfirm}
-                sx={{ mt: 2 }}
+                sx={{ mt: 2, bgcolor: "#156760" }}
               >
                 Ok
               </Button>
