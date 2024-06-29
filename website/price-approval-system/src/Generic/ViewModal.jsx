@@ -330,13 +330,13 @@ function PriceViewModal({ open, handleClose, data, rule }) {
             },
           }}
         >
-          <p style={{ color: "#323232", fontSize: "4vh" }}>
+          <p style={{ color: "#323232", fontSize: "3vh" }}>
             <center>Request Details</center>
           </p>
           {data ? (
             <>
               <div>
-                <p style={{ color: "#323232", fontSize: "3vh" }}>
+                <p style={{ color: "#323232", fontSize: "2vh" }}>
                   Customer: {data["consolidatedRequest"].customer_name}
                   <br />
                   Consignee: {data.consolidatedRequest.consignee_name}
