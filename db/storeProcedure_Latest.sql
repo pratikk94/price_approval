@@ -291,8 +291,11 @@ SELECT  *
 END
 
 
+
+
 CREATE PROCEDURE UpdateAndInsertRule
-    @RuleData NVARCHAR(MAX)
+    @RuleData NVARCHAR(MAX),
+    @Region nvarchar(150)
 AS
 BEGIN
     -- Start a transaction
@@ -301,24 +304,26 @@ BEGIN
     BEGIN TRY
     
         -- Declare a variable to hold the rule_id value
-    DECLARE @selectedValue INT;
-    
-    
-    -- get the rule_id from the rule_mvc table
-    SELECT Top 1 @selectedValue = rule_id FROM rule_mvc WHERE is_active =1;
+    DECLARE @selectedRuleId INT = 0;
 
+-- get the rule_id from the rule_mvc table
+    SELECT @selectedRuleId = MAX(rule_id)
+    FROM rule_mvc
 
-    
-    -- Perform the update operation to set is_active as 0
-        UPDATE rule_mvc SET is_active = 0 WHERE rule_id = @selectedValue;
+        -- Perform the update operation to set is_active as 0
+        UPDATE rule_mvc SET is_active = 0 WHERE region = @Region;
+
         
             -- Increment the rule_id
-    SET @selectedValue = @selectedValue + 1;
+    SET @selectedRuleId = @selectedRuleId + 1;
 
         -- Perform the insert operation
-    INSERT INTO rule_mvc (rule_id, region, approver,level,valid_from,valid_to,is_active)OUTPUT INSERTED.* 
-    SELECT 
-        @selectedValue,
+    INSERT INTO rule_mvc
+        (rule_id, region, approver,level,valid_from,valid_to,is_active)
+    OUTPUT
+    INSERTED.*
+    SELECT
+        @selectedRuleId,
         JSON_VALUE(value, '$.region'),
         JSON_VALUE(value, '$.approver'),
         JSON_VALUE(value, '$.level'),
@@ -339,12 +344,13 @@ BEGIN
         DECLARE @ErrorSeverity INT;
         DECLARE @ErrorState INT;
 
-        SELECT 
-            @ErrorMessage = ERROR_MESSAGE(),
-            @ErrorSeverity = ERROR_SEVERITY(),
-            @ErrorState = ERROR_STATE();
+        SELECT
+        @ErrorMessage = ERROR_MESSAGE(),
+        @ErrorSeverity = ERROR_SEVERITY(),
+        @ErrorState = ERROR_STATE();
 
         -- Raise the error with the original error information
         RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
     END CATCH
 END;
+

@@ -47,7 +47,7 @@ const getApproversByLevels = async () => {
 
 const postApproversByLevels = async (data) => {
   try {
-    let result = await db.executeQuery('EXEC UpdateAndInsertRule @RuleData', { "RuleData": JSON.stringify(data) });
+    let result = await db.executeQuery('EXEC UpdateAndInsertRule @RuleData,@Region', { "RuleData": JSON.stringify(data),"Region":data[0].region });
     return result.recordset;
   } catch (err) {
     console.error("Database connection error:", err);
