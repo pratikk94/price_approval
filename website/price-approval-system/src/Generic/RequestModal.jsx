@@ -76,7 +76,7 @@ const CreateRequestModal = ({
   const [plant, setPlant] = useState([]);
   const [paymentTerms, setPaymentTerms] = useState([]);
   const [validFrom, setValidFrom] = useState([]);
-  const [validTo, setValidTo] = useState([]);
+  let [validTo, setValidTo] = useState([]);
   const [fsc, setFSC] = useState(
     editData != undefined
       ? editData.priceDetails[0] != undefined
@@ -110,7 +110,9 @@ const CreateRequestModal = ({
   const [openModal, setOpenModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const handleOpen = () => setOpenModal(true);
-  const handleCloseModal = () => setOpenModal(false);
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
   const handleConfirmOneToOne = () => {
     setCheckBoxEnabled(true);
     setIsChecked(true);
@@ -134,7 +136,7 @@ const CreateRequestModal = ({
 
   const handleConfirm = () => {
     if (showSuccess) window.location.reload();
-    else setErrorMessage("");
+    // else setErrorMessage("");
 
     handleCloseModal();
     // setTimeout(() => {
@@ -179,6 +181,7 @@ const CreateRequestModal = ({
 
   console.log("Rework" + isRework);
   console.log(editData ?? "No data");
+
   const handleFormSubmit = (event, draft = false) => {
     handleOpen();
     setShowSuccess(false);
@@ -307,6 +310,15 @@ const CreateRequestModal = ({
         formData["oldRequestId"] = parentId;
 
         if (!stopExecution) {
+          console.log(typeof validFrom, typeof validTo);
+          if (typeof validTo == "string") {
+            validTo = new Date(validTo);
+
+            // Convert to a string with the desired format
+            // Note: The output format might slightly vary depending on the environment
+          }
+          // const validTo = moment(validTo);
+          console.log(validFrom, validTo);
           if (validFrom < validTo) {
             submitFormDataMVC(formData);
             //handleConfirm();
@@ -687,7 +699,9 @@ const CreateRequestModal = ({
     setOpenOneToOneModal(false);
   };
 
-  console.log(editData);
+  console.log(
+    editData != undefined ? editData.consolidatedRequest.plant : "No plant"
+  );
 
   return (
     <>
@@ -704,7 +718,7 @@ const CreateRequestModal = ({
         <Box sx={modalStyle} component="form">
           <Typography
             id="create-request-modal-title"
-            variant="h6"
+            variant="h"
             component="h2"
             marginBottom={2}
           >
@@ -863,7 +877,10 @@ const CreateRequestModal = ({
               </button>
               <button
                 style={{ backgroundColor: "#4f0000", marginLeft: "4px" }}
-                onClick={handleClose}
+                onClick={() => {
+                  handleClose();
+                  window.location.reload();
+                }}
                 color="primary"
                 variant="contained"
               >
@@ -893,7 +910,10 @@ const CreateRequestModal = ({
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleConfirm}
+                onClick={() => {
+                  handleConfirm();
+                  window.location.reload();
+                }}
                 sx={{ mt: 2, bgcolor: "#156760" }}
               >
                 Ok

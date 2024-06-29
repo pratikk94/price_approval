@@ -16,8 +16,8 @@ const Plant = ({ setSelection, editedData, disabled }) => {
         value: customer.code,
       }));
       setCustomers(customerOptions);
-
-      if (!disabled && editedData.length > 0) {
+      console.log(editedData);
+      if (editedData.length > 0) {
         const result = customerOptions.filter((customer) =>
           editedData.split(",").map(Number).includes(customer.value)
         );

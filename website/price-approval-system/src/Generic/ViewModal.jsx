@@ -472,7 +472,10 @@ function PriceViewModal({ open, handleClose, data, rule }) {
               <br />
               <HistoryModal reqId={id} />
               <button
-                onClick={handleClose}
+                onClick={() => {
+                  handleClose();
+                  window.location.reload;
+                }}
                 style={{ backgroundColor: "#156760" }}
               >
                 Close

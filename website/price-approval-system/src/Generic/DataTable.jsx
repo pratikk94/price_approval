@@ -96,6 +96,7 @@ function DraggableHeader({
 
 function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("");
   const [headers, setHeaders] = useState([]);
@@ -109,13 +110,74 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   const { session } = useSession();
   const [open, setOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
-  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectedRows, setSelectedRows] = useState({});
   const [editOpen, setEditOpen] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isExtension, setIsExtension] = useState(false);
   const [openDownloadModal, setOpenDownloadModal] = useState(false);
   const [id, setId] = useState(0);
   const [downloadRowData, setDownlaodRowData] = useState([]);
+  const [selectedRowIds, setSelectedRowIds] = useState(new Set()); // State to track selected rows
+
+  // Function to toggle row selection
+  const toggleRowSelection = (event, id) => {
+    event.stopPropagation(); // Stop event from bubbling to avoid triggering row click
+    setSelectedRowIds((prevSelected) => {
+      const newSet = new Set(prevSelected);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const renderRow = (row, index) => (
+    <TableRow
+      key={row.request_id}
+      selected={selectedRowIds.has(row.request_id)}
+      onClick={() => handleRowClick(row.request_id)} // Handle row clicks if needed
+      sx={{
+        "&:nth-of-type(odd)": { bgcolor: "action.hover" },
+        "&:nth-of-type(even)": { bgcolor: "background.default" },
+      }}
+    >
+      <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={selectedRowIds.has(row.request_id)}
+          onChange={(e) => toggleRowSelection(e, row.request_id)} // Ensure proper toggle function call
+        />
+      </TableCell>
+      {selectedHeaders
+        .filter((header) => !header.includes("_id"))
+        .map((header) => (
+          <TableCell key={header}>
+            {header === "Actions" ? (
+              actionButtons(row)
+            ) : (
+              <p>{row.consolidatedRequest[header]}</p>
+            )}
+          </TableCell>
+        ))}
+    </TableRow>
+  );
+
+  // Function to filter data based on search term
+  const filterData = useCallback(() => {
+    if (!searchTerm) return setData(data); // If no search term, show all data
+    const lowercasedFilter = searchTerm.toLowerCase();
+    const filtered = data.filter((entry) => {
+      return Object.keys(entry.consolidatedRequest).some((key) =>
+        entry.consolidatedRequest[key]
+          .toString()
+          .toLowerCase()
+          .includes(lowercasedFilter)
+      );
+    });
+    setFilteredData(filtered);
+  }, [data, searchTerm]);
+
   console.log("Rework is " + isRework);
 
   const handleRowClick = (id) => {
@@ -152,6 +214,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   const handleClose = () => {
     setOpen(false);
     setOpenDownloadModal(false);
+    window.location.reload();
   };
 
   const handleEditClose = () => {
@@ -194,10 +257,6 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
     setSelectedHeaders(event.target.value);
   };
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
   // const handleSort = (header) => {
   //   if (sortHeader === header) {
   //     setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -223,6 +282,31 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
       setEditOpen(true);
     }
     // Implement your view logic here
+  };
+
+  // Apply filter when data or search term changes
+  useEffect(() => {
+    const filtered = data.filter((item) =>
+      Object.keys(item.consolidatedRequest).some((key) =>
+        item.consolidatedRequest[key]
+          .toString()
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      )
+    );
+    setSelectedRows(filtered);
+  }, [searchTerm, data]);
+
+  const getFilteredData = () => {
+    if (!searchTerm) return data;
+    return data.filter((item) =>
+      Object.keys(item.consolidatedRequest).some((key) =>
+        item.consolidatedRequest[key]
+          .toString()
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      )
+    );
   };
 
   const handleDownloadAction = (rowData) => {
@@ -298,6 +382,11 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
     });
     console.log(sortedData);
     setData(sortedData);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value); // Update searchTerm with the input from the user
+    // The actual filtering logic is handled separately in the filterData function or useEffect if it depends on searchTerm
   };
 
   return (
@@ -454,41 +543,12 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                         </Box>
                       </Box>
                     ))
-                  : data
+                  : getFilteredData()
                       .slice(
                         page * rowsPerPage,
                         page * rowsPerPage + rowsPerPage
                       )
-                      .map((row, index) => (
-                        <TableRow
-                          sx={{
-                            "&:nth-of-type(odd)": { bgcolor: "action.hover" },
-                            "&:nth-of-type(even)": {
-                              bgcolor: "background.default",
-                            },
-                          }}
-                          key={row.request_id}
-                          selected={isSelected(row.request_id)}
-                          onClick={() => handleRowClick(row.request_id)}
-                          role="checkbox"
-                          aria-checked={isSelected(row.request_id)}
-                        >
-                          <TableCell padding="checkbox">
-                            <Checkbox checked={isSelected(row.request_id)} />
-                          </TableCell>
-                          {selectedHeaders
-                            .filter((header) => !header.includes("_id"))
-                            .map((header) => (
-                              <TableCell key={header}>
-                                {header === "Actions" ? (
-                                  actionButtons(row)
-                                ) : (
-                                  <p>{row.consolidatedRequest[header]}</p>
-                                )}
-                              </TableCell>
-                            ))}
-                        </TableRow>
-                      ))}
+                      .map(renderRow)}
               </TableBody>
             </Table>
             <TablePagination
