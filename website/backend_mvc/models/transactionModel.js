@@ -186,7 +186,7 @@ async function acceptTransaction(
 
     let query = "";
 
-    if (isDraft) {
+    if (isDraft || action == "R") {
       query = `
     SELECT TOP 1 id, currently_pending_with , rule_id
     FROM transaction_mvc
