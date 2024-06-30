@@ -7,4 +7,7 @@ router.get("/data/:role/:status/:id", dataController.getTransactionData);
 
 router.get("/request-details", dataController.getRequestDetails);
 
+router.get("/request-Report/:status/:id", dataController.getRequestReport);
+
+
 module.exports = router;

@@ -28,7 +28,19 @@ async function getRequestDetails(req, res) {
   }
 }
 
+async function getRequestReport(req, res) {
+  const {status, id} = req.params;
+  try {
+    const result = await priceRequestModel.fetchRequestReport(
+       id,status
+    );
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(`Server error: ${error.message}`);
+  }
+}
 module.exports = {
   getTransactionData,
   getRequestDetails,
+  getRequestReport
 };

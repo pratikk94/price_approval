@@ -19,7 +19,17 @@ const getApproversByLevels = async (req, res) => {
   }
 };
 
+const postApproversByLevels = async (req, res) => {
+  try {
+    const result = await ruleModel.postApproversByLevels(req.body.dataArray);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send("Error retrieving data");
+  }
+};
+
 module.exports = {
   getRulesByApproverAndLevel,
   getApproversByLevels,
+  postApproversByLevels
 };

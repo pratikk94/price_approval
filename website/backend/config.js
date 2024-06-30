@@ -1,2 +1,3 @@
-const url = "192.168.0.9";
+require("dotenv").config();
+const url = process.env.DOMAIN_IP;
 module.exports = url;
