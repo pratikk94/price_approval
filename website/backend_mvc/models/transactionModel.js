@@ -167,7 +167,9 @@ async function acceptTransaction(
   requestId,
   lastUpdatedById,
   lastUpdatedByRole,
-  oldRequestId = ""
+  oldRequestId = "",
+  isDraft = false,
+  isBlockExtensionPreclosure = false
 ) {
   try {
     // await sql.connect(config);
@@ -184,7 +186,7 @@ async function acceptTransaction(
 
     let query = "";
 
-    if (oldRequestId.length > 0) {
+    if (isDraft || action == "R") {
       query = `
     SELECT TOP 1 id, currently_pending_with , rule_id
     FROM transaction_mvc
@@ -193,6 +195,11 @@ async function acceptTransaction(
     }' and currently_pending_with = '${lastUpdatedByRole}'
     ORDER BY id DESC
 `;
+    } else if (isBlockExtensionPreclosure) {
+      query = `SELECT TOP 1 id, currently_pending_with , rule_id
+      FROM transaction_mvc
+      WHERE request_id = '${oldRequestId}'
+      ORDER BY id DESC`;
     } else {
       query = `
     SELECT TOP 1 id, currently_pending_with , rule_id
@@ -260,6 +267,7 @@ async function acceptTransaction(
         message: "Transactions added and status updated successfully.",
       };
     }
+    if (currentRole == "Approved") currentRole = "AM";
 
     console.log(lastUpdatedByRole, currentRole);
     const result = await isValidRole(lastUpdatedByRole, currentRole);

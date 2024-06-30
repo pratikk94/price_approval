@@ -25,11 +25,11 @@ function ResponsiveDrawer({ logout }) {
   const [activePane, setActivePane] = useState("Dashboard");
 
   const drawerItems = [
-    { text: "Dashboard", component: <Dashboard /> },
     {
       text: "Price Requests",
       component: <PriceChangeRequests role={"Validator"} isAM={true} />,
     },
+    { text: "Dashboard", component: <Dashboard /> },
     // { text: "Requests History", component: <RequestsHistory /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
   ];

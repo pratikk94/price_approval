@@ -103,7 +103,9 @@ async function processPrevApprovedTransaction(req, res) {
           requestId,
           am_id,
           resultA[0]["role"],
-          oldRequestId
+          oldRequestId,
+          false,
+          action == "B" || action == "E"
         );
         if (result3.success) {
           // res.json({

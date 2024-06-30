@@ -330,13 +330,13 @@ function PriceViewModal({ open, handleClose, data, rule }) {
             },
           }}
         >
-          <p style={{ color: "#323232", fontSize: "4vh" }}>
+          <p style={{ color: "#323232", fontSize: "3vh" }}>
             <center>Request Details</center>
           </p>
           {data ? (
             <>
               <div>
-                <p style={{ color: "#323232", fontSize: "3vh" }}>
+                <p style={{ color: "#323232", fontSize: "2vh" }}>
                   Customer: {data["consolidatedRequest"].customer_name}
                   <br />
                   Consignee: {data.consolidatedRequest.consignee_name}
@@ -472,7 +472,10 @@ function PriceViewModal({ open, handleClose, data, rule }) {
               <br />
               <HistoryModal reqId={id} />
               <button
-                onClick={handleClose}
+                onClick={() => {
+                  handleClose();
+                  window.location.reload;
+                }}
                 style={{ backgroundColor: "#156760" }}
               >
                 Close
@@ -507,10 +510,16 @@ function PriceViewModal({ open, handleClose, data, rule }) {
           <>
             {showSuccess ? (
               <Box sx={{ mt: 2, color: green[500] }}>
-                <CheckCircleOutlineIcon
-                  sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
-                />
+                <center>
+                  <img
+                    src="verified.gif"
+                    alt="Verified"
+                    style={{ maxWidth: "100px", marginBottom: "20px" }}
+                  />
+                </center>
+                <br />
                 {success_message}
+                <br />
                 <br />
                 <center>
                   <Button

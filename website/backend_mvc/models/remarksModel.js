@@ -52,12 +52,16 @@ async function getRemarksWithRequests(request_id) {
     const query2 = `SELECT 
                     DISTINCT r.request_id,
                     r.id,
-                    r.user_id,
+                    CONCAT(u.employee_name,'(',u.role,',',user_id,')') as user_id,
                     r.comment,
-                    r.created_at
+                    CONVERT(VARCHAR, CAST(r.created_at AS DATETIME2), 103) AS created_at
+                    
                   FROM 
                     dbo.Remarks AS r
+                  INNER JOIN define_roles AS u ON r.user_id = u.employee_id
                   WHERE r.request_id in ('${requestIds.join("', '")}')`;
+    console.log(query2);
+
     //let result = await db.executeQuery(query1);
     // let result = await pool.request().query(query1);
     //if (result.recordset.length == 0)

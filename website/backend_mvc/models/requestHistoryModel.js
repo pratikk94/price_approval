@@ -24,7 +24,9 @@ async function getTransactionsByRequestId(requestId) {
           request_name = '${currentRequestId}'
       `;
       // const parentIdResult = await new sql.Request().query(fetchParentIdQuery);
-      const parentIdResult  = await db.executeQuery(fetchParentIdQuery,{"currentRequestId":currentRequestId});
+      const parentIdResult = await db.executeQuery(fetchParentIdQuery, {
+        currentRequestId: currentRequestId,
+      });
       if (
         parentIdResult.recordset.length > 0 &&
         parentIdResult.recordset[0].parent_request_name
@@ -42,7 +44,7 @@ async function getTransactionsByRequestId(requestId) {
     let allTransactions = [];
 
     // Run the query for each requestId
-    for (const id of requestIds) {
+    for (const id of requestIds.reverse()) {
       const transactionHistoryQuery = `
         WITH RankedTransactions AS (
           SELECT 
@@ -85,8 +87,8 @@ async function getTransactionsByRequestId(requestId) {
       // const transactionResult = await new sql.Request().query(
       //   transactionHistoryQuery
       // );
-      console.log(transactionHistoryQuery)
-      const transactionResult  = await db.executeQuery(transactionHistoryQuery);
+      console.log(transactionHistoryQuery);
+      const transactionResult = await db.executeQuery(transactionHistoryQuery);
       allTransactions.push(...transactionResult.recordset); // Spread operator to flatten the results
     }
 
