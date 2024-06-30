@@ -416,17 +416,21 @@ async function fetchConsolidatedRequest(requestId) {
 
 async function fetchData(role, status, id) {
   try {
+    let transactionsResult;
+    if (role.indexOf("NSM") != -1) {
+      transactionsResult = await db.executeQuery(
+        "EXEC GetTransactionDetails @Status, @Role",
+        { Status: status, Role: "NSM" }
+      );
+    }
+
     // Use advanced query to get transactions pending with the given role
-    const transactionsResult = await db.executeQuery(
-      "EXEC GetTransactionDetails @Status, @Role",
-      { Status: status, Role: role }
-    );
-
-    let am =
-      role == "RM" || role == "AM"
-        ? `AND dr.region IN (SELECT region FROM [PriceApprovalSystem].[dbo].[define_roles] WHERE employee_id = '${id}')`
-        : "";
-
+    else {
+      transactionsResult = await db.executeQuery(
+        "EXEC GetTransactionDetails @Status, @Role",
+        { Status: status, Role: role }
+      );
+    }
     let details = [];
     // For each transaction, fetch and consolidate request details
     let uniqueTransactions = transactionsResult.recordset.filter(
@@ -435,8 +439,13 @@ async function fetchData(role, status, id) {
     );
     for (let transaction of uniqueTransactions) {
       console.log(transaction.request_id);
-       // Fetch price details with the maximum ID
-       const requestResult = await db.executeQuery('EXEC GetPriceApprovalRequests @RequestID, @Status', { "RequestID": transaction.request_id, "Status": status });
+
+      let query =
+        role == "RM" || role == "AM"
+          ? `EXEC GetPriceApprovalRequests @Id = '${id}', @Status = '${status}', @RequestId = ${transaction.request_id}, @Role = '${role}'`
+          : `EXEC GetPriceApprovalRequestsHigh  @Status = '${status}', @RequestId = ${transaction.request_id}, @Role = '${role}'`;
+      // Fetch price details with the maximum ID
+      const requestResult = await db.executeQuery(query);
 
       if (requestResult.recordset.length > 0) {
         const consolidated = requestResult.recordset.reduce((acc, row) => {
@@ -582,5 +591,5 @@ module.exports = {
   fetchConsolidatedRequest,
   fetchData,
   fetchRequestDetails,
-  addTransactionToTable
+  addTransactionToTable,
 };

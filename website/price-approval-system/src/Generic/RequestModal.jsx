@@ -75,7 +75,7 @@ const CreateRequestModal = ({
   const [endUse, setEndUse] = useState([]);
   const [plant, setPlant] = useState([]);
   const [paymentTerms, setPaymentTerms] = useState([]);
-  const [validFrom, setValidFrom] = useState([]);
+  let [validFrom, setValidFrom] = useState([]);
   let [validTo, setValidTo] = useState([]);
   const [fsc, setFSC] = useState(
     editData != undefined
@@ -316,6 +316,10 @@ const CreateRequestModal = ({
 
             // Convert to a string with the desired format
             // Note: The output format might slightly vary depending on the environment
+          }
+
+          if (typeof validFrom == "string") {
+            validFrom = new Date(validFrom);
           }
           // const validTo = moment(validTo);
           console.log(validFrom, validTo);
