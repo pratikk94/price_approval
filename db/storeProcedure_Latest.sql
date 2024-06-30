@@ -354,3 +354,41 @@ BEGIN
     END CATCH
 END;
 
+CREATE PROCEDURE GetReports
+    @RequestID NVARCHAR(50),
+    @Status INT
+AS
+BEGIN
+    SELECT 
+    par.request_name,
+    c.name AS customer_name, 
+    par.customer_id AS customer_ids,
+    consignee.name AS consignee_name, 
+    par.consignee_id AS consignee_ids,
+    enduse.name AS enduse_name,
+    par.end_use_id,
+    par.plant,
+    CONVERT(VARCHAR, CAST(valid_from AS DATETIME2), 103) AS valid_from,
+    CONVERT(VARCHAR, CAST(valid_to AS DATETIME2), 103) AS valid_to,
+    par.payment_terms_id
+FROM price_approval_requests par
+LEFT JOIN customer c ON par.customer_id = c.id
+LEFT JOIN customer consignee ON par.consignee_id = consignee.id
+LEFT JOIN customer enduse ON par.end_use_id = enduse.id
+JOIN requests_mvc rs ON par.request_name = rs.req_id
+WHERE par.request_name = @RequestID 
+  AND rs.status = @Status 
+  AND (par.customer_id <> '' OR par.consignee_id <> '' OR par.end_use_id <> '')
+GROUP BY
+    par.request_name,
+    c.name, 
+    par.customer_id,
+    consignee.name, 
+    par.consignee_id,
+    enduse.name,
+    par.end_use_id,
+    par.plant,
+    CONVERT(VARCHAR, CAST(valid_from AS DATETIME2), 103),
+    CONVERT(VARCHAR, CAST(valid_to AS DATETIME2), 103),
+    par.payment_terms_id;
+END;

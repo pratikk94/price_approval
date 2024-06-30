@@ -435,8 +435,8 @@ async function fetchData(role, status, id) {
     );
     for (let transaction of uniqueTransactions) {
       console.log(transaction.request_id);
-       // Fetch price details with the maximum ID
-       const requestResult = await db.executeQuery('EXEC GetPriceApprovalRequests @RequestID, @Status', { "RequestID": transaction.request_id, "Status": status });
+      // Fetch price details with the maximum ID
+      const requestResult = await db.executeQuery('EXEC GetPriceApprovalRequests @RequestID, @Status', { "RequestID": transaction.request_id, "Status": status });
 
       if (requestResult.recordset.length > 0) {
         const consolidated = requestResult.recordset.reduce((acc, row) => {
@@ -576,11 +576,24 @@ async function fetchRequestDetails({
   }
 }
 
+async function fetchRequestReport(req_id, status) {
+  try {
+    let result = await db.executeQuery(`EXEC GetReports @RequestID,@Status`, { "RequestID": req_id, "status": status });
+    console.log(result);
+    return result
+  } catch (err) {
+    console.error("Database operation failed:", err);
+    throw err;
+  }
+}
+
+
 module.exports = {
   handleNewRequest: getCurrentDateRequestId,
   insertTransactions,
   fetchConsolidatedRequest,
   fetchData,
   fetchRequestDetails,
-  addTransactionToTable
+  addTransactionToTable,
+  fetchRequestReport
 };
