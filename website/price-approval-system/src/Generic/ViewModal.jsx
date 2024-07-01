@@ -295,6 +295,13 @@ function PriceViewModal({ open, handleClose, data, rule }) {
   // console.log(rule);
   // console.log(rule.rules.can_approve);
   // console.log(data["consolidatedRequest"]);
+  console.log(
+    data != undefined
+      ? data.priceDetails != undefined
+        ? data.priceDetails[0]["fsc"]
+        : null
+      : null
+  );
   return (
     data["consolidatedRequest"] && (
       <>
@@ -351,7 +358,14 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                   <br />
                   Valid To: {data.consolidatedRequest.valid_to}
                   <br />
-                  FSC: {data.priceDetails[0]?.fsc == "Y " ? "Yes" : "No"}
+                  FSC:{" "}
+                  {data != undefined
+                    ? data.priceDetails != undefined
+                      ? data.priceDetails[0]["fsc"] == "Y"
+                        ? "Yes"
+                        : "No"
+                      : "No"
+                    : "No"}
                   <br />
                   Mapping Type:{" "}
                   {data.consolidatedRequest.mappint_type == 1

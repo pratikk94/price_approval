@@ -174,7 +174,7 @@ function TableWithInputs({
     ReelDiscount: false,
     PackUpCharge: false,
     TPC: false,
-    OfflineDisc: false,
+    offlineDiscount: false,
   });
 
   // Handle dynamic checkbox changes
@@ -402,7 +402,7 @@ function TableWithInputs({
                   ? "Pack Upcharge"
                   : option == "TPC"
                   ? "TPC"
-                  : option == "OfflineDisc"
+                  : option == "offlineDiscount"
                   ? "Offline Discount"
                   : ""
               }
@@ -456,7 +456,7 @@ function TableWithInputs({
                 <center>TPC</center>
               </th>
             )}
-            {checkboxState["OfflineDisc"] && (
+            {checkboxState["offlineDiscount"] && (
               <th style={{ width: calculateWidth() }}>
                 {" "}
                 <center>Offline Discount</center>
@@ -648,7 +648,7 @@ function TableWithInputs({
                   />
                 </td>
               )}
-              {checkboxState["OfflineDisc"] && (
+              {checkboxState["offlineDiscount"] && (
                 <td style={{ width: calculateWidth() }}>
                   <input
                     type="number"
@@ -756,6 +756,7 @@ function TableWithInputs({
                   <TableCell>Special Discount</TableCell>
                   <TableCell>Reel Discount</TableCell>
                   <TableCell>TPC</TableCell>
+                  <TableCell>Pack UpCharge</TableCell>
                   <TableCell>Offline Discount</TableCell>
                   <TableCell>Net NSR</TableCell>
                   {/* ... other headers */}
@@ -769,6 +770,7 @@ function TableWithInputs({
                     <TableCell>{row.special_discount}</TableCell>
                     <TableCell>{row.reel_discount}</TableCell>
                     <TableCell>{row.tpc}</TableCell>
+                    <TableCell>{row.packUpCharge}</TableCell>
                     <TableCell>{row.offline_discount}</TableCell>
                     <TableCell>{row.net_nsr}</TableCell>
 

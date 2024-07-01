@@ -105,7 +105,7 @@ const CreateRequestModal = ({
   const [newRequestId, setNewRequestId] = useState("");
   const [handleMapping, setHandleMapping] = useState(0);
   const [openOneToOneModal, setOpenOneToOneModal] = useState(false);
-  const timeZone = "Asia/Kolkata";
+  // const timeZone = "Asia/Kolkata";
   const [showSuccess, setShowSuccess] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -226,14 +226,9 @@ const CreateRequestModal = ({
         formData["plants"] = plant;
         formData["paymentTermsId"] = paymentTerms["value"].toString();
 
-        const today = moment();
-        formData["validFrom"] = validFrom
-          ? moment(validFrom).tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ")
-          : today.tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ");
+        formData["validFrom"] = validFrom;
 
-        formData["validTo"] = validTo
-          ? moment(validTo).tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ")
-          : today.tz(timeZone).format("YYYY-MM-DD HH:mm:ssZ");
+        formData["validTo"] = validTo;
         formData["remarks"] = remarks;
         formData["mappingType"] = checkBoxEnabled ? (isChecked ? 1 : 2) : 2;
         tableRowsData[0]["fsc"] = fsc;
@@ -324,6 +319,7 @@ const CreateRequestModal = ({
           // const validTo = moment(validTo);
           console.log(validFrom, validTo);
           if (validFrom < validTo) {
+            console.log(formData);
             submitFormDataMVC(formData);
             //handleConfirm();
           } else {

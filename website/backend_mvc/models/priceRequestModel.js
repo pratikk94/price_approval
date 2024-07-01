@@ -126,6 +126,25 @@ async function insertCombinationsOneToMany(
   }
 }
 
+// Function to format a Date object into 'YYYY-MM-DD HH:mm:ss' format
+function formatDateToDBString(date) {
+  const pad = (num) => (num < 10 ? "0" + num : num);
+
+  return (
+    date.getFullYear() +
+    "-" +
+    pad(date.getMonth() + 1) +
+    "-" +
+    pad(date.getDate()) +
+    "T" +
+    pad(date.getHours()) +
+    ":" +
+    pad(date.getMinutes()) +
+    ":" +
+    pad(date.getSeconds()) +
+    ".000Z"
+  );
+}
 async function insertTransactions(data) {
   const {
     customers,
@@ -154,6 +173,18 @@ async function insertTransactions(data) {
       ? insertCombinationsOneToMany
       : insertCombinationsOneToOne;
 
+    console.log(typeof validFrom, validFrom, "validFrom");
+    const adjustedValidFrom = new Date(
+      formatDateToDBString(
+        new Date(new Date(validFrom).getTime() + (5 * 60 + 30) * 60 * 1000)
+      )
+    ).toISOString();
+    console.log(typeof adjustedValidFrom, adjustedValidFrom, "valueFrom");
+    const adjustedValidTo = new Date(
+      formatDateToDBString(
+        new Date(new Date(validTo).getTime() + (5 * 60 + 30) * 60 * 1000)
+      )
+    ).toISOString();
     // Call the appropriate mapping function with the split data
     const result = await mappingFunction(
       customerList,
@@ -162,8 +193,8 @@ async function insertTransactions(data) {
       {
         endUse,
         endUseSegment,
-        validFrom,
-        validTo,
+        validFrom: adjustedValidFrom,
+        validTo: adjustedValidTo,
         paymentTerms,
         requestId,
         oneToOneMapping,
@@ -174,6 +205,8 @@ async function insertTransactions(data) {
     if (!result.success) {
       throw new Error(`Error inserting data: ${result.message}`);
     }
+
+    console.log(validFrom, validTo, "validFrom, validTo");
 
     // Additional business logic for inserting prices
     if (Array.isArray(prices)) {
@@ -446,7 +479,6 @@ async function fetchData(role, status, id) {
       // Fetch price details with the maximum ID
       const requestResult = await db.executeQuery(query);
 
-
       if (requestResult.recordset.length > 0) {
         const consolidated = requestResult.recordset.reduce((acc, row) => {
           Object.keys(row).forEach((key) => {
@@ -587,15 +619,17 @@ async function fetchRequestDetails({
 
 async function fetchRequestReport(req_id, status) {
   try {
-    let result = await db.executeQuery(`EXEC GetReports @RequestID,@Status`, { "RequestID": req_id, "status": status });
+    let result = await db.executeQuery(`EXEC GetReports @RequestID,@Status`, {
+      RequestID: req_id,
+      status: status,
+    });
     console.log(result);
-    return result
+    return result;
   } catch (err) {
     console.error("Database operation failed:", err);
     throw err;
   }
 }
-
 
 module.exports = {
   handleNewRequest: getCurrentDateRequestId,
@@ -604,6 +638,5 @@ module.exports = {
   fetchData,
   fetchRequestDetails,
   addTransactionToTable,
-  fetchRequestReport
-
+  fetchRequestReport,
 };

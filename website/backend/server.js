@@ -10,7 +10,7 @@ const fs = require("fs");
 const nodemailer = require("nodemailer");
 const upload = multer({ storage: multer.memoryStorage() });
 const corsOptions = {
-  origin: "http://" + url + ":5173", // or the specific origin you want to allow
+  origin: "http://192.168.1.102:5173", // or the specific origin you want to allow
   credentials: true, // allowing credentials (cookies, session)
 };
 const timeZone = "Asia/Kolkata";
@@ -26,8 +26,8 @@ require("dotenv").config();
 
 const config = {
   user: process.env.DB_USER,
-  password:  process.env.DB_PASSWORD,
-  server: process.env.DB_SERVER,// You can use 'localhost\\instance' if it's a local SQL Server instance
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER, // You can use 'localhost\\instance' if it's a local SQL Server instance
   // password: "12345",
   // server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
   port: 1433,

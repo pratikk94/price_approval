@@ -68,7 +68,7 @@ function RemarkBox({ request_id, setRemark }) {
             <TableRow>
               <TableCell>Latest Remark</TableCell>
               <TableCell>Posted By</TableCell>
-              <TableCell>Date of Comment</TableCell>
+              <TableCell>Posted Date</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

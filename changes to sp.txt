@@ -82,3 +82,8 @@ BEGIN
       AND (par.customer_id <> '' OR par.consignee_id <> '' OR par.end_use_id <> '');
 END;
 GO
+
+
+
+01-07-2024
+Add mappint type to above two sp.

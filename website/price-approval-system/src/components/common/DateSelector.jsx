@@ -14,6 +14,7 @@ const timeZone = "Asia/Kolkata";
 function CustomDatePicker({ name, setSelection, editedData, disabled }) {
   const [startDate, setStartDate] = useState("");
   console.log(`Time${editedData.length}`);
+  console.log(startDate);
   return (
     <div>
       <Typography variant="p">{name + "\t"}</Typography>
@@ -24,19 +25,22 @@ function CustomDatePicker({ name, setSelection, editedData, disabled }) {
         disabled={disabled}
         onChange={(date) => {
           console.log(
-            format(toZonedTime(date, timeZone), "yyyy-MM-dd HH:mm:ssXXX", {
-              timeZone,
-            })
+            date
+            // format(toZonedTime(date, timeZone), "yyyy-MM-dd HH:mm:ssXXX", {
+            //   timeZone,
+            // })
           );
           setStartDate(
-            format(toZonedTime(date, timeZone), "yyyy-MM-dd HH:mm:ssXXX", {
-              timeZone,
-            })
+            date
+            // format(toZonedTime(date, timeZone), "yyyy-MM-dd HH:mm:ssXXX", {
+            //   timeZone,
+            // })
           );
           setSelection(
-            format(toZonedTime(date, timeZone), "yyyy-MM-dd HH:mm:ssXXX", {
-              timeZone,
-            })
+            date
+            // format(toZonedTime(date, timeZone), "yyyy-MM-dd HH:mm:ssXXX", {
+            //   timeZone,
+            // })
           );
         }}
       />
