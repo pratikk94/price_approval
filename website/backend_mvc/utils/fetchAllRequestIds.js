@@ -33,6 +33,28 @@ async function fetchRequestNames(initialRequestName) {
   return requestNames;
 }
 
+// Function to insert request_id and parent_request_id
+async function insertParentRequest(requestId) {
+  try {
+    // Call fetchRequestNames to get parent_request_id
+    const parentRequestId = await fetchRequestNames(requestId); // Assuming this function returns the parent_request_id
+
+    // Insert into the database
+    const result = await db.executeQuery(
+      `INSERT INTO request_mapper (request_id, parent_request_id) VALUES ('${requestId}', '${
+        parentRequestId[parentRequestId.length - 1]
+      }')`
+    );
+
+    console.log(result); // Log or handle the result
+  } catch (err) {
+    console.error("Error inserting request:", err);
+  }
+}
+
+// Example usage
+insertParentRequest("NR202407010002");
+
 // Example usage
 fetchRequestNames("NR202406250001")
   .then((requestNames) => {
@@ -44,4 +66,5 @@ fetchRequestNames("NR202406250001")
 
 module.exports = {
   fetchRequestNames,
+  insertParentRequest,
 };

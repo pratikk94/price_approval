@@ -3,6 +3,7 @@ const sql = require("mssql");
 const db = require("../config/db");
 const config = require("../../backend_mvc/config");
 const { addAuditLog } = require("../utils/auditTrails");
+const { insertParentRequest } = require("../utils/fetchAllRequestIds");
 const poolPromise = new sql.ConnectionPool(config)
   .connect()
   .then((pool) => {
@@ -364,7 +365,7 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
       query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
     OUTPUT INSERTED.*
     VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}','AM0','AM', GETDATE())`;
-
+    insertParentRequest(requestId);
     const result = await sql.query(`${query}`);
     // console.log(result.recordset[0],"result.......")
     // Add audit log for the update operation
