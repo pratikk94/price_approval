@@ -94,6 +94,8 @@ function MyDocument({ data, consolidatedRequest }) {
               <Text style={styles.tableColHeader}>Special Discount</Text>
               <Text style={styles.tableColHeader}>Reel Discount</Text>
               <Text style={styles.tableColHeader}>TPC</Text>
+              <Text style={styles.tableColHeader}>Pack Upcharge</Text>
+
               <Text style={styles.tableColHeader}>Offline Discount</Text>
               <Text style={styles.tableColHeader}>Net NSR</Text>
               <Text style={styles.tableColHeader}>Old Net NSR</Text>
@@ -108,6 +110,7 @@ function MyDocument({ data, consolidatedRequest }) {
                 <Text style={styles.tableCol}>{item.special_discount}</Text>
                 <Text style={styles.tableCol}>{item.reel_discount}</Text>
                 <Text style={styles.tableCol}>{item.tpc}</Text>
+                <Text style={styles.tableCol}>{item.pack_upcharge}</Text>
                 <Text style={styles.tableCol}>{item.offline_discount}</Text>
                 <Text style={styles.tableCol}>{item.net_nsr}</Text>
                 <Text style={styles.tableCol}>{item.old_net_nsr}</Text>

@@ -146,7 +146,7 @@ function PriceTable({ price, selectedConsignees, selectedCustomers, plant }) {
                   <TableCell>Special Discount</TableCell>
                   <TableCell>Reel Discount</TableCell>
                   <TableCell>TPC</TableCell>
-                  <TableCell>Pack upcharge</TableCell>
+                  <TableCell>Pack Upcharge</TableCell>
                   <TableCell>Offline Discount</TableCell>
                   <TableCell>Net NSR</TableCell>
 

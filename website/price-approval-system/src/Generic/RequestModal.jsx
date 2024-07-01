@@ -833,6 +833,7 @@ const CreateRequestModal = ({
           <SpacingWrapper space="0px" />
 
           <TableWithInputs
+            isBlocked={isBlocked}
             isExtension={isExtension}
             disabled={isExtension || isBlocked}
             setTableRowsDataFunction={setTableRowsDataFunction}

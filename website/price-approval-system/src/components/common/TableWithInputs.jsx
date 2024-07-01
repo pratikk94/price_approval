@@ -35,6 +35,7 @@ function TableWithInputs({
   disableSubmit,
   prices,
   disabled,
+  isBlocked,
   isExtension,
   fetchHistory,
 }) {
@@ -358,7 +359,7 @@ function TableWithInputs({
       <FormControlLabel
         control={
           <Checkbox
-            disabled={isExtension}
+            disabled={isExtension || isBlocked}
             checked={
               prices[0] != undefined
                 ? prices[0].fsc == "Y"
@@ -387,7 +388,10 @@ function TableWithInputs({
                   disabled={
                     (option === "AgreedPrice" || option === "SpecialDiscount"
                       ? true
-                      : false) || isExtension
+                      : false) ||
+                    isExtension ||
+                    isBlocked ||
+                    isBlocked
                   }
                 />
               }
@@ -485,7 +489,7 @@ function TableWithInputs({
                   name="customers"
                   options={grades}
                   classNamePrefix="select"
-                  isDisabled={disabled || isExtension}
+                  isDisabled={disabled || isExtension || isBlocked || isBlocked}
                   onChange={(e) => {
                     console.log(rows); // Debugging
                     console.log(
@@ -527,7 +531,7 @@ function TableWithInputs({
                       e.profitCenter
                     );
                   }}
-                  isDisabled={disabled || isExtension}
+                  isDisabled={disabled || isExtension || isBlocked || isBlocked}
                   options={options}
                   className="tColumnGrade"
                   placeholder=""
@@ -539,7 +543,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     className="tColumnG"
-                    disabled={disabled || isExtension}
+                    disabled={disabled || isExtension || isBlocked || isBlocked}
                     value={row.gsmFrom}
                     min="0"
                     onKeyDown={(e) =>
@@ -564,7 +568,7 @@ function TableWithInputs({
                     type="number"
                     className="tColumnG"
                     value={row.gsmTo}
-                    disabled={disabled || isExtension}
+                    disabled={disabled || isExtension || isBlocked || isBlocked}
                     min="0"
                     onKeyDown={(e) =>
                       (e.key === "ArrowUp" || e.key === "ArrowDown") &&
@@ -587,7 +591,7 @@ function TableWithInputs({
                 <td style={{ width: calculateWidth() }}>
                   <input
                     type="number"
-                    disabled={disabled || isExtension}
+                    disabled={disabled || isExtension || isBlocked || isBlocked}
                     style={{ width: "100%" }}
                     value={row.agreedPrice}
                     onChange={(e) =>
@@ -600,7 +604,7 @@ function TableWithInputs({
                 <td style={{ width: calculateWidth() }}>
                   <input
                     type="number"
-                    disabled={disabled || isExtension}
+                    disabled={disabled || isExtension || isBlocked || isBlocked}
                     style={{ width: "100%" }}
                     value={row.specialDiscount}
                     onChange={(e) =>
@@ -614,7 +618,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     style={{ width: "100%" }}
-                    disabled={disabled || isExtension}
+                    disabled={disabled || isExtension || isBlocked || isBlocked}
                     value={row.reelDiscount}
                     onChange={(e) =>
                       handleRowChange(row.id, "reelDiscount", e.target.value)
@@ -627,7 +631,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     style={{ width: "100%" }}
-                    disabled={disabled || isExtension}
+                    disabled={disabled || isExtension || isBlocked || isBlocked}
                     value={row.packUpCharge}
                     onChange={(e) =>
                       handleRowChange(row.id, "packUpCharge", e.target.value)
@@ -641,7 +645,7 @@ function TableWithInputs({
                     type="number"
                     style={{ width: "100%" }}
                     value={row.tpc}
-                    disabled={disabled || isExtension}
+                    disabled={disabled || isExtension || isBlocked || isBlocked}
                     onChange={(e) =>
                       handleRowChange(row.id, "tpc", e.target.value)
                     }
@@ -653,7 +657,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     style={{ width: "100%" }}
-                    disabled={disabled || isExtension}
+                    disabled={disabled || isExtension || isBlocked || isBlocked}
                     value={row.offlineDiscount}
                     onChange={(e) =>
                       handleRowChange(row.id, "offlineDiscount", e.target.value)
@@ -665,7 +669,7 @@ function TableWithInputs({
                 <input
                   type="number"
                   readOnly
-                  disabled={disabled || isExtension}
+                  disabled={disabled || isExtension || isBlocked || isBlocked}
                   value={row.netNSR}
                   style={{ width: "100%" }}
                 />
@@ -694,7 +698,7 @@ function TableWithInputs({
                     className="tAction"
                     variant="outlined"
                     color="error"
-                    disabled={disabled || isExtension}
+                    disabled={disabled || isExtension || isBlocked || isBlocked}
                     onClick={() => deleteRow(row.id)}
                     sx={{
                       border: "none",
@@ -728,7 +732,10 @@ function TableWithInputs({
         className="div_container"
         style={{ marginTop: "20px", textAlign: "right" }}
       >
-        <Button onClick={addRow} disabled={disabled || isExtension}>
+        <Button
+          onClick={addRow}
+          disabled={disabled || isExtension || isBlocked || isBlocked}
+        >
           <AddCircleIcon />
         </Button>
       </div>

@@ -52,7 +52,7 @@ const MessagesComponent = ({ reqId }) => {
               : setStatus(transaction.current_status) == null
               ? "Request was approved."
               : "Request put for " + setStatus(transaction.current_status)}{" "}
-            by {transaction.last_updated_by_id} on .{transaction.created_at}
+            by {transaction.last_updated_by_id} on {transaction.created_at}
             <br />
           </p>
         ))}
