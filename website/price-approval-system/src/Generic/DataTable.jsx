@@ -119,25 +119,23 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   const [downloadRowData, setDownlaodRowData] = useState([]);
   const [selectedRowIds, setSelectedRowIds] = useState(new Set()); // State to track selected rows
 
-  // Function to toggle row selection
-  const toggleRowSelection = (event, id) => {
-    event.stopPropagation(); // Stop event from bubbling to avoid triggering row click
-    setSelectedRowIds((prevSelected) => {
-      const newSet = new Set(prevSelected);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
+  const toggleRowSelection = (id) => {
+    const isSelected = selectedRowIds.has(id);
+    const newSelectedRowIds = new Set(selectedRowIds);
+    if (isSelected) {
+      newSelectedRowIds.delete(id);
+    } else {
+      newSelectedRowIds.add(id);
+    }
+    setSelectedRowIds(newSelectedRowIds);
+    updateSelectedRows(newSelectedRowIds);
   };
 
   const renderRow = (row, index) => (
     <TableRow
       key={row.request_id}
       selected={selectedRowIds.has(row.request_id)}
-      onClick={() => handleRowClick(row.request_id)} // Handle row clicks if needed
+      onClick={() => handleRowClick(row.request_id)}
       sx={{
         "&:nth-of-type(odd)": { bgcolor: "action.hover" },
         "&:nth-of-type(even)": { bgcolor: "background.default" },
@@ -146,7 +144,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
       <TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
         <Checkbox
           checked={selectedRowIds.has(row.request_id)}
-          onChange={(e) => toggleRowSelection(e, row.request_id)} // Ensure proper toggle function call
+          onChange={() => toggleRowSelection(row.request_id)}
         />
       </TableCell>
       {selectedHeaders
@@ -162,7 +160,6 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
         ))}
     </TableRow>
   );
-
   // Function to filter data based on search term
   const filterData = useCallback(() => {
     if (!searchTerm) return setData(data); // If no search term, show all data
@@ -203,6 +200,13 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
     setRows(newSelected);
   };
 
+  const updateSelectedRows = (selectedIds) => {
+    const newSelectedRows = data.filter((row) =>
+      selectedIds.has(row.request_id)
+    );
+    setSelectedRows(newSelectedRows);
+    setRows(newSelectedRows); // Update the parent component with the selected rows
+  };
   const isSelected = (id) =>
     selectedRows.some((item) => item.request_id === id);
 
@@ -389,6 +393,14 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
     // The actual filtering logic is handled separately in the filterData function or useEffect if it depends on searchTerm
   };
 
+  // useEffect(() => {
+  //   const newSelectedRows = filteredData.filter((row) =>
+  //     selectedRowIds.has(row.request_id)
+  //   );
+  //   setSelectedRows(newSelectedRows);
+  //   setRows(newSelectedRows); // Update the parent component with the selected rows
+  // }, [filteredData, selectedRowIds, setRows]);
+
   return (
     <>
       <DndProvider backend={HTML5Backend}>
@@ -548,7 +560,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                         page * rowsPerPage,
                         page * rowsPerPage + rowsPerPage
                       )
-                      .map(renderRow)}
+                      .map((row) => renderRow(row))}
               </TableBody>
             </Table>
             <TablePagination

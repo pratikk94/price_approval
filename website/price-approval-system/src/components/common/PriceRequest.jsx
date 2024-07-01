@@ -619,7 +619,7 @@ function PriceChangeRequest({ role, isAM }) {
   };
 
   // const handleCopyRequest = () => {
-  //   handleClose(); // Close the menu
+  handleClose(); // Close the menu
   //   console.log("Copy Request action triggered");
   // };
 

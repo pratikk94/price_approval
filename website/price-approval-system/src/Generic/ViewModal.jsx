@@ -225,6 +225,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
       .catch((error) => console.error("Error posting remark:", error));
   };
   console.log(data);
+
   const updateStatus = (newStatus) => {
     let reportData = {
       request_id: id, // Example reportId
