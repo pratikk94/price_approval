@@ -392,3 +392,87 @@ GROUP BY
     CONVERT(VARCHAR, CAST(valid_to AS DATETIME2), 103),
     par.payment_terms_id;
 END;
+
+
+/*
+JUL-02-2024
+*/
+
+CREATE PROCEDURE dbo.DeleteFileById
+    @RequestID NVARCHAR(50) -- Define the input parameter for the specified file ID
+AS
+BEGIN
+   
+    DELETE FROM dbo.files
+    OUTPUT DELETED.id, DELETED.request_id, DELETED.file_name
+    WHERE request_id = @RequestID;  -- Use the input parameter
+END;
+GO
+
+
+-- EXEC dbo.GetRemarksByRequestIDs ['NR202407020001', 'NR202407020002', 'NR202407020003'];
+CREATE PROCEDURE dbo.GetRemarksByRequestIDs
+    @RequestIDs NVARCHAR(MAX)  -- Define the input parameter for the specified request IDs
+AS
+BEGIN
+
+    DECLARE @SQL NVARCHAR(MAX);
+
+    SET @SQL = '
+    SELECT DISTINCT
+        r.request_id,
+        r.id,
+        CONCAT(u.employee_name, ''('', u.role, '','', u.employee_id, '')'') AS user_id,
+        r.comment,
+        CONVERT(VARCHAR, CAST(r.created_at AS DATETIME2), 103) AS created_at
+    FROM 
+        dbo.Remarks AS r
+    INNER JOIN 
+        dbo.define_roles AS u ON r.user_id = u.employee_id
+    WHERE 
+        r.request_id IN (' + @RequestIDs + ')';
+
+    EXEC sp_executesql @SQL;
+END;
+GO
+
+-- EXEC InsertRemark 'NR202407020001', 12345, 'This is a test comment'
+CREATE PROCEDURE dbo.InsertRemark
+    @RequestID NVARCHAR(50),
+    @UserID INT,
+    @Comment NVARCHAR(MAX)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.Remarks (request_id, user_id, comment, created_at)
+    OUTPUT INSERTED.request_id, INSERTED.user_id, INSERTED.comment, INSERTED.created_at, INSERTED.id
+    VALUES (@RequestID, @UserID, @Comment, GETDATE());
+END;
+GO
+
+-- EXEC GetParentRequestName 'NR202407020003'
+CREATE PROCEDURE dbo.GetParentRequestName
+    @RequestName NVARCHAR(50)  -- Define the input parameter for the request name
+AS
+BEGIN
+
+    SELECT parent_request_name
+    FROM [PriceApprovalSystem].[dbo].[pre_approved_request_status_mvc]
+    WHERE request_name = @RequestName;  -- Use the input parameter
+END;
+GO
+
+
+CREATE PROCEDURE dbo.InsertFile
+    @RequestId NVARCHAR(50),
+    @FileName NVARCHAR(255),
+    @FileData VARBINARY(MAX)
+AS
+BEGIN
+    -- Perform the INSERT operation
+    INSERT INTO dbo.files (request_id, file_name, file_data)
+    OUTPUT INSERTED.request_id, INSERTED.file_name, INSERTED.file_data,INSERTED.id
+    VALUES (@RequestId, @FileName, @FileData);
+END;
+GO

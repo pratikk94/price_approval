@@ -12,8 +12,8 @@ async function fetchRequestNames(initialRequestName) {
     processedRequestNames.add(requestName); // Mark this requestName as processed
 
     try {
-      const query = `SELECT parent_request_name FROM [PriceApprovalSystem].[dbo].[pre_approved_request_status_mvc] WHERE request_name = '${requestName}'`;
-      let result = await db.executeQuery(query);
+      // const query = `SELECT parent_request_name FROM [PriceApprovalSystem].[dbo].[pre_approved_request_status_mvc] WHERE request_name = '${requestName}'`;
+      let result = await db.executeQuery('EXEC GetParentRequestName @RequestName',{"RequestName":requestName});
       requestNames.push(requestName);
       if (result.recordset.length > 0) {
         let parentRequestName = result.recordset[0].parent_request_name;
