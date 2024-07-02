@@ -98,7 +98,6 @@ function MyDocument({ data, consolidatedRequest }) {
 
               <Text style={styles.tableColHeader}>Offline Discount</Text>
               <Text style={styles.tableColHeader}>Net NSR</Text>
-              <Text style={styles.tableColHeader}>Old Net NSR</Text>
             </View>
             {data.map((item, index) => (
               <View key={index} style={styles.tableRow}>
@@ -113,7 +112,6 @@ function MyDocument({ data, consolidatedRequest }) {
                 <Text style={styles.tableCol}>{item.pack_upcharge}</Text>
                 <Text style={styles.tableCol}>{item.offline_discount}</Text>
                 <Text style={styles.tableCol}>{item.net_nsr}</Text>
-                <Text style={styles.tableCol}>{item.old_net_nsr}</Text>
               </View>
             ))}
           </View>

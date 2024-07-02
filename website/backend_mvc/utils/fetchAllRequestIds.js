@@ -53,16 +53,16 @@ async function insertParentRequest(requestId) {
 }
 
 // Example usage
-insertParentRequest("NR202407010002");
+// insertParentRequest("NR202407010002");
 
 // Example usage
-fetchRequestNames("NR202406250001")
-  .then((requestNames) => {
-    console.log(requestNames);
-  })
-  .catch((err) => {
-    console.error(err);
-  });
+// fetchRequestNames("NR202406250001")
+//   .then((requestNames) => {
+//     console.log(requestNames);
+//   })
+//   .catch((err) => {
+//     console.error(err);
+//   });
 
 module.exports = {
   fetchRequestNames,

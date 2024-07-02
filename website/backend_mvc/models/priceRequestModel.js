@@ -500,6 +500,13 @@ async function fetchData(role, status, id) {
           consolidated[key] = Array.from(consolidated[key]).join(", ");
         });
 
+        console.log(consolidated["request_name"].length, "consolidated....");
+
+        consolidated["request_name"] =
+          consolidated["request_name"].split(",")[
+            consolidated["request_name"].split(",").length - 1
+          ];
+
         // Fetch price details with the maximum ID
         const priceResult = await db.executeQuery(
           "EXEC GetPriceApprovalRequestDetails @RequestID, @Role",

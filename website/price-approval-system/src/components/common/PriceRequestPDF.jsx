@@ -77,7 +77,7 @@ function MyDocument({ data }) {
             <Text>Payment Terms ID: {data.payment_terms_id}</Text>
             <Text>Valid From: {data.valid_from}</Text>
             <Text>Valid To: {data.valid_to}</Text>
-            <Text>FSC: {data.fsc == 1 ? "Yes" : "No"}</Text>
+            <Text>FSC: {data.fsc == "Y" ? "Yes" : "No"}</Text>
           </View>
 
           <View style={styles.table}>
@@ -92,7 +92,6 @@ function MyDocument({ data }) {
               <Text style={styles.tableColHeader}>TPC</Text>
               <Text style={styles.tableColHeader}>Offline Discount</Text>
               <Text style={styles.tableColHeader}>Net NSR</Text>
-              <Text style={styles.tableColHeader}>Old Net NSR</Text>
             </View>
             {data.price.map((item, index) => (
               <View key={index} style={styles.tableRow}>
@@ -106,7 +105,6 @@ function MyDocument({ data }) {
                 <Text style={styles.tableCol}>{item.tpc}</Text>
                 <Text style={styles.tableCol}>{item.offline_discount}</Text>
                 <Text style={styles.tableCol}>{item.net_nsr}</Text>
-                <Text style={styles.tableCol}>{item.old_net_nsr}</Text>
               </View>
             ))}
           </View>

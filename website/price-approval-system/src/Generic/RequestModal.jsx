@@ -273,14 +273,15 @@ const CreateRequestModal = ({
             setErrorMessage("Select GSM From for Row " + (i + 1));
             setStopExecution(e, !e);
             // return;
-          } else if (tableRowsData[i]["gsmTo"] == "") {
-            setErrorMessage("Select GSM To for Row " + (i + 1));
-            setStopExecution(e, !e);
-            // return;
           }
+          //  else if (tableRowsData[i]["gsmTo"] == "") {
+          //   setErrorMessage("Select GSM To for Row " + (i + 1));
+          //   setStopExecution(e, !e);
+          //   // return;
+          // }
 
           if (
-            parseInt(tableRowsData[i]["gsmFrom"]) >=
+            parseInt(tableRowsData[i]["gsmFrom"]) >
             parseInt(tableRowsData[i]["gsmTo"])
           ) {
             console.log(typeof parseInt(tableRowsData[i]["gsmFrom"]));
