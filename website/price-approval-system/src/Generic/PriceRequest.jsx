@@ -254,7 +254,7 @@ function PriceChangeRequest(rules, employee_id) {
           url={
             `${backend_mvc}api/data/` +
             session.role +
-            "/-2/" +
+            "/-1/" +
             session.employee_id
           }
           rule={rules}

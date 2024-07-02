@@ -34,14 +34,14 @@ async function fetchRequestNames(initialRequestName) {
 }
 
 // Function to insert request_id and parent_request_id
-async function insertParentRequest(requestId) {
+async function insertParentRequest(newRequestId, requestId) {
   try {
     // Call fetchRequestNames to get parent_request_id
     const parentRequestId = await fetchRequestNames(requestId); // Assuming this function returns the parent_request_id
 
     // Insert into the database
     const result = await db.executeQuery(
-      `INSERT INTO request_mapper (request_id, parent_request_id) VALUES ('${requestId}', '${
+      `INSERT INTO request_mapper (request_id, parent_request_id) VALUES ('${newRequestId}', '${
         parentRequestId[parentRequestId.length - 1]
       }')`
     );
@@ -52,8 +52,8 @@ async function insertParentRequest(requestId) {
   }
 }
 
-// Example usage
-// insertParentRequest("NR202407010002");
+//Example usage
+insertParentRequest("NR202407010003");
 
 // Example usage
 // fetchRequestNames("NR202406250001")

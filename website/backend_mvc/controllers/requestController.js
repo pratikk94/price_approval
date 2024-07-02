@@ -11,6 +11,7 @@
 
 const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
+const { insertParentRequest } = require("../utils/fetchAllRequestIds");
 const { requestStatus } = require("../utils/updateRequestStatus");
 
 const updateRequestStatus = async (req, res) => {
@@ -93,7 +94,7 @@ const addADraft = async (requestName) => {
     VALUES (@request_id, @parent_request_id);
     `;
     const result = await db.executeQuery(query);
-
+    insertParentRequest(requestName);
     // Add audit log for the Insert operation
     await addAuditLog(
       "pre_approved_request_status_mvc",

@@ -406,10 +406,10 @@ const CreateRequestModal = ({
       value: data.payment_terms_id,
       label: `Terms ${data.payment_terms_id}`,
     });
-
+    setIsChecked(data.mappint_type == 1 ? true : false);
     console.log(moment(data.valid_from, "DD/MM/YYYY").toDate());
     console.log(moment(data.valid_to, "DD/MM/YYYY").toDate());
-
+    console.log(data.mappint_type);
     setValidFrom(moment(data.valid_from, "DD/MM/YYYY").toDate());
     setValidTo(moment(data.valid_to, "DD/MM/YYYY").toDate());
 
