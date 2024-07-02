@@ -517,7 +517,7 @@ const CreateRequestModal = ({
     if (formData["isDraft"]) {
       setIsDraft(true);
     }
-
+    const draft = formData["isDraft"];
     console.log(formData["isDraft"]);
 
     try {
@@ -613,7 +613,10 @@ const CreateRequestModal = ({
         JSON.parse(localStorage.getItem("request_ids")) || [];
       const requestData = await response.json();
       console.log(requestData["id"]);
-      handleAddRemark(requestData["id"]);
+      console.log(draft);
+      if (draft && remarks.length == 0) {
+        console.log("Remark won't be stored");
+      } else handleAddRemark(requestData["id"]);
 
       if (oldRequestIds.length > 0) {
         updateRequestIds(oldRequestIds, requestData["id"])
