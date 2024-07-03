@@ -273,14 +273,15 @@ const CreateRequestModal = ({
             setErrorMessage("Select GSM From for Row " + (i + 1));
             setStopExecution(e, !e);
             // return;
-          } else if (tableRowsData[i]["gsmTo"] == "") {
-            setErrorMessage("Select GSM To for Row " + (i + 1));
-            setStopExecution(e, !e);
-            // return;
           }
+          //  else if (tableRowsData[i]["gsmTo"] == "") {
+          //   setErrorMessage("Select GSM To for Row " + (i + 1));
+          //   setStopExecution(e, !e);
+          //   // return;
+          // }
 
           if (
-            parseInt(tableRowsData[i]["gsmFrom"]) >=
+            parseInt(tableRowsData[i]["gsmFrom"]) >
             parseInt(tableRowsData[i]["gsmTo"])
           ) {
             console.log(typeof parseInt(tableRowsData[i]["gsmFrom"]));
@@ -405,10 +406,10 @@ const CreateRequestModal = ({
       value: data.payment_terms_id,
       label: `Terms ${data.payment_terms_id}`,
     });
-
+    setIsChecked(data.mappint_type == 1 ? true : false);
     console.log(moment(data.valid_from, "DD/MM/YYYY").toDate());
     console.log(moment(data.valid_to, "DD/MM/YYYY").toDate());
-
+    console.log(data.mappint_type);
     setValidFrom(moment(data.valid_from, "DD/MM/YYYY").toDate());
     setValidTo(moment(data.valid_to, "DD/MM/YYYY").toDate());
 
@@ -516,7 +517,7 @@ const CreateRequestModal = ({
     if (formData["isDraft"]) {
       setIsDraft(true);
     }
-
+    const draft = formData["isDraft"];
     console.log(formData["isDraft"]);
 
     try {
@@ -612,7 +613,10 @@ const CreateRequestModal = ({
         JSON.parse(localStorage.getItem("request_ids")) || [];
       const requestData = await response.json();
       console.log(requestData["id"]);
-      handleAddRemark(requestData["id"]);
+      console.log(draft);
+      if (draft && remarks.length == 0) {
+        console.log("Remark won't be stored");
+      } else handleAddRemark(requestData["id"]);
 
       if (oldRequestIds.length > 0) {
         updateRequestIds(oldRequestIds, requestData["id"])

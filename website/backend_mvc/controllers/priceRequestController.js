@@ -9,6 +9,7 @@ const {
 } = require("./requestController");
 
 const { getRegionAndRoleByEmployeeId } = require("../utils/fetchDetails");
+const { insertParentRequest } = require("../utils/fetchAllRequestIds");
 async function processTransaction(req, res) {
   try {
     const {
@@ -45,7 +46,7 @@ async function processTransaction(req, res) {
     });
 
     priceRequestModel.addTransactionToTable(requestId, am_id);
-
+    insertParentRequest(requestId, requestId);
     res.json({
       message: "Transaction processed successfully",
       data: result,
@@ -184,7 +185,7 @@ async function pushDataToTable(requestName, parentRequestName) {
       INSERT INTO pre_approved_request_status_mvc (request_name, parent_request_name)
       VALUES ('${requestName}','${parentRequestName}')
     `;
-
+    insertParentRequest(requestName, parentRequestName);
     const result = await sql.query(query);
 
     console.log(result);

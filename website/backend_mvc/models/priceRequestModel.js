@@ -361,11 +361,12 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
     let query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
     OUTPUT INSERTED.*
     VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}', 'RM0A1',  'RM', GETDATE())`;
-    if (isDraft)
+    if (isDraft) {
       query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
     OUTPUT INSERTED.*
     VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}','AM0','AM', GETDATE())`;
-    insertParentRequest(requestId);
+      insertParentRequest(requestId);
+    }
     const result = await sql.query(`${query}`);
     // console.log(result.recordset[0],"result.......")
     // Add audit log for the update operation
@@ -500,6 +501,16 @@ async function fetchData(role, status, id) {
           consolidated[key] = Array.from(consolidated[key]).join(", ");
         });
 
+        console.log(consolidated["request_name"], "consolidated....");
+        if (consolidated["request_name"] != "undefined") {
+          consolidated["request_name"] =
+            consolidated["request_name"].split(",")[
+              consolidated["request_name"].split(",").length - 1
+            ];
+        } else {
+          console.log("In here ... ELse");
+          consolidated["request_name"] = transaction.request_id;
+        }
         // Fetch price details with the maximum ID
         const priceResult = await db.executeQuery(
           "EXEC GetPriceApprovalRequestDetails @RequestID, @Role",

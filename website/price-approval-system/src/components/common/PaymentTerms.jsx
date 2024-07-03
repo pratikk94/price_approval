@@ -87,7 +87,11 @@ const PaymentTerms = ({
         placeholder="Select Payment Terms"
       />
       {!manualOverride && (
-        <button onClick={handleOverride} style={{ marginTop: "10px" }}>
+        <button
+          onClick={handleOverride}
+          style={{ marginTop: "10px" }}
+          disabled={disabled}
+        >
           Override Automatic Selection
         </button>
       )}

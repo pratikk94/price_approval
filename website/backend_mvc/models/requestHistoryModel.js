@@ -32,8 +32,8 @@ async function getTransactionsByRequestId(requestId) {
         parentIdResult.recordset[0].parent_request_name
       ) {
         // Replace first character of parent_request_name with 'N'
-        currentRequestId =
-          "N" + parentIdResult.recordset[0].parent_request_name.substring(1);
+        currentRequestId = parentIdResult.recordset[0];
+        // "N" + parentIdResult.recordset[0].parent_request_name.substring(1);
         requestIds.push(currentRequestId);
       } else {
         parentFound = false; // Stop the loop if no parent is found

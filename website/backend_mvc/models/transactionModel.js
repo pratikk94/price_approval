@@ -236,7 +236,7 @@ async function acceptTransaction(
             VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
         `;
       let result = await db.executeQuery(query1, {});
-      insertParentRequest(requestId);
+      insertParentRequest(requestId, requestId);
       console.log(result.recordset[0], "Validator testing");
       // Add audit log for the update operation
       await addAuditLog(
@@ -331,7 +331,7 @@ async function acceptTransaction(
           currentRole: currentRole,
           lastUpdatedById: lastUpdatedById,
         });
-        insertParentRequest(requestId);
+        insertParentRequest(requestId, requestId);
         console.log(result.recordset[0], "testing tranc action == 2");
         // Add audit log for the update operation
         await addAuditLog(
@@ -371,7 +371,7 @@ async function acceptTransaction(
             currentRole: currentRole,
             lastUpdatedById: lastUpdatedById,
           });
-          insertParentRequest(requestId);
+
           console.log(result.recordset[0], "testing RM.................");
           // Add audit log for the update operation
           await addAuditLog(
@@ -391,7 +391,7 @@ async function acceptTransaction(
           currentRole: currentRole,
           lastUpdatedById: lastUpdatedById,
         });
-        insertParentRequest(requestId);
+        insertParentRequest(requestId, requestId);
         console.log(result1.recordset[0], "testing out side..............");
         // Add audit log for the update operation
         await addAuditLog(
@@ -423,7 +423,6 @@ async function acceptTransaction(
           currentRole: currentRole,
           lastUpdatedById: lastUpdatedById,
         });
-        insertParentRequest(requestId);
         console.log(
           result.recordset[0],
           "testing transaction_mvc approversResult.recordset.length === 1"
@@ -464,7 +463,7 @@ async function acceptTransaction(
             currentRole: currentRole,
             lastUpdatedById: lastUpdatedById,
           });
-          insertParentRequest(requestId);
+
           console.log(result.recordset[0], "trasanction testing..............");
           // Add audit log for the update operation
           await addAuditLog(
@@ -492,6 +491,9 @@ async function acceptTransaction(
         action,
         requestId
       );
+
+      insertParentRequest(requestId, requestId);
+
       console.log(response, "check the update data.................");
 
       // Handle response from the update-status API

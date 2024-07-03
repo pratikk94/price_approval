@@ -419,7 +419,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                     </Button>
                     <Button
                       style={{
-                        backgroundColor: "#FFC300",
+                        backgroundColor: "#009AA6",
                         color: "#fff",
                         marginLeft: "40px",
                       }}

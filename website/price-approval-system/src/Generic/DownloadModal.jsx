@@ -53,6 +53,7 @@ function FullScreenDialog({
           id={id}
           consolidatedRequest={consolidatedRequest}
           data={priceRequest}
+          fsc={priceRequest != undefined ? priceRequest[0].fsc : "N"}
         />
       </PDFViewer>
     </Dialog>

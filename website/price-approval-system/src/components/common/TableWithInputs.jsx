@@ -594,6 +594,16 @@ function TableWithInputs({
                     disabled={disabled || isExtension || isBlocked || isBlocked}
                     style={{ width: "100%" }}
                     value={row.agreedPrice}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Minus" ||
+                        e.key === "NumpadSubtract" ||
+                        e.key === "-" ||
+                        e.key === "+"
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     onChange={(e) =>
                       handleRowChange(row.id, "agreedPrice", e.target.value)
                     }
@@ -607,6 +617,16 @@ function TableWithInputs({
                     disabled={disabled || isExtension || isBlocked || isBlocked}
                     style={{ width: "100%" }}
                     value={row.specialDiscount}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Minus" ||
+                        e.key === "NumpadSubtract" ||
+                        e.key === "-" ||
+                        e.key === "+"
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     onChange={(e) =>
                       handleRowChange(row.id, "specialDiscount", e.target.value)
                     }
@@ -620,6 +640,16 @@ function TableWithInputs({
                     style={{ width: "100%" }}
                     disabled={disabled || isExtension || isBlocked || isBlocked}
                     value={row.reelDiscount}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Minus" ||
+                        e.key === "NumpadSubtract" ||
+                        e.key === "-" ||
+                        e.key === "+"
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     onChange={(e) =>
                       handleRowChange(row.id, "reelDiscount", e.target.value)
                     }
@@ -633,6 +663,16 @@ function TableWithInputs({
                     style={{ width: "100%" }}
                     disabled={disabled || isExtension || isBlocked || isBlocked}
                     value={row.packUpCharge}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Minus" ||
+                        e.key === "NumpadSubtract" ||
+                        e.key === "-" ||
+                        e.key === "+"
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     onChange={(e) =>
                       handleRowChange(row.id, "packUpCharge", e.target.value)
                     }
@@ -646,6 +686,16 @@ function TableWithInputs({
                     style={{ width: "100%" }}
                     value={row.tpc}
                     disabled={disabled || isExtension || isBlocked || isBlocked}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Minus" ||
+                        e.key === "NumpadSubtract" ||
+                        e.key === "-" ||
+                        e.key === "+"
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     onChange={(e) =>
                       handleRowChange(row.id, "tpc", e.target.value)
                     }
@@ -659,6 +709,16 @@ function TableWithInputs({
                     style={{ width: "100%" }}
                     disabled={disabled || isExtension || isBlocked || isBlocked}
                     value={row.offlineDiscount}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "Minus" ||
+                        e.key === "NumpadSubtract" ||
+                        e.key === "-" ||
+                        e.key === "+"
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     onChange={(e) =>
                       handleRowChange(row.id, "offlineDiscount", e.target.value)
                     }

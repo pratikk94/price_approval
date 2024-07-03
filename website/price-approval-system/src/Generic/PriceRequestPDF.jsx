@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
 });
 
 // Create document component
-function MyDocument({ data, consolidatedRequest }) {
+function MyDocument({ data, consolidatedRequest, fsc }) {
   if (data === undefined) return null;
   else {
     console.log(data);
@@ -81,7 +81,7 @@ function MyDocument({ data, consolidatedRequest }) {
             <Text>Payment Terms: {consolidatedRequest.payment_terms_id}</Text>
             <Text>Valid From: {consolidatedRequest.valid_from}</Text>
             <Text>Valid To: {consolidatedRequest.valid_to}</Text>
-            <Text>FSC: {consolidatedRequest.fsc == 1 ? "Yes" : "No"}</Text>
+            <Text>FSC: {fsc == "Y" ? "Yes" : "No"}</Text>
           </View>
 
           <View style={styles.table}>
@@ -98,7 +98,6 @@ function MyDocument({ data, consolidatedRequest }) {
 
               <Text style={styles.tableColHeader}>Offline Discount</Text>
               <Text style={styles.tableColHeader}>Net NSR</Text>
-              <Text style={styles.tableColHeader}>Old Net NSR</Text>
             </View>
             {data.map((item, index) => (
               <View key={index} style={styles.tableRow}>
@@ -113,7 +112,6 @@ function MyDocument({ data, consolidatedRequest }) {
                 <Text style={styles.tableCol}>{item.pack_upcharge}</Text>
                 <Text style={styles.tableCol}>{item.offline_discount}</Text>
                 <Text style={styles.tableCol}>{item.net_nsr}</Text>
-                <Text style={styles.tableCol}>{item.old_net_nsr}</Text>
               </View>
             ))}
           </View>
