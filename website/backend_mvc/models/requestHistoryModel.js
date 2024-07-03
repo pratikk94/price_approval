@@ -21,7 +21,7 @@ async function getTransactionsByRequestId(requestId) {
         FROM 
           dbo.pre_approved_request_status_mvc
         WHERE 
-          request_name = '${currentRequestId}'
+          request_name LIKE '$${currentRequestId}'
       `;
       // const parentIdResult = await new sql.Request().query(fetchParentIdQuery);
       const parentIdResult = await db.executeQuery(fetchParentIdQuery, {
@@ -31,10 +31,13 @@ async function getTransactionsByRequestId(requestId) {
         parentIdResult.recordset.length > 0 &&
         parentIdResult.recordset[0].parent_request_name
       ) {
-        // Replace first character of parent_request_name with 'N'
-        currentRequestId = parentIdResult.recordset[0];
+        // Replace first character of parent_request_name with ''
+        currentRequestId =
+          parentIdResult.parentIdResult.recordset[0].parent_request_name.substring(
+            1
+          );
         // "N" + parentIdResult.recordset[0].parent_request_name.substring(1);
-        requestIds.push(currentRequestId);
+        requestIds.push("N" + currentRequestId);
       } else {
         parentFound = false; // Stop the loop if no parent is found
       }

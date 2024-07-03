@@ -225,7 +225,7 @@ async function acceptTransaction(
     //   };
     // }
 
-    if (lastUpdatedByRole == "Validator") {
+    if (lastUpdatedByRole == "Validator" && action == 1) {
       // await sql.query(
       //   `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
       //         VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
@@ -340,6 +340,7 @@ async function acceptTransaction(
           "INSERT",
           null
         );
+        return;
       }
       if (action == 3) {
         // if (currentRole != "RM")
