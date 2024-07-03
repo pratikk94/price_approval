@@ -439,7 +439,7 @@ GO
 -- EXEC InsertRemark 'NR202407020001', 12345, 'This is a test comment'
 CREATE PROCEDURE dbo.InsertRemark
     @RequestID NVARCHAR(50),
-    @UserID INT,
+    @UserID NVARCHAR(50),
     @Comment NVARCHAR(MAX)
 AS
 BEGIN
