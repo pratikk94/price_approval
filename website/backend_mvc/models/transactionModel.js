@@ -6,6 +6,7 @@ const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
 const { requestStatus } = require("../utils/updateRequestStatus");
 const { insertParentRequest } = require("../utils/fetchAllRequestIds");
+const { STATUS } = require("../config/constants");
 
 // // Make sure to maintain a connection pool instead of connecting in each function
 // const poolPromise = new sql.ConnectionPool(config)
@@ -225,7 +226,7 @@ async function acceptTransaction(
     //   };
     // }
 
-    if (lastUpdatedByRole == "Validator" && action == 1) {
+    if (lastUpdatedByRole == "Validator" && action == STATUS.APPROVED) {
       // await sql.query(
       //   `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
       //         VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())

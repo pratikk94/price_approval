@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Typography, Box, MenuItem, Button, Menu } from "@mui/material";
 
 import DataTable from "./DataTable";
-import { backend_mvc, backend_url, statusFilters } from "../util";
+import { STATUS, backend_mvc, backend_url, statusFilters } from "../util";
 
 import CreateRequestModal from "./RequestModal";
 import { useSession } from "../Login_Controller/SessionContext";
@@ -191,7 +191,7 @@ function PriceChangeRequest(rules, employee_id) {
           url={
             `${backend_mvc}api/data/` +
             session.role +
-            "/1/" +
+            `/${STATUS.APPROVED}/` +
             session.employee_id
           }
           rule={rules}
@@ -206,7 +206,7 @@ function PriceChangeRequest(rules, employee_id) {
           url={
             `${backend_mvc}api/data/` +
             session.role +
-            "/3/" +
+            `/${STATUS.REWORK}/` +
             session.employee_id
           }
           rule={rules}
@@ -222,7 +222,7 @@ function PriceChangeRequest(rules, employee_id) {
           url={
             `${backend_mvc}api/data/` +
             session.role +
-            "/5/" +
+            `/${STATUS.DRAFT}/` +
             session.employee_id
           }
           rule={rules}
@@ -238,7 +238,7 @@ function PriceChangeRequest(rules, employee_id) {
           url={
             `${backend_mvc}api/data/` +
             session.role +
-            "/0/" +
+            `/${STATUS.PENDING}/` +
             session.employee_id
           }
           rule={rules}
@@ -254,7 +254,7 @@ function PriceChangeRequest(rules, employee_id) {
           url={
             `${backend_mvc}api/data/` +
             session.role +
-            "/7/" +
+            `/${STATUS.REJECTED}/` +
             session.employee_id
           }
           rule={rules}

@@ -104,7 +104,7 @@ const addADraft = async (requestName) => {
     );
 
     // const result = await sql.query(query);
-    updatePreApprovedRequestStatus(requestName, 5);
+    updatePreApprovedRequestStatus(requestName, STATUS.DRAFT);
     console.log(result);
   } catch (err) {
     console.error("Database connection error:", err);
