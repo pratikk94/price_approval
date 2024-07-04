@@ -82,7 +82,7 @@ async function processPrevApprovedTransaction(req, res) {
     console.log("Action is ", action);
     if (action == "R") {
       console.log("In update");
-      updatePreApprovedRequestStatus(oldRequestId, STATUS.REWORK);
+      updatePreApprovedRequestStatus(oldRequestId, STATUS.APPROVED);
     }
 
     const requestId = await priceRequestModel.handleNewRequest();

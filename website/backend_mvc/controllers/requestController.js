@@ -55,7 +55,8 @@ const updatePreApprovedRequestStatus = async (requestName, action) => {
     if (action == STATUS.REJECTED) {
       pending = ", [pending] = '1'";
     }
-    if (action == STATUS.REWORK) {
+    if (action == STATUS.APPROVED) {
+      //ADD THIS TO DISPLACE IT FROM REWORK.
       action = -2;
     }
 

@@ -86,9 +86,21 @@ const requestStatus = async (current_role, region, action, req_id) => {
       const nextLevelExists = await db.executeQuery(query4, {
         nextLevel: pendingWith,
       });
+
       if (nextLevelExists.recordset[0].LevelExists === 0) {
         status = 1;
         pendingWith = -1;
+      }
+
+      switch (action) {
+        case STATUS.APPROVED:
+          updatePreApprovedRequestStatus(req_id, STATUS.APPROVED);
+          break;
+        case STATUS.BLOCKED:
+        case STATUS.PENDING:
+        case STATUS.COPY:
+        case STATUS.MERGE:
+          break;
       }
 
       let query5 =
