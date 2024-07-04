@@ -33,13 +33,21 @@ const requestStatus = async (current_role, region, action, req_id) => {
             pendingWith = 0;
           }
           break;
-        case "2": // Rework
+        case "3": // Rework
           if (level === 2) {
-            status = 2;
+            status = -1;
             pendingWith = 1;
           } else if (level > 2) {
-            status = 2;
+            status = -1;
             pendingWith = 2;
+
+            let query3 =
+              "INSERT INTO requests_mvc (status, pending, req_id)OUTPUT INSERTED.* VALUES (@status, @pendingWith, @req_id)";
+            let result = await db.executeQuery(query3, {
+              status: -1,
+              pendingWith: 1,
+              req_id: req_id,
+            });
           }
           updatePreApprovedRequestStatus(req_id, -1);
           break;
