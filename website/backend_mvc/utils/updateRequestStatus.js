@@ -43,9 +43,9 @@ const requestStatus = async (current_role, region, action, req_id) => {
           }
           updatePreApprovedRequestStatus(req_id, -1);
           break;
-        case "3": // Reject
-          status = 3;
-          pendingWith = level; // indicates who rejected it
+        case "7": // Reject
+          status = 7;
+          pendingWith = 1; // indicates who rejected it
           break;
       }
 
@@ -61,7 +61,7 @@ const requestStatus = async (current_role, region, action, req_id) => {
       await addAuditLog("requests_mvc", result.recordset[0].id, "INSERT", null);
 
       if (pendingWith == 0) {
-        updatePreApprovedRequestStatus(req_id, 1);
+        updatePreApprovedRequestStatus(req_id, 3);
       }
 
       return {

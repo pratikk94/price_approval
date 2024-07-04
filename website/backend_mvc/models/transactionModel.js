@@ -312,7 +312,7 @@ async function acceptTransaction(
       console.log(approversResult);
 
       // Construct and insert new transactions based on the number of approvers found
-      if (action == 2) {
+      if (action == 7) {
         console.log(action, "testing....................................");
         // await sql.query(
         //   `
@@ -331,6 +331,13 @@ async function acceptTransaction(
           currentRole: currentRole,
           lastUpdatedById: lastUpdatedById,
         });
+        const response = await requestStatus(
+          lastUpdatedByRole,
+          region,
+          action,
+          requestId
+        );
+
         insertParentRequest(requestId, requestId);
         console.log(result.recordset[0], "testing tranc action == 2");
         // Add audit log for the update operation
@@ -340,7 +347,10 @@ async function acceptTransaction(
           "INSERT",
           null
         );
-        return;
+        return {
+          success: true,
+          message: "Transactions rejected and status updated successfully.",
+        };
       }
       if (action == 3) {
         // if (currentRole != "RM")

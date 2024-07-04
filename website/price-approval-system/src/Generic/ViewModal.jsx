@@ -472,7 +472,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                       setOpenModal(true);
                       setUpdateStatusV((e) => {
                         // handleConfirm(2);
-                        return 2;
+                        return 7;
                       });
                     }}
                   >
