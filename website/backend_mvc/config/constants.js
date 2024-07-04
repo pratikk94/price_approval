@@ -22,6 +22,7 @@ const STATUS = {
   EXTENSION: "5",
   COPY: "6",
   MERGE: "7",
+  COMPLETELY_APPROVED: "8",
 };
 
 module.exports = {

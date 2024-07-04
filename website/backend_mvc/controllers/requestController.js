@@ -59,6 +59,9 @@ const updatePreApprovedRequestStatus = async (requestName, action) => {
       //ADD THIS TO DISPLACE IT FROM REWORK.
       action = -2;
     }
+    if (action === STATUS.COMPLETELY_APPROVED) {
+      action = 1;
+    }
 
     // Ensure poolPromise is defined elsewhere in your module
     // const pool = await poolPromise;

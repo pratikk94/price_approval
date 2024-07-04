@@ -72,7 +72,7 @@ const requestStatus = async (current_role, region, action, req_id) => {
 
       //REQUEST COMPLETELY APPROVED.
       if (pendingWith == 0) {
-        updatePreApprovedRequestStatus(req_id, STATUS.APPROVED);
+        updatePreApprovedRequestStatus(req_id, STATUS.COMPLETELY_APPROVED);
       }
 
       return {

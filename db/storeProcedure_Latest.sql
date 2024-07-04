@@ -476,3 +476,84 @@ BEGIN
     VALUES (@RequestId, @FileName, @FileData);
 END;
 GO
+
+
+/* JULY 4, 2024 */
+USE [PriceApprovalSystem]
+GO
+/****** Object:  StoredProcedure [dbo].[GetTransactionDetails]    Script Date: 7/4/2024 9:13:40 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetTransactionDetails]
+    @Status INT,
+    @Role NVARCHAR(50)
+AS
+BEGIN
+    DECLARE @StatusSTR NVARCHAR(MAX);
+    DECLARE @StatusIM NVARCHAR(MAX);
+
+    -- Set @StatusSTR and @StatusIM based on @Status
+    IF @Status = 0
+    BEGIN
+        SET @StatusSTR = 'AND currently_pending_with = ''' + @Role + '''';
+        SET @StatusIM = 'status = ' + CAST(0 AS NVARCHAR(10));
+    END
+    ELSE
+    BEGIN
+        SET @StatusSTR = '';
+        SET @StatusIM = 'status = ' + CAST(@Status AS NVARCHAR(10));
+    END
+
+    -- Construct the main SQL query using CTEs
+    DECLARE @SqlQuery NVARCHAR(MAX);
+
+    SET @SqlQuery = '
+    WITH LatestRequests AS (
+        SELECT 
+            req_id, 
+            status, 
+            ROW_NUMBER() OVER (PARTITION BY req_id ORDER BY id DESC) AS rn
+        FROM [PriceApprovalSystem].[dbo].[requests_mvc]
+    ),
+    FilteredRequests AS (
+        SELECT req_id
+        FROM LatestRequests
+        WHERE rn = 1 AND ' + @StatusIM + '
+    ),
+    MaxIds AS (
+        SELECT MAX(id) AS maxId, request_id
+        FROM transaction_mvc
+        WHERE request_id IN (SELECT req_id FROM FilteredRequests)
+        GROUP BY request_id
+    ),
+    MaxDetails AS (
+        SELECT m.maxId, m.request_id, t.current_status
+        FROM transaction_mvc t
+        INNER JOIN MaxIds m ON t.id = m.maxId
+    ),
+    RelatedTransactions AS (
+        SELECT t.*
+        FROM transaction_mvc t
+        INNER JOIN MaxDetails m ON t.request_id = m.request_id AND t.current_status = m.current_status
+    )
+    SELECT *
+    FROM RelatedTransactions
+    WHERE EXISTS (
+        SELECT 1
+        FROM transaction_mvc
+        WHERE request_id = RelatedTransactions.request_id
+        AND current_status = RelatedTransactions.current_status
+        AND id != RelatedTransactions.id
+    )
+    ' + @StatusSTR + '
+    UNION
+    SELECT *
+    FROM transaction_mvc
+    WHERE id IN (SELECT maxId FROM MaxDetails)
+    ' + @StatusSTR + ';';
+
+    -- Execute the constructed SQL query
+    EXEC sp_executesql @SqlQuery;
+END;
