@@ -10,6 +10,7 @@ const {
 
 const { getRegionAndRoleByEmployeeId } = require("../utils/fetchDetails");
 const { insertParentRequest } = require("../utils/fetchAllRequestIds");
+const { STATUS } = require("../config/constants");
 async function processTransaction(req, res) {
   try {
     const {
