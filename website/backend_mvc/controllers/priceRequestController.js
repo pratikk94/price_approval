@@ -11,6 +11,7 @@ const {
 const { getRegionAndRoleByEmployeeId } = require("../utils/fetchDetails");
 const { insertParentRequest } = require("../utils/fetchAllRequestIds");
 const { STATUS } = require("../config/constants");
+const logger = require("../utils/logger");
 async function processTransaction(req, res) {
   try {
     const {
@@ -27,9 +28,13 @@ async function processTransaction(req, res) {
       am_id,
       tempAttachmentIds,
     } = req.body;
-    console.log("tempAttachmentIds", tempAttachmentIds);
+
+    logger.info("Processing transaction...");
+    logger.debug("Received request body:", req.body);
+
     const requestId = await priceRequestModel.handleNewRequest();
-    console.log("requestId", requestId); // Debugging output (requestId value
+     logger.info(`New request ID generated: ${requestId}`);
+
     const result = await priceRequestModel.insertTransactions({
       customers,
       consignees,
@@ -48,13 +53,16 @@ async function processTransaction(req, res) {
 
     priceRequestModel.addTransactionToTable(requestId, am_id);
     insertParentRequest(requestId, requestId);
+
+    logger.info("Transaction processed successfully:: Id:",requestId);
+
     res.json({
       message: "Transaction processed successfully",
       data: result,
       id: requestId,
     });
   } catch (error) {
-    console.error("Error processing transaction:", error);
+   logger.error("Error processing transaction:", error);
     res.status(500).send("Failed to process transaction");
   }
 }
@@ -77,20 +85,23 @@ async function processPrevApprovedTransaction(req, res) {
       oldRequestId,
       tempAttachmentIds,
     } = req.body;
-    console.log(tempAttachmentIds);
-    console.log("oldRequestId", oldRequestId);
-    console.log("Action is ", action);
+
+    logger.info("Processing previous approved transaction...");
+    logger.debug("Received request body:", req.body);
+
     if (action == "R") {
-      console.log("In update");
+      logger.info(`Updating pre-approved request status for request ID: ${oldRequestId}`);
       updatePreApprovedRequestStatus(oldRequestId, STATUS.APPROVED);
     }
 
     const requestId = await priceRequestModel.handleNewRequest();
+    logger.info(`New request ID generated: ${requestId}`);
+
     const resultA = await getRegionAndRoleByEmployeeId(am_id);
 
-    console.log("requestId", requestId); // Debugging output (requestId value
+ 
     if (action == "D") {
-      console.log("In draft");
+      logger.info(`Adding draft for request ID: ${requestId}`);
       addADraft(requestId);
       priceRequestModel.addTransactionToTable(
         requestId,
@@ -123,11 +134,13 @@ async function processPrevApprovedTransaction(req, res) {
       }
     }
     if (resultA.success) {
+      logger.info(`Transaction accepted successfully for request ID: ${requestId}`);
       // res.json({
       //   message: "Transaction added successfully",
       //   currentStatus: result.currentStatus,
       // });
     } else {
+      logger.error(`Failed to accept transaction for request ID: ${requestId}`);
       // res.status(500).send("Failed to process transaction");
     }
 
@@ -161,7 +174,7 @@ async function processPrevApprovedTransaction(req, res) {
       id: requestId,
     });
   } catch (error) {
-    console.error("Error processing transaction:", error);
+    logger.error("Error processing transaction:", error);
     res.status(500).send("Failed to process transaction");
   }
 }
@@ -170,11 +183,12 @@ async function getPriceApprovalData(req, res) {
   const { requestId } = req.params; // Assuming request_id is passed as a URL parameter
 
   try {
+    logger.info(`Fetching price approval data for request ID: ${requestId}`);
     const data = await priceRequestModel.fetchConsolidatedRequest(requestId);
     res.json(data);
   } catch (error) {
+    logger.error(`Error fetching price approval data for request ID ${requestId}: ${error.message}`);
     res.status(500).send("Error fetching price approval data");
-    console.error("Error:", error);
   }
 }
 
@@ -189,9 +203,10 @@ async function pushDataToTable(requestName, parentRequestName) {
     insertParentRequest(requestName, parentRequestName);
     const result = await sql.query(query);
 
-    console.log(result);
+    logger.info(`Data pushed to table: ${JSON.stringify(result)}`);
   } catch (err) {
-    console.error("Database connection error:", err);
+    logger.error("Database connection error:", err);
+    res.status(500).send("Database connection error:", err);
   }
 }
 
