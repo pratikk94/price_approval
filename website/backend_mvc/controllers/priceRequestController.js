@@ -153,7 +153,7 @@ async function processPrevApprovedTransaction(req, res) {
     //   (draft = action == "D")
     // );
     if (oldRequestId != undefined)
-      pushDataToTable(requestId, action + oldRequestId.substring(1));
+      pushDataToTable(requestId, "N" + oldRequestId.substring(1));
 
     res.json({
       message: "Transaction processed successfully",

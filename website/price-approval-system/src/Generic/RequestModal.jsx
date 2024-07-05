@@ -81,7 +81,7 @@ const CreateRequestModal = ({
     editData != undefined
       ? editData.priceDetails[0] != undefined
         ? editData.priceDetails[0].fsc == "Y"
-        : "N"
+        : "Y"
       : "N"
   );
   const [priceDetails, setPriceDetails] = useState(

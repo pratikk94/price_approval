@@ -311,9 +311,9 @@ async function acceptTransaction(
       });
       console.log("********");
       console.log(approversResult);
-
+      console.log(`ACTION IS ${action}`);
       // Construct and insert new transactions based on the number of approvers found
-      if (action == 7) {
+      if (action == STATUS.REJECTED) {
         console.log(action, "testing....................................");
         // await sql.query(
         //   `
@@ -353,7 +353,7 @@ async function acceptTransaction(
           message: "Transactions rejected and status updated successfully.",
         };
       }
-      if (action == 3) {
+      if (action == STATUS.REWORK) {
         // if (currentRole != "RM")
         //   await sql.query(
         //     `
