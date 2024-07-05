@@ -557,3 +557,49 @@ GO
         -- Execute the constructed SQL query
         EXEC sp_executesql @SqlQuery;
     END;
+
+/** JULY 5 2024 **/
+WITH LatestRequests AS (
+        SELECT 
+            req_id, 
+            status, 
+            ROW_NUMBER() OVER (PARTITION BY req_id ORDER BY id DESC) AS rn
+        FROM [PriceApprovalSystem].[dbo].[requests_mvc]
+    ),
+    FilteredRequests AS (
+        SELECT req_id
+        FROM LatestRequests
+        WHERE rn = 1 
+        -- AND status = 3
+    ),
+    MaxIds AS (
+        SELECT MAX(id) AS maxId, request_id
+        FROM transaction_mvc
+        WHERE request_id IN (SELECT req_id FROM FilteredRequests)
+        GROUP BY request_id
+    ),
+    MaxDetails AS (
+        SELECT m.maxId, m.request_id, t.current_status
+        FROM transaction_mvc t
+        INNER JOIN MaxIds m ON t.id = m.maxId
+    ),
+    RelatedTransactions AS (
+        SELECT t.*
+        FROM transaction_mvc t
+        INNER JOIN MaxDetails m ON t.request_id = m.request_id AND t.current_status = m.current_status
+    )
+    SELECT *
+    FROM RelatedTransactions
+    WHERE EXISTS (
+        SELECT 1
+        FROM transaction_mvc
+        WHERE request_id = RelatedTransactions.request_id
+        AND current_status = RelatedTransactions.current_status
+        AND id != RelatedTransactions.id
+    )
+    -- AND currently_pending_with = 'RM'
+    UNION
+    SELECT *
+    FROM transaction_mvc
+    WHERE id IN (SELECT maxId FROM MaxDetails)
+    -- AND currently_pending_with = 'RM';
