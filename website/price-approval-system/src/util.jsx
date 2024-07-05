@@ -12,13 +12,13 @@ export const statusFilters = new Map([
 ]);
 
 export const STATUS = Object.freeze({
-  DRAFT: -1,
-  PENDING: 0,
-  APPROVED: 1,
-  REJECTED: 2,
-  REWORK: 3,
-  BLOCKED: 4,
-  EXTENSION: 5,
-  COPY: 6,
-  MERGE: 7,
+  DRAFT: "-1",
+  PENDING: "0",
+  APPROVED: "1",
+  REJECTED: "2",
+  REWORK: "3",
+  BLOCKED: "4",
+  EXTENSION: "5",
+  COPY: "6",
+  MERGE: "7",
 });
