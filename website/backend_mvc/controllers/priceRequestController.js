@@ -10,6 +10,7 @@ const {
 
 const { getRegionAndRoleByEmployeeId } = require("../utils/fetchDetails");
 const { insertParentRequest } = require("../utils/fetchAllRequestIds");
+const { STATUS } = require("../config/constants");
 async function processTransaction(req, res) {
   try {
     const {
@@ -81,7 +82,7 @@ async function processPrevApprovedTransaction(req, res) {
     console.log("Action is ", action);
     if (action == "R") {
       console.log("In update");
-      updatePreApprovedRequestStatus(oldRequestId, -1);
+      updatePreApprovedRequestStatus(oldRequestId, STATUS.APPROVED);
     }
 
     const requestId = await priceRequestModel.handleNewRequest();

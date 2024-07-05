@@ -5,6 +5,7 @@ const { addAuditLog } = require("../utils/auditTrails");
 const {
   updatePreApprovedRequestStatus,
 } = require("../controllers/requestController");
+const { STATUS } = require("../config/constants");
 const requestStatus = async (current_role, region, action, req_id) => {
   //   const { current_role, region, action, req_id } = req.body;
   try {
@@ -22,38 +23,39 @@ const requestStatus = async (current_role, region, action, req_id) => {
       console.log(action);
       console.log(typeof action);
       switch (action) {
-        case "1":
+        case STATUS.APPROVED:
           const query2 =
             "SELECT COUNT(1) AS LevelExists FROM rule_mvc WHERE level = @nextLevel";
           const nextLevelExists = await db.executeQuery(query2, {
             nextLevel: pendingWith,
           });
+          console.log(`Pending with ${pendingWith}`);
+          console.log(nextLevelExists.recordset[0].LevelExists);
+          // If request has no more levels, set status to approved
           if (nextLevelExists.recordset[0].LevelExists === 0) {
-            status = 1;
+            status = STATUS.APPROVED;
             pendingWith = 0;
           }
           break;
-        case "3": // Rework
+        case STATUS.REWORK: // Rework
           if (level === 2) {
-            status = -1;
+            status = STATUS.REWORK;
             pendingWith = 1;
           } else if (level > 2) {
-            status = -1;
+            status = STATUS.REWORK;
             pendingWith = 2;
-
-            let query3 =
-              "INSERT INTO requests_mvc (status, pending, req_id)OUTPUT INSERTED.* VALUES (@status, @pendingWith, @req_id)";
-            let result = await db.executeQuery(query3, {
-              status: -1,
-              pendingWith: 1,
-              req_id: req_id,
-            });
           }
-          updatePreApprovedRequestStatus(req_id, -1);
+          updatePreApprovedRequestStatus(req_id, STATUS.REWORK);
           break;
-        case "7": // Reject
-          status = 7;
+        case STATUS.REJECTED: // Reject
+          status = STATUS.REJECTED;
           pendingWith = 1; // indicates who rejected it
+          break;
+        //do nothing for the below
+        case STATUS.BLOCKED:
+        case STATUS.PENDING:
+        case STATUS.COPY:
+        case STATUS.MERGE:
           break;
       }
 
@@ -68,8 +70,9 @@ const requestStatus = async (current_role, region, action, req_id) => {
       // Add audit log for the INSERT operation
       await addAuditLog("requests_mvc", result.recordset[0].id, "INSERT", null);
 
+      //REQUEST COMPLETELY APPROVED.
       if (pendingWith == 0) {
-        updatePreApprovedRequestStatus(req_id, 3);
+        updatePreApprovedRequestStatus(req_id, STATUS.COMPLETELY_APPROVED);
       }
 
       return {
@@ -83,13 +86,25 @@ const requestStatus = async (current_role, region, action, req_id) => {
       const nextLevelExists = await db.executeQuery(query4, {
         nextLevel: pendingWith,
       });
+
       if (nextLevelExists.recordset[0].LevelExists === 0) {
         status = 1;
         pendingWith = -1;
       }
 
+      switch (action) {
+        case STATUS.APPROVED:
+          updatePreApprovedRequestStatus(req_id, STATUS.APPROVED);
+          break;
+        case STATUS.BLOCKED:
+        case STATUS.PENDING:
+        case STATUS.COPY:
+        case STATUS.MERGE:
+          break;
+      }
+
       let query5 =
-        "INSERT INTO requests_status_mvc (status, pendingWith, requestStatus)OUTPUT INSERTED.* VALUES (@status, @pendingWith, @requestStatus)";
+        "INSERT INTO requests_status_mvc (status, pendingWith, requestStatus)OUTPUT INSERTED.* VALUES (@status, @pendingWith, @req_id)";
 
       let result = await db.executeQuery(query5, {
         status: status,

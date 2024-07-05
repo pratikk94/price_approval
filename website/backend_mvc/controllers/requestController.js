@@ -9,6 +9,7 @@
 //   })
 //   .catch((err) => console.log("Database Connection Failed! Bad Config: ", err));
 
+const { STATUS } = require("../config/constants");
 const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
 const { insertParentRequest } = require("../utils/fetchAllRequestIds");
@@ -49,10 +50,17 @@ const updatePreApprovedRequestStatus = async (requestName, action) => {
     const parentRequestResult = await db.executeQuery(query);
 
     console.log(`Request name is ${requestName}`);
-
+    console.log(`Action is ${action}`);
     let pending = "";
-    if (action == 5) {
+    if (action == STATUS.REJECTED) {
       pending = ", [pending] = '1'";
+    }
+    if (action == STATUS.APPROVED) {
+      //ADD THIS TO DISPLACE IT FROM REWORK.
+      action = -2;
+    }
+    if (action === STATUS.COMPLETELY_APPROVED) {
+      action = 1;
     }
 
     // Ensure poolPromise is defined elsewhere in your module
@@ -67,6 +75,9 @@ const updatePreApprovedRequestStatus = async (requestName, action) => {
         ORDER BY [id] DESC
       );
     `;
+
+    console.log(query3);
+
     const updateResult2 = await db.executeQuery(query3);
     console.log(`Updated Result`);
     console.log(updateResult2);
@@ -104,7 +115,7 @@ const addADraft = async (requestName) => {
     );
 
     // const result = await sql.query(query);
-    updatePreApprovedRequestStatus(requestName, 5);
+    updatePreApprovedRequestStatus(requestName, STATUS.DRAFT);
     console.log(result);
   } catch (err) {
     console.error("Database connection error:", err);

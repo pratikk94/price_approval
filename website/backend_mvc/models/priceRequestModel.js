@@ -4,6 +4,7 @@ const db = require("../config/db");
 const config = require("../../backend_mvc/config");
 const { addAuditLog } = require("../utils/auditTrails");
 const { insertParentRequest } = require("../utils/fetchAllRequestIds");
+const { STATUS } = require("../config/constants");
 const poolPromise = new sql.ConnectionPool(config)
   .connect()
   .then((pool) => {
@@ -379,7 +380,7 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
     const pool = await poolPromise;
     let result1 = await pool
       .request()
-      .input("status", sql.Int, isDraft ? 5 : 0)
+      .input("status", sql.Int, isDraft ? STATUS.DRAFT : STATUS.PENDING)
       .input("pendingWith", sql.Int, isDraft ? 1 : 2)
       .input("req_id", sql.VarChar, requestId)
       .query(
