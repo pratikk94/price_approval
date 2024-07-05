@@ -16,9 +16,8 @@ const CustomerSelect = ({
   const [customers, setCustomers] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
   const { session } = useSession();
-  useEffect(() => {
-    // Fetch and set customers only if not disabled
 
+  useEffect(() => {
     const fetchCustomers = async () => {
       const response = await fetch(
         `${backend_mvc}api/customers/${id}/${session.region}`
@@ -37,7 +36,6 @@ const CustomerSelect = ({
             .map(Number)
             .includes(customer.value);
         });
-        console.log(initialSelectedCustomers);
         setSelectedOptions(initialSelectedCustomers);
 
         if (id === 1) customerState(initialSelectedCustomers);
@@ -49,29 +47,22 @@ const CustomerSelect = ({
   }, [disabled, id, selectedCustomersToEdit, customerState]);
 
   const handleChange = (selected) => {
-    // Only update if not disabled
-    console.log(selected);
-    console.log(!disabled);
-    console.log(id);
     if (!disabled) {
       setSelectedOptions(selected);
       if (id === 1) customerState(selected);
       if (id === 2) consigneeState(selected);
-      if (id === 3) {
-        console.log("End use state");
-        endUseState(selected);
-      }
+      if (id === 3) endUseState(selected);
     }
   };
 
   const handleBlur = () => {
-    if (id != 3) checkCheckBox();
+    if (id !== 3) checkCheckBox();
   };
 
-  // console.log(disabled);
   return (
     <Select
-      isMulti
+      isMulti={id !== 3}
+      isClearable={id === 3}
       isDisabled={disabled}
       name={name}
       options={customers}

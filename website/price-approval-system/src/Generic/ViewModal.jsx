@@ -334,7 +334,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
               background: "linear-gradient(135deg, #fff,  #004d40)",
             },
             overlay: {
-              backgroundColor: "rgba(0, 0, 0, 0.75)", // Darker overlay for better focus on the modal
+              backgroundColor: "rgba(0, 0, 0, 0.5)", // Darker overlay for better focus on the modal
               transition: "opacity 0.3s ease-out", // Smooth transition for the overlay appearance
             },
           }}

@@ -74,7 +74,7 @@ function TableWithInputs({
   }, [fscCode]);
 
   useEffect(() => {
-    if (prices[0] != undefined && prices.length > 0) {
+    if (prices && prices.length > 0) {
       setFSCCode(prices[0].fsc);
       const newRows = prices.map((price) => {
         const newId = uuidv4();
@@ -184,7 +184,7 @@ function TableWithInputs({
         selectedGrade.length > 0 &&
         customerOptions.indexOf(selectedGrade) === -1
       ) {
-        // alert("Invalid mix of Grades");
+        alert("Invalid mix of Grades");
       }
     } catch (error) {
       console.error("Error fetching customer data:", error);
@@ -293,40 +293,44 @@ function TableWithInputs({
       <SpacingWrapper space="12px" />
       <Typography>Select Pricing Conditions</Typography>
       <Grid container spacing={0} sx={{ mb: 2 }}>
-        {Object.keys(checkboxState).map((option) => (
-          <Grid item xs={4} key={option}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={checkboxState[option]}
-                  onChange={handleCheckboxChange}
-                  name={option}
-                  disabled={
-                    option === "AgreedPrice" ||
-                    option === "SpecialDiscount" ||
-                    isExtension ||
-                    isBlocked
-                  }
-                />
-              }
-              label={
-                option === "AgreedPrice"
-                  ? "Agreed Price*"
-                  : option === "SpecialDiscount"
-                  ? "Special Discount*"
-                  : option === "ReelDiscount"
-                  ? "Reel Discount"
-                  : option === "PackUpCharge"
-                  ? "Pack Upcharge"
-                  : option === "TPC"
-                  ? "TPC"
-                  : option === "offlineDiscount"
-                  ? "Offline Discount"
-                  : ""
-              }
-            />
-          </Grid>
-        ))}
+        {Object.keys(checkboxState)
+          .filter(
+            (option) => option !== "AgreedPrice" && option !== "SpecialDiscount"
+          )
+          .map((option) => (
+            <Grid item xs={3} key={option}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={checkboxState[option]}
+                    onChange={handleCheckboxChange}
+                    name={option}
+                    disabled={
+                      option === "AgreedPrice" ||
+                      option === "SpecialDiscount" ||
+                      isExtension ||
+                      isBlocked
+                    }
+                  />
+                }
+                label={
+                  option === "AgreedPrice"
+                    ? "Agreed Price*"
+                    : option === "SpecialDiscount"
+                    ? "Special Discount*"
+                    : option === "ReelDiscount"
+                    ? "Reel Discount"
+                    : option === "PackUpCharge"
+                    ? "Pack Upcharge"
+                    : option === "TPC"
+                    ? "TPC"
+                    : option === "offlineDiscount"
+                    ? "Offline Discount"
+                    : ""
+                }
+              />
+            </Grid>
+          ))}
       </Grid>
       <table>
         <thead>

@@ -12,11 +12,11 @@ export default function FilesForRequest({ files, tempFiles }) {
 
   return (
     <div>
-      <h2>Attachments</h2>
+      {/* <h2>Attachments</h2> */}
       {/* Render permanent files */}
       {files.length > 0 && (
         <>
-          <h3>Permanent Files</h3>
+          {/* <h3>Permanent Files</h3> */}
           <ul>
             {files.map((file) => (
               <li key={file.id}>
@@ -37,7 +37,7 @@ export default function FilesForRequest({ files, tempFiles }) {
       {/* Render temporary files */}
       {tempFiles && tempFiles.length > 0 && (
         <>
-          <h3>Temporary Files</h3>
+          {/* <h3>Temporary Files</h3> */}
           <ul>
             {tempFiles.map((tempFile) => (
               <li key={tempFile.id}>

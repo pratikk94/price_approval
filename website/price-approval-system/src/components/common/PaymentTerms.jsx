@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { backend_mvc } from "../../util";
+import { Checkbox, FormControlLabel } from "@mui/material";
 
 const PaymentTerms = ({
   setSelection,
@@ -21,9 +22,6 @@ const PaymentTerms = ({
     { value: 2, label: "AD00 - Advance payment (100)" },
     { value: 1, label: "ADV - Advance" },
   ]);
-
-  console.log(typeof customers, typeof consignees, typeof endUses);
-  console.log(customers, consignees, endUses);
 
   // Function to fetch the lowest payment term from the backend API
   const fetchLowestPaymentTerm = async () => {
@@ -58,12 +56,12 @@ const PaymentTerms = ({
     fetchLowestPaymentTerm();
   }, [customers, consignees, endUses, manualOverride]);
 
-  const handleOverride = () => {
-    // This could be triggered by a button to enable manual override
-    setManualOverride(true);
-    // Resetting to default selection when manual override is enabled
-    setSelectedPaymentTerm(paymentTermOptions[0]);
-    setSelection(paymentTermOptions[0]);
+  const handleOverrideChange = (event) => {
+    const { checked } = event.target;
+    setManualOverride(checked);
+    if (!checked) {
+      fetchLowestPaymentTerm();
+    }
   };
 
   const handleChange = (selectedOption) => {
@@ -86,15 +84,16 @@ const PaymentTerms = ({
         onChange={handleChange}
         placeholder="Select Payment Terms"
       />
-      {!manualOverride && (
-        <button
-          onClick={handleOverride}
-          style={{ marginTop: "10px" }}
-          disabled={disabled}
-        >
-          Override Automatic Selection
-        </button>
-      )}
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={manualOverride}
+            onChange={handleOverrideChange}
+            disabled={disabled}
+          />
+        }
+        label="I wish to choose my own Payment terms"
+      />
     </div>
   );
 };

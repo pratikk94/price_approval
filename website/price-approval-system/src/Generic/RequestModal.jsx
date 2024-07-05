@@ -8,6 +8,7 @@ import {
   Button,
   Checkbox,
   FormControlLabel,
+  TextField,
 } from "@mui/material";
 import TableWithInputs from "../components/common/TableWithInputs";
 import CustomerSelect from "../components/common/CustomerSelect";
@@ -27,19 +28,6 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import moment from "moment-timezone";
 import axios from "axios";
 
-const style = {
-  position: "absolute",
-  top: "10%",
-  left: "50%",
-  transform: "translate(-50%, -10%)",
-  width: 400,
-  bgcolor: "background.paper",
-  border: "2px solid #000",
-  boxShadow: 24,
-  p: 4,
-  textAlign: "center",
-};
-
 const modalStyle = {
   position: "absolute",
   background: "linear-gradient(135deg, #fff, #004d40)",
@@ -54,6 +42,19 @@ const modalStyle = {
   boxShadow: 24,
   p: 4,
   overflowY: "auto",
+};
+
+const modalContentStyle = {
+  position: "absolute",
+  top: "10%",
+  left: "50%",
+  transform: "translate(-50%, -10%)",
+  width: 400,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  p: 4,
+  textAlign: "center",
 };
 
 const CreateRequestModal = ({
@@ -94,7 +95,7 @@ const CreateRequestModal = ({
   const [disableSubmit, setDisableSubmit] = useState(false);
   const { session } = useSession();
   const employee_id = session.employee_id;
-  const [selectedCustomerrIDs, setSelectedCustomerIDs] = useState([]);
+  const [selectedCustomerIDs, setSelectedCustomerIDs] = useState([]);
   const [selectedConsigneeIDs, setSelectedConsigneeIDs] = useState([]);
   const [selectedEndUseIDs, setSelectedEndUseIDs] = useState([]);
   const [scenarioID, setScenarioId] = useState(0);
@@ -104,7 +105,6 @@ const CreateRequestModal = ({
   const [openOneToOneModal, setOpenOneToOneModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [openModal, setOpenModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const handleOpen = () => setOpenModal(true);
   const handleCloseModal = () => {
     setOpenModal(false);
@@ -137,7 +137,8 @@ const CreateRequestModal = ({
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleFSCChange = (e) => {
-    editData["priceDetails"][0]["fsc"] = e;
+    console.log(editData);
+    if (editData != undefined) editData[0]["priceDetails"][0]["fsc"] = e;
     setFSC(e);
   };
 
@@ -351,11 +352,6 @@ const CreateRequestModal = ({
   }, [editData]);
 
   const fetchTempRequestIds = async () => {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      const value = localStorage.getItem(key);
-    }
-
     const tempIds = localStorage.getItem("request_id") ?? [];
     return tempIds != "undefined" ? [tempIds] : [];
   };
@@ -544,16 +540,17 @@ const CreateRequestModal = ({
         <Box sx={modalStyle} component="form">
           <Typography
             id="create-request-modal-title"
-            variant="h"
+            variant="h4"
             component="h2"
             marginBottom={2}
+            color="primary"
           >
             Create New Request
           </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
               <SpacingWrapper space="12px" />
-              <Typography>Customer * </Typography>
+              <Typography variant="h6">Customer *</Typography>
               <CustomerSelect
                 disabled={isBlocked || isExtension}
                 id={1}
@@ -563,8 +560,9 @@ const CreateRequestModal = ({
                 endUseState={setEndUse}
                 checkCheckBox={CheckCheckBox}
                 isEditing={editData != undefined}
-                selectedCustomersToEdit={selectedCustomerrIDs}
+                selectedCustomersToEdit={selectedCustomerIDs}
               />
+              <SpacingWrapper space="12px" />
               <SpacingWrapper space="12px" />
               <FormControlLabel
                 control={
@@ -579,9 +577,9 @@ const CreateRequestModal = ({
                   />
                 }
                 label="1 Customers mapped to exactly 1 Consignees."
-              />{" "}
-              <SpacingWrapper space="12px" />
-              <Typography>End Use</Typography>
+              />
+
+              <Typography variant="h6">End Use</Typography>
               <CustomerSelect
                 id={3}
                 disabled={mode > 1 || isExtension || isBlocked}
@@ -594,7 +592,7 @@ const CreateRequestModal = ({
                 selectedCustomersToEdit={selectedEndUseIDs}
               />
               <SpacingWrapper space="12px" />
-              <Typography>Plant </Typography>
+              <Typography variant="h6">Plant</Typography>
               <Plant
                 setSelection={setPlant}
                 editedData={
@@ -605,40 +603,17 @@ const CreateRequestModal = ({
                 disabled={mode > 1 || isExtension || isBlocked}
               />
               <SpacingWrapper space="12px" />
-              <Typography>Payment Terms *</Typography>
-              <PaymentTerms
-                disabled={mode > 1 || isExtension || isBlocked}
-                setSelection={setPaymentTerms}
-                editedData={paymentTerms}
-                customers={selectedCustomers}
-                consignees={selectedConsignees}
-                endUses={endUse}
-              />
-              <SpacingWrapper space="12px" />
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <DateSelector
-                    disabled={mode > 1 || isExtension || isBlocked}
-                    name={"Valid From * "}
-                    setSelection={setValidFrom}
-                    editedData={validFrom}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <DateSelector
-                    disabled={isBlocked}
-                    name={"Valid To * "}
-                    setSelection={setValidTo}
-                    editedData={validTo}
-                  />
-                </Grid>
-              </Grid>
-              <SpacingWrapper space="12px" />
-            </Grid>
-            <Grid item xs={6}>
-              <SpacingWrapper space="12px" />
-              <Typography>Consignee *</Typography>
 
+              <DateSelector
+                disabled={mode > 1 || isExtension || isBlocked}
+                name={"Valid From *"}
+                setSelection={setValidFrom}
+                editedData={validFrom}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <SpacingWrapper space="12px" />
+              <Typography variant="h6">Consignee *</Typography>
               <CustomerSelect
                 id={2}
                 disabled={mode > 1 || isExtension || isBlocked}
@@ -651,13 +626,28 @@ const CreateRequestModal = ({
                 selectedCustomersToEdit={selectedConsigneeIDs}
               />
 
-              <SpacingWrapper space="12px" />
-              <SpacingWrapper space="61.5px" />
+              <SpacingWrapper space="54px" />
+              <Typography variant="h6">Payment Terms *</Typography>
+              <PaymentTerms
+                disabled={mode > 1 || isExtension || isBlocked}
+                setSelection={setPaymentTerms}
+                editedData={paymentTerms}
+                customers={selectedCustomers}
+                consignees={selectedConsignees}
+                endUses={endUse}
+              />
+
+              <SpacingWrapper space="56px" />
+              <DateSelector
+                disabled={isBlocked}
+                name={"Valid To *"}
+                setSelection={setValidTo}
+                editedData={validTo}
+              />
             </Grid>
           </Grid>
 
           <SpacingWrapper space="0px" />
-
           <TableWithInputs
             isBlocked={isBlocked}
             isExtension={isExtension}
@@ -670,26 +660,24 @@ const CreateRequestModal = ({
             fetchHistory={fetchHistory}
           />
           <SpacingWrapper space="24px" />
-          <Typography>Attachment</Typography>
-
+          <Typography variant="h6">Attachment</Typography>
           <FileHandling requestId={editData ? editData["request_id"] : ""} />
-
           <RemarkBox
             setRemark={setRemarks}
             request_id={editData ? editData["request_id"] : ""}
           />
-
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-            <button
+            <Button
               type="submit"
               disabled={disableSubmit}
               onClick={handleFormSubmit}
-              style={{ backgroundColor: "#156760" }}
+              variant="contained"
+              color="primary"
             >
               Submit
-            </button>
+            </Button>
             <Box>
-              <button
+              <Button
                 variant="contained"
                 onClick={(e) => {
                   setIsDraft((isDraft) => {
@@ -700,18 +688,18 @@ const CreateRequestModal = ({
                 style={{ backgroundColor: "#5f5f00" }}
               >
                 Save as draft
-              </button>
-              <button
+              </Button>
+              <Button
                 style={{ backgroundColor: "#4f0000", marginLeft: "4px" }}
                 onClick={() => {
                   handleClose();
                   window.location.reload();
                 }}
-                color="primary"
                 variant="contained"
+                color="secondary"
               >
                 Close
-              </button>
+              </Button>
             </Box>
           </Box>
         </Box>
@@ -722,17 +710,16 @@ const CreateRequestModal = ({
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>
+        <Box sx={modalContentStyle}>
           {showSuccess ? (
             <Box sx={{ mt: 2, color: green[500], textAlign: "center" }}>
-              <img
-                src="verified.gif"
-                alt="Verified"
-                style={{ maxWidth: "100px", marginBottom: "20px" }}
+              <CheckCircleOutlineIcon
+                sx={{ fontSize: 60, mb: 2 }}
+                color="success"
               />
-              <br />
-              Request Created Successfully.
-              <br />
+              <Typography variant="h6">
+                Request Created Successfully.
+              </Typography>
               <Button
                 variant="contained"
                 color="primary"
@@ -746,13 +733,9 @@ const CreateRequestModal = ({
               </Button>
             </Box>
           ) : (
-            <Box sx={{ mt: 2, color: red[500] }}>
-              <ErrorOutlineIcon
-                sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
-              />
-              <br />
-
-              <Typography id="modal-modal-description" sx={{ color: "black" }}>
+            <Box sx={{ mt: 2, color: red[500], textAlign: "center" }}>
+              <ErrorOutlineIcon sx={{ fontSize: 60, mb: 2 }} color="error" />
+              <Typography variant="h6">
                 Failed to create request.
                 <br /> Reason : {errorMessage}
               </Typography>
@@ -774,28 +757,30 @@ const CreateRequestModal = ({
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>
+        <Box sx={modalContentStyle}>
           <Box sx={{ mt: 2 }}>
-            Do you wish to choose one to one mapping for your customers and
-            consignees?
-            <br />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleConfirmOneToOne}
-              sx={{ mt: 2 }}
-            >
-              Yes
-            </Button>
-            <div style={{ display: "inline-block", width: "40px" }}></div>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleOneToOneModalClose}
-              sx={{ mt: 2, marginLeft: 2 }}
-            >
-              No
-            </Button>
+            <Typography variant="h6">
+              Do you wish to choose one-to-one mapping for your customers and
+              consignees?
+            </Typography>
+            <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleConfirmOneToOne}
+                sx={{ mt: 2 }}
+              >
+                Yes
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleOneToOneModalClose}
+                sx={{ mt: 2, ml: 2 }}
+              >
+                No
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Modal>

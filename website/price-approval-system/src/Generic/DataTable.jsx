@@ -439,7 +439,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                 multiple
                 value={selectedHeaders}
                 onChange={handleSelectChange}
-                renderValue={(selected) => `${selected.length} selected`}
+                renderValue={(selected) => `${selected.length - 4} selected`}
               >
                 {headers
                   .filter((header) => !header.includes("_id"))

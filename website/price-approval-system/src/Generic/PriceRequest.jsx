@@ -59,7 +59,12 @@ import { useSession } from "../Login_Controller/SessionContext";
 function PriceChangeRequest(rules, employee_id) {
   let statusFiltersValues = [];
   console.log(rules);
-
+  if (rules.rules.can_approve == 1) {
+    statusFiltersValues = [
+      ...statusFiltersValues,
+      Array.from(statusFilters.values())[1], //pending
+    ];
+  }
   if (rules.rules.can_initiate == 1) {
     statusFiltersValues = [
       ...statusFiltersValues,
@@ -76,12 +81,6 @@ function PriceChangeRequest(rules, employee_id) {
     ];
   }
 
-  if (rules.rules.can_approve == 1) {
-    statusFiltersValues = [
-      ...statusFiltersValues,
-      Array.from(statusFilters.values())[1], //pending
-    ];
-  }
   const [filterdId, setFilterdId] = useState(0);
 
   // const [data, setData] = useState(initialData);
