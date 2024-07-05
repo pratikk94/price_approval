@@ -6,6 +6,7 @@ const cors = require("cors");
 const url = require("./utils");
 const corsOptions = {
   origin: "http://192.168.1.109:5173", // or the specific origin you want to allow
+
   credentials: true, // allowing credentials (cookies, session)
 };
 app.use(cors(corsOptions));

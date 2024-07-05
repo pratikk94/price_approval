@@ -473,7 +473,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                       setOpenModal(true);
                       setUpdateStatusV((e) => {
                         // handleConfirm(2);
-                        return STATUS.REJECT;
+                        return STATUS.REJECTED;
                       });
                     }}
                   >

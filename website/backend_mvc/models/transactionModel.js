@@ -311,9 +311,9 @@ async function acceptTransaction(
       });
       console.log("********");
       console.log(approversResult);
-
+      console.log(`ACTION IS ${action}`);
       // Construct and insert new transactions based on the number of approvers found
-      if (action == 7) {
+      if (action == STATUS.REJECTED) {
         console.log(action, "testing....................................");
         // await sql.query(
         //   `
@@ -353,7 +353,7 @@ async function acceptTransaction(
           message: "Transactions rejected and status updated successfully.",
         };
       }
-      if (action == 3) {
+      if (action == STATUS.REWORK) {
         // if (currentRole != "RM")
         //   await sql.query(
         //     `
@@ -373,6 +373,9 @@ async function acceptTransaction(
         If RM rework and tran go to all (NSM&HDSM) above levels in pending
         also check same level(NSM&HDSM)
         */
+
+        console.log(`Current role is ${currentRole}`);
+
         if (currentRole != "RM") {
           let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
           OUTPUT INSERTED.* 
@@ -391,6 +394,13 @@ async function acceptTransaction(
             result.recordset[0].id,
             "INSERT",
             null
+          );
+
+          const response = await requestStatus(
+            currentRole,
+            region,
+            action,
+            requestId
           );
         }
         let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
@@ -412,6 +422,15 @@ async function acceptTransaction(
           "INSERT",
           null
         );
+
+        if (currentRole == "RM") {
+          const response = await requestStatus("RM", region, action, requestId);
+        }
+
+        return {
+          success: true,
+          message: "Transactions added and status updated successfully.",
+        };
       } else if (approversResult.recordset.length === 1) {
         const { approver } = approversResult.recordset[0];
         const newStatus = `${approver}0_${currentRole}1`;

@@ -1,6 +1,7 @@
 export const backend_url = "http://192.168.1.109:3001/";
 export const backend_mvc = "http://192.168.1.109:3000/";
 
+
 export const statusFilters = new Map([
   [0, "Draft"],
   [1, "Pending"],
@@ -12,13 +13,13 @@ export const statusFilters = new Map([
 ]);
 
 export const STATUS = Object.freeze({
-  DRAFT: -1,
-  PENDING: 0,
-  APPROVED: 1,
-  REJECTED: 2,
-  REWORK: 3,
-  BLOCKED: 4,
-  EXTENSION: 5,
-  COPY: 6,
-  MERGE: 7,
+  DRAFT: "-1",
+  PENDING: "0",
+  APPROVED: "1",
+  REJECTED: "2",
+  REWORK: "3",
+  BLOCKED: "4",
+  EXTENSION: "5",
+  COPY: "6",
+  MERGE: "7",
 });

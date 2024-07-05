@@ -10,7 +10,7 @@ const fs = require("fs");
 const nodemailer = require("nodemailer");
 const upload = multer({ storage: multer.memoryStorage() });
 const corsOptions = {
-  origin: "http://192.168.1.109:5173", // or the specific origin you want to allow
+  origin: "http://192.168.1.102:5173", // or the specific origin you want to allow
   credentials: true, // allowing credentials (cookies, session)
 };
 const timeZone = "Asia/Kolkata";
