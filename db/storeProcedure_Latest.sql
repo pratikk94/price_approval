@@ -559,7 +559,40 @@ GO
     END;
 
 /** JULY 5 2024 **/
-WITH LatestRequests AS (
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetTransactionDetails]
+    @Status INT,
+    @Role NVARCHAR(50)
+AS
+BEGIN
+    DECLARE @StatusSTR NVARCHAR(MAX);
+    DECLARE @StatusIM NVARCHAR(MAX);
+
+    -- Set @StatusSTR and @StatusIM based on @Status
+    IF @Status = 0
+    BEGIN
+        SET @StatusSTR = 'AND currently_pending_with = @Role';
+        SET @StatusIM = 'status = 0';
+    END
+    ELSE IF @Status = 3 AND @Role = 'RM'
+    BEGIN
+        SET @StatusSTR = 'AND currently_pending_with = @Role';
+        SET @StatusIM = '1=1'; -- No status filter for this case
+    END
+    ELSE
+    BEGIN
+        SET @StatusSTR = '';
+        SET @StatusIM = 'status = ' + CAST(@Status AS NVARCHAR(10));
+    END
+
+    -- Construct the main SQL query using CTEs
+    DECLARE @SqlQuery NVARCHAR(MAX);
+
+    SET @SqlQuery = '
+    WITH LatestRequests AS (
         SELECT 
             req_id, 
             status, 
@@ -569,8 +602,7 @@ WITH LatestRequests AS (
     FilteredRequests AS (
         SELECT req_id
         FROM LatestRequests
-        WHERE rn = 1 
-        -- AND status = 3
+        WHERE rn = 1 AND ' + @StatusIM + '
     ),
     MaxIds AS (
         SELECT MAX(id) AS maxId, request_id
@@ -596,10 +628,13 @@ WITH LatestRequests AS (
         WHERE request_id = RelatedTransactions.request_id
         AND current_status = RelatedTransactions.current_status
         AND id != RelatedTransactions.id
-    )
-    -- AND currently_pending_with = 'RM'
+    ) ' + @StatusSTR + '
     UNION
     SELECT *
     FROM transaction_mvc
-    WHERE id IN (SELECT maxId FROM MaxDetails)
-    -- AND currently_pending_with = 'RM';
+    WHERE id IN (SELECT maxId FROM MaxDetails) ' + @StatusSTR + ';';
+
+    -- Execute the constructed SQL query
+    EXEC sp_executesql @SqlQuery, N'@Role NVARCHAR(50)', @Role;
+END;
+GO
