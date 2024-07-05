@@ -48,10 +48,10 @@ exports.checkSession = (req, res) => {
 exports.logout = (req, res) => {
   req.session.destroy((err) => {
     if (err) {
-      logger.error(`Error during logout for employee_id: ${employee_id} - ${err.message}`);
+      logger.error(`Error during logout  - ${err.message}`);
       throw err;
     }
-    logger.info(`User logged out: employee_id: ${employee_id}`);
+    logger.info(`User logged out`);
     res.json({ loggedOut: true });
   });
 };
