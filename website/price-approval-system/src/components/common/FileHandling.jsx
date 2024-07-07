@@ -39,7 +39,7 @@ export default function FileHandling({ requestId }) {
 
   return (
     <div>
-      <FilesForRequest files={files} tempFiles={tempFiles} />
+      <FilesForRequest files={files} tempFiles={storedRequestId} />
       {session.role === "AM" && (
         <FileUploader onSuccess={onUploadSuccess} requestId={storedRequestId} />
       )}

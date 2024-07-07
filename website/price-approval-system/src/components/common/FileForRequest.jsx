@@ -1,5 +1,5 @@
 import React from "react";
-import { backend_url } from "../../util";
+import { backend_mvc, backend_url } from "../../util";
 
 export default function FilesForRequest({ files, tempFiles }) {
   // Check if there are no files or tempFiles
@@ -18,11 +18,11 @@ export default function FilesForRequest({ files, tempFiles }) {
         <>
           {/* <h3>Permanent Files</h3> */}
           <ul>
-            {files.map((file) => (
-              <li key={file.id}>
+            {files.map((file, index) => (
+              <li key={file.file_name || index}>
                 {file.file_name} -{" "}
                 <a
-                  href={`${backend_url}api/g_files/download/${file.id[1]}`}
+                  href={`${backend_mvc}api/download/${file.request_id}`} // Assuming `file_name` is used for download
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -35,7 +35,7 @@ export default function FilesForRequest({ files, tempFiles }) {
       )}
 
       {/* Render temporary files */}
-      {tempFiles && tempFiles.length > 0 && (
+      {Array.isArray(tempFiles) && tempFiles.length > 0 && (
         <>
           {/* <h3>Temporary Files</h3> */}
           <ul>
@@ -43,7 +43,7 @@ export default function FilesForRequest({ files, tempFiles }) {
               <li key={tempFile.id}>
                 {tempFile.name} -{" "}
                 <a
-                  href={`${backend_url}api/g_files/download/${tempFile.id}`}
+                  href={`${backend_url}api/g_files/download/${tempFile}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
