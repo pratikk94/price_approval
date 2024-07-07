@@ -30,10 +30,11 @@ function TableWithInputs({
   disableSubmit,
   prices,
   disabled,
+  isCopy,
   isBlocked,
   isExtension,
   fetchHistory,
-  fscCode,
+
   setFSCCode,
 }) {
   const [grades, setGrades] = useState([]);
@@ -42,7 +43,9 @@ function TableWithInputs({
   const [ids, setIds] = useState([]);
   const [open, setOpen] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-
+  const [fscCode, setFSC] = useState(
+    prices[0] != undefined ? prices[0].fsc : "N"
+  );
   const options = [
     { value: "Reel", label: "Reel" },
     { value: "Sheet", label: "Sheet" },
@@ -184,7 +187,7 @@ function TableWithInputs({
         selectedGrade.length > 0 &&
         customerOptions.indexOf(selectedGrade) === -1
       ) {
-        alert("Invalid mix of Grades");
+        // alert("Invalid mix of Grades");
       }
     } catch (error) {
       console.error("Error fetching customer data:", error);
@@ -240,6 +243,8 @@ function TableWithInputs({
     setTableRowsDataFunction(rows);
   }, [rows, setTableRowsDataFunction]);
 
+  console.log(prices);
+
   const addRow = () => {
     const newRow = {
       id: uuidv4(),
@@ -265,6 +270,8 @@ function TableWithInputs({
   };
 
   function handleFSCChange(e) {
+    console.log(e.target.checked);
+    setFSC(e.target.checked ? "Y" : "N");
     setFSCCode(e.target.checked ? "Y" : "N");
   }
 
@@ -277,12 +284,14 @@ function TableWithInputs({
     return !(has234 && has5);
   }
 
+  console.log(fscCode);
+
   return (
     <>
       <FormControlLabel
         control={
           <Checkbox
-            checked={fscCode === "Y"}
+            checked={fscCode == "Y"}
             onChange={handleFSCChange}
             icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
             checkedIcon={<CheckBoxIcon fontSize="medium" />}
@@ -405,7 +414,7 @@ function TableWithInputs({
                     const result = isMixPresent(rows);
 
                     if (!result) {
-                      alert("Invalid mix of Grades");
+                      // alert("Invalid mix of Grades");
                       disableSubmit(true);
                     } else {
                       disableSubmit(false);
@@ -482,7 +491,7 @@ function TableWithInputs({
                     type="number"
                     disabled={disabled || isExtension || isBlocked}
                     style={{ width: "100%" }}
-                    value={row.agreedPrice}
+                    value={isCopy ? 0 : row.agreedPrice}
                     onKeyDown={(e) => {
                       if (
                         e.key === "Minus" ||
@@ -505,7 +514,7 @@ function TableWithInputs({
                     type="number"
                     disabled={disabled || isExtension || isBlocked}
                     style={{ width: "100%" }}
-                    value={row.specialDiscount}
+                    value={isCopy ? 0 : row.specialDiscount}
                     onKeyDown={(e) => {
                       if (
                         e.key === "Minus" ||
@@ -528,7 +537,7 @@ function TableWithInputs({
                     type="number"
                     style={{ width: "100%" }}
                     disabled={disabled || isExtension || isBlocked}
-                    value={row.reelDiscount}
+                    value={isCopy ? 0 : row.reelDiscount}
                     onKeyDown={(e) => {
                       if (
                         e.key === "Minus" ||
@@ -551,7 +560,7 @@ function TableWithInputs({
                     type="number"
                     style={{ width: "100%" }}
                     disabled={disabled || isExtension || isBlocked}
-                    value={row.packUpCharge}
+                    value={isCopy ? 0 : row.packUpCharge}
                     onKeyDown={(e) => {
                       if (
                         e.key === "Minus" ||
@@ -573,7 +582,7 @@ function TableWithInputs({
                   <input
                     type="number"
                     style={{ width: "100%" }}
-                    value={row.tpc}
+                    value={isCopy ? 0 : row.tpc}
                     disabled={disabled || isExtension || isBlocked}
                     onKeyDown={(e) => {
                       if (
@@ -597,7 +606,7 @@ function TableWithInputs({
                     type="number"
                     style={{ width: "100%" }}
                     disabled={disabled || isExtension || isBlocked}
-                    value={row.offlineDiscount}
+                    value={isCopy ? 0 : row.offlineDiscount}
                     onKeyDown={(e) => {
                       if (
                         e.key === "Minus" ||

@@ -482,6 +482,7 @@ function PriceChangeRequest(rules, employee_id) {
           handleClose={handleEditClose}
           editData={rows[0]}
           rule={rules}
+          isCopyOrMerged={copyOrMege}
           isBlocked={false}
           isExtension={false}
           // parentId={rows[0].request_id}

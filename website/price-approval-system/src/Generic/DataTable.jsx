@@ -148,7 +148,7 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
         />
       </TableCell>
       {selectedHeaders
-        .filter((header) => !header.includes("_id"))
+        .filter((header) => !header.includes("_id") && !header.includes("map"))
         .map((header) => (
           <TableCell key={header}>
             {header === "Actions" ? (
@@ -439,10 +439,13 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                 multiple
                 value={selectedHeaders}
                 onChange={handleSelectChange}
-                renderValue={(selected) => `${selected.length - 4} selected`}
+                renderValue={(selected) => `${selected.length - 5} selected`}
               >
                 {headers
-                  .filter((header) => !header.includes("_id"))
+                  .filter(
+                    (header) =>
+                      !header.includes("_id") && !header.includes("map")
+                  )
                   .map((header) => (
                     <MenuItem key={header} value={header}>
                       <Checkbox
@@ -483,7 +486,10 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                       }}
                     />
                     {selectedHeaders
-                      .filter((header) => !header.includes("_id"))
+                      .filter(
+                        (header) =>
+                          !header.includes("_id") && !header.includes("map")
+                      )
                       .map((header, index) => (
                         <DraggableHeader
                           key={
@@ -508,7 +514,10 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
                   ? data.map((row, rowIndex) => (
                       <Box key={rowIndex}>
                         {selectedHeaders
-                          .filter((header) => !header.includes("_id"))
+                          .filter(
+                            (header) =>
+                              !header.includes("_id") && !header.includes("map")
+                          )
                           .map((header) => (
                             <Typography key={header} variant="p">
                               <strong>

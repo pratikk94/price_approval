@@ -75,13 +75,7 @@ const CreateRequestModal = ({
   const [paymentTerms, setPaymentTerms] = useState([]);
   let [validFrom, setValidFrom] = useState([]);
   let [validTo, setValidTo] = useState([]);
-  const [fsc, setFSC] = useState(
-    editData != undefined
-      ? editData.priceDetails[0] != undefined
-        ? editData.priceDetails[0].fsc == "Y"
-        : "N"
-      : "N"
-  );
+  const [fsc, setFSC] = useState("");
   const [priceDetails, setPriceDetails] = useState(
     editData != undefined ? editData.priceDetails : []
   );
@@ -137,8 +131,6 @@ const CreateRequestModal = ({
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleFSCChange = (e) => {
-    console.log(editData);
-    if (editData != undefined) editData[0]["priceDetails"][0]["fsc"] = e;
     setFSC(e);
   };
 
@@ -170,17 +162,17 @@ const CreateRequestModal = ({
     handleOpen();
     setShowSuccess(false);
     event.preventDefault();
-    const checkForEndUse =
-      endUse != undefined
-        ? endUse[0]["value"] != undefined
-          ? true
-          : false
-        : false;
+    // const checkForEndUse =
+    //   endUse != undefined
+    //     ? endUse[0]["value"] != undefined
+    //       ? true
+    //       : false
+    //     : false;
     if (
       (validFrom != "" &&
         validTo != "" &&
-        endUse != undefined &&
-        endUse[0]["value"] > 0 &&
+        // endUse != undefined &&
+        // endUse[0]["value"] > 0 &&
         paymentTerms != undefined &&
         selectedCustomers.length > 0 &&
         remarks.length > 10) ||
@@ -195,7 +187,8 @@ const CreateRequestModal = ({
         formData["consigneeIds"] = selectedConsignees
           .map((item) => item.value)
           .join(",");
-        formData["endUseIds"] = endUse[0]["value"];
+        formData["endUseIds"] =
+          endUse[0] != undefined ? endUse[0].value : endUse[0];
         formData["endUseSegmentIds"] = ["seg1"].toString();
         formData["plants"] = plant;
         formData["paymentTermsId"] = paymentTerms["value"].toString();
@@ -209,6 +202,7 @@ const CreateRequestModal = ({
         formData["am_id"] = employee_id;
         formData["oldRequestId"] = parentId;
         formData["priceTable"] = tableRowsData;
+
         if (draft) {
           submitFormDataMVC(formData);
           return;
@@ -279,17 +273,17 @@ const CreateRequestModal = ({
       }
     } else if (selectedCustomers.length == 0) {
       setErrorMessage("Please select Customer(s)");
-    } else if (selectedConsignees.length == 0) {
-      setErrorMessage("Please select Consignee(s)");
     } else if (paymentTerms == undefined) {
       setErrorMessage("Please select Payment Terms");
     } else if (validFrom == "") {
       setErrorMessage("Please select Valid From date");
     } else if (validTo == "") {
       setErrorMessage("Please select Valid To date");
-    } else if (endUse.length == 0) {
-      setErrorMessage("Please select End Use");
-    } else if (remarks.length < 11) {
+    }
+    // else if (endUse.length == 0) {
+    //   setErrorMessage("Please select End Use");
+    // }
+    else if (remarks.length < 11) {
       setErrorMessage("Please add a remark with at least 10 characters ");
     } else {
       console.log("All checks met");
@@ -340,13 +334,7 @@ const CreateRequestModal = ({
     setValidFrom(moment(data.valid_from, "DD/MM/YYYY").toDate());
     setValidTo(moment(data.valid_to, "DD/MM/YYYY").toDate());
 
-    setFSC(
-      editData != undefined
-        ? editData.priceDetails[0] != undefined
-          ? editData.priceDetails[0].fsc == "Y"
-          : "N"
-        : "N"
-    );
+    setFSC(editData.priceDetails[0].fsc);
 
     setPriceDetails(editData.priceDetails);
   }, [editData]);
@@ -436,6 +424,11 @@ const CreateRequestModal = ({
           formData["tempAttachmentIds"] = attachmentId;
         }
       }
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] === undefined) {
+          formData[key] = "";
+        }
+      });
       const response = await fetch(
         action == "N"
           ? `${backend_mvc}process-price-request`
@@ -572,11 +565,11 @@ const CreateRequestModal = ({
                     }
                     icon={<CheckBoxOutlineBlankIcon fontSize="medium" />}
                     checkedIcon={<CheckBoxIcon fontSize="medium" />}
-                    checked={isChecked}
+                    checked={!checkBoxEnabled ? false : isChecked}
                     onChange={handleCheckboxChange}
                   />
                 }
-                label="1 Customers mapped to exactly 1 Consignees."
+                label="One Customer for One Consignee"
               />
 
               <Typography variant="h6">End Use</Typography>
@@ -656,7 +649,7 @@ const CreateRequestModal = ({
             setFSCCode={handleFSCChange}
             disableSubmit={setDisableSubmit}
             prices={priceDetails}
-            fscCode={fsc}
+            isCopy={isCopyOrMerged}
             fetchHistory={fetchHistory}
           />
           <SpacingWrapper space="24px" />

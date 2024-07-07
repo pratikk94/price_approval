@@ -26,18 +26,18 @@ async function fetchLowestPaymentTermDetails(customers, consignees, endUses) {
     INSERT INTO @EndUses (end_use_id) VALUES ${insertEndUses}; -- e.g., VALUES ('e1'),('e2'),('e3')
     
     -- Running the query to find the lowest payment term and its corresponding terms
-    SELECT MIN(ptm.payment_term_id) AS LowestPaymentTerm, pt.terms
+    SELECT MIN(ptm.payment_term_id) AS LowestPaymentTerm, CONCAT(pt.payment_terms_id,pt.terms) as terms
     FROM dbo.payment_terms_master ptm
     INNER JOIN payment_terms pt ON pt.id = ptm.payment_term_id
     WHERE (ptm.customer_id IN (SELECT customer_id FROM @Customers) OR ptm.customer_id IS NULL)
       AND (ptm.consignee_id IN (SELECT consignee_id FROM @Consignees) OR ptm.consignee_id IS NULL)
       AND (ptm.end_use_id IN (SELECT end_use_id FROM @EndUses) OR ptm.end_use_id IS NULL)
-    GROUP BY pt.terms;
+    GROUP BY pt.terms,pt.payment_terms_id;
     `;
 
     let result = await db.executeQuery(query);
 
-    // let result = await db.executeQuery(`EXEC FindLowestPaymentTermForDynamicIds 
+    // let result = await db.executeQuery(`EXEC FindLowestPaymentTermForDynamicIds
     //       @InsertCustomers,
     //       @InsertConsignees,
     //       @InsertEndUses`,{"InsertCustomers":insertCustomers,
@@ -45,14 +45,13 @@ async function fetchLowestPaymentTermDetails(customers, consignees, endUses) {
     if (result.recordset.length) {
       return result.recordset[0];
     } else {
-      return { LowestPaymentTerm: 5, terms: "Payment within 30 days" };
+      return { LowestPaymentTerm: 5, terms: "C030 - Payment within 30 days" };
     }
   } catch (error) {
     console.error("Failed to fetch lowest payment term details", error);
     throw error;
   }
 }
-
 
 async function fetchProfitCenter() {
   try {
@@ -67,5 +66,5 @@ async function fetchProfitCenter() {
 
 module.exports = {
   fetchLowestPaymentTermDetails,
-  fetchProfitCenter
+  fetchProfitCenter,
 };

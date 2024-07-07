@@ -28,7 +28,7 @@ import { useSession } from "../Login_Controller/SessionContext";
 import { green } from "@mui/material/colors";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import axios from "axios";
-import { Modal } from "@mui/material";
+import { Grid, Modal } from "@mui/material";
 
 function PriceTable({ price, selectedConsignees, selectedCustomers, plant }) {
   const [historyData, setHistoryData] = useState([]);
@@ -283,6 +283,20 @@ function PriceViewModal({ open, handleClose, data, rule }) {
   const [success_message, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [updateStatusV, setUpdateStatusV] = useState(0);
+  const pt = [
+    { value: 5, label: "C030 - Payment within 30 days" },
+    { value: 6, label: "C045 - Payment within 45 days" },
+    { value: 7, label: "C060 - Payment within 60 days" },
+    { value: 4, label: "D021 - Payment within 21 days" },
+    { value: 8, label: "U90 - LC 90 days" },
+    { value: 3, label: "C017 - Payment within 17 days" },
+    { value: 2, label: "AD00 - Advance payment (100)" },
+    { value: 1, label: "ADV - Advance" },
+  ];
+  const ptMap = pt.reduce((acc, item) => {
+    acc[item.value] = item.label;
+    return acc;
+  }, {});
 
   const handleConfirm = () => {
     setTimeout(() => {
@@ -325,8 +339,8 @@ function PriceViewModal({ open, handleClose, data, rule }) {
               boxShadow:
                 "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)", // Soft shadow for depth
               border: "1px solid rgba(255, 255, 255, 0.1)", // Subtle border
-              backdropFilter: "blur(10px)", // Soft background blur effect
-              webkitBackdropFilter: "blur(10px)", // For Safari
+              backdropFilter: "none", // Soft background blur effect
+              webkitBackdropFilter: "none", // For Safari
               // Ensures no content spills out
               overflow: "auto",
               transition: "transform 0.3s ease-out", // Smooth transition for modal appearance
@@ -345,35 +359,42 @@ function PriceViewModal({ open, handleClose, data, rule }) {
           {data ? (
             <>
               <div>
-                <p style={{ color: "#323232", fontSize: "2vh" }}>
-                  Customer: {data["consolidatedRequest"].customer_name}
-                  <br />
-                  Consignee: {data.consolidatedRequest.consignee_name}
-                  <br />
-                  Plant: {data.consolidatedRequest.plant}
-                  <br />
-                  End Use: {data.consolidatedRequest.enduse_name}
-                  <br />
-                  Payment Terms ID: {data.consolidatedRequest.payment_terms_id}
-                  <br />
-                  Valid From: {data.consolidatedRequest.valid_from}
-                  <br />
-                  Valid To: {data.consolidatedRequest.valid_to}
-                  <br />
-                  FSC:{" "}
-                  {data != undefined
-                    ? data.priceDetails != undefined
-                      ? data.priceDetails[0]["fsc"] == "Y"
-                        ? "Yes"
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    {" "}
+                    {/* First column */}
+                    Customer: {data["consolidatedRequest"].customer_name}
+                    <br />
+                    Consignee: {data.consolidatedRequest.consignee_name}
+                    <br />
+                    Plant: {data.consolidatedRequest.plant}
+                    <br />
+                    End Use: {data.consolidatedRequest.enduse_name}
+                  </Grid>
+                  <Grid item xs={6}>
+                    {" "}
+                    {/* Second column */}
+                    Payment Terms ID:{" "}
+                    {ptMap[data.consolidatedRequest.payment_terms_id]}
+                    <br />
+                    Valid From: {data.consolidatedRequest.valid_from}
+                    <br />
+                    Valid To: {data.consolidatedRequest.valid_to}
+                    <br />
+                    FSC:{" "}
+                    {data != undefined
+                      ? data.priceDetails != undefined
+                        ? data.priceDetails[0]["fsc"] == "Y"
+                          ? "Yes"
+                          : "No"
                         : "No"
-                      : "No"
-                    : "No"}
-                  <br />
-                  Mapping Type:{" "}
-                  {data.consolidatedRequest.mappint_type == 1
-                    ? "One to one mapping"
-                    : "One to many mapping"}
-                </p>
+                      : "No"}
+                  </Grid>
+                </Grid>
+                Customer-Consignee Mapping:{" "}
+                {data.consolidatedRequest.mappint_type == 1
+                  ? "One to one mapping"
+                  : "One to many mapping"}
               </div>
               <PriceTable
                 price={data.priceDetails}
