@@ -561,9 +561,13 @@ const CreateRequestModal = ({
             variant="h4"
             component="h2"
             marginBottom={2}
-            color="primary"
+            color="#004040"
           >
-            Create New Request
+            <center>
+              {editData != undefined
+                ? "Request id:" + editData.request_id
+                : "Create New Request"}
+            </center>
           </Typography>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
