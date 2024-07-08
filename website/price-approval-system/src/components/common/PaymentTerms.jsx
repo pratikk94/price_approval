@@ -6,6 +6,7 @@ import { Checkbox, FormControlLabel } from "@mui/material";
 const PaymentTerms = ({
   setSelection,
   disabled,
+  editedData,
   customers,
   consignees,
   endUses,
@@ -22,6 +23,8 @@ const PaymentTerms = ({
     { value: 2, label: "AD00 - Advance payment (100)" },
     { value: 1, label: "ADV - Advance" },
   ]);
+
+  console.log(editedData, "editedData");
 
   // Function to fetch the lowest payment term from the backend API
   const fetchLowestPaymentTerm = async () => {
@@ -73,7 +76,7 @@ const PaymentTerms = ({
     <div>
       <Select
         isDisabled={disabled}
-        value={selectedPaymentTerm}
+        value={editedData ?? selectedPaymentTerm}
         options={
           manualOverride
             ? paymentTermOptions
