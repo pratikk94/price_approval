@@ -15,7 +15,7 @@ import {
   // TextField,
 } from "@mui/material";
 const drawerWidth = 240;
-import Dashboard from "../Role_Approvers_RM/Screens/Dashboard";
+import Dashboard from "../Generic/Dashboard";
 import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
 import PriceChangeRequest from "../components/common/PriceRequest";
 import { useSession } from "../Login_Controller/SessionContext";

@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useTheme, useMediaQuery } from "@mui/material";
-import Dashboard from "../Role_Approvers_RM/Screens/Dashboard";
+import Dashboard from "../Generic/Dashboard";
 
 import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
 import ParentComponent from "../Generic/Main";
