@@ -638,3 +638,52 @@ BEGIN
     EXEC sp_executesql @SqlQuery, N'@Role NVARCHAR(50)', @Role;
 END;
 GO
+
+/*
+JUL-8-2024
+*/
+CREATE PROCEDURE GetTransactionHistory (
+    @RequestIds VARCHAR(MAX)
+)
+AS
+BEGIN
+    -- Temporary table to hold intermediate results
+    DECLARE @TempResults TABLE (
+        request_id VARCHAR(50),
+        action VARCHAR(50),
+        last_updated_by_id VARCHAR(50),
+        created_at VARCHAR(50),
+        name VARCHAR(50),
+        role VARCHAR(50)
+    );
+
+    -- Insert data into the temporary table
+    INSERT INTO @TempResults (request_id, action, last_updated_by_id, created_at, name, role)
+    SELECT 
+        t.request_id,
+        CASE 
+           WHEN t.current_status = 'Approved' THEN 'completelyApproved'
+            WHEN t.current_status IN ('Rework', 'Rejected') THEN t.current_status
+            ELSE 'Approved'
+        END AS action,
+        t.last_updated_by_id,
+        FORMAT(CONVERT(datetime2, t.created_at), 'dd/MM/yyyy h:mm tt') as created_at,
+        d.employee_name as name,
+        d.role
+    FROM 
+        transaction_mvc t
+    JOIN 
+        define_roles d ON t.last_updated_by_id = d.employee_id
+    WHERE 
+        t.request_id IN (SELECT value FROM STRING_SPLIT(@RequestIds, ','));
+
+    -- Select the result from the temporary table
+    SELECT 
+        request_id,
+        action,
+        last_updated_by_id,
+        created_at,
+        name,
+        role
+    FROM @TempResults;
+END;
