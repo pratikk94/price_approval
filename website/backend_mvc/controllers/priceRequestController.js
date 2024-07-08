@@ -33,7 +33,7 @@ async function processTransaction(req, res) {
     logger.debug("Received request body:", req.body);
 
     const requestId = await priceRequestModel.handleNewRequest();
-     logger.info(`New request ID generated: ${requestId}`);
+    logger.info(`New request ID generated: ${requestId}`);
 
     const result = await priceRequestModel.insertTransactions({
       customers,
@@ -54,7 +54,7 @@ async function processTransaction(req, res) {
     priceRequestModel.addTransactionToTable(requestId, am_id);
     insertParentRequest(requestId, requestId);
 
-    logger.info("Transaction processed successfully:: Id:",requestId);
+    logger.info("Transaction processed successfully:: Id:", requestId);
 
     res.json({
       message: "Transaction processed successfully",
@@ -62,7 +62,7 @@ async function processTransaction(req, res) {
       id: requestId,
     });
   } catch (error) {
-   logger.error("Error processing transaction:", error);
+    logger.error("Error processing transaction:", error);
     res.status(500).send("Failed to process transaction");
   }
 }
@@ -90,7 +90,9 @@ async function processPrevApprovedTransaction(req, res) {
     logger.debug("Received request body:", req.body);
 
     if (action == "R") {
-      logger.info(`Updating pre-approved request status for request ID: ${oldRequestId}`);
+      logger.info(
+        `Updating pre-approved request status for request ID: ${oldRequestId}`
+      );
       updatePreApprovedRequestStatus(oldRequestId, STATUS.APPROVED);
     }
 
@@ -99,7 +101,6 @@ async function processPrevApprovedTransaction(req, res) {
 
     const resultA = await getRegionAndRoleByEmployeeId(am_id);
 
- 
     if (action == "D") {
       logger.info(`Adding draft for request ID: ${requestId}`);
       addADraft(requestId);
@@ -134,7 +135,9 @@ async function processPrevApprovedTransaction(req, res) {
       }
     }
     if (resultA.success) {
-      logger.info(`Transaction accepted successfully for request ID: ${requestId}`);
+      logger.info(
+        `Transaction accepted successfully for request ID: ${requestId}`
+      );
       // res.json({
       //   message: "Transaction added successfully",
       //   currentStatus: result.currentStatus,
@@ -187,7 +190,9 @@ async function getPriceApprovalData(req, res) {
     const data = await priceRequestModel.fetchConsolidatedRequest(requestId);
     res.json(data);
   } catch (error) {
-    logger.error(`Error fetching price approval data for request ID ${requestId}: ${error.message}`);
+    logger.error(
+      `Error fetching price approval data for request ID ${requestId}: ${error.message}`
+    );
     res.status(500).send("Error fetching price approval data");
   }
 }
@@ -210,8 +215,35 @@ async function pushDataToTable(requestName, parentRequestName) {
   }
 }
 
+async function fetchPriceRequestByStatus(req, res) {
+  const status = req.params.status;
+  try {
+    await sql.connect(config);
+    const query = `SELECT DISTINCT [request_id] FROM [PriceApprovalSystem].[dbo].[transaction_mvc] WHERE current_status = '${status}'`;
+    console.log(query);
+    const result = await sql.query(query);
+    const consolidatedResults = [];
+    console.log("Here");
+    // Assuming priceRequestModel.fetchConsolidatedRequest is an async function
+    for (const row of result.recordset) {
+      const requestId = row.request_id;
+      console.log(requestId);
+      const consolidatedRequest =
+        await priceRequestModel.fetchConsolidatedRequest(requestId);
+      console.log(consolidatedRequest);
+      consolidatedResults.push(consolidatedRequest);
+    }
+    return res.json(consolidatedResults); // Return or process the aggregated results
+  } catch (error) {
+    logger.error("Error fetching price request by status:", error);
+    // Assuming 'res' is the response object from an Express.js handler
+    res.status(500).send("Failed to fetch price request by status");
+  }
+}
+
 module.exports = {
   processTransaction,
   getPriceApprovalData,
   processPrevApprovedTransaction,
+  fetchPriceRequestByStatus,
 };

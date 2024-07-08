@@ -78,7 +78,7 @@ function TableWithInputs({
 
   useEffect(() => {
     if (prices && prices.length > 0) {
-      setFSCCode(prices[0].fsc);
+      // setFSCCode(prices[0].fsc);
       const newRows = prices.map((price) => {
         const newId = uuidv4();
         setSelectedGrade([...grades, price.grade]);

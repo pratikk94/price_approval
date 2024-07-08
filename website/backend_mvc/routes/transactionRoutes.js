@@ -30,4 +30,9 @@ router.get(
   priceRequestController.getPriceApprovalData
 );
 
+router.get(
+  "/completed-transactions/:status",
+  priceRequestController.fetchPriceRequestByStatus
+);
+
 module.exports = router;

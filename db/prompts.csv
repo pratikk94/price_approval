@@ -218,7 +218,8 @@ Write to requests_status_mvc
 1. Pass grade with descriptionto function filter.
 2. Split grade by spaces and focus on first word.
 3. For the given grade(first word) fetch the first digit of profit_center
-4. Call function http://192.168.1.109:3000/api/fetchValuesByParams which has json o/p as 
+4. Call function http://192.168.1.102:3000/api/fetchValuesByParams which has json o/p as 
+
 [
     {
         "id": 1,

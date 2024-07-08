@@ -109,6 +109,22 @@ const CreateRequestModal = ({
     setOpenOneToOneModal(false);
   };
 
+  const pt = [
+    { value: 5, label: "C030 - Payment within 30 days" },
+    { value: 6, label: "C045 - Payment within 45 days" },
+    { value: 7, label: "C060 - Payment within 60 days" },
+    { value: 4, label: "D021 - Payment within 21 days" },
+    { value: 8, label: "U90 - LC 90 days" },
+    { value: 3, label: "C017 - Payment within 17 days" },
+    { value: 2, label: "AD00 - Advance payment (100)" },
+    { value: 1, label: "ADV - Advance" },
+  ];
+
+  const ptMap = pt.reduce((acc, item) => {
+    acc[item.value] = item.label;
+    return acc;
+  }, {});
+
   const fetchHistory = async (grade) => {
     try {
       const response = await axios.get(
@@ -317,6 +333,11 @@ const CreateRequestModal = ({
     }
 
     const data = editData.consolidatedRequest;
+    console.log(ptMap[data.payment_terms_id]);
+    console.log({
+      value: data.payment_terms_id,
+      label: ptMap[data.payment_terms_id],
+    });
     setReqId(data.request_name);
     setSelectedConsigneeIDs(data.consignee_ids);
     setSelectedCustomerIDs(data.customer_ids);
@@ -328,7 +349,7 @@ const CreateRequestModal = ({
     setPlant(data.plant);
     setPaymentTerms({
       value: data.payment_terms_id,
-      label: `Terms ${data.payment_terms_id}`,
+      label: ptMap[data.payment_terms_id],
     });
     setIsChecked(data.mappint_type == 1 ? true : false);
     setValidFrom(moment(data.valid_from, "DD/MM/YYYY").toDate());
@@ -606,7 +627,7 @@ const CreateRequestModal = ({
             </Grid>
             <Grid item xs={12} md={6}>
               <SpacingWrapper space="12px" />
-              <Typography variant="h6">Consignee *</Typography>
+              <Typography variant="h6">Consignee</Typography>
               <CustomerSelect
                 id={2}
                 disabled={mode > 1 || isExtension || isBlocked}
@@ -624,7 +645,15 @@ const CreateRequestModal = ({
               <PaymentTerms
                 disabled={mode > 1 || isExtension || isBlocked}
                 setSelection={setPaymentTerms}
-                editedData={paymentTerms}
+                editedData={
+                  editData != undefined
+                    ? {
+                        value: editData.consolidatedRequest.payment_terms_id,
+                        label:
+                          ptMap[editData.consolidatedRequest.payment_terms_id],
+                      }
+                    : null
+                }
                 customers={selectedCustomers}
                 consignees={selectedConsignees}
                 endUses={endUse}
