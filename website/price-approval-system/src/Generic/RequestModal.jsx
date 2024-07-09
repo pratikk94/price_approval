@@ -696,9 +696,13 @@ const CreateRequestModal = ({
             setRemark={setRemarks}
             request_id={editData ? editData["request_id"] : ""}
           />
-          <MessagesComponent
-            reqId={editData != undefined ? editData.request_id : ""}
-          />
+          {editData != undefined ? (
+            <MessagesComponent
+              reqId={editData != undefined ? editData.request_id : ""}
+            />
+          ) : (
+            <></>
+          )}
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
             <Button

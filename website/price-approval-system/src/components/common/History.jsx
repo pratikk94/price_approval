@@ -54,26 +54,25 @@ const MessagesComponent = ({ reqId }) => {
           <TableHead>
             <TableRow>
               <TableCell>Last Updated</TableCell>
-              <TableCell>Current Status</TableCell>
+              <TableCell>Action</TableCell>
               <TableCell>Transaction time</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {messages.map((transaction, index) => (
               <TableRow key={index}>
-                <TableCell>{transaction.last_updated_by_id}</TableCell>
                 <TableCell>
-                  {transaction.last_updated_by_id.toString().includes("(AM)") &&
-                  transaction.current_status != "Rework"
-                    ? "Request Raised"
-                    : setStatus(transaction.current_status) == null
-                    ? "Request Approved."
-                    : !transaction.last_updated_by_id
-                        .toString()
-                        .includes("(AM)") &&
-                      transaction.current_status === "Rework"
-                    ? "Request put for rework"
-                    : "Request  " + setStatus(transaction.current_status)}{" "}
+                  {transaction.name +
+                    " (" +
+                    transaction.role +
+                    "-" +
+                    transaction.last_updated_by_id +
+                    ")"}
+                </TableCell>
+                <TableCell>
+                  {transaction.action == "Approved"
+                    ? "Submited"
+                    : transaction.action}
                 </TableCell>
 
                 <TableCell>{transaction.created_at}</TableCell>

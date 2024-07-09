@@ -56,7 +56,9 @@ const PaymentTerms = ({
   };
 
   useEffect(() => {
-    fetchLowestPaymentTerm();
+    if (!manualOverride) {
+      fetchLowestPaymentTerm();
+    }
   }, [customers, consignees, endUses, manualOverride]);
 
   const handleOverrideChange = (event) => {
@@ -76,7 +78,11 @@ const PaymentTerms = ({
     <div>
       <Select
         isDisabled={disabled}
-        value={editedData ?? selectedPaymentTerm}
+        value={
+          manualOverride
+            ? selectedPaymentTerm
+            : editedData ?? selectedPaymentTerm
+        }
         options={
           manualOverride
             ? paymentTermOptions
