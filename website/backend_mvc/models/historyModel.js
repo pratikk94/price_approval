@@ -1,7 +1,5 @@
-// const sql = require("mssql");
-// const config = require("../config");
-// const poolPromise = new sql.ConnectionPool(config).connect();
 const db = require("../config/db");
+const logger = require("../utils/logger");
 
 
 exports.findRequests = async ({
@@ -14,9 +12,6 @@ exports.findRequests = async ({
   const customerIdsArray = customerIds ? customerIds.split(",") : [];
   const consigneeIdsArray = consigneeIds ? consigneeIds.split(",") : [];
   const plantIdsArray = plantIds ? plantIds.split(",") : [];
-
-  // const pool = await poolPromise;
-  // const request = new sql.Request(pool);
 
   // Start building the SQL query dynamically based on provided parameters.
   let query = `SELECT DISTINCT requests_mvc.req_id, requests_mvc.*, price_approval_requests_price_table.*

@@ -1,16 +1,22 @@
 const roleModel = require("../models/roleModel");
-
+const logger = require("../utils/logger");
 
 const fetchRoleDetails = async (req, res) => {
   const role = req.params.role;
+  logger.info("Fetching role details", { role });
+
   try {
     const details = await roleModel.getRoleDetails(role);
+
     if (details) {
+      logger.debug("Role details fetched successfully", { role, details });
       res.json({ success: true, data: details });
     } else {
+      logger.warn("Role not found", { role });
       res.status(404).json({ success: false, message: "Role not found" });
     }
   } catch (error) {
+    logger.error("Error accessing the database", { error: error.message, role });
     res.status(500).json({
       success: false,
       message: "Error accessing the database",
@@ -20,20 +26,28 @@ const fetchRoleDetails = async (req, res) => {
 };
 
 async function getRoles(req, res) {
+  logger.info("Fetching all roles");
+
   try {
     const roles = await fetchRoles();
+    logger.debug("Roles fetched successfully", { roles });
     res.json(roles);
   } catch (err) {
+    logger.error("Failed to fetch roles", { error: err.message });
     res.status(500).send("Failed to fetch roles");
   }
 }
 
 const updateEmployeeRole = async (req, res) => {
-  try {
-    const emplotyeeDetails = await roleModel.updateEmployeRole(req.body)
+  const employeeData = req.body;
+  logger.info("Updating employee role", { employeeData });
 
-    res.send(emplotyeeDetails);
+  try {
+    const employeeDetails = await roleModel.updateEmployeRole(employeeData)
+    logger.debug("Employee role updated successfully", { employeeDetails });
+    res.send(employeeDetails);
   } catch (error) {
+    logger.error("Error accessing the database", { error: error.message, employeeData });
     res.status(500).json({
       success: false,
       message: "Error accessing the database",
@@ -44,12 +58,15 @@ const updateEmployeeRole = async (req, res) => {
 }
 
 const fetchRoleData = async (req, res) => {
+  logger.info("Fetching role data");
   try {
     const result = await roleModel.fetchRoleData();
+    logger.debug("Role data fetched successfully", { result });
     console.log(result);
     res.send(result.recordset);
 
   } catch (error) {
+    logger.error("Error accessing the database", { error: error.message });
     res
       .status(500)
       .json({
@@ -62,12 +79,16 @@ const fetchRoleData = async (req, res) => {
 }
 
 const fetchRoleById = async (req, res) => {
+  const roleId = req.query.id;
+  logger.info("Fetching role by ID", { roleId });
+
   try {
-    const result = await roleModel.fetchRoleId(req.query.id);
-    console.log(result);
+    const result = await roleModel.fetchRoleId(roleId);
+    logger.debug("Role fetched successfully by ID", { roleId, result });
     res.send(result.recordset);
 
   } catch (error) {
+    logger.error("Error accessing the database", { error: error.message, roleId });
     res
       .status(500)
       .json({
@@ -78,8 +99,9 @@ const fetchRoleById = async (req, res) => {
   }
 
 }
-module.exports = { 
-  fetchRoleDetails, 
+module.exports = {
+  fetchRoleDetails,
   updateEmployeeRole,
   fetchRoleData,
-  fetchRoleById };
+  fetchRoleById
+};

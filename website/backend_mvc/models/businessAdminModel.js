@@ -1,52 +1,61 @@
-// const sql = require("mssql");
-// const config = require("../../backend_mvc/config");
 const { CREATED_BY } = require("../config/constants");
 const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
+const logger = require("../utils/logger");
 
 async function getValuesByParams(paramsList) {
+
   try {
-    // let pool = await sql.connect(config);
+    logger.info("Fetching values by params", { paramsList });
+
     let paramsString = paramsList.map((param) => `'${param}'`).join(",");
     let query = `SELECT [id], [params], [value], [status] FROM [dbo].[business_admin] WHERE [params] IN (${paramsString})`;
 
-    // let result = await pool.request().query(query);
+
     let result = await db.executeQuery(query);
+    logger.info("Values fetched successfully", { count: result.recordset.length });
 
     return result.recordset;
   } catch (err) {
-    console.error("SQL error", err);
+    logger.error("SQL error in getValuesByParams", { error: err.message });
     throw err;
   }
 }
 
 async function getSalesRegion() {
+
   try {
+    logger.info("Fetching sales regions");
     let query = `SELECT [id] as id,[desc] as name from sales_office`;
 
     let result = await db.executeQuery(query);
+    logger.info("Sales regions fetched successfully", { count: result.recordsets.length });
 
     return result.recordsets;
   } catch (err) {
-    console.error("SQL error", err);
+    logger.error("SQL error in getSalesRegion", { error: err.message });
     throw err;
   }
 }
 
 async function getGradeWithPC(fsc) {
+
   try {
+    logger.info("Fetching grades with profit centers", { fsc });
     let result = await db.executeQuery("EXEC GetProfitCentersByFSC @fsc", {
       fsc: fsc,
     });
     return result.recordsets;
   } catch (err) {
-    console.error("SQL error", err);
+    logger.error("SQL error in getGradeWithPC", { error: err.message });
     throw err;
   }
 }
 
 async function addRule(data) {
   try {
+    logger.info("Adding new rule", { data });
+
     const query = `INSERT INTO defined_rules (rule_name, profit_center, region, valid_from, valid_to, active, rm, nsm, hdsm, validator, created_at)
     OUTPUT INSERTED.* 
     VALUES (@rule_name, @profit_center, @region,@valid_from, @valid_to, @active, @rm, @nsm, @hdsm, @validator, @created_at)`;
@@ -66,18 +75,22 @@ async function addRule(data) {
     };
 
     let result = await db.executeQuery(query, inputs);
+    logger.info("Rule added successfully", { ruleId: result.recordset[0].id });
+
     // Add audit log for the update operation
     await addAuditLog("defined_rules", result.recordset[0].id, "INSERT", null);
 
     return result;
   } catch (err) {
-    console.error("SQL error", err);
+    logger.error("SQL error in addRule", { error: err.message });
     throw err;
   }
 }
 
 async function getBusinessAdmin(type, fsc) {
   try {
+    logger.info("Fetching business admin data", { type, fsc });
+
     let result = await db.executeQuery(
       "EXEC GetBusinessAdminData @queryType, @fsc",
       { queryType: type, fsc: fsc ? fsc : null }
@@ -85,7 +98,7 @@ async function getBusinessAdmin(type, fsc) {
 
     return result;
   } catch (err) {
-    console.error("SQL error", err);
+    logger.error("SQL error in getBusinessAdmin", { error: err.message });
     throw err;
   }
 }
@@ -99,6 +112,8 @@ async function addEmployeeRole(
   active
 ) {
   try {
+    logger.info("Adding employee role", { employee_id, employee_name, role, region, created_date, active });
+
     let result = await db.executeQuery(
       `EXEC InsertEmployeeRole @employee_id, @employee_name, @role, @region, @created_by, @created_date, @active`,
       {
@@ -113,7 +128,7 @@ async function addEmployeeRole(
     );
     return result;
   } catch (err) {
-    console.error("SQL error", err);
+    logger.error("SQL error in addEmployeeRole", { error: err.message });
     throw err;
   }
 }

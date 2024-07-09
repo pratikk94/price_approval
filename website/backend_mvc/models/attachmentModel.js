@@ -1,16 +1,20 @@
 const db = require("../config/db");
 const { fetchRequestNames } = require("../utils/fetchAllRequestIds");
+const logger = require("../utils/logger");
+
 async function getFilesByRequestId(requestId) {
+  logger.info("Fetching files by request ID", { requestId });
+
   try {
     const requestIds = await fetchRequestNames(requestId);
     const query = `SELECT * FROM files WHERE request_id IN ('${requestIds.join(
       "', '"
     )}')`;
-    console.log(query);
     const result = await db.executeQuery(query);
+    logger.info("Files fetched successfully", { count: result.recordset.length });
     return result.recordset;
   } catch (err) {
-    console.error("Database query error:", err);
+    logger.error("Database query error", { error: err.message, requestId });
     throw err; // Rethrow the error to be handled by the controller
   }
 }

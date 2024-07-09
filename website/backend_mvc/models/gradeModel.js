@@ -1,18 +1,22 @@
 const db = require("../config/db");
+const logger = require("../utils/logger");
 
 async function fetchGrade(fsc) {
   try {
-  
-    // const result = await request.query(query);
+    logger.info(`Fetching grades for FSC: ${fsc}`);
+
     let result = await db.executeQuery(`EXEC GetMaterialsByFSC @fsc=${fsc}`);
-     // Send the results as a response
-     return result;
+
+    logger.info(`Fetch grades successful for FSC: ${fsc}. Result: ${JSON.stringify(result.recordset)}`);
+
+    // Send the results as a response
+    return result;
   } catch (error) {
-    console.error("An error occurred while fetching plants", error);
+    logger.error(`Error fetching grades for FSC: ${fsc}. Error: ${error.message}`);
     throw error;
   }
 }
 
 module.exports = {
-    fetchGrade,
+  fetchGrade,
 };
