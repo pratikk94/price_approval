@@ -17,11 +17,12 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useTheme, useMediaQuery } from "@mui/material";
-import Dashboard from "../Role_Approvers_RM/Screens/Dashboard";
+import Dashboard from "../Generic/Dashboard";
 
 import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
 import ParentComponent from "../Generic/Main";
 import { useSession } from "../Login_Controller/SessionContext";
+import ApprovedTransactions from "../Generic/Dashboard";
 function ResponsiveDrawer({ logout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activePane, setActivePane] = useState("Price Requests"); // Initialize with "Dashboard" or whichever is default
@@ -38,7 +39,7 @@ function ResponsiveDrawer({ logout }) {
 
   const drawerItems = [
     { text: "Price Requests", component: <ParentComponent /> },
-    { text: "Dashboard", component: <Dashboard /> },
+    { text: "Dashboard", component: <ApprovedTransactions /> },
 
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
   ];

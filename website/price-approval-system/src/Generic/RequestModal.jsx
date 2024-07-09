@@ -27,6 +27,8 @@ import { green, red } from "@mui/material/colors";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import moment from "moment-timezone";
 import axios from "axios";
+import HistoryModal from "../Role_Business_Admin/Components/RequestHistoryModal";
+import MessagesComponent from "../components/common/History";
 
 const modalStyle = {
   position: "absolute",
@@ -539,6 +541,8 @@ const CreateRequestModal = ({
     setOpenOneToOneModal(false);
   };
 
+  console.log(editData != undefined ? editData.request_id : "");
+
   return (
     <>
       <Modal
@@ -557,9 +561,13 @@ const CreateRequestModal = ({
             variant="h4"
             component="h2"
             marginBottom={2}
-            color="primary"
+            color="#004040"
           >
-            Create New Request
+            <center>
+              {editData != undefined
+                ? "Request id:" + editData.request_id
+                : "Create New Request"}
+            </center>
           </Typography>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
@@ -688,6 +696,14 @@ const CreateRequestModal = ({
             setRemark={setRemarks}
             request_id={editData ? editData["request_id"] : ""}
           />
+          {editData != undefined ? (
+            <MessagesComponent
+              reqId={editData != undefined ? editData.request_id : ""}
+            />
+          ) : (
+            <></>
+          )}
+
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
             <Button
               type="submit"

@@ -642,13 +642,14 @@ GO
 /*
 JUL-8-2024
 */
-CREATE PROCEDURE GetTransactionHistory (
+CREATE PROCEDURE GetTransactionHistory(
     @RequestIds VARCHAR(MAX)
 )
 AS
 BEGIN
     -- Temporary table to hold intermediate results
     DECLARE @TempResults TABLE (
+        countTranc INT,
         request_id VARCHAR(50),
         action VARCHAR(50),
         last_updated_by_id VARCHAR(50),
@@ -658,27 +659,35 @@ BEGIN
     );
 
     -- Insert data into the temporary table
-    INSERT INTO @TempResults (request_id, action, last_updated_by_id, created_at, name, role)
+    INSERT INTO @TempResults (countTranc, request_id, action, last_updated_by_id, created_at, name, role)
     SELECT 
+        COUNT(*) AS countTranc,
         t.request_id,
         CASE 
-           WHEN t.current_status = 'Approved' THEN 'completelyApproved'
+            WHEN t.current_status = 'Approved' THEN 'completelyApproved'
             WHEN t.current_status IN ('Rework', 'Rejected') THEN t.current_status
             ELSE 'Approved'
         END AS action,
         t.last_updated_by_id,
-        FORMAT(CONVERT(datetime2, t.created_at), 'dd/MM/yyyy h:mm tt') as created_at,
-        d.employee_name as name,
+        FORMAT(CONVERT(datetime2, MIN(t.created_at)), 'dd/MM/yyyy h:mm tt') AS created_at,
+        d.employee_name AS name,
         d.role
     FROM 
         transaction_mvc t
     JOIN 
         define_roles d ON t.last_updated_by_id = d.employee_id
     WHERE 
-        t.request_id IN (SELECT value FROM STRING_SPLIT(@RequestIds, ','));
+        t.request_id IN (SELECT value FROM STRING_SPLIT(@RequestIds, ','))
+    GROUP BY 
+        t.request_id,
+        t.last_updated_by_id,
+        t.current_status,
+        d.employee_name, 
+        d.role;
 
     -- Select the result from the temporary table
     SELECT 
+        countTranc,
         request_id,
         action,
         last_updated_by_id,

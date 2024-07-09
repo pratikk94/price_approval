@@ -219,7 +219,7 @@ async function fetchPriceRequestByStatus(req, res) {
   const status = req.params.status;
   try {
     await sql.connect(config);
-    const query = `SELECT DISTINCT [request_id] FROM [PriceApprovalSystem].[dbo].[transaction_mvc] WHERE current_status = '${status}'`;
+    const query = `SELECT DISTINCT [request_id] FROM [PriceApprovalSystem].[dbo].[transaction_mvc] WHERE current_status LIKE '%${status}%'`;
     console.log(query);
     const result = await sql.query(query);
     const consolidatedResults = [];
@@ -233,11 +233,72 @@ async function fetchPriceRequestByStatus(req, res) {
       console.log(consolidatedRequest);
       consolidatedResults.push(consolidatedRequest);
     }
-    return res.json(consolidatedResults); // Return or process the aggregated results
+    getCustomerConsigneeAndEndUseDetails(consolidatedResults, res); // Return or process the aggregated results
   } catch (error) {
     logger.error("Error fetching price request by status:", error);
     // Assuming 'res' is the response object from an Express.js handler
     res.status(500).send("Failed to fetch price request by status");
+  }
+}
+
+async function fetchNamesByIds(ids) {
+  try {
+    let pool = await sql.connect(config);
+    let query = `SELECT [id], [Name] FROM [PriceApprovalSystem].[dbo].[customer] WHERE [id] IN (${ids.join(
+      ","
+    )})`;
+
+    console.log("Query:", query);
+    let result = await pool.request().query(query);
+    await pool.close();
+    return result.recordset;
+  } catch (err) {
+    console.error("SQL error", err);
+    throw err;
+  }
+}
+
+async function getCustomerConsigneeAndEndUseDetails(jsonArray, res) {
+  try {
+    for (let jsonInput of jsonArray) {
+      const consolidatedRequest = jsonInput.consolidatedRequest;
+
+      // Extract IDs from JSON
+      const customerId = consolidatedRequest.customer_id;
+      const consigneeIds = consolidatedRequest.consignee_id
+        ? consolidatedRequest.consignee_id.split(",").map((id) => id.trim())
+        : [];
+      const endUseId = consolidatedRequest.end_use_id
+        ? [consolidatedRequest.end_use_id]
+        : [];
+
+      // Fetch names from database
+      const customerName = customerId
+        ? await fetchNamesByIds([customerId])
+        : [];
+      const consigneeNames =
+        consigneeIds.length > 0 ? await fetchNamesByIds(consigneeIds) : [];
+      const endUseName =
+        endUseId.length > 0 ? await fetchNamesByIds(endUseId) : [];
+
+      // Modify the JSON to include names
+      consolidatedRequest.customer_name = customerName.length
+        ? customerName[0].Name
+        : null;
+      consolidatedRequest.consignee_names = consigneeNames.map(
+        (consignee) => consignee.Name
+      );
+      consolidatedRequest.end_use_name = endUseName.length
+        ? endUseName[0].Name
+        : null;
+    }
+
+    console.log("JSON array with names:", jsonArray);
+
+    return res.json(jsonArray);
+  } catch (err) {
+    console.error("Error in getCustomerConsigneeAndEndUseDetails", err);
+    throw err;
   }
 }
 

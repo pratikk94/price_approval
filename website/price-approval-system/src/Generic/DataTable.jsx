@@ -335,31 +335,33 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
           <DownloadIcon />
         </IconButton>
 
-        {rule["rules"].can_initiate == 1 && !isRework ? (
-          <>
-            <IconButton
-              onClick={() => {
-                console.log("Blocked clicked");
-                setSelectedRow(rowData);
-                console.log(rowData);
-                setEditOpen(true);
-                setIsBlocked(true);
-              }}
-            >
-              <BlockIcon />
-            </IconButton>
-            <IconButton
-              onClick={() => {
-                console.log("Extension clicked");
-                setSelectedRow(rowData);
-                console.log(rowData);
-                setEditOpen(true);
-                setIsExtension(true);
-              }}
-            >
-              <MoreTimeIcon />
-            </IconButton>
-          </>
+        {rule != undefined ? (
+          rule["rules"].can_initiate == 1 && !isRework ? (
+            <>
+              <IconButton
+                onClick={() => {
+                  console.log("Blocked clicked");
+                  setSelectedRow(rowData);
+                  console.log(rowData);
+                  setEditOpen(true);
+                  setIsBlocked(true);
+                }}
+              >
+                <BlockIcon />
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  console.log("Extension clicked");
+                  setSelectedRow(rowData);
+                  console.log(rowData);
+                  setEditOpen(true);
+                  setIsExtension(true);
+                }}
+              >
+                <MoreTimeIcon />
+              </IconButton>
+            </>
+          ) : null
         ) : null}
       </span>
     </div>

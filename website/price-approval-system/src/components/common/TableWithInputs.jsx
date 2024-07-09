@@ -187,7 +187,7 @@ function TableWithInputs({
         selectedGrade.length > 0 &&
         customerOptions.indexOf(selectedGrade) === -1
       ) {
-        // alert("Invalid mix of Grades");
+        alert("Invalid mix of Grades");
       }
     } catch (error) {
       console.error("Error fetching customer data:", error);
@@ -414,7 +414,7 @@ function TableWithInputs({
                     const result = isMixPresent(rows);
 
                     if (!result) {
-                      // alert("Invalid mix of Grades");
+                      alert("Invalid mix of Grades");
                       disableSubmit(true);
                     } else {
                       disableSubmit(false);
