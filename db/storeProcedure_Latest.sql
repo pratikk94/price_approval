@@ -696,3 +696,61 @@ BEGIN
         role
     FROM @TempResults;
 END;
+
+/*
+JUL-10-2024
+*/
+CREATE PROCEDURE GetReportsWithDiffTime
+AS
+BEGIN
+    WITH FilteredRequests AS (
+        SELECT 
+            id, 
+            rule_id, 
+            currently_pending_with, 
+            last_updated_by_role, 
+            last_updated_by_id, 
+            current_status, 
+            request_id, 
+            created_at,
+            LAG(created_at) OVER (PARTITION BY request_id ORDER BY id) AS previous_created_at,
+            LAG(last_updated_by_role) OVER (PARTITION BY request_id ORDER BY id) AS previous_last_updated_by_role,
+            CASE 
+                WHEN current_status IN ('Rework', 'Rejected') THEN current_status
+                ELSE 'Pending'
+            END AS action
+        FROM 
+            transaction_mvc
+        WHERE 
+            current_status NOT IN ('Approved', 'AM0')
+    ),
+    TimeDiff AS (
+        SELECT 
+            id, 
+            rule_id, 
+            currently_pending_with, 
+            last_updated_by_role, 
+            last_updated_by_id, 
+            current_status, 
+            request_id, 
+            created_at,
+            previous_created_at,
+            previous_last_updated_by_role,
+            action,
+            DATEDIFF(SECOND, previous_created_at, created_at) AS time_diff_seconds,
+            ROW_NUMBER() OVER (PARTITION BY request_id, last_updated_by_role ORDER BY id) AS rn
+        FROM 
+            FilteredRequests
+    )
+    SELECT 
+        request_id AS RequestId, 
+        previous_last_updated_by_role AS Role_from, 
+        last_updated_by_role AS Role_to, 
+        time_diff_seconds AS time
+    FROM 
+        TimeDiff
+    WHERE 
+        rn = 1
+    ORDER BY 
+        id;
+END;

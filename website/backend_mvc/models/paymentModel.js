@@ -1,7 +1,9 @@
 const db = require("../config/db");
+const logger = require("../utils/logger");
 
 async function fetchLowestPaymentTermDetails(customers, consignees, endUses) {
   try {
+    logger.info(`Fetching lowest payment term details for customers: ${customers}, consignees: ${consignees}, endUses: ${endUses}`);
     // Convert customer, consignee, and end use lists to string literals for SQL IN clause
     const insertCustomers =
       customers.length > 0
@@ -37,29 +39,32 @@ async function fetchLowestPaymentTermDetails(customers, consignees, endUses) {
 
     let result = await db.executeQuery(query);
 
-    // let result = await db.executeQuery(`EXEC FindLowestPaymentTermForDynamicIds
-    //       @InsertCustomers,
-    //       @InsertConsignees,
-    //       @InsertEndUses`,{"InsertCustomers":insertCustomers,
-    //         "InsertConsignees":insertConsignees,"InsertEndUses":insertEndUses});
     if (result.recordset.length) {
+      logger.info(`Lowest payment term details fetched successfully. Result: ${JSON.stringify(result.recordset[0])}`);
       return result.recordset[0];
     } else {
-      return { LowestPaymentTerm: 5, terms: "C030 - Payment within 30 days" };
+      const defaultResult = { LowestPaymentTerm: 5, terms: "C030 - Payment within 30 days" };
+      logger.info(`No specific payment term found, returning default. Default result: ${JSON.stringify(defaultResult)}`);
+      return defaultResult;
     }
   } catch (error) {
-    console.error("Failed to fetch lowest payment term details", error);
+    logger.error(`Failed to fetch lowest payment term details. Error: ${error.message}`);
     throw error;
   }
 }
 
 async function fetchProfitCenter() {
   try {
+    logger.info("Fetching profit centers");
+
     let result = await db.executeQuery(`EXEC FetchProfitCenters`);
+
+    logger.info(`Profit centers fetched successfully. Result count: ${result.recordset.length}`);
     // Send the results as a response
     return result;
   } catch (error) {
-    console.error("An error occurred while fetching plants", error);
+    logger
+    logger.error(`An error occurred while fetching profit centers. Error: ${error.message}`);
     throw error;
   }
 }

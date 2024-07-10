@@ -64,10 +64,11 @@ WHERE price_approval_requests_price_table.grade = @grade
   try {
     let result = await db.executeQuery(query,{"grade":grade});
 
+    logger.info("Query executed successfully:", query);
     // const result = await request.query(query,{"grade":grade});
     return result.recordset;
   } catch (error) {
-    console.error("Error executing queries:", error);
+    logger.error("Error executing query:", error);
     throw new Error("Internal Server Error");
   }
 };

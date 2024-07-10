@@ -17,6 +17,19 @@ async function fetchTransactionsByRequestId(req, res) {
   }
 }
 
+async function fetchReportTransactions(req, res) {
+  try {
+    const transactions = await requestHistoryModel.getReportsTransactions();
+    logger.debug("Report Transactions fetched successfully", transactions);
+    res.json({ data: transactions });
+  } catch (err) {
+    logger.error("Error fetching Report transactions", { error: err.message });
+    res.status(500).send("Failed to fetch transactions");
+  }
+}
+
+
 module.exports = {
   fetchTransactionsByRequestId,
+  fetchReportTransactions
 };

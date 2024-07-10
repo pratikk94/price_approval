@@ -1,29 +1,41 @@
-//Request history.js
-// const sql = require("mssql");
-// const config = require("../config"); // Assuming your config file is named dbConfig.js
-
 const db = require("../config/db");
 const { fetchRequestNames } = require("../utils/fetchAllRequestIds");
+const logger = require("../utils/logger");
 
 async function getTransactionsByRequestId(requestId) {
-  try {
-   
-    console.log(`Request id is ${requestId}`);
-    const requestIds = await fetchRequestNames(requestId);
+  logger.info("getTransactionsByRequestId called with requestId:", requestId); // Log function call
 
+  try {
+    const requestIds = await fetchRequestNames(requestId);
+    logger.info(`Fetched request names for requestId: ${requestId}, ${requestIds}`);
     let allTransactions = [];
     for (const id of requestIds.reverse()) {
-    const result = await db.executeQuery(`EXEC dbo.GetTransactionHistory ${id }`);
-    
-    allTransactions.push(...result.recordset); // Spread operator to flatten the results
+      const result = await db.executeQuery(`EXEC dbo.GetTransactionHistory ${id}`);
+      logger.info(`Fetched transactions for requestId: ${id}, result: ${result}`);
+      allTransactions.push(...result.recordset); // Spread operator to flatten the results
     }
+    logger.info(`Returning transactions for requestId: ${requestId}, allTransactions: ${allTransactions}`);
     return allTransactions;
   } catch (err) {
-    console.error("SQL error", err);
+    logger.error(`SQL error in getTransactionsByRequestId for requestId: ${requestId}, error: ${err}`); // Log error
+    throw err;
+  }
+}
+
+async function getReportsTransactions() {
+  logger.info("getReportsTransactions called");
+
+  try {
+    const result = await db.executeQuery(`EXEC dbo.GetReportsWithDiffTime`);
+    logger.info(`getReportsTransactions successful, result: ${result}`);
+    return result;
+  } catch (err) {
+    logger.error(`SQL error in getReportsTransactions, error: ${err}`,);
     throw err;
   }
 }
 
 module.exports = {
   getTransactionsByRequestId,
+  getReportsTransactions
 };

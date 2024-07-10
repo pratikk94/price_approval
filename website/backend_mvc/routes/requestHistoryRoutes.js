@@ -9,4 +9,9 @@ router.get(
   requestHistoryController.fetchTransactionsByRequestId
 );
 
+router.get(
+  "/reportTransaction",
+  requestHistoryController.fetchReportTransactions
+);
+
 module.exports = router;
