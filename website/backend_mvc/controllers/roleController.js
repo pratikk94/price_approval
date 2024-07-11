@@ -29,8 +29,8 @@ async function getRoles(req, res) {
   logger.info("Fetching all roles");
 
   try {
-    const roles = await fetchRoles();
     logger.debug("Roles fetched successfully", { roles });
+    const roles = await roleModel.fetchRoles();
     res.json(roles);
   } catch (err) {
     logger.error("Failed to fetch roles", { error: err.message });
@@ -54,8 +54,7 @@ const updateEmployeeRole = async (req, res) => {
       error: error.message,
     });
   }
-
-}
+};
 
 const fetchRoleData = async (req, res) => {
   logger.info("Fetching role data");
@@ -64,7 +63,6 @@ const fetchRoleData = async (req, res) => {
     logger.debug("Role data fetched successfully", { result });
     console.log(result);
     res.send(result.recordset);
-
   } catch (error) {
     logger.error("Error accessing the database", { error: error.message });
     res
@@ -75,8 +73,7 @@ const fetchRoleData = async (req, res) => {
         error: error.message,
       });
   }
-
-}
+};
 
 const fetchRoleById = async (req, res) => {
   const roleId = req.query.id;
@@ -86,7 +83,6 @@ const fetchRoleById = async (req, res) => {
     const result = await roleModel.fetchRoleId(roleId);
     logger.debug("Role fetched successfully by ID", { roleId, result });
     res.send(result.recordset);
-
   } catch (error) {
     logger.error("Error accessing the database", { error: error.message, roleId });
     res
@@ -97,11 +93,35 @@ const fetchRoleById = async (req, res) => {
         error: error.message,
       });
   }
-
 }
+
+async function addRole(req, res) {
+  try {
+    const role = req.body;
+    const adjustHierarchy = req.body.adjustHierarchy || false;
+    const result = await roleModel.addRole(role, adjustHierarchy);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+}
+
+async function updateRole(req, res) {
+  try {
+    const role = req.body;
+    const result = await roleModel.updateRole(role);
+    res.json(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+}
+
 module.exports = {
   fetchRoleDetails,
   updateEmployeeRole,
   fetchRoleData,
-  fetchRoleById
+  fetchRoleById,
+  getRoles,
+  addRole,
+  updateRole,
 };

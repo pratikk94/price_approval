@@ -45,15 +45,19 @@ const updateEmployeRole = async (roleDetails) => {
   }
 };
 
-
 const fetchRoleData = async () => {
   logger.info("fetchRoleData called");
   try {
+<<<<<<< HEAD
     let result = await db.executeQuery('EXEC FetchDefinedRoles');
     logger.info(`fetchRoleData result: ${result}`);
     return result;
 
 
+=======
+    let result = await db.executeQuery("EXEC FetchDefinedRoles");
+    return result;
+>>>>>>> main
   } catch (err) {
     logger.error(`SQL error in fetchRoleData: ${err}`);
     throw err;
@@ -63,9 +67,16 @@ const fetchRoleData = async () => {
 const fetchRoleId = async (id) => {
   logger.info(`fetchRoleId called with id: ${id}`);
   try {
+<<<<<<< HEAD
     console.log(id, "check the id.......")
     let result = await db.executeQuery('EXEC FetchDefinedRoleById @id', { "id": id });
     logger.info(`fetchRoleId result: ${result}`);
+=======
+    console.log(id, "check the id.......");
+    let result = await db.executeQuery("EXEC FetchDefinedRoleById @id", {
+      id: id,
+    });
+>>>>>>> main
     return result;
   } catch (err) {
     logger.error(`SQL error in fetchRoleId: ${err}`);
@@ -73,9 +84,73 @@ const fetchRoleId = async (id) => {
   }
 };
 
+async function fetchRoles() {
+  try {
+    let result = await db.executeQuery(
+      "SELECT [id], [role], [can_approve], [can_initiate], [can_rework], [can_view], [hierarchy] FROM role_matrix ORDER BY hierarchy ASC"
+    );
+    console.log(result.recordset);
+    return result.recordset;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function addRole(role, adjustHierarchy) {
+  try {
+    await db.executeQuery(
+      "UPDATE role_matrix SET hierarchy = hierarchy + 1 WHERE hierarchy >= @hierarchy",
+      { hierarchy: role.hierarchy }
+    );
+
+    let result = await db.executeQuery(
+      `INSERT INTO role_matrix (role, can_approve, can_initiate, can_rework, can_view, hierarchy) VALUES (@role, @can_approve, @can_initiate, @can_rework, @can_view, @hierarchy)`,
+      {
+        role: role.role,
+        can_approve: role.can_approve,
+        can_initiate: role.can_initiate,
+        can_rework: role.can_rework,
+        can_view: role.can_view,
+        hierarchy: role.hierarchy,
+      }
+    );
+
+    return result;
+  } catch (err) {
+    console.error(err);
+    if (transaction) await transaction.rollback();
+  }
+}
+
+async function updateRole(role) {
+  try {
+    result = await db.executeQuery(
+      "UPDATE role_matrix SET can_approve = @can_approve, can_initiate = @can_initiate, can_rework = @can_rework, can_view = @can_view WHERE id = @id",
+      {
+        can_approve: role.can_approve,
+        can_initiate: role.can_initiate,
+        can_rework: role.can_rework,
+        can_view: role.can_view,
+        id: role.id,
+      }
+    );
+    return result;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 module.exports = {
   getRoleDetails,
   updateEmployeRole,
   fetchRoleData,
+<<<<<<< HEAD
   fetchRoleId
 };
+=======
+  fetchRoleId,
+  fetchRoles,
+  addRole,
+  updateRole,
+};
+>>>>>>> main
