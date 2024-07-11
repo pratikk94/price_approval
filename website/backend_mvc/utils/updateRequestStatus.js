@@ -1,27 +1,26 @@
-// models/customerModel.js
-
 const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
 const {
   updatePreApprovedRequestStatus,
 } = require("../controllers/requestController");
 const { STATUS } = require("../config/constants");
+const logger = require("../utils/logger");
+
 const requestStatus = async (current_role, region, action, req_id) => {
-  //   const { current_role, region, action, req_id } = req.body;
   try {
+    logger.info(`RequestStatus called with role: ${current_role}, region: ${region}, action: ${action}, req_id: ${req_id}`);
     const query =
       "SELECT level FROM rule_mvc WHERE approver = @currentRole AND region = @region";
     const roleInfo = await db.executeQuery(query, {
       currentRole: current_role,
       region: region,
     });
-    console.log(roleInfo, "testing update status");
+    logger.info(`Role Info: ${JSON.stringify(roleInfo.recordset)}`);
     if (roleInfo.recordset.length > 0) {
       const { level } = roleInfo.recordset[0];
       let status = 0;
       let pendingWith = level + 1;
-      console.log(action);
-      console.log(typeof action);
+      logger.info(`Action: ${action}, Level: ${level}`);
       switch (action) {
         case STATUS.APPROVED:
           const query2 =
@@ -29,8 +28,7 @@ const requestStatus = async (current_role, region, action, req_id) => {
           const nextLevelExists = await db.executeQuery(query2, {
             nextLevel: pendingWith,
           });
-          console.log(`Pending with ${pendingWith}`);
-          console.log(nextLevelExists.recordset[0].LevelExists);
+          logger.info(`Next Level Exists: ${nextLevelExists.recordset[0].LevelExists}`);
           // If request has no more levels, set status to approved
           if (nextLevelExists.recordset[0].LevelExists === 0) {
             status = STATUS.APPROVED;
@@ -66,7 +64,7 @@ const requestStatus = async (current_role, region, action, req_id) => {
         pendingWith: pendingWith,
         req_id: req_id,
       });
-
+      logger.info(`Request Inserted: ${JSON.stringify(result.recordset[0])}`);
       // Add audit log for the INSERT operation
       await addAuditLog("requests_mvc", result.recordset[0].id, "INSERT", null);
 
@@ -111,7 +109,7 @@ const requestStatus = async (current_role, region, action, req_id) => {
         pendingWith: pendingWith,
         req_id: req_id,
       });
-
+      logger.info(`Request Inserted: ${JSON.stringify(result.recordset[0])}`);
       // Add audit log for the INSERT operation
       await addAuditLog(
         "requests_status_mvc",
@@ -129,6 +127,7 @@ const requestStatus = async (current_role, region, action, req_id) => {
       throw new Error("Role or region not found", 400);
     }
   } catch (err) {
+    logger.error(`Error updating request status: ${err.message}`, { stack: err.stack });
     throw err;
     // res.status(500).json({ message: "Server error", error: err.message });
   }
