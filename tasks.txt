@@ -40,3 +40,79 @@ Add a business role.
 8. For scenario of point 6 a hierarchy of label + 1 will be added for new label and all the below rows will be incremented by 1.
 9. The third action button will be update. The value of can_approve, can_initiate can_rework and can_view are editable and on clicking on update button checkbox will be ediatbale. 
 10. Afer making changes to checkbox, table will be updated. Write a mssql query for update in nodejs with mvc background
+
+
+Rule edit modal.
+1. Write a react JSX code for selecting sales office region.
+2. These values will come from api `${backend_url}api/sales_office/Sales office North`
+3. On selecting of one of the sales office from the dropdown fetch values from the table 'rule_mvc'
+4. schema is SELECT TOP (1000) [id]
+      ,[rule_id]
+      ,[region]
+      ,[approver]
+      ,[level]
+      ,[valid_from]
+      ,[valid_to]
+      ,[created_at]
+      ,[is_active]
+  FROM [PriceApprovalSystem].[dbo].[rule_mvc].
+5. Fetch through nodejs api using mvc architecture. 
+6. Now show as blank if values for selected sales offfice region are not found.
+7. Add a button that opens up a modal. 
+8. Modal has following colums.  
+    i.label
+    ii. value
+    iii. Action button to create another row.
+9. Row and label is populated by fetching values from  role matrix. You can use the post api ${backend_mvc}api/roles/roles to fetch values.
+10. Please note that for row label is approver and hierarchy is value. 
+11. When we select a label in point 8 dropdown should not contain label whose value is lower than current selection.
+12. gather an info with schema like this on final button click and print it in console.
+
+ "dataArray": [
+        {
+            "rule_id": 3,
+            "region": "Sales office North",
+            "approver": "AM",
+            "level": 1,
+            "valid_from": "2019-01-01 00:00:00.0000000",
+            "valid_to": "2024-01-01 00:00:00.0000000",
+            "is_active": 1
+        },
+        {
+            "rule_id": 3,
+            "region": "Sales office North",
+            "approver": "RM",
+            "level": 2,
+            "valid_from": "2019-01-01 00:00:00.0000000",
+            "valid_to": "2024-01-01 00:00:00.0000000",
+            "is_active": 1
+        },
+        {
+            "rule_id": 3,
+            "region": "Sales office North",
+            "approver": "NSM",
+            "level": 3,
+            "valid_from": "2019-01-01 00:00:00.0000000",
+            "valid_to": "2024-01-01 00:00:00.0000000",
+            "is_active": 1
+        },
+                {
+            "rule_id": 3,
+            "region": "Sales office North",
+            "approver": "HDSM",
+            "level": 4,
+            "valid_from": "2019-01-01 00:00:00.0000000",
+            "valid_to": "2024-01-01 00:00:00.0000000",
+            "is_active": 1
+        },
+                {
+            "rule_id": 3,
+            "region": "Sales office North",
+            "approver": "Validator",
+            "level": 5,
+            "valid_from": "2019-01-01 00:00:00.0000000",
+            "valid_to": "2024-01-01 00:00:00.0000000",
+            "is_active": 1
+        }
+    ]
+

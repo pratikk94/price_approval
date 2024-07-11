@@ -73,9 +73,48 @@ async function getRulesByRegion(region) {
   }
 }
 
+const updateRules = async (rules) => {
+  try {
+    for (const rule of rules) {
+      db.executeQuery(
+        ` UPDATE [PriceApprovalSystem].[dbo].[rule_mvc]
+          SET region = @region, approvers = @approvers, level = @level,
+              valid_from = @valid_from, valid_to = @valid_to, is_active = @is_active
+          WHERE id = @id`,
+        {
+          id: rule.id,
+          region: rule.region,
+          approvers: rule.approvers.join(", "),
+          level: rule.level,
+          valid_from: rule.valid_from,
+          valid_to: rule.valid_to,
+          is_active: rule.is_active,
+        }
+      );
+    }
+  } catch (err) {
+    throw new Error("Error updating rules: " + err.message);
+  }
+};
+
+const addRule = async (rule) => {
+  try {
+    await db.executeQuery(`
+      INSERT INTO [PriceApprovalSystem].[dbo].[rule_mvc] (region, approvers, level, valid_from, valid_to, is_active)
+      VALUES (${rule.region}, ${rule.approvers.join(", ")}, ${rule.level}, ${
+      rule.valid_from
+    }, ${rule.valid_to}, ${rule.is_active})
+    `);
+  } catch (err) {
+    throw new Error("Error adding rule: " + err.message);
+  }
+};
+
 module.exports = {
   getRulesByApproverAndLevel,
   getApproversByLevels,
   postApproversByLevels,
   getRulesByRegion,
+  updateRules,
+  addRule,
 };

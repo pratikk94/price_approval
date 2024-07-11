@@ -14,15 +14,8 @@ export const RuleModal = () => {
   };
   return (
     <>
-      <div className="app">
-        <h1>Select a Sales Office</h1>
-        <SalesOfficeSelector />
-      </div>
       <Container>
-        <Button variant="contained" onClick={handleOpen}>
-          Edit Rule
-        </Button>
-        <RuleEditModal
+         <RuleEditModal
           open={modalOpen}
           handleClose={handleClose}
           onRuleUpdated={handleRuleUpdated}
