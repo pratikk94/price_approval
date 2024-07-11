@@ -7,10 +7,13 @@ async function getFilesByRequestId(requestId) {
 
   try {
     const requestIds = await fetchRequestNames(requestId);
-    const query = `SELECT * FROM files WHERE request_id IN ('${requestIds.join(
-      "', '"
-    )}')`;
-    const result = await db.executeQuery(query);
+    const requestIDsString = requestIds.map(id => `'${id}'`).join(', ');
+
+    // const query = `SELECT * FROM files WHERE request_id IN ('${requestIds.join(
+    //   "', '"
+    // )}')`;
+    const result = await db.executeQuery(`EXEC GetFilesByRequestIds @RequestIds`, { "RequestIds": requestIDsString });
+
     logger.info("Files fetched successfully", { count: result.recordset.length });
     return result.recordset;
   } catch (err) {

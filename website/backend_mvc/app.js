@@ -5,7 +5,7 @@ const morgan = require("morgan");
 const cors = require("cors");
 const url = require("./utils");
 const corsOptions = {
-  origin: "http://192.168.1.109:5173", // or the specific origin you want to allow
+  origin: "http://192.168.0.6:5173", // or the specific origin you want to allow
 
   credentials: true, // allowing credentials (cookies, session)
 };

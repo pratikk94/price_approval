@@ -754,3 +754,27 @@ BEGIN
     ORDER BY 
         id;
 END;
+
+
+/*
+11-JUL-2024
+*/
+
+CREATE PROCEDURE GetFilesByRequestIds
+    @RequestIds NVARCHAR(MAX)
+AS
+BEGIN
+    -- Split the comma-separated request IDs into a table
+    DECLARE @RequestIdTable TABLE (RequestId NVARCHAR(50));
+
+    -- Insert each request ID into the table
+    INSERT INTO @RequestIdTable (RequestId)
+    SELECT value
+    FROM STRING_SPLIT(@RequestIds, ',');
+
+    -- Select files where the request_id is in the request ID table
+    SELECT * 
+    FROM files
+    WHERE request_id IN (SELECT RequestId FROM @RequestIdTable);
+END
+GO

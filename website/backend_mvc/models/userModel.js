@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const logger = require("../utils/logger");
 
 class User {
   static async findUserByEmployeeId(employee_id) {
