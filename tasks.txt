@@ -18,3 +18,25 @@ Haneef :
 Pratik:
 1. Attachments single add for staright flow. (Done).
 2. 
+
+
+
+Add a business role. 
+1. Fetch from table role_matrix whose colums are [id] int 
+      ,[role] nvarchar(50)
+      ,[can_approve] int 
+      ,[can_initiate] int 
+      ,[can_rework] int 
+      ,[can_view] int
+      ,[hierarchy] int .
+
+
+2. Write a mssql query with node js backend in mvc format to fetch this data. 
+3. Populate a dynamic table in react jsx and plain css(no tailwind) where you display all the above values in a material ui table. 0 will be written as checkbox unchecked and 1 will be checkbox checked but all will be uneditable
+4. Add an action button in the last column where you have two action buttons. 
+5. First action button will be to add a role on same level as label.
+6. Second action button will be to add a role below current role and above the next label.
+7. A row will be added in both the scenarios. but in scenario pf point 5, hierarchy will be same for new role added.
+8. For scenario of point 6 a hierarchy of label + 1 will be added for new label and all the below rows will be incremented by 1.
+9. The third action button will be update. The value of can_approve, can_initiate can_rework and can_view are editable and on clicking on update button checkbox will be ediatbale. 
+10. Afer making changes to checkbox, table will be updated. Write a mssql query for update in nodejs with mvc background

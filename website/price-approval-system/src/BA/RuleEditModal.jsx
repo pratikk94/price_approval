@@ -15,7 +15,7 @@ import {
 import axios from "axios";
 import SpacingWrapper from "../components/util/SpacingWrapper";
 
-const backend_url = "http://192.168.1.103:3000/";
+const backend_url = "http://192.168.0.5:3000/";
 
 const RuleEditModal = ({ open, handleClose, onRuleUpdated }) => {
   const [rules, setRules] = useState([]);

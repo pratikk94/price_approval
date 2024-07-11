@@ -63,9 +63,9 @@ const ApprovedTransactions = () => {
   const [currentTab, setCurrentTab] = useState(0);
 
   const apiEndpoints = [
-    "http://192.168.1.103:3000/api/completed-transactions/Approved",
-    "http://192.168.1.103:3000/api/completed-transactions/Rejected",
-    "http://192.168.1.103:3000/api/completed-transactions/Rework",
+    "http://192.168.0.5:3000/api/completed-transactions/Approved",
+    "http://192.168.0.5:3000/api/completed-transactions/Rejected",
+    "http://192.168.0.5:3000/api/completed-transactions/Rework",
   ];
 
   useEffect(() => {
