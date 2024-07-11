@@ -70,7 +70,7 @@ const MessagesComponent = ({ reqId }) => {
                     ")"}
                 </TableCell>
                 <TableCell>
-                  {transaction.action == "Approved"
+                  {transaction.action == "Approved" && transaction.role == "AM"
                     ? "Submited"
                     : transaction.action}
                 </TableCell>

@@ -374,7 +374,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                   <Grid item xs={6}>
                     {" "}
                     {/* Second column */}
-                    Payment Terms ID:{" "}
+                    Payment Terms :{" "}
                     {ptMap[data.consolidatedRequest.payment_terms_id]}
                     <br />
                     Valid From: {data.consolidatedRequest.valid_from}

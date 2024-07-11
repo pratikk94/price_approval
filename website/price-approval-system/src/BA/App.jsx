@@ -23,6 +23,7 @@ import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics
 import ParentComponent from "../Generic/Main";
 import { useSession } from "../Login_Controller/SessionContext";
 import EmployeeDashboard from "./EmployeeDashboard";
+import { RuleModal } from "./RuleModal";
 function ResponsiveDrawer({ logout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activePane, setActivePane] = useState("Dashboard"); // Initialize with "Dashboard" or whichever is default
@@ -41,6 +42,7 @@ function ResponsiveDrawer({ logout }) {
     { text: "Dashboard", component: <Dashboard /> },
     { text: "Employees Dashoard", component: <EmployeeDashboard /> },
     { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
+    { text: "Rule Modal", component: <RuleModal /> },
   ];
 
   const drawer = (

@@ -11,4 +11,6 @@ router.get("/approvers-by-levels", ruleController.getApproversByLevels);
 
 router.post("/approvers-by-levels", ruleController.postApproversByLevels);
 
+router.get("/sales_office/:region", ruleController.getRulesByRegion);
+
 module.exports = router;

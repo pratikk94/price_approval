@@ -39,9 +39,9 @@ function ResponsiveDrawer({ logout }) {
 
   const drawerItems = [
     { text: "Price Requests", component: <ParentComponent /> },
-    { text: "Dashboard", component: <ApprovedTransactions /> },
+    { text: "Reports and Analytics", component: <ApprovedTransactions /> },
 
-    { text: "Reports and Analytics", component: <ReportsAndAnalysis /> },
+    { text: "Dashbaord", component: <ReportsAndAnalysis /> },
   ];
 
   const drawer = (
