@@ -14,6 +14,7 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  TextField,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -34,7 +35,6 @@ function TableWithInputs({
   isBlocked,
   isExtension,
   fetchHistory,
-
   setFSCCode,
 }) {
   const [grades, setGrades] = useState([]);
@@ -51,77 +51,7 @@ function TableWithInputs({
     { value: "Sheet", label: "Sheet" },
     { value: "Bobbin", label: "Bobbin" },
   ];
-
   const gradeTypes = ["Reel", "Sheet", "Bobbin"];
-
-  const handleMaterialChange = (option) => {
-    setGradeType(option);
-  };
-
-  const calculateWidth = () => {
-    const fixedColumnWidths = 30;
-    const activeConditionalColumns = Object.values(checkboxState).filter(
-      (val) => val
-    ).length;
-
-    const conditionalColumnWidth =
-      activeConditionalColumns > 0
-        ? (100 - fixedColumnWidths) / activeConditionalColumns
-        : 0;
-
-    return `${conditionalColumnWidth}%`;
-  };
-
-  useEffect(() => {
-    fetch_grades(fscCode);
-  }, [fscCode]);
-
-  useEffect(() => {
-    if (prices && prices.length > 0) {
-      // setFSCCode(prices[0].fsc);
-      const newRows = prices.map((price) => {
-        const newId = uuidv4();
-        setSelectedGrade([...grades, price.grade]);
-        setIds((prevIds) => [...prevIds, newId]);
-
-        if (price.tpc !== 0 && price.tpc !== null) {
-          setCheckboxState((prev) => ({ ...prev, TPC: true }));
-        }
-
-        if (price.offline_discount !== 0 && price.offline_discount !== null) {
-          setCheckboxState((prev) => ({ ...prev, offlineDiscount: true }));
-        }
-
-        if (price.reel_discount !== 0 && price.reel_discount !== null) {
-          setCheckboxState((prev) => ({ ...prev, ReelDiscount: true }));
-        }
-
-        if (price.pack_upcharge !== 0 && price.pack_upcharge !== null) {
-          setCheckboxState((prev) => ({ ...prev, PackUpCharge: true }));
-        }
-
-        return {
-          id: newId,
-          grade: price.grade,
-          gradeType: price.grade_type,
-          gsmFrom: price.gsm_range_from,
-          gsmTo: price.gsm_range_to,
-          agreedPrice: price.agreed_price,
-          specialDiscount: price.special_discount,
-          reelDiscount: price.reel_discount,
-          packUpCharge: price.pack_upcharge,
-          tpc: price.tpc,
-          offlineDiscount: price.offline_discount,
-          netNSR: price.net_nsr,
-          oldNetNSR: price.old_net_nsr,
-          profitCenter: gradeMapper(newId, price.grade),
-        };
-      });
-
-      setRows(newRows);
-    }
-  }, [prices, grades]);
-
   const [rows, setRows] = useState([
     {
       id: "",
@@ -140,7 +70,6 @@ function TableWithInputs({
       profitCenter: "",
     },
   ]);
-
   const [checkboxState, setCheckboxState] = useState({
     AgreedPrice: true,
     SpecialDiscount: true,
@@ -149,6 +78,92 @@ function TableWithInputs({
     TPC: false,
     offlineDiscount: false,
   });
+  const [excelData, setExcelData] = useState("");
+
+  const handleTextChange = (event) => {
+    setExcelData(event.target.value);
+  };
+
+  const handleParse = () => {
+    const rows = excelData.trim().split("\n");
+    const parsedData = rows.map((row) => row.split("\t"));
+    const newRows = parsedData.map((data) => ({
+      id: uuidv4(),
+      grade: data[0] || "",
+      gradeType: data[1] || "",
+      gsmFrom: data[2] || "",
+      gsmTo: data[3] || "",
+      agreedPrice: parseFloat(data[4]) || 0,
+      specialDiscount: parseFloat(data[5]) || 0,
+      reelDiscount: parseFloat(data[6]) || 0,
+      packUpCharge: parseFloat(data[7]) || 0,
+      tpc: parseFloat(data[8]) || 0,
+      offlineDiscount: parseFloat(data[9]) || 0,
+      netNSR: parseFloat(data[10]) || 0,
+      oldNetNSR: parseFloat(data[11]) || 0,
+      profitCenter: "",
+    }));
+    setRows((prevRows) => [...prevRows, ...newRows]);
+  };
+
+  const handleMaterialChange = (option) => {
+    setGradeType(option);
+  };
+
+  const calculateWidth = () => {
+    const fixedColumnWidths = 30;
+    const activeConditionalColumns = Object.values(checkboxState).filter(
+      (val) => val
+    ).length;
+    const conditionalColumnWidth =
+      activeConditionalColumns > 0
+        ? (100 - fixedColumnWidths) / activeConditionalColumns
+        : 0;
+    return `${conditionalColumnWidth}%`;
+  };
+
+  useEffect(() => {
+    fetch_grades(fscCode);
+  }, [fscCode]);
+
+  useEffect(() => {
+    if (prices && prices.length > 0) {
+      const newRows = prices.map((price) => {
+        const newId = uuidv4();
+        setSelectedGrade([...grades, price.grade]);
+        setIds((prevIds) => [...prevIds, newId]);
+        if (price.tpc !== 0 && price.tpc !== null) {
+          setCheckboxState((prev) => ({ ...prev, TPC: true }));
+        }
+        if (price.offline_discount !== 0 && price.offline_discount !== null) {
+          setCheckboxState((prev) => ({ ...prev, offlineDiscount: true }));
+        }
+        if (price.reel_discount !== 0 && price.reel_discount !== null) {
+          setCheckboxState((prev) => ({ ...prev, ReelDiscount: true }));
+        }
+        if (price.pack_upcharge !== 0 && price.pack_upcharge !== null) {
+          setCheckboxState((prev) => ({ ...prev, PackUpCharge: true }));
+        }
+        return {
+          id: newId,
+          grade: price.grade,
+          gradeType: price.grade_type,
+          gsmFrom: price.gsm_range_from,
+          gsmTo: price.gsm_range_to,
+          agreedPrice: price.agreed_price,
+          specialDiscount: price.special_discount,
+          reelDiscount: price.reel_discount,
+          packUpCharge: price.pack_upcharge,
+          tpc: price.tpc,
+          offlineDiscount: price.offline_discount,
+          netNSR: price.net_nsr,
+          oldNetNSR: price.old_net_nsr,
+          profitCenter: gradeMapper(newId, price.grade),
+        };
+      });
+      setRows(newRows);
+    }
+  }, [prices, grades]);
 
   const handleCheckboxChange = (event) => {
     const { name, checked } = event.target;
@@ -181,7 +196,6 @@ function TableWithInputs({
         value: customer.code,
         profitCenter: customer.profitCenter,
       }));
-
       setGrades([...customerOptions]);
       if (
         selectedGrade.length > 0 &&
@@ -202,7 +216,6 @@ function TableWithInputs({
           if (field === "grade") {
             updatedRow.profitCenter = profit_center;
           }
-
           if (
             [
               "agreedPrice",
@@ -219,7 +232,6 @@ function TableWithInputs({
             const packUpCharge = parseFloat(updatedRow.packUpCharge) || 0;
             const tpc = parseFloat(updatedRow.tpc) || 0;
             const offlineDiscount = parseFloat(updatedRow.offlineDiscount) || 0;
-
             updatedRow.netNSR =
               agreedPrice -
               specialDiscount -
@@ -231,7 +243,6 @@ function TableWithInputs({
               alert("Net NSR cannot be less than 0");
             }
           }
-
           return updatedRow;
         }
         return row;
@@ -277,10 +288,8 @@ function TableWithInputs({
 
   function isMixPresent(rowData) {
     const firstDigits = rowData.map((item) => String(item.profitCenter)[0]);
-
     const has234 = ["2", "3", "4"].some((digit) => firstDigits.includes(digit));
     const has5 = firstDigits.includes("5");
-
     return !(has234 && has5);
   }
 
@@ -341,6 +350,25 @@ function TableWithInputs({
             </Grid>
           ))}
       </Grid>
+
+      <TextField
+        label="Paste Excel Data"
+        multiline
+        rows={4}
+        variant="outlined"
+        fullWidth
+        value={excelData}
+        onChange={handleTextChange}
+      />
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleParse}
+        style={{ marginTop: "10px" }}
+      >
+        Parse Data
+      </Button>
+
       <table>
         <thead>
           <tr>
@@ -412,7 +440,6 @@ function TableWithInputs({
                     row.grade = e.label;
                     row.profitCenter = e.profitCenter;
                     const result = isMixPresent(rows);
-
                     if (!result) {
                       alert("Invalid mix of Grades");
                       disableSubmit(true);
@@ -423,7 +450,6 @@ function TableWithInputs({
                   }}
                 />
               </td>
-
               <td>
                 <Select
                   value={options.find(

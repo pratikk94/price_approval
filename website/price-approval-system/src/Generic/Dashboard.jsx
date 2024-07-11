@@ -22,6 +22,7 @@ import {
   Tab,
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
+import RemarkBox from "../components/common/RemarkBox";
 
 const useStyles = makeStyles({
   card: {
@@ -64,7 +65,7 @@ const ApprovedTransactions = () => {
   const apiEndpoints = [
     "http://192.168.1.103:3000/api/completed-transactions/Approved",
     "http://192.168.1.103:3000/api/completed-transactions/Rejected",
-    "http://192.168.1.103:3000/api/completed-transactions/Reworked",
+    "http://192.168.1.103:3000/api/completed-transactions/Rework",
   ];
 
   useEffect(() => {
@@ -113,10 +114,12 @@ const ApprovedTransactions = () => {
     setCurrentTab(newValue);
   };
 
+  console.log(transactions);
+
   return (
     <div>
       <Tabs
-        style={{ marginTop: "-14%" }}
+        style={{ marginTop: "0%" }}
         value={currentTab}
         onChange={handleTabChange}
         centered
@@ -186,8 +189,6 @@ const ApprovedTransactions = () => {
               <TableCell className={classes.tableCell}>Payment Terms</TableCell>
               <TableCell className={classes.tableCell}>Valid From</TableCell>
               <TableCell className={classes.tableCell}>Valid To</TableCell>
-              <TableCell className={classes.tableCell}>Mapping Type</TableCell>
-              <TableCell className={classes.tableCell}>Request ID</TableCell>
               <TableCell className={classes.tableCell}>AM ID</TableCell>
               <TableCell className={classes.tableCell}>Request Name</TableCell>
               <TableCell className={classes.tableCell}>Action</TableCell>
@@ -219,10 +220,6 @@ const ApprovedTransactions = () => {
                     transaction.consolidatedRequest.valid_to
                   ).toLocaleDateString()}
                 </TableCell>
-                <TableCell>
-                  {transaction.consolidatedRequest.mappint_type}
-                </TableCell>
-                <TableCell>{transaction.consolidatedRequest.req_id}</TableCell>
                 <TableCell>{transaction.consolidatedRequest.am_id}</TableCell>
                 <TableCell>
                   {transaction.consolidatedRequest.request_name}
@@ -333,6 +330,10 @@ const ApprovedTransactions = () => {
               </TableContainer>
             </div>
           )}
+          <RemarkBox
+            request_id={transactions[0] != undefined ? transactions[0] : ""}
+            setRemark={() => {}}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">

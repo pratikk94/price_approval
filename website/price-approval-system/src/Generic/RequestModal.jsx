@@ -29,6 +29,7 @@ import moment from "moment-timezone";
 import axios from "axios";
 import HistoryModal from "../Role_Business_Admin/Components/RequestHistoryModal";
 import MessagesComponent from "../components/common/History";
+import ExcelBox from "../components/common/ExcelBox";
 
 const modalStyle = {
   position: "absolute",
@@ -678,6 +679,7 @@ const CreateRequestModal = ({
           </Grid>
 
           <SpacingWrapper space="0px" />
+
           <TableWithInputs
             isBlocked={isBlocked}
             isExtension={isExtension}

@@ -42,8 +42,20 @@ const postApproversByLevels = async (req, res) => {
   }
 };
 
+async function getRulesByRegion(req, res) {
+  const region = req.params.region;
+  try {
+    const rules = await ruleModel.getRulesByRegion(region);
+    res.json(rules);
+  } catch (err) {
+    console.error("Error fetching rules:", err);
+    res.status(500).send("Internal Server Error");
+  }
+}
+
 module.exports = {
   getRulesByApproverAndLevel,
   getApproversByLevels,
-  postApproversByLevels
+  postApproversByLevels,
+  getRulesByRegion,
 };

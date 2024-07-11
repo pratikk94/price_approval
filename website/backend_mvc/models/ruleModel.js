@@ -8,8 +8,11 @@ const getRulesByApproverAndLevel = async (approver, level) => {
   logger.info(`getRulesByApproverAndLevel called with approver: ${approver} level: ${level}`);
   try {
     const query = `SELECT * FROM rule_mvc WHERE approver = @approver AND level = @level`;
-    let result = await db.executeQuery(query, { "approver": approver, "level": level });
-    logger.info(`getRulesByApproverAndLevel result: #{result}`);
+    let result = await db.executeQuery(query, {
+      approver: approver,
+      level: level,
+    });
+    logger.info(`getRulesByApproverAndLevel result: ${result}`);
     return result.recordset;
   } catch (err) {
     logger.error(`Database connection error in getRulesByApproverAndLevel:${err}`); 
@@ -36,7 +39,10 @@ const getApproversByLevels = async () => {
 const postApproversByLevels = async (data) => {
   logger.info(`postApproversByLevels called with data: ${data}`); 
   try {
-    let result = await db.executeQuery('EXEC UpdateAndInsertRule @RuleData,@Region', { "RuleData": JSON.stringify(data),"Region":data[0].region });
+    let result = await db.executeQuery(
+      "EXEC UpdateAndInsertRule @RuleData,@Region",
+      { RuleData: JSON.stringify(data), Region: data[0].region }
+    );
     logger.info(`postApproversByLevels result: ${result}`);
     return result.recordset;
   } catch (err) {
@@ -45,8 +51,21 @@ const postApproversByLevels = async (data) => {
   }
 };
 
+async function getRulesByRegion(region) {
+  try {
+    // const pool = await poolPromise;
+    const result = await db.executeQuery(
+      `SELECT TOP (1000) [id], [rule_id], [region], [approver], [level], [valid_from], [valid_to], [created_at], [is_active] FROM [dbo].[rule_mvc] WHERE [region] = '${region}'`
+    );
+    return result.recordset;
+  } catch (err) {
+    throw new Error(err);
+  }
+}
+
 module.exports = {
   getRulesByApproverAndLevel,
   getApproversByLevels,
-  postApproversByLevels
+  postApproversByLevels,
+  getRulesByRegion,
 };
