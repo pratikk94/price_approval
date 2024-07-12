@@ -75,6 +75,7 @@ async function getRulesByRegion(region) {
 
 const updateRules = async (rules) => {
   try {
+    console.log(rules);
     for (const rule of rules) {
       db.executeQuery(
         ` UPDATE [PriceApprovalSystem].[dbo].[rule_mvc]

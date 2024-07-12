@@ -101,23 +101,45 @@ const RuleEditModal = () => {
     }));
   };
 
-  const handleFinalSubmit = () => {
-    const updatedRule = {
-      ...editRule,
-      approvers: editRule.approvers
-        .map((approver) => approver.label)
-        .join(", "),
-    };
+  const handleFinalSubmit = async () => {
+    try {
+      const approverRows = editRule.approvers.map((approver, index) => ({
+        rule_id: editRule.rule_id,
+        region: editRule.region,
+        approver: approver.label,
+        level: index + 1,
+        valid_from: editRule.valid_from,
+        valid_to: editRule.valid_to,
+        created_at: new Date().toISOString(),
+        is_active: editRule.is_active,
+      }));
 
-    const updatedRules =
-      editRule.rule_id > rules.length
-        ? [...rules, updatedRule]
-        : rules.map((rule) =>
-            rule.rule_id === editRule.rule_id ? updatedRule : rule
-          );
+      await axios.put(`${backend_mvc}api/update_rules`, {
+        rules: approverRows,
+      });
 
-    setRules(updatedRules);
-    closeModal();
+      const updatedRules = approverRows.map((row) => ({
+        ...row,
+        approvers: editRule.approvers.map((a) => a.label).join(", "),
+      }));
+
+      if (editRule.rule_id > rules.length) {
+        setRules([...rules, ...updatedRules]);
+      } else {
+        setRules(
+          rules.map((rule) =>
+            rule.rule_id === editRule.rule_id
+              ? updatedRules.find((r) => r.level === 1)
+              : rule
+          )
+        );
+      }
+
+      closeModal();
+    } catch (error) {
+      console.error("Failed to update rule:", error);
+      alert("Failed to update rule");
+    }
   };
 
   const saveChanges = () => {

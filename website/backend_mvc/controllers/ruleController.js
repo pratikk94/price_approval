@@ -42,6 +42,7 @@ async function getRulesByRegion(req, res) {
 const updateRules = async (req, res) => {
   try {
     const rules = req.body.rules;
+    console.log("COnsole log rules", rules);
     await ruleModel.updateRules(rules);
     res.json({ message: "Rules updated successfully" });
   } catch (err) {
