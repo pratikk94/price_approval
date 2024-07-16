@@ -48,16 +48,9 @@ const updateEmployeRole = async (roleDetails) => {
 const fetchRoleData = async () => {
   logger.info("fetchRoleData called");
   try {
-<<<<<<< HEAD
-    let result = await db.executeQuery('EXEC FetchDefinedRoles');
+    let result = await db.executeQuery("EXEC FetchDefinedRoles");
     logger.info(`fetchRoleData result: ${result}`);
     return result;
-
-
-=======
-    let result = await db.executeQuery("EXEC FetchDefinedRoles");
-    return result;
->>>>>>> main
   } catch (err) {
     logger.error(`SQL error in fetchRoleData: ${err}`);
     throw err;
@@ -67,16 +60,11 @@ const fetchRoleData = async () => {
 const fetchRoleId = async (id) => {
   logger.info(`fetchRoleId called with id: ${id}`);
   try {
-<<<<<<< HEAD
-    console.log(id, "check the id.......")
-    let result = await db.executeQuery('EXEC FetchDefinedRoleById @id', { "id": id });
-    logger.info(`fetchRoleId result: ${result}`);
-=======
     console.log(id, "check the id.......");
     let result = await db.executeQuery("EXEC FetchDefinedRoleById @id", {
       id: id,
     });
->>>>>>> main
+    logger.info(`fetchRoleId result: ${result}`);
     return result;
   } catch (err) {
     logger.error(`SQL error in fetchRoleId: ${err}`);
@@ -144,13 +132,8 @@ module.exports = {
   getRoleDetails,
   updateEmployeRole,
   fetchRoleData,
-<<<<<<< HEAD
-  fetchRoleId
-};
-=======
   fetchRoleId,
   fetchRoles,
   addRole,
   updateRole,
 };
->>>>>>> main

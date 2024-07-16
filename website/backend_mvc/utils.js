@@ -1,4 +1,4 @@
 require("dotenv").config();
-const url = "192.168.1.102";
+const url = "192.168.76.129";
 
 module.exports = url;
