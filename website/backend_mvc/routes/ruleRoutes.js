@@ -13,4 +13,8 @@ router.post("/approvers-by-levels", ruleController.postApproversByLevels);
 
 router.get("/sales_office/:region", ruleController.getRulesByRegion);
 
+router.put("/update_rules", ruleController.updateRules);
+
+router.post("/add_rule", ruleController.addRule);
+
 module.exports = router;

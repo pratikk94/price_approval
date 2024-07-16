@@ -53,9 +53,32 @@ async function getRulesByRegion(req, res) {
   }
 }
 
+const updateRules = async (req, res) => {
+  try {
+    const rules = req.body.rules;
+    console.log("COnsole log rules", rules);
+    await ruleModel.updateRules(rules);
+    res.json({ message: "Rules updated successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const addRule = async (req, res) => {
+  try {
+    const rule = req.body.rule;
+    await ruleModel.addRule(rule);
+    res.json({ message: "Rule added successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   getRulesByApproverAndLevel,
   getApproversByLevels,
   postApproversByLevels,
   getRulesByRegion,
+  updateRules,
+  addRule,
 };

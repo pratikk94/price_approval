@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import RemarkBox from "../components/common/RemarkBox";
+import { backend_mvc } from "../util";
 
 const useStyles = makeStyles({
   card: {
@@ -63,9 +64,9 @@ const ApprovedTransactions = () => {
   const [currentTab, setCurrentTab] = useState(0);
 
   const apiEndpoints = [
-    "http://192.168.0.5:3000/api/completed-transactions/Approved",
-    "http://192.168.0.5:3000/api/completed-transactions/Rejected",
-    "http://192.168.0.5:3000/api/completed-transactions/Rework",
+    `${backend_mvc}api/completed-transactions/Approved`,
+    `${backend_mvc}api/completed-transactions/Rejected`,
+    `${backend_mvc}api/completed-transactions/Rework`,
   ];
 
   useEffect(() => {
