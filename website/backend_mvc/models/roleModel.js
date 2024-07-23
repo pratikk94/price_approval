@@ -53,9 +53,12 @@ const fetchRoleData = async () => {
 const fetchRoleId = async (id) => {
   try {
     console.log(id, "check the id.......");
-    let result = await db.executeQuery("EXEC FetchDefinedRoleById @id", {
+    let result = await db.executeQuery("EXEC FetchDefinedRoleById @id, @SymmetricKeyName,@CertificateName`", {
       id: id,
+      SymmetricKeyName: SYMMETRIC_KEY_NAME,
+      CertificateName: CERTIFICATE_NAME
     });
+
     return result;
   } catch (err) {
     console.error("SQL error", err);

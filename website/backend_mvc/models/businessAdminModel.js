@@ -1,6 +1,6 @@
 // const sql = require("mssql");
 // const config = require("../../backend_mvc/config");
-const { CREATED_BY } = require("../config/constants");
+const { CREATED_BY, SYMMETRIC_KEY_NAME, CERTIFICATE_NAME } = require("../config/constants");
 const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
 
@@ -100,7 +100,7 @@ async function addEmployeeRole(
 ) {
   try {
     let result = await db.executeQuery(
-      `EXEC InsertEmployeeRole @employee_id, @employee_name, @role, @region, @created_by, @created_date, @active`,
+      `EXEC InsertEmployeeRole @employee_id, @employee_name, @role, @region, @created_by, @created_date, @active,@SymmetricKeyName,@CertificateName`,
       {
         employee_id: employee_id,
         employee_name: employee_name,
@@ -109,6 +109,8 @@ async function addEmployeeRole(
         created_by: CREATED_BY,
         created_date: created_date,
         active: active,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+      CertificateName: CERTIFICATE_NAME
       }
     );
     return result;

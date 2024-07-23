@@ -1,4 +1,5 @@
 
+const { SYMMETRIC_KEY_NAME, CERTIFICATE_NAME } = require("../config/constants");
 const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
 const { fetchRequestNames } = require("../utils/fetchAllRequestIds");
@@ -7,7 +8,13 @@ async function getRemarksWithRequests(request_id) {
   try {
     const requestIds = await fetchRequestNames(request_id);
     const requestIDsString = requestIds.map(id => `'${id}'`).join(', ');
-    result = await db.executeQuery(`EXEC dbo.GetRemarksByRequestIDs @RequestIDs`, { "RequestIDs": requestIDsString });
+    console.log(requestIDsString);
+    result = await db.executeQuery(`EXEC dbo.GetRemarksByRequestIDs @RequestIDs,@SymmetricKeyName,@CertificateName`,
+      {
+        RequestIDs: requestIDsString, 
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      });
     return result.recordset;
   } catch (err) {
     console.error("SQL error", err);
@@ -18,10 +25,12 @@ async function getRemarksWithRequests(request_id) {
 async function postRemark(remarkData) {
   try {
     const { request_id, user_id, comment } = remarkData;
-    const result = await db.executeQuery(`EXEC InsertRemark @RequestID,@UserID,@Comment`, {
+    const result = await db.executeQuery(`EXEC InsertRemark @RequestID,@UserID,@Comment,@SymmetricKeyName,@CertificateName`, {
       RequestID: request_id,
       UserID: user_id,
       Comment: comment,
+      SymmetricKeyName: SYMMETRIC_KEY_NAME,
+      CertificateName: CERTIFICATE_NAME
     });
 
     // Add audit log for the update operation
