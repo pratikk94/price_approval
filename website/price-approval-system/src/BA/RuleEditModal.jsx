@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Modal from "react-modal";
+import "./orgchart-styles.css"; // Import the custom styles
 import { backend_mvc } from "../util";
 
 const RuleEditModal = () => {
@@ -16,7 +17,7 @@ const RuleEditModal = () => {
       .get(`${backend_mvc}api/fetch_sales_regions`)
       .then((response) => {
         if (response.data && response.data.length > 0) {
-          setSalesOffices(response.data[0]);
+          setSalesOffices(response.data[0]); // Adjusted to access the nested array
         }
       })
       .catch((error) => {
@@ -153,8 +154,51 @@ const RuleEditModal = () => {
       });
   };
 
+  const renderTree = () => {
+    const groupedRules = rules.reduce((acc, rule) => {
+      if (!acc[rule.level]) {
+        acc[rule.level] = [];
+      }
+      acc[rule.level].push(rule);
+      return acc;
+    }, {});
+
+    const levels = Object.keys(groupedRules).sort((a, b) => b - a);
+
+    const validator =
+      groupedRules[4] &&
+      groupedRules[4].find((rule) => rule.approver === "Validator");
+
+    return (
+      <div className="orgchart">
+        {validator && (
+          <div className="valid-dates">
+            <div>
+              <strong>Valid From:</strong> {validator.valid_from.split("T")[0]}
+            </div>
+            <div>
+              <strong>Valid To:</strong> {validator.valid_to.split("T")[0]}
+            </div>
+          </div>
+        )}
+        {levels.map((level) => (
+          <div className="level" key={level}>
+            {groupedRules[level].map((rule) => (
+              <div key={rule.id} className="node-container">
+                <div className="node-level">{rule.level}</div>
+                <div className="node">
+                  <strong>Approver:</strong> {rule.approver}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div>
+    <div className="container">
       <select
         value={selectedOffice}
         onChange={(e) => setSelectedOffice(e.target.value)}
@@ -169,36 +213,7 @@ const RuleEditModal = () => {
 
       {rules.length > 0 ? (
         <div>
-          <table>
-            <thead>
-              <tr>
-                <th>Rule ID</th>
-                <th>Region</th>
-                <th>Approvers</th>
-                <th>Level</th>
-                <th>Valid From</th>
-                <th>Valid To</th>
-                <th>Is Active</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rules.map((rule, index) => (
-                <tr key={rule.rule_id}>
-                  <td>{rule.rule_id}</td>
-                  <td>{rule.region}</td>
-                  <td>{rule.approvers}</td>
-                  <td>{rule.level}</td>
-                  <td>{rule.valid_from}</td>
-                  <td>{rule.valid_to}</td>
-                  <td>{rule.is_active ? "Yes" : "No"}</td>
-                  <td>
-                    <button onClick={() => openModal(index)}>Edit</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {renderTree()}
           <button onClick={saveChanges}>Save Changes</button>
         </div>
       ) : (
@@ -224,65 +239,41 @@ const RuleEditModal = () => {
           </select>
         </div>
         <div>
-          <label>Valid From:</label>
-          <input
-            type="date"
-            value={editRule?.valid_from}
-            onChange={(e) => handleRuleChange("valid_from", e.target.value)}
-          />
+          <label>Approvers:</label>
+          {editRule?.approvers.map((approver, index) => (
+            <div key={index}>
+              <select
+                value={approver.label}
+                onChange={(e) =>
+                  handleApproverChange(index, "label", e.target.value)
+                }
+              >
+                <option value="">Select Label</option>
+                {roles
+                  .filter((role) => {
+                    const currentLevel = editRule.approvers
+                      .slice(0, index)
+                      .reduce(
+                        (max, app) =>
+                          Math.max(
+                            max,
+                            roles.find((r) => r.role === app.label)
+                              ?.hierarchy || 0
+                          ),
+                        0
+                      );
+                    return role.hierarchy > currentLevel;
+                  })
+                  .map((role) => (
+                    <option key={role.id} value={role.role}>
+                      {role.role}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          ))}
+          <button onClick={addApproverRow}>Add Approver</button>
         </div>
-        <div>
-          <label>Valid To:</label>
-          <input
-            type="date"
-            value={editRule?.valid_to}
-            onChange={(e) => handleRuleChange("valid_to", e.target.value)}
-          />
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Approver</th>
-            </tr>
-          </thead>
-          <tbody>
-            {editRule?.approvers.map((approver, index) => (
-              <tr key={index}>
-                <td>
-                  <select
-                    value={approver.label}
-                    onChange={(e) =>
-                      handleApproverChange(index, "label", e.target.value)
-                    }
-                  >
-                    <option value="">Select Label</option>
-                    {roles
-                      .filter((role) => {
-                        const currentLevel = editRule.approvers
-                          .slice(0, index)
-                          .reduce(
-                            (max, app) =>
-                              Math.max(
-                                max,
-                                roles.find((r) => r.role === app.label)
-                                  ?.hierarchy || 0
-                              ),
-                            0
-                          );
-                        return role.hierarchy > currentLevel;
-                      })
-                      .map((role) => (
-                        <option key={role.id} value={role.role}>
-                          {role.role}
-                        </option>
-                      ))}
-                  </select>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <button onClick={addApproverRow}>Add Approver</button>
         <button onClick={handleFinalSubmit}>Submit</button>
         <button onClick={closeModal}>Close</button>
       </Modal>

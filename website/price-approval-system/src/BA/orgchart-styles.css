@@ -1,0 +1,57 @@
+/* Center the valid from and valid to section at the top */
+.valid-dates {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.valid-dates div {
+  margin: 0 20px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full height of the viewport */
+}
+
+.orgchart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.orgchart .level {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.orgchart .node-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.orgchart .node {
+  border: 1px solid #000;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #f0f0f0;
+  margin: 0 10px;
+  text-align: center;
+}
+
+.orgchart .node-level {
+  position: absolute;
+  top: -20px;
+  background-color: #fff;
+  padding: 2px 5px;
+  border: 1px solid #000;
+  border-radius: 3px;
+}

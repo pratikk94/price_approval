@@ -218,7 +218,7 @@ Write to requests_status_mvc
 1. Pass grade with descriptionto function filter.
 2. Split grade by spaces and focus on first word.
 3. For the given grade(first word) fetch the first digit of profit_center
-4. Call function http://192.168.1.102:3000/api/fetchValuesByParams which has json o/p as 
+4. Call function http://192.168.1.101:3000/api/fetchValuesByParams which has json o/p as 
 
 [
     {
@@ -255,3 +255,51 @@ Write to requests_status_mvc
 8. After reaching null, return the list of request_name.
 
 **********************************************************************
+
+Leave scenario. 
+Write a react jsx referred as rt and node js mvc api referred as nt for following code.
+1. Accept an employee_id. (rt)
+2. Schema of mssql table is SELECT TOP (1000) [employee_name]
+      ,[employee_id]
+      ,[role]
+      ,[region]
+      ,[created_by]
+      ,[created_date]
+      ,[active]
+      ,[id]
+  FROM [PriceApprovalSystem].[dbo].[define_roles]. (nt)
+3. Fetch the region and role for following employee_id (nt)
+4. Fetch the latest entry for a given request_id from transaction_mvc. (nt)
+5. Schema of transaction_mvc is SELECT TOP (1000) [id]
+      ,[rule_id]
+      ,[currently_pending_with]
+      ,[last_updated_by_role]
+      ,[last_updated_by_id]
+      ,[current_status]
+      ,[request_id]
+      ,[created_at]
+  FROM [PriceApprovalSystem].[dbo].[transaction_mvc]. (nt)
+6. You can find latest transaction for given request_id by created_at. (nt)
+7. Now if role and region for transaction matches with values from 3, update the request such that,
+    a. Its rule id remaind same.
+    b. currently_pending_with goes to a role higher than the currently_pending_with_role which can be found in point 8.
+    c. last_updated_by_role is e1000
+    d. current status is also given in poin.
+    e. request_id is same
+    f. created at is current time.
+8. currently_pending_with will come from rule_mvc.
+    a. schema is SELECT TOP (1000) [id]
+      ,[rule_id]
+      ,[region]
+      ,[approver]
+      ,[level]
+      ,[valid_from]
+      ,[valid_to]
+      ,[created_at]
+      ,[is_active]
+  FROM [PriceApprovalSystem].[dbo].[rule_mvc]
+   b. for given region and given approver from role of point 3. get one level above the current approver. there can be on or more than one approver on a level 1 above current approver.
+   c. fetch above approver and chnage currently pending with to that value. 
+   d. if more than one approver exist at a level above current level add all the number of approvers to a level above it. 
+9.fetch above approver and chnage currently pending with to format  like if nsm hdsm and nsmt are on above level then it will be nsm0_hdsm0_nsmt0_bam. It should always end with bam.
+    

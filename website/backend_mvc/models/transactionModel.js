@@ -171,7 +171,8 @@ async function acceptTransaction(
   lastUpdatedByRole,
   oldRequestId = "",
   isDraft = false,
-  isBlockExtensionPreclosure = false
+  isBlockExtensionPreclosure = false,
+  isBAM = false
 ) {
   try {
     // await sql.connect(config);
@@ -275,7 +276,7 @@ async function acceptTransaction(
     const result = await isValidRole(lastUpdatedByRole, currentRole);
     console.log("In here");
     console.log(result);
-    if (!result) {
+    if (!result && !isBAM) {
       return {
         success: false,
         message: "Unauthorized access",
@@ -541,10 +542,71 @@ async function acceptTransaction(
   }
 }
 
+const processTransaction = async (req, res) => {
+  const { employee_id } = req.body;
+
+  try {
+    // Fetch employee details
+    const employeeResult = await db.executeQuery(
+      `SELECT role, region FROM define_roles WHERE employee_id = '${employee_id}'`
+    );
+    if (employeeResult.recordset.length === 0) {
+      return res.status(404).send("Employee not found.");
+    }
+    const { role, region } = employeeResult.recordset[0];
+
+    console.log("!!!", role, region);
+    // Fetch all transaction IDs that match current role and region for the latest value of created_at
+    const matchingTransactionsResult = await db.executeQuery(
+      `SELECT t.id, request_id
+      FROM transaction_mvc as t
+      INNER JOIN rule_mvc as r on t.rule_id = r.rule_id
+      WHERE currently_pending_with = '${role}' AND r.region = '${region}'
+      
+      ORDER BY t.created_at DESC
+    `
+    );
+
+    // Check if there are any matching transactions
+    if (matchingTransactionsResult.recordset.length === 0) {
+      return res.status(404).send("No matching transactions found.");
+    }
+
+    // Iterate over the matching transactions and call acceptTransaction
+    for (const {
+      request_id: transRequestId,
+    } of matchingTransactionsResult.recordset) {
+      const action = "0"; // Define the action as needed
+      const lastUpdatedById = employee_id; // Define the lastUpdatedById as needed
+      const lastUpdatedByRole = role; // Define the lastUpdatedByRole as needed
+      const result = await acceptTransaction(
+        region,
+        action,
+        transRequestId,
+        lastUpdatedById,
+        lastUpdatedByRole,
+        "",
+        false,
+        false,
+        true
+      );
+
+      if (!result.success) {
+        return res.status(500).send(result.message);
+      }
+    }
+
+    res.send("Transactions updated successfully");
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 module.exports = {
   getTransactionByRequestId,
   getTransactionsPendingWithRole,
   getTransactionsByRole,
   fetchTransactions,
   acceptTransaction,
+  processTransaction,
 };

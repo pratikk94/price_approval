@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const transactionController = require("../controllers/transactionController");
 const priceRequestController = require("../controllers/priceRequestController");
+const { processTransaction } = require("../models/transactionModel");
 
 router.get(
   "/transactions/:requestId/analyze",
@@ -34,5 +35,7 @@ router.get(
   "/completed-transactions/:status",
   priceRequestController.fetchPriceRequestByStatus
 );
+
+router.post("/transaction/process", processTransaction);
 
 module.exports = router;

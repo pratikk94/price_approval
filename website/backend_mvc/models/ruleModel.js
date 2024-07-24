@@ -65,7 +65,7 @@ async function getRulesByRegion(region) {
   try {
     // const pool = await poolPromise;
     const result = await db.executeQuery(
-      `SELECT TOP (1000) [id], [rule_id], [region], [approver], [level], [valid_from], [valid_to], [created_at], [is_active] FROM [dbo].[rule_mvc] WHERE [region] = '${region}'`
+      `SELECT TOP (1000) [id], [rule_id], [region], [approver], [level], [valid_from], [valid_to], [created_at], [is_active] FROM [dbo].[rule_mvc] WHERE [region] = '${region}' and [is_active] = 1`
     );
     return result.recordset;
   } catch (err) {
