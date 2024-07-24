@@ -79,8 +79,11 @@ async function addRule(data) {
 async function getBusinessAdmin(type, fsc) {
   try {
     let result = await db.executeQuery(
-      "EXEC GetBusinessAdminData @queryType, @fsc",
-      { queryType: type, fsc: fsc ? fsc : null }
+      "EXEC GetBusinessAdminData @queryType, @fsc,@SymmetricKeyName,@CertificateName",
+      {
+        queryType: type, fsc: fsc ? fsc : null, SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      }
     );
 
     return result;
@@ -110,7 +113,7 @@ async function addEmployeeRole(
         created_date: created_date,
         active: active,
         SymmetricKeyName: SYMMETRIC_KEY_NAME,
-      CertificateName: CERTIFICATE_NAME
+        CertificateName: CERTIFICATE_NAME
       }
     );
     return result;
