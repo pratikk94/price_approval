@@ -12,7 +12,8 @@ const getRulesByApproverAndLevel = async (req, res) => {
 
 const getApproversByLevels = async (req, res) => {
   try {
-    const approversByLevels = await ruleModel.getApproversByLevels();
+    const region = req.params.region;
+    const approversByLevels = await ruleModel.getApproversByLevels(region);
     res.json(approversByLevels);
   } catch (error) {
     res.status(500).send("Error retrieving data");

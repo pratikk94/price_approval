@@ -28,7 +28,7 @@ const getRulesByApproverAndLevel = async (approver, level) => {
   }
 };
 
-const getApproversByLevels = async () => {
+const getApproversByLevels = async (region) => {
   try {
     // await sql.connect(config);
     // const result =
@@ -36,8 +36,9 @@ const getApproversByLevels = async () => {
     // FROM rule_Mvc
     // GROUP BY level
     // ORDER BY level`;
-    const query = `SELECT level, STRING_AGG(approver, ',') AS approvers
+    const query = `SELECT level, STRING_AGG(approver, ',') AS approvers, MAX(valid_from) AS valid_from, MAX(valid_to) AS valid_to
     FROM rule_Mvc
+    WHERE is_active = 1 AND region = '${region}'
     GROUP BY level
     ORDER BY level`;
     let result = await db.executeQuery(query);

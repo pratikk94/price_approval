@@ -7,6 +7,7 @@ const { addAuditLog } = require("../utils/auditTrails");
 const { requestStatus } = require("../utils/updateRequestStatus");
 const { insertParentRequest } = require("../utils/fetchAllRequestIds");
 const { STATUS } = require("../config/constants");
+const { getApproversByLevels, postApproversByLevels } = require("./ruleModel");
 
 // // Make sure to maintain a connection pool instead of connecting in each function
 // const poolPromise = new sql.ConnectionPool(config)
@@ -434,6 +435,10 @@ async function acceptTransaction(
         };
       } else if (approversResult.recordset.length === 1) {
         const { approver } = approversResult.recordset[0];
+        if (isBAM) {
+          lastUpdatedById = "e1000";
+          currentRole = "BAM";
+        }
         const newStatus = `${approver}0_${currentRole}1`;
 
         // await sql.query(
@@ -468,6 +473,10 @@ async function acceptTransaction(
         );
       } else if (approversResult.recordset.length > 1) {
         for (const { approver } of approversResult.recordset) {
+          if (isBAM) {
+            lastUpdatedById = "e1000";
+            currentRole = "BAM";
+          }
           const newStatus =
             approversResult.recordset.reduce(
               (acc, { approver }, index, array) => {
@@ -516,7 +525,6 @@ async function acceptTransaction(
       //     req_id: requestId, // This is a mockup; adjust as needed
       //   }
       // );
-
       const response = await requestStatus(
         lastUpdatedByRole,
         region,
@@ -542,6 +550,66 @@ async function acceptTransaction(
   }
 }
 
+// const processTransaction = async (req, res) => {
+//   const { employee_id } = req.body;
+
+//   try {
+//     // Fetch employee details
+//     const employeeResult = await db.executeQuery(
+//       `SELECT role, region FROM define_roles WHERE employee_id = '${employee_id}'`
+//     );
+//     if (employeeResult.recordset.length === 0) {
+//       return res.status(404).send("Employee not found.");
+//     }
+//     const { role, region } = employeeResult.recordset[0];
+
+//     console.log("!!!", role, region);
+//     // Fetch all transaction IDs that match current role and region for the latest value of created_at
+//     const matchingTransactionsResult = await db.executeQuery(
+//       `SELECT TOP 1 t.id, request_id
+//       FROM transaction_mvc as t
+//       INNER JOIN rule_mvc as r on t.rule_id = r.rule_id
+//       WHERE currently_pending_with = '${role}' AND r.region = '${region}'
+
+//       ORDER BY t.created_at DESC
+//     `
+//     );
+
+//     // Check if there are any matching transactions
+//     if (matchingTransactionsResult.recordset.length === 0) {
+//       return res.status(404).send("No matching transactions found.");
+//     }
+
+//     // Iterate over the matching transactions and call acceptTransaction
+//     for (const {
+//       request_id: transRequestId,
+//     } of matchingTransactionsResult.recordset) {
+//       const action = "0"; // Define the action as needed
+//       const lastUpdatedById = employee_id; // Define the lastUpdatedById as needed
+//       const lastUpdatedByRole = role; // Define the lastUpdatedByRole as needed
+//       const result = await acceptTransaction(
+//         region,
+//         action,
+//         transRequestId,
+//         lastUpdatedById,
+//         lastUpdatedByRole,
+//         "",
+//         false,
+//         false,
+//         true
+//       );
+
+//       if (!result.success) {
+//         return res.status(500).send(result.message);
+//       }
+//     }
+
+//     res.send(result);
+//   } catch (err) {
+//     res.status(500).send(err.message);
+//   }
+// };
+
 const processTransaction = async (req, res) => {
   const { employee_id } = req.body;
 
@@ -555,48 +623,73 @@ const processTransaction = async (req, res) => {
     }
     const { role, region } = employeeResult.recordset[0];
 
-    console.log("!!!", role, region);
     // Fetch all transaction IDs that match current role and region for the latest value of created_at
-    const matchingTransactionsResult = await db.executeQuery(
-      `SELECT t.id, request_id
+    const matchingTransactionsResult = await db.executeQuery(`
+            SELECT TOP 1 t.id, request_id
       FROM transaction_mvc as t
       INNER JOIN rule_mvc as r on t.rule_id = r.rule_id
       WHERE currently_pending_with = '${role}' AND r.region = '${region}'
-      
       ORDER BY t.created_at DESC
-    `
-    );
+
+    `);
 
     // Check if there are any matching transactions
     if (matchingTransactionsResult.recordset.length === 0) {
       return res.status(404).send("No matching transactions found.");
     }
 
-    // Iterate over the matching transactions and call acceptTransaction
-    for (const {
-      request_id: transRequestId,
-    } of matchingTransactionsResult.recordset) {
-      const action = "0"; // Define the action as needed
-      const lastUpdatedById = employee_id; // Define the lastUpdatedById as needed
-      const lastUpdatedByRole = role; // Define the lastUpdatedByRole as needed
-      const result = await acceptTransaction(
-        region,
-        action,
-        transRequestId,
-        lastUpdatedById,
-        lastUpdatedByRole,
-        "",
-        false,
-        false,
-        true
-      );
+    // Fetch approvers by levels
+    const approversByLevels = await getApproversByLevels(region);
 
-      if (!result.success) {
-        return res.status(500).send(result.message);
+    console.log(approversByLevels);
+
+    // Create data array and adjust levels
+    const dataArray = [];
+    let levelShift = 0;
+
+    for (const {
+      level,
+      approvers,
+      valid_from,
+      valid_to,
+      rule_id,
+    } of approversByLevels) {
+      const approversList = approvers
+        .split(",")
+        .filter((approver) => approver !== role);
+
+      if (approversList.length === 0) {
+        // If no approvers left on this level, increase the level shift
+        levelShift++;
+      } else {
+        approversList.forEach((approver) => {
+          dataArray.push({
+            rule_id: rule_id,
+            region: region,
+            approver: approver,
+            level: level - levelShift,
+            valid_from: valid_from,
+            valid_to: valid_to,
+            is_active: 1,
+          });
+        });
       }
     }
 
-    res.send("Transactions updated successfully");
+    console.log(dataArray);
+
+    // Call postApproversByLevels
+    const postResult = await postApproversByLevels(dataArray);
+
+    // Process the matching transactions
+    for (const {
+      request_id: transRequestId,
+    } of matchingTransactionsResult.recordset) {
+      // You can implement any additional logic here if needed
+      console.log(`Processed transaction for request_id: ${transRequestId}`);
+    }
+
+    res.json({ message: "Transactions updated successfully", postResult });
   } catch (err) {
     res.status(500).send(err.message);
   }

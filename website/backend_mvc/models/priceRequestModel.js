@@ -346,6 +346,7 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
           SELECT rule_id
           FROM rule_mvc
           WHERE region = '${region}'
+          and is_active = 1
           AND valid_from <= GETDATE()
           AND valid_to >= GETDATE()
       `
@@ -356,39 +357,141 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
     }
 
     const { rule_id } = validRule.recordset[0];
-
-    // Insert into transaction table
-    // const currentTime = new Date();
-    let query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
-    OUTPUT INSERTED.*
-    VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}', 'RM0A1',  'RM', GETDATE())`;
+    console.log(`Rule id is ${rule_id}`);
+    const query2 = `
+    SELECT approver, level
+    FROM rule_mvc
+    WHERE rule_id = @rule_id AND level = (
+        SELECT level + 1
+        FROM rule_mvc
+        WHERE approver = @currentRole AND rule_id = @rule_id
+    )
+    `;
+    const approversResult = await db.executeQuery(query2, {
+      rule_id: rule_id,
+      currentRole: "AM",
+    });
+    console.log("********");
+    console.log(approversResult);
     if (isDraft) {
       query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
     OUTPUT INSERTED.*
     VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}','AM0','AM', GETDATE())`;
       insertParentRequest(requestId);
-    }
-    const result = await sql.query(`${query}`);
-    // console.log(result.recordset[0],"result.......")
-    // Add audit log for the update operation
-    await addAuditLog(
-      "transaction_mvc",
-      result.recordset[0].id,
-      "INSERT",
-      null
-    );
-    const pool = await poolPromise;
-    let result1 = await pool
-      .request()
-      .input("status", sql.Int, isDraft ? STATUS.DRAFT : STATUS.PENDING)
-      .input("pendingWith", sql.Int, isDraft ? 1 : 2)
-      .input("req_id", sql.VarChar, requestId)
-      .query(
-        "INSERT INTO requests_mvc (status, pending, req_id)OUTPUT INSERTED.* VALUES (@status, @pendingWith, @req_id)"
+      const result = await sql.query(`${query}`);
+      // console.log(result.recordset[0],"result.......")
+      // Add audit log for the update operation
+      await addAuditLog(
+        "transaction_mvc",
+        result.recordset[0].id,
+        "INSERT",
+        null
       );
-    // console.log(result1.recordset[0],"result1.......")
-    // Add audit log for the update operation
-    await addAuditLog("requests_mvc", result1.recordset[0].id, "INSERT", null);
+    }
+    if (approversResult.recordset.length === 1) {
+      const { approver, level } = approversResult.recordset[0];
+
+      const newStatus = `${approver}0_AM1`;
+
+      // await sql.query(
+      //   `
+      //       INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+      //       VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
+      //   `
+      // );
+      let query = `
+            INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+            OUTPUT INSERTED.* 
+            VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole, @lastUpdatedById, GETDATE())
+        `;
+      let result = await db.executeQuery(query, {
+        requestId: requestId,
+        rule_id: rule_id,
+        newStatus: newStatus,
+        approver: approver,
+        currentRole: "AM",
+        lastUpdatedById: employee_id,
+      });
+      console.log(
+        result.recordset[0],
+        "testing transaction_mvc approversResult.recordset.length === 1"
+      );
+      // Add audit log for the update operation
+      await addAuditLog(
+        "transaction_mvc",
+        result.recordset[0].id,
+        "INSERT",
+        null
+      );
+      const pool = await poolPromise;
+      const result1 = await pool
+        .request()
+        .input("status", sql.Int, isDraft ? STATUS.DRAFT : STATUS.PENDING)
+        .input("pendingWith", sql.Int, isDraft ? 1 : level)
+        .input("req_id", sql.VarChar, requestId)
+        .query(
+          "INSERT INTO requests_mvc (status, pending, req_id)OUTPUT INSERTED.* VALUES (@status, @pendingWith, @req_id)"
+        );
+      await addAuditLog(
+        "requests_mvc",
+        result1.recordset[0].id,
+        "INSERT",
+        null
+      );
+    } else if (approversResult.recordset.length > 1) {
+      for (const { approver, level } of approversResult.recordset) {
+        const newStatus =
+          approversResult.recordset.reduce(
+            (acc, { approver }, index, array) => {
+              return `${acc}${approver}0${index < array.length - 1 ? "_" : ""}`;
+            },
+            ""
+          ) + `AM1`;
+
+        // await sql.query(
+        //   `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
+        //         VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
+        //     `
+        // );
+        let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
+        OUTPUT INSERTED.*
+              VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole,@lastUpdatedById, GETDATE())
+          `;
+        let result = await db.executeQuery(query, {
+          requestId: requestId,
+          rule_id: rule_id,
+          newStatus: newStatus,
+          approver: approver,
+          currentRole: "AM",
+          lastUpdatedById: employee_id,
+        });
+
+        console.log(result.recordset[0], "trasanction testing..............");
+        const pool = await poolPromise;
+        const result1 = await pool
+          .request()
+          .input("status", sql.Int, isDraft ? STATUS.DRAFT : STATUS.PENDING)
+          .input("pendingWith", sql.Int, isDraft ? 1 : level)
+          .input("req_id", sql.VarChar, requestId)
+          .query(
+            "INSERT INTO requests_mvc (status, pending, req_id)OUTPUT INSERTED.* VALUES (@status, @pendingWith, @req_id)"
+          );
+        await addAuditLog(
+          "requests_mvc",
+          result1.recordset[0].id,
+          "INSERT",
+          null
+        );
+
+        // Add audit log for the update operation
+        await addAuditLog(
+          "transaction_mvc",
+          result.recordset[0].id,
+          "INSERT",
+          null
+        );
+      }
+    }
 
     return { success: true, message: "Transaction successfully added." };
   } catch (err) {
