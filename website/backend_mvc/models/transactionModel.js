@@ -611,7 +611,7 @@ async function acceptTransaction(
 // };
 
 const processTransaction = async (req, res) => {
-  const { employee_id } = req.body;
+  const { employee_id, valid_from, valid_to } = req.body;
 
   try {
     // Fetch employee details
@@ -621,75 +621,112 @@ const processTransaction = async (req, res) => {
     if (employeeResult.recordset.length === 0) {
       return res.status(404).send("Employee not found.");
     }
-    const { role, region } = employeeResult.recordset[0];
 
-    // Fetch all transaction IDs that match current role and region for the latest value of created_at
-    const matchingTransactionsResult = await db.executeQuery(`
-            SELECT TOP 1 t.id, request_id
-      FROM transaction_mvc as t
-      INNER JOIN rule_mvc as r on t.rule_id = r.rule_id
-      WHERE currently_pending_with = '${role}' AND r.region = '${region}'
-      ORDER BY t.created_at DESC
+    for (var i = 0; i < employeeResult.recordset.length; i++) {
+      const { role, region } = employeeResult.recordset[i];
+      console.log("IN here ", role, region);
 
-    `);
+      // Fetch approvers by levels
+      const approversByLevels = await getApproversByLevels(region);
 
-    // Check if there are any matching transactions
-    if (matchingTransactionsResult.recordset.length === 0) {
-      return res.status(404).send("No matching transactions found.");
-    }
+      console.log(approversByLevels);
 
-    // Fetch approvers by levels
-    const approversByLevels = await getApproversByLevels(region);
+      // Create data array and adjust levels
+      const dataArray = [];
+      let levelShift = 0;
+      let skipTransactionProcessing = false;
 
-    console.log(approversByLevels);
+      for (const { level, approvers, rule_id } of approversByLevels) {
+        const approversList = approvers
+          .split(",")
+          .filter((approver) => approver !== role);
+        console.log("ROLE is ", role);
 
-    // Create data array and adjust levels
-    const dataArray = [];
-    let levelShift = 0;
+        if (approvers.split(",").includes(role)) {
+          if (approversList.length > 0) {
+            // Skip transaction processing if the role is on the same level as other approvers
+            skipTransactionProcessing = true;
+          }
+        } else {
+          if (approversList.length === 0) {
+            // If no approvers left on this level, increase the level shift
+            levelShift++;
+          } else {
+            approversList.forEach((approver) => {
+              dataArray.push({
+                rule_id: rule_id,
+                region: region,
+                approver: approver,
+                level: level - levelShift,
+                valid_from: valid_from,
+                valid_to: valid_to,
+                is_active: 1,
+              });
+            });
+          }
+        }
 
-    for (const {
-      level,
-      approvers,
-      valid_from,
-      valid_to,
-      rule_id,
-    } of approversByLevels) {
-      const approversList = approvers
-        .split(",")
-        .filter((approver) => approver !== role);
+        console.log(dataArray);
 
-      if (approversList.length === 0) {
-        // If no approvers left on this level, increase the level shift
-        levelShift++;
-      } else {
-        approversList.forEach((approver) => {
-          dataArray.push({
-            rule_id: rule_id,
-            region: region,
-            approver: approver,
-            level: level - levelShift,
-            valid_from: valid_from,
-            valid_to: valid_to,
-            is_active: 1,
-          });
-        });
+        // Call postApproversByLevels
+        const postResult = await postApproversByLevels(dataArray);
+
+        if (!skipTransactionProcessing) {
+          // Fetch all transaction IDs that match current role and region for the latest value of created_at
+          const matchingTransactionsResult = await db.executeQuery(`
+          SELECT TOP 1 t.id, request_id
+          FROM transaction_mvc as t
+          INNER JOIN rule_mvc as r on t.rule_id = r.rule_id
+          WHERE currently_pending_with = '${role}' AND r.region = '${region}'
+          ORDER BY t.created_at DESC
+        `);
+
+          // Check if there are any matching transactions
+          if (matchingTransactionsResult.recordset.length === 0) {
+            // return res.status(404).send("No matching transactions found.");
+          }
+
+          // Iterate over the matching transactions and call acceptTransaction
+          for (const {
+            request_id: transRequestId,
+          } of matchingTransactionsResult.recordset) {
+            const action = "0"; // Define the action as needed
+            const lastUpdatedById = employee_id; // Define the lastUpdatedById as needed
+            const lastUpdatedByRole = role; // Define the lastUpdatedByRole as needed
+            const result = await acceptTransaction(
+              region,
+              action,
+              transRequestId,
+              lastUpdatedById,
+              lastUpdatedByRole,
+              "",
+              false,
+              false,
+              true
+            );
+
+            if (!result.success) {
+              return res.status(500).send(result.message);
+            }
+          }
+
+          // Process the matching transactions
+          for (const {
+            request_id: transRequestId,
+          } of matchingTransactionsResult.recordset) {
+            // You can implement any additional logic here if needed
+            console.log(
+              `Processed transaction for request_id: ${transRequestId}`
+            );
+          }
+        } else {
+          console.log(
+            `Skipping transaction processing for role: ${role} on level with other approvers.`
+          );
+        }
       }
     }
-
-    console.log(dataArray);
-
-    // Call postApproversByLevels
-    const postResult = await postApproversByLevels(dataArray);
-
-    // Process the matching transactions
-    for (const {
-      request_id: transRequestId,
-    } of matchingTransactionsResult.recordset) {
-      // You can implement any additional logic here if needed
-      console.log(`Processed transaction for request_id: ${transRequestId}`);
-    }
-
-    res.json({ message: "Transactions updated successfully", postResult });
+    res.json({ message: "Transactions updated successfully" });
   } catch (err) {
     res.status(500).send(err.message);
   }

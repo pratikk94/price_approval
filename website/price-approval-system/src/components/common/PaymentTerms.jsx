@@ -101,7 +101,7 @@ const PaymentTerms = ({
             disabled={disabled}
           />
         }
-        label="I wish to choose my own Payment terms"
+        label="I wish to change the Payment terms"
       />
     </div>
   );
