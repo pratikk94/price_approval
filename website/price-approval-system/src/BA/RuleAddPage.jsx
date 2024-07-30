@@ -15,7 +15,7 @@ const RuleAddPage = () => {
   useEffect(() => {
     // Fetch sales regions
     axios
-      .get("http://192.168.1.101:3000/api/fetch_sales_regions")
+      .get("http://192.168.1.109:3000/api/fetch_sales_regions")
       .then((response) => {
         setRegions(response.data[0]);
       })
@@ -25,7 +25,7 @@ const RuleAddPage = () => {
 
     // Fetch roles
     axios
-      .post("http://192.168.1.101:3000/api/roles/roles")
+      .post("http://192.168.1.109:3000/api/roles/roles")
       .then((response) => {
         setRoles(response.data);
       })
@@ -77,7 +77,7 @@ const RuleAddPage = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.1.101:3000/api/approvers-by-levels",
+        "http://192.168.1.109:3000/api/approvers-by-levels",
         { dataArray },
         {
           headers: {

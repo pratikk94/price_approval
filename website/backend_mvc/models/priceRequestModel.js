@@ -4,7 +4,7 @@ const db = require("../config/db");
 const config = require("../../backend_mvc/config");
 const { addAuditLog } = require("../utils/auditTrails");
 const { insertParentRequest } = require("../utils/fetchAllRequestIds");
-const { STATUS } = require("../config/constants");
+const { STATUS, SYMMETRIC_KEY_NAME, CERTIFICATE_NAME } = require("../config/constants");
 const poolPromise = new sql.ConnectionPool(config)
   .connect()
   .then((pool) => {
@@ -374,11 +374,30 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
     console.log("********");
     console.log(approversResult);
     if (isDraft) {
-      query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
-    OUTPUT INSERTED.*
-    VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}','AM0','AM', GETDATE())`;
+      //   query = `INSERT INTO transaction_mvc (rule_id, last_updated_by_role, last_updated_by_id, request_id, current_status, currently_pending_with, created_at)
+      // OUTPUT INSERTED.*
+      // VALUES ('${rule_id}', 'AM', '${employee_id}', '${requestId}','AM0','AM', GETDATE())`;
       insertParentRequest(requestId);
-      const result = await sql.query(`${query}`);
+      const result = await db.executeQuery(`EXEC InsertTransaction 
+    @RuleId, 
+    @LastUpdatedByRole, 
+    @LastUpdatedById, 
+    @RequestId, 
+    @CurrentStatus, 
+    @CurrentlyPendingWith,
+    @SymmetricKeyName,
+    @CertificateName;`, {
+        RuleId: rule_id,
+        LastUpdatedByRole: 'AM',
+        LastUpdatedById: employee_id,
+        RequestId: requestId,
+        CurrentStatus: 'AM0',
+        CurrentlyPendingWith: 'AM',
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+
+      });
+      // const result = await sql.query(`${query}`);
       // console.log(result.recordset[0],"result.......")
       // Add audit log for the update operation
       await addAuditLog(
@@ -399,18 +418,34 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
       //       VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
       //   `
       // );
-      let query = `
-            INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-            OUTPUT INSERTED.* 
-            VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole, @lastUpdatedById, GETDATE())
-        `;
-      let result = await db.executeQuery(query, {
-        requestId: requestId,
-        rule_id: rule_id,
-        newStatus: newStatus,
-        approver: approver,
-        currentRole: "AM",
-        lastUpdatedById: employee_id,
+      // let query = `
+      //       INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+      //       OUTPUT INSERTED.* 
+      //       VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole, @lastUpdatedById, GETDATE())
+      //   `;
+      // requestId: requestId,
+      //   rule_id: rule_id,
+      //   newStatus: newStatus,
+      //   approver: approver,
+      //   currentRole: "AM",
+      //   lastUpdatedById: employee_id,
+      let result = await db.executeQuery(`EXEC InsertTransaction
+    @RuleId, 
+    @LastUpdatedByRole, 
+    @LastUpdatedById, 
+    @RequestId, 
+    @CurrentStatus, 
+    @CurrentlyPendingWith,
+    @SymmetricKeyName,
+    @CertificateName;`, {
+        RequestId: requestId,
+        RuleId: rule_id,
+        CurrentStatus: newStatus,
+        CurrentlyPendingWith: approver,
+        LastUpdatedByRole: "AM",
+        LastUpdatedById: employee_id,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
       });
       console.log(
         result.recordset[0],
@@ -453,17 +488,25 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
         //         VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
         //     `
         // );
-        let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
-        OUTPUT INSERTED.*
-              VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole,@lastUpdatedById, GETDATE())
-          `;
-        let result = await db.executeQuery(query, {
-          requestId: requestId,
-          rule_id: rule_id,
-          newStatus: newStatus,
-          approver: approver,
-          currentRole: "AM",
-          lastUpdatedById: employee_id,
+        // let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
+        // OUTPUT INSERTED.*
+        //       VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole,@lastUpdatedById, GETDATE())
+        //   `;
+        let result = await db.executeQuery(`EXEC InsertTransaction 
+    @RuleId, 
+    @LastUpdatedByRole, 
+    @LastUpdatedById, 
+    @RequestId, 
+    @CurrentStatus, 
+    @CurrentlyPendingWith,
+    @SymmetricKeyName,
+    @CertificateName;`, {
+          RequestId: requestId,
+          RuleId: rule_id,
+          CurrentStatus: newStatus,
+          CurrentlyPendingWith: approver,
+          LastUpdatedByRole: "AM",
+          LastUpdatedById: employee_id,
         });
 
         console.log(result.recordset[0], "trasanction testing..............");
@@ -558,16 +601,16 @@ async function fetchData(role, status, id) {
     let transactionsResult;
     if (role.indexOf("NSM") != -1) {
       transactionsResult = await db.executeQuery(
-        "EXEC GetTransactionDetails @Status, @Role",
-        { Status: status, Role: "NSM" }
+        "EXEC GetTransactionDetails @Status, @Role,@SymmetricKeyName,@CertificateName",
+        { Status: status, Role: "NSM", SymmetricKeyName: SYMMETRIC_KEY_NAME, CertificateName: CERTIFICATE_NAME }
       );
     }
 
     // Use advanced query to get transactions pending with the given role
     else {
       transactionsResult = await db.executeQuery(
-        "EXEC GetTransactionDetails @Status, @Role",
-        { Status: status, Role: role }
+        "EXEC GetTransactionDetails @Status, @Role,@SymmetricKeyName,@CertificateName",
+        { Status: status, Role: role, SymmetricKeyName: SYMMETRIC_KEY_NAME, CertificateName: CERTIFICATE_NAME }
       );
     }
     let details = [];
@@ -609,7 +652,7 @@ async function fetchData(role, status, id) {
         if (consolidated["request_name"] != "undefined") {
           consolidated["request_name"] =
             consolidated["request_name"].split(",")[
-              consolidated["request_name"].split(",").length - 1
+            consolidated["request_name"].split(",").length - 1
             ];
         } else {
           console.log("In here ... ELse");
@@ -747,6 +790,22 @@ async function fetchRequestReport(req_id, status) {
   }
 }
 
+async function fetchRequestByStatus(status) {
+  try {
+    let result = await db.executeQuery(`EXEC GetPriceRequestByStatus @StatusFilter
+      ,@SymmetricKeyName,@CertificateName`, {
+      StatusFilter: status,
+      SymmetricKeyName: SYMMETRIC_KEY_NAME,
+      CertificateName: CERTIFICATE_NAME
+    });
+    console.log(result);
+    return result;
+  } catch (err) {
+    console.error("Database operation failed:", err);
+    throw err;
+  }
+}
+
 module.exports = {
   handleNewRequest: getCurrentDateRequestId,
   insertTransactions,
@@ -755,4 +814,5 @@ module.exports = {
   fetchRequestDetails,
   addTransactionToTable,
   fetchRequestReport,
+  fetchRequestByStatus
 };

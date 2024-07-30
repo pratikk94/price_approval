@@ -28,7 +28,7 @@ async function processTransaction(req, res) {
       am_id,
       tempAttachmentIds,
     } = req.body;
-
+ 
     logger.info("Processing transaction...");
     logger.debug("Received request body:", req.body);
 
@@ -51,7 +51,7 @@ async function processTransaction(req, res) {
       tempAttachmentIds,
     });
 
-    priceRequestModel.addTransactionToTable(requestId, am_id);
+   await priceRequestModel.addTransactionToTable(requestId, am_id);
     insertParentRequest(requestId, requestId);
 
     logger.info("Transaction processed successfully:: Id:", requestId);
@@ -218,10 +218,11 @@ async function pushDataToTable(requestName, parentRequestName) {
 async function fetchPriceRequestByStatus(req, res) {
   const status = req.params.status;
   try {
-    await sql.connect(config);
-    const query = `SELECT DISTINCT [request_id] FROM [PriceApprovalSystem].[dbo].[transaction_mvc] WHERE current_status LIKE '%${status}%'`;
-    console.log(query);
-    const result = await sql.query(query);
+    // await sql.connect(config);
+    // const query = `SELECT DISTINCT [request_id] FROM [PriceApprovalSystem].[dbo].[transaction_mvc] WHERE current_status LIKE '%${status}%'`;
+    // console.log(query);
+    // const result = await sql.query(query);
+    const result = await priceRequestModel.fetchRequestByStatus(status);
     const consolidatedResults = [];
     console.log("Here");
     // Assuming priceRequestModel.fetchConsolidatedRequest is an async function

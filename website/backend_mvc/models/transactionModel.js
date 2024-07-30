@@ -6,7 +6,7 @@ const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
 const { requestStatus } = require("../utils/updateRequestStatus");
 const { insertParentRequest } = require("../utils/fetchAllRequestIds");
-const { STATUS } = require("../config/constants");
+const { STATUS, SYMMETRIC_KEY_NAME, CERTIFICATE_NAME } = require("../config/constants");
 const { getApproversByLevels, postApproversByLevels } = require("./ruleModel");
 
 // // Make sure to maintain a connection pool instead of connecting in each function
@@ -26,10 +26,16 @@ const getTransactionsByRole = async (approver, pendingWith) => {
     //   .query(
     //     `SELECT * FROM transaction_mvc WHERE currently_pending_with = '${pendingWith}' AND last_updated_by_role = '${approver}'`
     //   );
-    const query = `SELECT * FROM transaction_mvc WHERE currently_pending_with = @pendingWith AND last_updated_by_role = @approver`;
-    let result = await db.executeQuery(query, {
-      pendingWith: pendingWith,
-      approver: approver,
+    // const query = `SELECT * FROM transaction_mvc WHERE currently_pending_with = @pendingWith AND last_updated_by_role = @approver`;
+    let result = await db.executeQuery(`EXEC GetTransactionByRole 
+    @PendingWith, 
+    @Approver, 
+    @SymmetricKeyName, 
+    @CertificateName;`, {
+      PendingWith: pendingWith,
+      Approver: approver,
+      SymmetricKeyName: SYMMETRIC_KEY_NAME,
+      CertificateName: CERTIFICATE_NAME
     });
 
     return result.recordset;
@@ -47,8 +53,11 @@ const getTransactionByRequestId = async (requestId) => {
     //   .query(
     //     `SELECT TOP 1 * FROM transaction_mvc WHERE request_id = '${requestId}' ORDER BY id DESC`
     //   );
-    const query = `SELECT TOP 1 * FROM transaction_mvc WHERE request_id = @requestId ORDER BY id DESC`;
-    let result = await db.executeQuery(query, { requestId: requestId });
+    // const query = `SELECT TOP 1 * FROM transaction_mvc WHERE request_id = @requestId ORDER BY id DESC`;
+    let result = await db.executeQuery(`EXEC GetLatestTransactionByRequestId 
+    @RequestId, 
+    @SymmetricKeyName, 
+    @CertificateName;`, { RequestId: requestId, SymmetricKeyName: SYMMETRIC_KEY_NAME, CertificateName: CERTIFICATE_NAME });
     return result.recordset[0];
   } catch (err) {
     console.error("Database connection error:", err);
@@ -64,8 +73,11 @@ const getTransactionsPendingWithRole = async (role) => {
     //   .query(
     //     `SELECT * FROM transaction_mvc WHERE currently_pending_with = '${role}'`
     //   );
-    const query = `SELECT * FROM transaction_mvc WHERE currently_pending_with = @role`;
-    let result = await db.executeQuery(query, { role: role });
+    // const query = `SELECT * FROM transaction_mvc WHERE currently_pending_with = @role`;
+    let result = await db.executeQuery(`EXEC GetTransactionPendingWithRole 
+    @Role, 
+    @SymmetricKeyName, 
+    @CertificateName;`, { Role: role, SymmetricKeyName: SYMMETRIC_KEY_NAME, CertificateName: CERTIFICATE_NAME });
 
     console.log(result.recordset);
     return result.recordset;
@@ -78,39 +90,42 @@ const getTransactionsPendingWithRole = async (role) => {
 async function fetchTransactions(role) {
   try {
     // await sql.connect(config);
-    const query = `
-            WITH MaxIds AS (
-                SELECT MAX(id) AS maxId, request_id
-                FROM transaction_mvc
-                GROUP BY request_id
-            ),
-            MaxDetails AS (
-                SELECT m.maxId, m.request_id, t.current_status
-                FROM transaction_mvc t
-                INNER JOIN MaxIds m ON t.id = m.maxId
-            ),
-            RelatedTransactions AS (
-                SELECT t.*
-                FROM transaction_mvc t
-                INNER JOIN MaxDetails m ON t.request_id = m.request_id AND t.current_status = m.current_status
-            )
-            SELECT *
-            FROM RelatedTransactions
-            WHERE EXISTS (
-                SELECT 1
-                FROM transaction_mvc
-                WHERE request_id = RelatedTransactions.request_id
-                AND current_status = RelatedTransactions.current_status
-                AND id != RelatedTransactions.id
-            )
-            AND currently_pending_with = @role
-            UNION
-            SELECT *
-            FROM transaction_mvc
-            WHERE id IN (SELECT maxId FROM MaxDetails)
-            AND currently_pending_with = @role;
-        `;
-    let result = await db.executeQuery(query, { role: role });
+    // const query = `
+    //         WITH MaxIds AS (
+    //             SELECT MAX(id) AS maxId, request_id
+    //             FROM transaction_mvc
+    //             GROUP BY request_id
+    //         ),
+    //         MaxDetails AS (
+    //             SELECT m.maxId, m.request_id, t.current_status
+    //             FROM transaction_mvc t
+    //             INNER JOIN MaxIds m ON t.id = m.maxId
+    //         ),
+    //         RelatedTransactions AS (
+    //             SELECT t.*
+    //             FROM transaction_mvc t
+    //             INNER JOIN MaxDetails m ON t.request_id = m.request_id AND t.current_status = m.current_status
+    //         )
+    //         SELECT *
+    //         FROM RelatedTransactions
+    //         WHERE EXISTS (
+    //             SELECT 1
+    //             FROM transaction_mvc
+    //             WHERE request_id = RelatedTransactions.request_id
+    //             AND current_status = RelatedTransactions.current_status
+    //             AND id != RelatedTransactions.id
+    //         )
+    //         AND currently_pending_with = @role
+    //         UNION
+    //         SELECT *
+    //         FROM transaction_mvc
+    //         WHERE id IN (SELECT maxId FROM MaxDetails)
+    //         AND currently_pending_with = @role;
+    //     `;
+    let result = await db.executeQuery(`EXEC GetTransactionPendingWithRole 
+    @Role, 
+    @SymmetricKeyName, 
+    @CertificateName;`, { Role: role, SymmetricKeyName: SYMMETRIC_KEY_NAME, CertificateName: CERTIFICATE_NAME });
     return result.recordset;
   } catch (err) {
     console.error("Database connection error:", err);
@@ -189,27 +204,57 @@ async function acceptTransaction(
     // );
 
     let query = "";
-
+    let input = [];
     if (isDraft || action == "R") {
-      query = `
-    SELECT TOP 1 id, currently_pending_with , rule_id
-    FROM transaction_mvc
-    WHERE request_id = '${
-      oldRequestId.length > 0 ? oldRequestId : requestId
-    }' and currently_pending_with = '${lastUpdatedByRole}'
-    ORDER BY id DESC
-`;
+      //       query = `
+      //     SELECT TOP 1 id, currently_pending_with , rule_id
+      //     FROM transaction_mvc
+      //     WHERE request_id = '${oldRequestId.length > 0 ? oldRequestId : requestId
+      //         }' and currently_pending_with = '${lastUpdatedByRole}'
+      //     ORDER BY id DESC
+      // `;
+      query = `EXEC GetLatestTransactionByRequestIdAndRole 
+    @RequestId, 
+    @OldRequestId, 
+    @LastUpdatedByRole, 
+    @SymmetricKeyName, 
+    @CertificateName;`
+      input = {
+        RequestId: requestId,
+        OldRequestId: oldRequestId,
+        LastUpdatedByRole: lastUpdatedByRole,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      }
     } else if (isBlockExtensionPreclosure) {
-      query = `SELECT TOP 1 id, currently_pending_with , rule_id
-      FROM transaction_mvc
-      WHERE request_id = '${oldRequestId}'
-      ORDER BY id DESC`;
+      // query = `SELECT TOP 1 id, currently_pending_with , rule_id
+      // FROM transaction_mvc
+      // WHERE request_id = '${oldRequestId}'
+      // ORDER BY id DESC`;
+      query = `EXEC GetLatestTransactionByOldRequestId 
+    @OldRequestId, 
+    @SymmetricKeyName, 
+    @CertificateName;`
+      input = {
+        OldRequestId: oldRequestId,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      }
     } else {
-      query = `
-    SELECT TOP 1 id, currently_pending_with , rule_id
-    FROM transaction_mvc
-    WHERE request_id = '${requestId}'
-    ORDER BY id DESC`;
+      //   query = `
+      // SELECT TOP 1 id, currently_pending_with , rule_id
+      // FROM transaction_mvc
+      // WHERE request_id = '${requestId}'
+      // ORDER BY id DESC`;
+      query = `EXEC GetLatestTransactionByOldRequestId 
+    @OldRequestId, 
+    @SymmetricKeyName, 
+    @CertificateName;`
+      input = {
+        OldRequestId: requestId,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      }
     }
     console.log(query);
 
@@ -234,11 +279,29 @@ async function acceptTransaction(
       //         VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
       //     `
       // );
-      let query1 = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
-        OUTPUT INSERTED.* 
-            VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
-        `;
-      let result = await db.executeQuery(query1, {});
+      // let query1 = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
+      //   OUTPUT INSERTED.* 
+      //       VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
+      //   `;
+      let query1 = `EXEC InsertTransaction 
+      @RequestId,
+    @RuleId, 
+    @LastUpdatedByRole, 
+    @LastUpdatedById,      
+    @CurrentStatus, 
+    @CurrentlyPendingWith,
+    @SymmetricKeyName,
+    @CertificateName;`;
+      let result = await db.executeQuery(query1, {
+        RequestId: requestId,
+        RuleId: rule_id,
+        CurrentStatus: 'Approved',
+        CurrentlyPendingWith: 'Approved',
+        LastUpdatedByRole: currentRole,
+        LastUpdatedById: lastUpdatedById,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      });
       insertParentRequest(requestId, requestId);
       console.log(result.recordset[0], "Validator testing");
       // Add audit log for the update operation
@@ -323,16 +386,29 @@ async function acceptTransaction(
         //       VALUES ('${requestId}', '${rule_id}', 'Rejected', 'Rejected', '${currentRole}','${lastUpdatedById}', GETDATE())
         //   `
         // );
-        let query = `
-            INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-            OUTPUT INSERTED.* 
-            VALUES (@requestId, @rule_id, 'Rejected', 'Rejected', @currentRole,@lastUpdatedById, GETDATE())
-        `;
+        // let query = `
+        //     INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+        //     OUTPUT INSERTED.* 
+        //     VALUES (@requestId, @rule_id, 'Rejected', 'Rejected', @currentRole,@lastUpdatedById, GETDATE())
+        // `;
+        let query = `EXEC InsertTransaction 
+        @RequestId,
+      @RuleId, 
+      @LastUpdatedByRole, 
+      @LastUpdatedById, 
+      @CurrentStatus, 
+      @CurrentlyPendingWith,
+      @SymmetricKeyName,
+      @CertificateName`;
         let result = await db.executeQuery(query, {
-          requestId: requestId,
-          rule_id: rule_id,
-          currentRole: currentRole,
-          lastUpdatedById: lastUpdatedById,
+          RequestId: requestId,
+          RuleId: rule_id,
+          CurrentStatus: 'Rejected',
+          CurrentlyPendingWith: 'Rejected',
+          LastUpdatedByRole: currentRole,
+          LastUpdatedById: lastUpdatedById,
+          SymmetricKeyName: SYMMETRIC_KEY_NAME,
+          CertificateName: CERTIFICATE_NAME
         });
         const response = await requestStatus(
           lastUpdatedByRole,
@@ -379,14 +455,26 @@ async function acceptTransaction(
         console.log(`Current role is ${currentRole}`);
 
         if (currentRole != "RM") {
-          let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-          OUTPUT INSERTED.* 
-          VALUES (@requestId, @rule_id, 'Rework', 'RM', @currentRole,@lastUpdatedById, GETDATE())`;
-          let result = await db.executeQuery(query, {
-            requestId: requestId,
-            rule_id: rule_id,
-            currentRole: currentRole,
-            lastUpdatedById: lastUpdatedById,
+          // let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+          // OUTPUT INSERTED.* 
+          // VALUES (@requestId, @rule_id, 'Rework', 'RM', @currentRole,@lastUpdatedById, GETDATE())`;
+          let result = await db.executeQuery(`EXEC InsertTransaction 
+        @RequestId,
+      @RuleId, 
+      @LastUpdatedByRole, 
+      @LastUpdatedById, 
+      @CurrentStatus, 
+      @CurrentlyPendingWith,
+      @SymmetricKeyName,
+      @CertificateName`, {
+        RequestId: requestId,
+        RuleId: rule_id,
+        CurrentStatus:'Rework',
+        currently_pending_with:'RM',
+        LastUpdatedByRole: currentRole,
+        LastUpdatedById: lastUpdatedById,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
           });
 
           console.log(result.recordset[0], "testing RM.................");
@@ -405,15 +493,27 @@ async function acceptTransaction(
             requestId
           );
         }
-        let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-          OUTPUT INSERTED.* 
-          VALUES (@requestId, @rule_id, 'Rework', 'AM', @currentRole,@lastUpdatedById, GETDATE())
-          `;
-        let result1 = await db.executeQuery(query, {
-          requestId: requestId,
-          rule_id: rule_id,
-          currentRole: currentRole,
-          lastUpdatedById: lastUpdatedById,
+        // let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+        //   OUTPUT INSERTED.* 
+        //   VALUES (@requestId, @rule_id, 'Rework', 'AM', @currentRole,@lastUpdatedById, GETDATE())
+        //   `;
+        let result1 = await db.executeQuery(`EXEC InsertTransaction 
+        @RequestId,
+      @RuleId, 
+      @LastUpdatedByRole, 
+      @LastUpdatedById, 
+      @CurrentStatus, 
+      @CurrentlyPendingWith,
+      @SymmetricKeyName,
+      @CertificateName`, {
+        RequestId: requestId,
+        RuleId: rule_id,
+        CurrentStatus:'Rework',
+        currently_pending_with:'AM',
+        LastUpdatedByRole:currentRole,
+        LastUpdatedById: lastUpdatedById,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
         });
         insertParentRequest(requestId, requestId);
         console.log(result1.recordset[0], "testing out side..............");
@@ -447,18 +547,28 @@ async function acceptTransaction(
         //       VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
         //   `
         // );
-        let query = `
-              INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
-              OUTPUT INSERTED.* 
-              VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole, @lastUpdatedById, GETDATE())
-          `;
-        let result = await db.executeQuery(query, {
-          requestId: requestId,
-          rule_id: rule_id,
-          newStatus: newStatus,
-          approver: approver,
-          currentRole: currentRole,
-          lastUpdatedById: lastUpdatedById,
+        // let query = `
+        //       INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id, created_at)
+        //       OUTPUT INSERTED.* 
+        //       VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole, @lastUpdatedById, GETDATE())
+        //   `;
+        let result = await db.executeQuery(`EXEC InsertTransaction 
+        @RequestId,
+      @RuleId, 
+      @LastUpdatedByRole, 
+      @LastUpdatedById, 
+      @CurrentStatus, 
+      @CurrentlyPendingWith,
+      @SymmetricKeyName,
+      @CertificateName`, {
+        RequestId: requestId,
+        RuleId: rule_id,
+        CurrentStatus: newStatus,
+        CurrentlyPendingWith: approver,
+        LastUpdatedByRole: currentRole,
+        LastUpdatedById: lastUpdatedById,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
         });
         console.log(
           result.recordset[0],
@@ -480,9 +590,8 @@ async function acceptTransaction(
           const newStatus =
             approversResult.recordset.reduce(
               (acc, { approver }, index, array) => {
-                return `${acc}${approver}0${
-                  index < array.length - 1 ? "_" : ""
-                }`;
+                return `${acc}${approver}0${index < array.length - 1 ? "_" : ""
+                  }`;
               },
               ""
             ) + `${currentRole}1`;
@@ -492,17 +601,27 @@ async function acceptTransaction(
           //         VALUES ('${requestId}', '${rule_id}', '${newStatus}', '${approver}', '${currentRole}','${lastUpdatedById}', GETDATE())
           //     `
           // );
-          let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
-          OUTPUT INSERTED.*
-                VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole,@lastUpdatedById, GETDATE())
-            `;
-          let result = await db.executeQuery(query, {
-            requestId: requestId,
-            rule_id: rule_id,
-            newStatus: newStatus,
-            approver: approver,
-            currentRole: currentRole,
-            lastUpdatedById: lastUpdatedById,
+          // let query = `INSERT INTO transaction_mvc (request_id, rule_id, current_status, currently_pending_with, last_updated_by_role, last_updated_by_id,created_at)
+          // OUTPUT INSERTED.*
+          //       VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole,@lastUpdatedById, GETDATE())
+          //   `;
+          let result = await db.executeQuery(`EXEC InsertTransaction 
+        @RequestId,
+      @RuleId, 
+      @LastUpdatedByRole, 
+      @LastUpdatedById, 
+      @CurrentStatus, 
+      @CurrentlyPendingWith,
+      @SymmetricKeyName,
+      @CertificateName`, {
+        RequestId: requestId,
+        RuleId: rule_id,
+        CurrentStatus: newStatus,
+        CurrentlyPendingWith: approver,
+        LastUpdatedByRole: currentRole,
+        LastUpdatedById: lastUpdatedById,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
           });
 
           console.log(result.recordset[0], "trasanction testing..............");
@@ -624,14 +743,20 @@ const processTransaction = async (req, res) => {
     const { role, region } = employeeResult.recordset[0];
 
     // Fetch all transaction IDs that match current role and region for the latest value of created_at
-    const matchingTransactionsResult = await db.executeQuery(`
-            SELECT TOP 1 t.id, request_id
-      FROM transaction_mvc as t
-      INNER JOIN rule_mvc as r on t.rule_id = r.rule_id
-      WHERE currently_pending_with = '${role}' AND r.region = '${region}'
-      ORDER BY t.created_at DESC
+    // const matchingTransactionsResult = await db.executeQuery(`
+    //         SELECT TOP 1 t.id, request_id
+    //   FROM transaction_mvc as t
+    //   INNER JOIN rule_mvc as r on t.rule_id = r.rule_id
+    //   WHERE currently_pending_with = '${role}' AND r.region = '${region}'
+    //   ORDER BY t.created_at DESC
 
-    `);
+    // `);
+    const matchingTransactionsResult = await db.executeQuery(`
+      EXEC GetLatestTransactionByRoleAndRegion 
+    @Role, 
+    @Region, 
+    @SymmetricKeyName, 
+    @CertificateName`,{Role:role,Region:region,SymmetricKeyName:SYMMETRIC_KEY_NAME,CertificateName:CERTIFICATE_NAME});
 
     // Check if there are any matching transactions
     if (matchingTransactionsResult.recordset.length === 0) {

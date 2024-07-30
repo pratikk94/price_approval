@@ -3,7 +3,8 @@ require("dotenv").config();
 
 const BASE_PATH = "http://" + process.env.URL + ":5173";
 const SESSION_SECRET = process.env.SESSION_SECRET;
-
+const SYMMETRIC_KEY_NAME=process.env.SYMMETRIC_KEY_NAME;
+const CERTIFICATE_NAME =process.env.CERTIFICATE_NAME;
 
 const DB_CONFIG = {
   user: process.env.DB_USER,
@@ -32,4 +33,6 @@ module.exports = {
   DB_CONFIG,
   CREATED_BY,
   STATUS,
+  SYMMETRIC_KEY_NAME,
+  CERTIFICATE_NAME
 };
