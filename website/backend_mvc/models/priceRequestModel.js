@@ -400,6 +400,7 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
       // const result = await sql.query(`${query}`);
       // console.log(result.recordset[0],"result.......")
       // Add audit log for the update operation
+      console.log(result.recordset[0].id)
       await addAuditLog(
         "transaction_mvc",
         result.recordset[0].id,
@@ -448,10 +449,11 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
         CertificateName: CERTIFICATE_NAME
       });
       console.log(
-        result.recordset[0],
+        result,
         "testing transaction_mvc approversResult.recordset.length === 1"
       );
       // Add audit log for the update operation
+      console.log(result.recordset[0].id)
       await addAuditLog(
         "transaction_mvc",
         result.recordset[0].id,
@@ -508,7 +510,7 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
           LastUpdatedByRole: "AM",
           LastUpdatedById: employee_id,
         });
-
+        console.log(result.recordset[0].id)
         console.log(result.recordset[0], "trasanction testing..............");
         const pool = await poolPromise;
         const result1 = await pool
@@ -602,7 +604,7 @@ async function fetchData(role, status, id) {
     if (role.indexOf("NSM") != -1) {
       transactionsResult = await db.executeQuery(
         "EXEC GetTransactionDetails @Status, @Role,@SymmetricKeyName,@CertificateName",
-        { Status: status, Role: "NSM", SymmetricKeyName: SYMMETRIC_KEY_NAME, CertificateName: CERTIFICATE_NAME }
+        { Status: status, Role: role, SymmetricKeyName: SYMMETRIC_KEY_NAME, CertificateName: CERTIFICATE_NAME }
       );
     }
 
@@ -622,9 +624,9 @@ async function fetchData(role, status, id) {
     for (let transaction of uniqueTransactions) {
       console.log(transaction.request_id);
       let query =
-        role == "RM" || role == "AM"
-          ? `EXEC GetPriceApprovalRequests @Id = '${id}', @Status = '${status}', @RequestId = ${transaction.request_id}, @Role = '${role}'`
-          : `EXEC GetPriceApprovalRequestsHigh  @Status = '${status}', @RequestId = ${transaction.request_id}, @Role = '${role}'`;
+        role == "RM" || role == "AM" 
+          ? `EXEC GetPriceApprovalRequests @Id = '${id}', @Status = '${status}', @RequestId = ${transaction.request_id}, @Role = '${role}',@SymmetricKeyName = '${SYMMETRIC_KEY_NAME}', @CertificateName='${CERTIFICATE_NAME}'`
+          : `EXEC GetPriceApprovalRequestsHigh  @Status = '${status}', @RequestId = ${transaction.request_id}, @Role = '${role}',@SymmetricKeyName = '${SYMMETRIC_KEY_NAME}', @CertificateName='${CERTIFICATE_NAME}'`;
       // Fetch price details with the maximum ID
       const requestResult = await db.executeQuery(query);
 

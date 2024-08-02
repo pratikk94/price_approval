@@ -35,6 +35,8 @@ async function executeQuery(query, inputs = {}) { try {
                 request.input(key, inputs[key]);
             }
         }
+        console.log(query);
+        console.log(inputs);
         const result = await request.query(query);
         // const result = await request.execute(query)
         console.log('Connection pool is open:', pool.connected);

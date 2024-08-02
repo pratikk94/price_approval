@@ -77,7 +77,7 @@ END;
 --     @CertificateName;
 
 CREATE PROCEDURE InsertTransaction
-    @RuleId NVARCHAR(128),
+    @RuleId BIGINT,
     @LastUpdatedByRole NVARCHAR(128),
     @LastUpdatedById NVARCHAR(128),
     @RequestId NVARCHAR(128),
@@ -582,6 +582,8 @@ GO
 --     @SymmetricKeyName, 
 --     @CertificateName;
 
+-- DROP PROCEDURE GetTransactionDetails
+
 CREATE PROCEDURE GetTransactionDetails
     @Status INT,
     @Role NVARCHAR(50),
@@ -607,13 +609,13 @@ BEGIN
         -- Set @StatusSTR and @StatusIM based on @Status
         IF @Status = 0
         BEGIN
-            SET @StatusSTR = 'AND CONVERT(VARCHAR(128), DecryptByKey(currently_pending_with)) = @Role';
+            SET @StatusSTR = 'AND CAST(REPLACE(DecryptByKey(currently_pending_with), CHAR(0), '''') AS VARCHAR(128)) = @Role';
             SET @StatusIM = 'status = 0';
         END
         ELSE IF @Status = 3 AND @Role = 'RM'
         BEGIN
-            SET @StatusSTR = 'AND CONVERT(VARCHAR(128), DecryptByKey(currently_pending_with)) = @Role';
-            SET @StatusIM = '1=1'; -- No status filter for this case
+            SET @StatusSTR = 'AND CAST(REPLACE(DecryptByKey(currently_pending_with), CHAR(0), '''') AS VARCHAR(128)) = @Role';
+            SET @StatusIM = '1=1';  -- No status filter for this case
         END
         ELSE
         BEGIN
@@ -638,48 +640,50 @@ BEGIN
             WHERE rn = 1 AND ' + @StatusIM + '
         ),
         MaxIds AS (
-            SELECT MAX(id) AS maxId, CONVERT(VARCHAR(128), DecryptByKey(request_id)) AS request_id
+            SELECT MAX(id) AS maxId, CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(request_id)), CHAR(0), '''') AS VARCHAR(128)) AS request_id
             FROM transaction_mvc
-            WHERE CONVERT(VARCHAR(128), DecryptByKey(request_id)) IN (SELECT req_id FROM FilteredRequests)
-            GROUP BY CONVERT(VARCHAR(128), DecryptByKey(request_id))
+            WHERE CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(request_id)), CHAR(0), '''') AS VARCHAR(128)) IN (SELECT req_id FROM FilteredRequests)
+            GROUP BY CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(request_id)), CHAR(0), '''') AS VARCHAR(128))
         ),
         MaxDetails AS (
-            SELECT m.maxId, m.request_id, CONVERT(VARCHAR(128), DecryptByKey(t.current_status)) AS current_status
+           SELECT m.maxId, m.request_id, CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.current_status)), CHAR(0), '''') AS VARCHAR(128)) AS current_status
             FROM transaction_mvc t
             INNER JOIN MaxIds m ON t.id = m.maxId
         ),
         RelatedTransactions AS (
-            SELECT 
-                t.id,
-                t.rule_id,
-                CONVERT(VARCHAR(128), DecryptByKey(t.currently_pending_with)) AS currently_pending_with,
-                CONVERT(VARCHAR(128), DecryptByKey(t.last_updated_by_role)) AS last_updated_by_role,
-                CONVERT(VARCHAR(128), DecryptByKey(t.last_updated_by_id)) AS last_updated_by_id,
-                CONVERT(VARCHAR(128), DecryptByKey(t.current_status)) AS current_status,
-                CONVERT(VARCHAR(128), DecryptByKey(t.request_id)) AS request_id,
-                t.created_at
+           SELECT 
+               t.id,
+               t.rule_id,
+               CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.currently_pending_with)), CHAR(0), '''') AS VARCHAR(128)) AS currently_pending_with,
+               CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.last_updated_by_role)), CHAR(0), '''') AS VARCHAR(128)) AS last_updated_by_role,
+               CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.last_updated_by_id)), CHAR(0), '''') AS VARCHAR(128)) AS last_updated_by_id,
+               CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.current_status)), CHAR(0), '''') AS VARCHAR(128)) AS current_status,
+               CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.request_id)), CHAR(0), '''') AS VARCHAR(128)) AS request_id,
+               t.created_at
             FROM transaction_mvc t
-            INNER JOIN MaxDetails m ON CONVERT(VARCHAR(128), DecryptByKey(t.request_id)) = m.request_id AND CONVERT(VARCHAR(128), DecryptByKey(t.current_status)) = m.current_status
+            INNER JOIN MaxDetails m ON CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.request_id)), CHAR(0), '''') AS VARCHAR(128)) = m.request_id 
+            AND CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.current_status)), CHAR(0), '''') AS VARCHAR(128)) = m.current_status
         )
         SELECT *
         FROM RelatedTransactions
         WHERE EXISTS (
             SELECT 1
             FROM transaction_mvc
-            WHERE CONVERT(VARCHAR(128), DecryptByKey(request_id)) = RelatedTransactions.request_id
-            AND CONVERT(VARCHAR(128), DecryptByKey(current_status)) = RelatedTransactions.current_status
+            WHERE CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(request_id)), CHAR(0), '''') AS VARCHAR(128)) = RelatedTransactions.request_id
+            AND CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(current_status)), CHAR(0), '''') AS VARCHAR(128)) = RelatedTransactions.current_status
             AND id != RelatedTransactions.id
-        ) ' + @StatusSTR + '
+        ) 
+        ' + @StatusSTR + '
         UNION
         SELECT 
-            t.id,
-            t.rule_id,
-            CAST(REPLACE(DecryptByKey(t.currently_pending_with), CHAR(0), '''') AS VARCHAR(128)) AS currently_pending_with,
-            CAST(REPLACE(DecryptByKey(t.last_updated_by_role), CHAR(0), '''') AS VARCHAR(128)) AS last_updated_by_role,
-            CAST(REPLACE(DecryptByKey(t.last_updated_by_id), CHAR(0), '''') AS VARCHAR(128)) AS last_updated_by_id,
-            CAST(REPLACE(DecryptByKey(t.current_status), CHAR(0), '''') AS VARCHAR(128)) AS current_status,
-            CAST(REPLACE(DecryptByKey(t.request_id), CHAR(0), '''') AS VARCHAR(128)) AS request_id,
-            t.created_at
+          t.id,
+          t.rule_id,
+          CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.currently_pending_with)), CHAR(0), '''') AS VARCHAR(128)) AS currently_pending_with,
+          CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.last_updated_by_role)), CHAR(0), '''') AS VARCHAR(128)) AS last_updated_by_role,
+          CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.last_updated_by_id)), CHAR(0), '''') AS VARCHAR(128)) AS last_updated_by_id,
+          CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.current_status)), CHAR(0), '''') AS VARCHAR(128)) AS current_status,
+          CAST(REPLACE(CONVERT(VARCHAR(128), DecryptByKey(t.request_id)), CHAR(0), '''') AS VARCHAR(128)) AS request_id,
+          t.created_at
         FROM transaction_mvc t
         WHERE id IN (SELECT maxId FROM MaxDetails) ' + @StatusSTR + ';';
 
@@ -691,16 +695,11 @@ BEGIN
     END TRY
     BEGIN CATCH
         -- Handle errors
-        IF (SELECT ISNULL(XACT_STATE(), 0)) <> 0
-        BEGIN
-            ROLLBACK TRANSACTION;
-        END
-
         DECLARE @ErrorMessage NVARCHAR(4000);
         DECLARE @ErrorSeverity INT;
         DECLARE @ErrorState INT;
 
-        SELECT 
+        SELECT
             @ErrorMessage = ERROR_MESSAGE(),
             @ErrorSeverity = ERROR_SEVERITY(),
             @ErrorState = ERROR_STATE();
@@ -715,3 +714,296 @@ BEGIN
     END CATCH
 END;
 GO
+
+
+-- EXEC GetPriceApprovalRequests @Id = 'e1002', @Status = '0', @RequestId = NR202407300003, @Role = 'RM', @SymmetricKeyName = 'YourSymmetricKeyName', @CertificateName='YourCertificateName'
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetPriceApprovalRequests]
+    @RequestID NVARCHAR(50),
+    @Status INT,
+    @Id NVARCHAR(50),
+    @Role NVARCHAR(50),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    BEGIN TRY
+        -- Declare dynamic SQL strings for opening and closing the symmetric key
+        DECLARE @OpenSymmetricKeySQL NVARCHAR(MAX);
+        DECLARE @CloseSymmetricKeySQL NVARCHAR(MAX);
+
+        SET @OpenSymmetricKeySQL = N'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + N';';
+        SET @CloseSymmetricKeySQL = N'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N';';
+
+        -- Open the symmetric key for decryption
+        EXEC sp_executesql @OpenSymmetricKeySQL;
+    DECLARE @MaxStatus INT;
+
+SELECT @MaxStatus = MAX(status)
+    FROM [PriceApprovalSystem].[dbo].[requests_mvc]
+    WHERE req_id = @RequestID;
+
+-- If the status parameter is not equal to the maximum status, return an empty result set
+IF @Status <> @MaxStatus
+BEGIN
+        SELECT
+            NULL AS request_name,
+            NULL AS customer_name,
+            NULL AS customer_ids,
+            NULL AS consignee_name,
+            NULL AS consignee_ids,
+            NULL AS enduse_name,
+            NULL AS end_use_id,
+            NULL AS plant,
+            NULL AS valid_from,
+            NULL AS valid_to,
+            NULL AS payment_terms_id
+        WHERE 1 = 0;
+    -- This will return an empty result set
+    END
+ELSE
+BEGIN
+        -- Use a CTE to fetch the latest status for the request ID
+        WITH
+            LatestStatus
+            AS
+            (
+                SELECT TOP (1)
+                    req_id,
+                    status
+                FROM
+                    [PriceApprovalSystem].[dbo].[requests_mvc]
+                WHERE 
+            req_id = @RequestID
+                ORDER BY 
+            id DESC
+                -- Assuming id is a sequential identifier for ordering
+            )
+
+        SELECT
+            rm.parent_request_id as request_name,
+            c.name AS customer_name,
+            par.customer_id AS customer_ids,
+            consignee.name AS consignee_name,
+            par.consignee_id AS consignee_ids,
+            enduse.name AS enduse_name,
+            par.end_use_id,
+            par.plant,
+            CONVERT(VARCHAR, CAST(par.valid_from AS DATETIME), 103) AS valid_from,
+            CONVERT(VARCHAR, CAST(par.valid_to AS DATETIME), 103) AS valid_to,
+            par.payment_terms_id,
+            par.mappint_type
+
+        FROM
+            price_approval_requests par
+            LEFT JOIN
+            customer c ON par.customer_id = c.id
+            LEFT JOIN
+            customer consignee ON par.consignee_id = consignee.id
+            LEFT JOIN
+            customer enduse ON par.end_use_id = enduse.id
+            JOIN
+            LatestStatus ls ON par.request_name = ls.req_id
+            JOIN
+            requests_mvc rs ON par.request_name = rs.req_id
+            JOIN
+            transaction_mvc tmvc ON par.request_name = CONVERT(VARCHAR(128), DecryptByKey(tmvc.request_id))
+            INNER JOIN
+            price_approval_requests_price_table parpt ON par.request_name = parpt.req_id
+            INNER JOIN
+            profit_center PC ON parpt.grade = PC.Grade
+            INNER JOIN
+            business_admin_variables BAV ON BAV.value = LEFT(CAST(ABS(PC.Profit_Centre) AS VARCHAR(10)), 1)
+            JOIN
+            define_roles dr ON CONVERT(VARCHAR(128), DecryptByKey(tmvc.last_updated_by_id)) = dr.employee_id
+            INNER JOIN
+            request_mapper rm ON rm.request_id = par.request_name
+        WHERE 
+        par.request_name = @RequestID
+            AND BAV.[key] = @Role
+            AND dr.region IN (SELECT region
+            FROM [PriceApprovalSystem].[dbo].[define_roles]
+            WHERE employee_id = @Id)
+            AND rs.status = @Status -- Filter based on the parameterized status
+            AND ls.status = (SELECT TOP 1
+                status
+            FROM LatestStatus
+            ORDER BY req_id DESC) -- Ensure matching latest status
+            AND @Status <= @MaxStatus;
+    -- Ensure @Status is within valid range
+    END
+
+        -- Close the symmetric key
+        EXEC sp_executesql @CloseSymmetricKeySQL;
+    END TRY
+    BEGIN CATCH
+        -- Handle errors
+        -- Declare variables to hold error information
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        DECLARE @ErrorSeverity INT;
+        DECLARE @ErrorState INT;
+
+        -- Retrieve error information
+        SELECT
+        @ErrorMessage = ERROR_MESSAGE(),
+        @ErrorSeverity = ERROR_SEVERITY(),
+        @ErrorState = ERROR_STATE();
+
+        -- Close the symmetric key if an error occurs
+        IF EXISTS (SELECT *
+    FROM sys.openkeys
+    WHERE key_name = @SymmetricKeyName)
+        BEGIN
+        EXEC sp_executesql @CloseSymmetricKeySQL;
+    END
+
+        -- Raise the error
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+
+-- EXEC GetPriceApprovalRequestsHigh  @Status = '${status}', @RequestId = ${transaction.request_id}, @Role = '${role},@SymmetricKeyName = ${SYMMETRIC_KEY_NAME}, @CertificateName=${CERTIFICATE_NAME}
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetPriceApprovalRequestsHigh]
+    @RequestID NVARCHAR(50),
+    @Status INT,
+    @Role NVARCHAR(50),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+    -- @Id INT
+AS
+BEGIN
+   BEGIN TRY
+        -- Declare dynamic SQL strings for opening and closing the symmetric key
+        DECLARE @OpenSymmetricKeySQL NVARCHAR(MAX);
+        DECLARE @CloseSymmetricKeySQL NVARCHAR(MAX);
+
+        SET @OpenSymmetricKeySQL = N'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + N';';
+        SET @CloseSymmetricKeySQL = N'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N';';
+
+        -- Open the symmetric key for decryption
+        EXEC sp_executesql @OpenSymmetricKeySQL;
+    DECLARE @MaxStatus INT;
+
+SELECT @MaxStatus = MAX(status)
+FROM [PriceApprovalSystem].[dbo].[requests_mvc]
+WHERE req_id = @RequestID;
+
+-- If the status parameter is not equal to the maximum status, return an empty result set
+IF @Status <> @MaxStatus
+BEGIN
+    SELECT 
+        NULL AS request_name,
+        NULL AS customer_name,
+        NULL AS customer_ids,
+        NULL AS consignee_name,
+        NULL AS consignee_ids,
+        NULL AS enduse_name,
+        NULL AS end_use_id,
+        NULL AS plant,
+        NULL AS valid_from,
+        NULL AS valid_to,
+        NULL AS payment_terms_id
+    WHERE 1 = 0; -- This will return an empty result set
+END
+ELSE
+BEGIN
+    -- Use a CTE to fetch the latest status for the request ID
+    WITH LatestStatus AS (
+        SELECT TOP (1) 
+            req_id,
+            status
+        FROM 
+            [PriceApprovalSystem].[dbo].[requests_mvc]
+        WHERE 
+            req_id = @RequestID
+        ORDER BY 
+            id DESC -- Assuming id is a sequential identifier for ordering
+    )
+    
+    SELECT 
+        rm.parent_request_id as request_name,
+        c.name AS customer_name, 
+        par.customer_id AS customer_ids,
+        consignee.name AS consignee_name, 
+        par.consignee_id AS consignee_ids,
+        enduse.name AS enduse_name,
+        par.end_use_id,
+        par.plant,
+        CONVERT(VARCHAR, CAST(par.valid_from AS DATETIME), 103) AS valid_from,
+        CONVERT(VARCHAR, CAST(par.valid_to AS DATETIME), 103) AS valid_to,
+        par.payment_terms_id,
+        par.mappint_type
+    FROM 
+        price_approval_requests par
+    LEFT JOIN 
+        customer c ON par.customer_id = c.id
+    LEFT JOIN 
+        customer consignee ON par.consignee_id = consignee.id
+    LEFT JOIN 
+        customer enduse ON par.end_use_id = enduse.id
+    JOIN 
+        LatestStatus ls ON par.request_name = ls.req_id
+    JOIN 
+        requests_mvc rs ON par.request_name = rs.req_id
+    JOIN 
+        transaction_mvc tmvc ON par.request_name = tmvc.request_id
+    INNER JOIN 
+        price_approval_requests_price_table parpt ON par.request_name = parpt.req_id
+    INNER JOIN 
+        profit_center PC ON parpt.grade = PC.Grade
+    INNER JOIN 
+        business_admin_variables BAV ON BAV.value = LEFT(CAST(ABS(PC.Profit_Centre) AS VARCHAR(10)), 1)
+    INNER JOIN
+        request_mapper rm ON rm.request_id = par.request_name 
+    -- JOIN 
+    --     define_roles dr ON tmvc.last_updated_by_id = dr.employee_id
+    WHERE 
+        par.request_name = @RequestID
+        AND BAV.[key] = @Role
+        -- AND dr.region IN (SELECT region FROM [PriceApprovalSystem].[dbo].[define_roles] WHERE employee_id = @Id)
+        AND rs.status = @Status -- Filter based on the parameterized status
+        AND ls.status = (SELECT TOP 1 status FROM LatestStatus ORDER BY par.req_id DESC) -- Ensure matching latest status
+        AND @Status <= @MaxStatus; -- Ensure @Status is within valid range
+    END
+
+        -- Close the symmetric key
+        EXEC sp_executesql @CloseSymmetricKeySQL;
+    END TRY
+    BEGIN CATCH
+        -- Handle errors
+        -- Declare variables to hold error information
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        DECLARE @ErrorSeverity INT;
+        DECLARE @ErrorState INT;
+
+        -- Retrieve error information
+        SELECT
+        @ErrorMessage = ERROR_MESSAGE(),
+        @ErrorSeverity = ERROR_SEVERITY(),
+        @ErrorState = ERROR_STATE();
+
+        -- Close the symmetric key if an error occurs
+        IF EXISTS (SELECT *
+    FROM sys.openkeys
+    WHERE key_name = @SymmetricKeyName)
+        BEGIN
+        EXEC sp_executesql @CloseSymmetricKeySQL;
+    END
+
+        -- Raise the error
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+

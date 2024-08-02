@@ -246,10 +246,7 @@ async function acceptTransaction(
       // FROM transaction_mvc
       // WHERE request_id = '${requestId}'
       // ORDER BY id DESC`;
-      query = `EXEC GetLatestTransactionByOldRequestId 
-    @OldRequestId, 
-    @SymmetricKeyName, 
-    @CertificateName;`
+      query = `EXEC GetLatestTransactionByOldRequestId @OldRequestId,@SymmetricKeyName,@CertificateName`
       input = {
         OldRequestId: requestId,
         SymmetricKeyName: SYMMETRIC_KEY_NAME,
@@ -258,7 +255,7 @@ async function acceptTransaction(
     }
     console.log(query);
 
-    let transactionResult = await db.executeQuery(query);
+    let transactionResult = await db.executeQuery(query,input);
 
     console.log(transactionResult, "testing.................");
 
@@ -284,14 +281,14 @@ async function acceptTransaction(
       //       VALUES ('${requestId}', '${rule_id}', '${"Approved"}', '${"Approved"}', '${currentRole}','${lastUpdatedById}', GETDATE())
       //   `;
       let query1 = `EXEC InsertTransaction 
-      @RequestId,
-    @RuleId, 
-    @LastUpdatedByRole, 
-    @LastUpdatedById,      
-    @CurrentStatus, 
-    @CurrentlyPendingWith,
-    @SymmetricKeyName,
-    @CertificateName;`;
+      @RuleId, 
+      @LastUpdatedByRole, 
+      @LastUpdatedById, 
+      @RequestId, 
+      @CurrentStatus, 
+      @CurrentlyPendingWith,
+      @SymmetricKeyName,
+      @CertificateName;`;
       let result = await db.executeQuery(query1, {
         RequestId: requestId,
         RuleId: rule_id,
@@ -302,6 +299,7 @@ async function acceptTransaction(
         SymmetricKeyName: SYMMETRIC_KEY_NAME,
         CertificateName: CERTIFICATE_NAME
       });
+      console.log(result.recordset[0].id)
       insertParentRequest(requestId, requestId);
       console.log(result.recordset[0], "Validator testing");
       // Add audit log for the update operation
@@ -392,14 +390,14 @@ async function acceptTransaction(
         //     VALUES (@requestId, @rule_id, 'Rejected', 'Rejected', @currentRole,@lastUpdatedById, GETDATE())
         // `;
         let query = `EXEC InsertTransaction 
-        @RequestId,
-      @RuleId, 
-      @LastUpdatedByRole, 
-      @LastUpdatedById, 
-      @CurrentStatus, 
-      @CurrentlyPendingWith,
-      @SymmetricKeyName,
-      @CertificateName`;
+        @RuleId, 
+        @LastUpdatedByRole, 
+        @LastUpdatedById, 
+        @RequestId, 
+        @CurrentStatus, 
+        @CurrentlyPendingWith,
+        @SymmetricKeyName,
+        @CertificateName;`;
         let result = await db.executeQuery(query, {
           RequestId: requestId,
           RuleId: rule_id,
@@ -416,7 +414,7 @@ async function acceptTransaction(
           action,
           requestId
         );
-
+        console.log(result.recordset[0].id)
         insertParentRequest(requestId, requestId);
         console.log(result.recordset[0], "testing tranc action == 2");
         // Add audit log for the update operation
@@ -459,14 +457,14 @@ async function acceptTransaction(
           // OUTPUT INSERTED.* 
           // VALUES (@requestId, @rule_id, 'Rework', 'RM', @currentRole,@lastUpdatedById, GETDATE())`;
           let result = await db.executeQuery(`EXEC InsertTransaction 
-        @RequestId,
-      @RuleId, 
-      @LastUpdatedByRole, 
-      @LastUpdatedById, 
-      @CurrentStatus, 
-      @CurrentlyPendingWith,
-      @SymmetricKeyName,
-      @CertificateName`, {
+        @RuleId, 
+        @LastUpdatedByRole, 
+        @LastUpdatedById, 
+        @RequestId, 
+        @CurrentStatus, 
+        @CurrentlyPendingWith,
+        @SymmetricKeyName,
+        @CertificateName;`, {
         RequestId: requestId,
         RuleId: rule_id,
         CurrentStatus:'Rework',
@@ -499,13 +497,13 @@ async function acceptTransaction(
         //   `;
         let result1 = await db.executeQuery(`EXEC InsertTransaction 
         @RequestId,
-      @RuleId, 
-      @LastUpdatedByRole, 
-      @LastUpdatedById, 
-      @CurrentStatus, 
-      @CurrentlyPendingWith,
-      @SymmetricKeyName,
-      @CertificateName`, {
+        @RuleId, 
+        @LastUpdatedByRole, 
+        @LastUpdatedById, 
+        @CurrentStatus, 
+        @CurrentlyPendingWith,
+        @SymmetricKeyName,
+        @CertificateName`, {
         RequestId: requestId,
         RuleId: rule_id,
         CurrentStatus:'Rework',
@@ -553,22 +551,22 @@ async function acceptTransaction(
         //       VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole, @lastUpdatedById, GETDATE())
         //   `;
         let result = await db.executeQuery(`EXEC InsertTransaction 
-        @RequestId,
-      @RuleId, 
-      @LastUpdatedByRole, 
-      @LastUpdatedById, 
-      @CurrentStatus, 
-      @CurrentlyPendingWith,
-      @SymmetricKeyName,
-      @CertificateName`, {
-        RequestId: requestId,
-        RuleId: rule_id,
-        CurrentStatus: newStatus,
-        CurrentlyPendingWith: approver,
-        LastUpdatedByRole: currentRole,
-        LastUpdatedById: lastUpdatedById,
-        SymmetricKeyName: SYMMETRIC_KEY_NAME,
-        CertificateName: CERTIFICATE_NAME
+        @RuleId, 
+        @LastUpdatedByRole, 
+        @LastUpdatedById, 
+        @RequestId, 
+        @CurrentStatus, 
+        @CurrentlyPendingWith,
+        @SymmetricKeyName,
+        @CertificateName;`, {
+          RequestId: requestId,
+          RuleId: rule_id,
+          CurrentStatus: newStatus,
+          CurrentlyPendingWith: approver,
+          LastUpdatedByRole: currentRole,
+          LastUpdatedById: lastUpdatedById,
+          SymmetricKeyName: SYMMETRIC_KEY_NAME,
+          CertificateName: CERTIFICATE_NAME
         });
         console.log(
           result.recordset[0],
@@ -606,22 +604,22 @@ async function acceptTransaction(
           //       VALUES (@requestId, @rule_id, @newStatus, @approver, @currentRole,@lastUpdatedById, GETDATE())
           //   `;
           let result = await db.executeQuery(`EXEC InsertTransaction 
-        @RequestId,
-      @RuleId, 
-      @LastUpdatedByRole, 
-      @LastUpdatedById, 
-      @CurrentStatus, 
-      @CurrentlyPendingWith,
-      @SymmetricKeyName,
-      @CertificateName`, {
-        RequestId: requestId,
-        RuleId: rule_id,
-        CurrentStatus: newStatus,
-        CurrentlyPendingWith: approver,
-        LastUpdatedByRole: currentRole,
-        LastUpdatedById: lastUpdatedById,
-        SymmetricKeyName: SYMMETRIC_KEY_NAME,
-        CertificateName: CERTIFICATE_NAME
+            @RuleId, 
+            @LastUpdatedByRole, 
+            @LastUpdatedById, 
+            @RequestId, 
+            @CurrentStatus, 
+            @CurrentlyPendingWith,
+            @SymmetricKeyName,
+            @CertificateName;`, {
+            RequestId: requestId,
+            RuleId: rule_id,
+            CurrentStatus: newStatus,
+            CurrentlyPendingWith: approver,
+            LastUpdatedByRole: currentRole,
+            LastUpdatedById: lastUpdatedById,
+            SymmetricKeyName: SYMMETRIC_KEY_NAME,
+            CertificateName: CERTIFICATE_NAME
           });
 
           console.log(result.recordset[0], "trasanction testing..............");
