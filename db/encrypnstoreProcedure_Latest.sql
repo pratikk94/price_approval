@@ -717,6 +717,10 @@ GO
 
 
 -- EXEC GetPriceApprovalRequests @Id = 'e1002', @Status = '0', @RequestId = NR202407300003, @Role = 'RM', @SymmetricKeyName = 'YourSymmetricKeyName', @CertificateName='YourCertificateName'
+EXEC GetPriceApprovalRequests @Id = 'e1002', @Status = '0',
+ @RequestId = NR202408050001, @Role = 'RM',
+ @SymmetricKeyName = 'YourSymmetricKeyName', 
+ @CertificateName='YourCertificateName'
 
 SET ANSI_NULLS ON
 GO
@@ -813,9 +817,9 @@ BEGIN
             JOIN
             transaction_mvc tmvc ON par.request_name = CONVERT(VARCHAR(128), DecryptByKey(tmvc.request_id))
             INNER JOIN
-            price_approval_requests_price_table parpt ON par.request_name = parpt.req_id
+            price_approval_requests_price_table parpt ON par.request_name = CAST(REPLACE(DecryptByKey(parpt.req_id), CHAR(0), '') AS NVARCHAR(128))
             INNER JOIN
-            profit_center PC ON parpt.grade = PC.Grade
+            profit_center PC ON CAST(REPLACE(DecryptByKey(parpt.grade), CHAR(0), '') AS NVARCHAR(50)) = PC.Grade
             INNER JOIN
             business_admin_variables BAV ON BAV.value = LEFT(CAST(ABS(PC.Profit_Centre) AS VARCHAR(10)), 1)
             JOIN
@@ -1236,3 +1240,270 @@ BEGIN
         RETURN;
     END CATCH
 END;
+
+
+-- EXEC GetPriceApprovalRequestDetails 
+--     @RequestID = 'NR202408050001',
+--     @Role = 'RM',
+--     @SymmetricKeyName = 'YourSymmetricKeyName',
+--     @CertificateName = 'YourCertificateName';
+
+
+CREATE PROCEDURE GetPriceApprovalRequestDetails
+    @RequestID NVARCHAR(50),
+    @Role NVARCHAR(50),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Open the symmetric key for decryption
+        DECLARE @sql NVARCHAR(MAX);
+        SET @sql = 'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + ';';
+        EXEC sp_executesql @sql;
+
+        -- Select and decrypt data
+        SELECT 
+            CAST(REPLACE(DecryptByKey(PAQ.req_id), CHAR(0), '') AS NVARCHAR(128)) AS req_id,
+            CAST(REPLACE(DecryptByKey(PAQ.grade), CHAR(0), '') AS NVARCHAR(50)) AS grade,
+            CAST(REPLACE(DecryptByKey(PAQ.fsc), CHAR(0), '') AS NVARCHAR(50)) AS fsc,
+            CAST(REPLACE(DecryptByKey(PAQ.grade_type), CHAR(0), '') AS NVARCHAR(50)) AS grade_type,
+            CAST(REPLACE(DecryptByKey(PAQ.gsm_range_from), CHAR(0), '') AS NVARCHAR(MAX)) AS gsm_range_from,
+            CAST(REPLACE(DecryptByKey(PAQ.gsm_range_to), CHAR(0), '') AS NVARCHAR(MAX)) AS gsm_range_to,
+            CAST(REPLACE(DecryptByKey(PAQ.agreed_price), CHAR(0), '') AS NVARCHAR(MAX)) AS agreed_price,
+            CAST(REPLACE(DecryptByKey(PAQ.special_discount), CHAR(0), '') AS NVARCHAR(MAX)) AS special_discount,
+            CAST(REPLACE(DecryptByKey(PAQ.reel_discount), CHAR(0), '') AS NVARCHAR(MAX)) AS reel_discount,
+            CAST(REPLACE(DecryptByKey(PAQ.pack_upcharge), CHAR(0), '') AS NVARCHAR(MAX)) AS pack_upcharge,
+            CAST(REPLACE(DecryptByKey(PAQ.tpc), CHAR(0), '') AS NVARCHAR(MAX)) AS tpc,
+            CAST(REPLACE(DecryptByKey(PAQ.offline_discount), CHAR(0), '') AS NVARCHAR(MAX)) AS offline_discount,
+            CAST(REPLACE(DecryptByKey(PAQ.net_nsr), CHAR(0), '') AS NVARCHAR(MAX)) AS net_nsr,
+            CAST(REPLACE(DecryptByKey(PAQ.old_net_nsr), CHAR(0), '') AS NVARCHAR(MAX)) AS old_net_nsr,
+            PC.Grade,
+            BAV.[key],
+            BAV.status 
+        FROM 
+            price_approval_requests_price_table PAQ
+        INNER JOIN 
+            profit_center PC ON CAST(REPLACE(DecryptByKey(PAQ.grade), CHAR(0), '') AS NVARCHAR(50)) = PC.Grade
+        INNER JOIN 
+            business_admin_variables BAV ON BAV.value = LEFT(CAST(ABS(PC.Profit_Centre) AS VARCHAR(10)), 1)
+        WHERE 
+            CAST(REPLACE(DecryptByKey(PAQ.req_id), CHAR(0), '') AS NVARCHAR(128)) = @RequestID 
+            AND BAV.[key] = @Role;
+
+        -- Close the symmetric key
+        SET @sql = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ';';
+        EXEC sp_executesql @sql;
+
+    END TRY
+    BEGIN CATCH
+        -- Error handling
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        PRINT 'Error: ' + @ErrorMessage;
+        RETURN;
+    END CATCH
+END;
+
+
+
+-- DECLARE @request_name NVARCHAR(50) = 'NR202408010001';
+-- DECLARE @SymmetricKeyName NVARCHAR(128) = 'YourSymmetricKeyName';
+-- DECLARE @CertificateName NVARCHAR(128) = 'YourCertificateName';
+
+-- EXEC GetPriceApprovalRequestByRequestName @request_name, @SymmetricKeyName, @CertificateName;
+
+
+
+CREATE PROCEDURE GetPriceApprovalRequestByRequestName
+    @request_name NVARCHAR(50),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Open the symmetric key for decryption
+        DECLARE @sql NVARCHAR(MAX);
+        SET @sql = 'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + ';';
+        EXEC sp_executesql @sql;
+
+        -- Select and decrypt data
+   SELECT
+                req_id,
+                CONVERT(NVARCHAR(MAX), DECRYPTBYKEY(customer_id)) AS customer_id,
+                CONVERT(NVARCHAR(MAX), DECRYPTBYKEY(consignee_id)) AS consignee_id,
+                end_use_id,
+                plant,
+                end_use_segment_id,
+                valid_from,
+                valid_to,
+                payment_terms_id,
+                request_name,
+                mappint_type,
+                am_id
+            FROM price_approval_requests
+            WHERE request_name = @request_name;
+
+
+        -- Close the symmetric key
+        SET @sql = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ';';
+        EXEC sp_executesql @sql;
+
+    END TRY
+    BEGIN CATCH
+        -- Error handling
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        PRINT 'Error: ' + @ErrorMessage;
+        RETURN;
+    END CATCH
+END;
+
+
+
+-- DECLARE @request_name NVARCHAR(50) = 'NR202408010001';
+-- DECLARE @SymmetricKeyName NVARCHAR(128) = 'YourSymmetricKeyName';
+-- DECLARE @CertificateName NVARCHAR(128) = 'YourCertificateName';
+
+-- EXEC GetPriceApprovalRequestByRequestName @request_name, @SymmetricKeyName, @CertificateName;
+
+
+
+CREATE PROCEDURE GetPriceApprovalRequestByRequestName
+    @request_name NVARCHAR(50),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Open the symmetric key for decryption
+        DECLARE @sql NVARCHAR(MAX);
+        SET @sql = 'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + ';';
+        EXEC sp_executesql @sql;
+
+        -- Select and decrypt data
+   SELECT
+                req_id,
+                CONVERT(NVARCHAR(MAX), DECRYPTBYKEY(customer_id)) AS customer_id,
+                CONVERT(NVARCHAR(MAX), DECRYPTBYKEY(consignee_id)) AS consignee_id,
+                end_use_id,
+                plant,
+                end_use_segment_id,
+                valid_from,
+                valid_to,
+                payment_terms_id,
+                request_name,
+                mappint_type,
+                am_id
+            FROM price_approval_requests
+            WHERE request_name = @request_name;
+
+
+        -- Close the symmetric key
+        SET @sql = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ';';
+        EXEC sp_executesql @sql;
+
+    END TRY
+    BEGIN CATCH
+        -- Error handling
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        PRINT 'Error: ' + @ErrorMessage;
+        RETURN;
+    END CATCH
+END;
+
+
+
+-- EXEC InsertPriceApprovalReq 
+--     @customer_id, @consignee_id, @end_use_id, @plant, 
+--     @end_use_segment_id, @valid_from, @valid_to, 
+--     @payment_terms_id, @request_name, @mappint_type, @am_id
+--     @SymmetricKeyName,@CertificateName
+
+CREATE PROCEDURE [dbo].[InsertPriceApprovalReq]
+     @customer_id NVARCHAR(MAX),
+    @consignee_id NVARCHAR(MAX),
+    @end_use_id NVARCHAR(MAX),
+    @plant NVARCHAR(MAX),
+    @end_use_segment_id NVARCHAR(MAX),
+    @valid_from DATETIME2(7),
+    @valid_to DATETIME2(7),
+    @payment_terms_id NVARCHAR(MAX),
+    @request_name NVARCHAR(50),
+    @mappint_type TINYINT,
+    @am_id NVARCHAR(50),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    BEGIN TRY
+        -- Construct the dynamic SQL statements for opening and closing the symmetric key
+        DECLARE @OpenSymmetricKeySQL NVARCHAR(MAX);
+        DECLARE @CloseSymmetricKeySQL NVARCHAR(MAX);
+
+        SET @OpenSymmetricKeySQL = N'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + N';';
+        SET @CloseSymmetricKeySQL = N'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N';';
+
+        -- Open the symmetric key for encryption
+        EXEC sp_executesql @OpenSymmetricKeySQL;
+
+        -- Insert the encrypted values into the table
+      INSERT INTO price_approval_requests (
+        customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
+        valid_from, valid_to, payment_terms_id, request_name, mappint_type, am_id
+    )
+    OUTPUT
+        INSERTED.req_id,
+        CONVERT(NVARCHAR(MAX), DECRYPTBYKEY(INSERTED.customer_id)) AS customer_id,
+        CONVERT(NVARCHAR(MAX), DECRYPTBYKEY(INSERTED.consignee_id)) AS consignee_id,
+        INSERTED.end_use_id,
+        INSERTED.plant,
+        INSERTED.end_use_segment_id,
+        INSERTED.valid_from,
+        INSERTED.valid_to,
+        INSERTED.payment_terms_id,
+        INSERTED.request_name,
+        INSERTED.mappint_type,
+        INSERTED.am_id
+    VALUES (
+        ENCRYPTBYKEY(KEY_GUID(@SymmetricKeyName), @customer_id),
+        ENCRYPTBYKEY(KEY_GUID(@SymmetricKeyName), @consignee_id),
+        @end_use_id, @plant, @end_use_segment_id,
+        @valid_from, @valid_to,
+        @payment_terms_id, @request_name,
+        @mappint_type, @am_id
+    );
+
+        -- Close the symmetric key
+        EXEC sp_executesql @CloseSymmetricKeySQL;
+    END TRY
+    BEGIN CATCH
+        -- Handle errors
+        IF (SELECT ISNULL(XACT_STATE(), 0)) <> 0
+        BEGIN
+            ROLLBACK TRANSACTION;
+        END
+
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        DECLARE @ErrorSeverity INT;
+        DECLARE @ErrorState INT;
+
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+
+        -- Close the symmetric key if an error occurs
+        IF EXISTS (SELECT * FROM sys.openkeys WHERE key_name = @SymmetricKeyName)
+        BEGIN
+            EXEC sp_executesql @CloseSymmetricKeySQL;
+        END
+    END CATCH
+END;
+GO

@@ -39,23 +39,44 @@ async function insertCombinationsOneToOne(
   am_id
 ) {
   try {
-    await sql.connect(config);
-    const transaction = new sql.Transaction();
-    await transaction.begin();
-    const request = new sql.Request(transaction);
+    // await sql.connect(config);
+    // const transaction = new sql.Transaction();
+    // await transaction.begin();
+    // const request = new sql.Request(transaction);
 
     for (let i = 0; i < customers.length; i++) {
       for (const plant of plants) {
-        await request.query(`
-                  INSERT INTO price_approval_requests (
-                      customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
-                      valid_from, valid_to, payment_terms_id, request_name,mappint_type.,am_id) 
-                      OUTPUT INSERTED.*
-                  VALUES (
-                      '${customers[i]}', '${consignees[i]}', '${data.endUse}', '${plant}', 
-                      '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
-                      '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping},'${am_id}')
-              `);
+        // await request.query(`
+        //           INSERT INTO price_approval_requests (
+        //               customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
+        //               valid_from, valid_to, payment_terms_id, request_name,mappint_type.,am_id) 
+        //               OUTPUT INSERTED.*
+        //           VALUES (
+        //               '${customers[i]}', '${consignees[i]}', '${data.endUse}', '${plant}', 
+        //               '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
+        //               '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping},'${am_id}')
+        //       `);
+
+        await db.executeQuery(`EXEC InsertPriceApprovalReq 
+    @customer_id, @consignee_id, @end_use_id, @plant, 
+    @end_use_segment_id, @valid_from, @valid_to, 
+    @payment_terms_id, @request_name, @mappint_type, @am_id
+    @SymmetricKeyName,@CertificateName`,
+          {
+            customer_id: customers[i],
+            consignee_id: consignees[i],
+            end_use_id: data.endUse,
+            plant: plant,
+            end_use_segment_id: data.endUseSegment,
+            valid_from: data.validFrom,
+            valid_to: data.validTo,
+            payment_terms_id: data.paymentTerms,
+            request_name: data.requestId,
+            mappint_type: data.oneToOneMapping,
+            am_id: am_id,
+            SymmetricKeyName:SYMMETRIC_KEY_NAME,
+            CertificateName:CERTIFICATE_NAME
+          })
       }
     }
     // Add audit log for the INSERT operation
@@ -66,7 +87,7 @@ async function insertCombinationsOneToOne(
       null
     );
 
-    await transaction.commit();
+    // await transaction.commit();
     return {
       success: true,
       message: "Data inserted successfully.",
@@ -86,24 +107,42 @@ async function insertCombinationsOneToMany(
   am_id
 ) {
   try {
-    await sql.connect(config);
-    const transaction = new sql.Transaction();
-    await transaction.begin();
-    const request = new sql.Request(transaction);
+    // await sql.connect(config);
+    // const transaction = new sql.Transaction();
+    // await transaction.begin();
+    // const request = new sql.Request(transaction);
 
     for (const customer of customers) {
       for (const consignee of consignees) {
         for (const plant of plants) {
-          let result = await request.query(`
-                      INSERT INTO price_approval_requests (
-                          customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
-                          valid_from, valid_to, payment_terms_id, request_name, mappint_type,am_id) 
-                          OUTPUT INSERTED.*
-                      VALUES (
-                          '${customer}', '${consignee}', '${data.endUse}', '${plant}', 
-                          '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
-                          '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping},'${am_id}')
-                  `);
+          // let result = await request.query(`
+          //             INSERT INTO price_approval_requests (
+          //                 customer_id, consignee_id, end_use_id, plant, end_use_segment_id, 
+          //                 valid_from, valid_to, payment_terms_id, request_name, mappint_type,am_id) 
+          //                 OUTPUT INSERTED.*
+          //             VALUES (
+          //                 '${customer}', '${consignee}', '${data.endUse}', '${plant}', 
+          //                 '${data.endUseSegment}', '${data.validFrom}', '${data.validTo}', 
+          //                 '${data.paymentTerms}', '${data.requestId}', ${data.oneToOneMapping},'${am_id}')
+          //         `);
+          let result = await db.executeQuery(`EXEC InsertPriceApprovalReq 
+            @customer_id, @consignee_id, @end_use_id, @plant, 
+            @end_use_segment_id, @valid_from, @valid_to, 
+            @payment_terms_id, @request_name, @mappint_type, @am_id`,
+            {
+              customer_id: customers[i],
+              consignee_id: consignees[i],
+              end_use_id: data.endUse,
+              plant: plant,
+              end_use_segment_id: data.endUseSegment,
+              valid_from: data.validFrom,
+              valid_to: data.validTo,
+              payment_terms_id: data.paymentTerms,
+              request_name: data.requestId,
+              mappint_type: data.oneToOneMapping,
+              am_id: am_id
+            })
+
           // Add audit log for the INSERT operation
           console.log(result.recordset[0], "testing...........");
           await addAuditLog(
@@ -116,7 +155,7 @@ async function insertCombinationsOneToMany(
       }
     }
 
-    await transaction.commit();
+    // await transaction.commit();
     return {
       success: true,
       message: "Data inserted successfully.",
@@ -569,15 +608,23 @@ async function addTransactionToTable(requestId, userId, isDraft = false) {
 
 async function fetchConsolidatedRequest(requestId) {
   try {
-    await sql.connect(config);
+    // await sql.connect(config);
     // Fetch all rows from the price_approval_requests table with the given request_id
-    const requestResult = await sql.query(
-      `
-          SELECT *
-          FROM price_approval_requests
-          WHERE request_name = '${requestId}'
-      `
-    );
+    // const requestResult = await sql.query(
+    //   `
+    //       SELECT *
+    //       FROM price_approval_requests
+    //       WHERE request_name = '${requestId}'
+    //   `
+    // );
+
+    const requestResult = await db.executeQuery(`EXEC GetPriceApprovalRequestByRequestName 
+      @request_name, @SymmetricKeyName, @CertificateName`,
+      {
+        request_name:requestId,
+        SymmetricKeyName:SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+});
 
     // Consolidate rows by combining similar data into one JSON object
     const consolidated = requestResult.recordset.reduce((acc, row) => {
@@ -691,8 +738,8 @@ async function fetchData(role, status, id) {
         }
         // Fetch price details with the maximum ID
         const priceResult = await db.executeQuery(
-          "EXEC GetPriceApprovalRequestDetails @RequestID, @Role",
-          { RequestID: transaction.request_id, Role: role }
+          "EXEC GetPriceApprovalRequestDetails @RequestID, @Role,@SymmetricKeyName,@CertificateName",
+          { RequestID: transaction.request_id, Role: role, SymmetricKeyName: SYMMETRIC_KEY_NAME, CertificateName: CERTIFICATE_NAME }
         );
 
         details.push({
