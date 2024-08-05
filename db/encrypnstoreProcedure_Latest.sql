@@ -1007,3 +1007,232 @@ BEGIN
 END;
 GO
 
+
+-- EXEC FetchRequests 
+--     @grade = 'BXHS',
+--     @customerIdsArray = '14,8', 
+--     @consigneeIdsArray = '4,3', 
+--     @plantIdsArray = '1,3,4', 
+--     @endUseId = 'seg1',
+--     @SymmetricKeyName = 'YourSymmetricKeyName',
+--     @CertificateName = 'YourCertificateName';
+
+
+CREATE PROCEDURE FetchRequests
+    @grade NVARCHAR(50),
+    @customerIdsArray NVARCHAR(MAX) = NULL,
+    @consigneeIdsArray NVARCHAR(MAX) = NULL,
+    @plantIdsArray NVARCHAR(MAX) = NULL,
+    @endUseId NVARCHAR(50) = NULL,
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Open the symmetric key for decryption
+        DECLARE @sql NVARCHAR(MAX)
+        SET @sql = 'OPEN SYMMETRIC KEY ' + @SymmetricKeyName + ' DECRYPTION BY CERTIFICATE ' + @CertificateName;
+        EXEC sp_executesql @sql;
+
+        -- Base query with decryption
+        DECLARE @query NVARCHAR(MAX) = 
+            'SELECT DISTINCT 
+                requests_mvc.req_id, 
+        requests_mvc.*, 
+        -- Decrypting each column in the price_approval_requests_price_table table
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.req_id) AS VARCHAR(128)) AS req_id,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.grade) AS VARCHAR(50)) AS grade,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.fsc) AS VARCHAR(50)) AS fsc,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.grade_type) AS VARCHAR(50)) AS grade_type,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.gsm_range_from) AS VARCHAR(MAX)) AS gsm_range_from,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.gsm_range_to) AS VARCHAR(MAX)) AS gsm_range_to,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.agreed_price) AS VARCHAR(MAX)) AS agreed_price,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.special_discount) AS VARCHAR(MAX)) AS special_discount,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.reel_discount) AS VARCHAR(MAX)) AS reel_discount,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.pack_upcharge) AS VARCHAR(MAX)) AS pack_upcharge,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.tpc) AS VARCHAR(MAX)) AS tpc,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.offline_discount) AS VARCHAR(MAX)) AS offline_discount,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.net_nsr) AS VARCHAR(MAX)) AS net_nsr,
+        CAST(DECRYPTBYKEY(price_approval_requests_price_table.old_net_nsr) AS VARCHAR(MAX)) AS old_net_nsr
+             FROM price_approval_requests_price_table
+             INNER JOIN requests_mvc ON 
+                CAST(DECRYPTBYKEY(price_approval_requests_price_table.req_id) AS VARCHAR(128)) = requests_mvc.req_id
+             WHERE 
+                CAST(DECRYPTBYKEY(price_approval_requests_price_table.grade) AS VARCHAR(50)) = @grade
+               AND requests_mvc.status = 0
+               AND requests_mvc.req_id IN (
+                   SELECT DISTINCT request_name 
+                   FROM price_approval_requests 
+                   WHERE 1=1 ';
+
+        -- Dynamically add conditions
+        IF @customerIdsArray IS NOT NULL AND LEN(@customerIdsArray) > 0
+        BEGIN
+            SET @query += ' AND customer_id IN (' + @customerIdsArray + ')';
+        END
+
+        IF @consigneeIdsArray IS NOT NULL AND LEN(@consigneeIdsArray) > 0
+        BEGIN
+            SET @query += ' AND consignee_id IN (' + @consigneeIdsArray + ')';
+        END
+
+        IF @plantIdsArray IS NOT NULL AND LEN(@plantIdsArray) > 0
+        BEGIN
+            SET @query += ' AND plant IN (' + @plantIdsArray + ')';
+        END
+
+        IF @endUseId IS NOT NULL AND LEN(@endUseId) > 0
+        BEGIN
+            SET @query += ' AND end_use_id = ''' + @endUseId + '''';
+        END
+
+        -- Closing the IN clause and the main query
+        SET @query += ' )';
+PRINT 'Debug: Final SQL Query - ' + @query;
+        -- Execute the dynamic query
+        EXEC sp_executesql @query, N'@grade NVARCHAR(50)', @grade;
+
+        -- Close the symmetric key after the operation
+        SET @sql = 'CLOSE SYMMETRIC KEY ' + @SymmetricKeyName;
+        EXEC sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        -- Handle errors
+        DECLARE @ErrorMessage NVARCHAR(4000);
+        DECLARE @ErrorSeverity INT;
+        DECLARE @ErrorState INT;
+
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+
+
+-- EXEC InsertPriceApprovalRequest 
+--     @req_id ,@fsc,@grade,@grade_type,@gsm_range_from,@gsm_range_to,
+--     @agreed_price,@special_discount,@reel_discount, @pack_upcharge,
+--     @tpc,@offline_discount,@net_nsr,@old_net_nsr,@SymmetricKeyName,
+--     @CertificateName;
+
+CREATE PROCEDURE InsertPriceApprovalRequest
+    @req_id NVARCHAR(128),
+    @fsc NVARCHAR(50),
+    @grade NVARCHAR(50),
+    @grade_type NVARCHAR(50),
+    @gsm_range_from NVARCHAR(50),
+    @gsm_range_to NVARCHAR(50),
+    @agreed_price NVARCHAR(50),
+    @special_discount NVARCHAR(50),
+    @reel_discount NVARCHAR(50),
+    @pack_upcharge NVARCHAR(50),
+    @tpc NVARCHAR(50),
+    @offline_discount NVARCHAR(50),
+    @net_nsr NVARCHAR(50),
+    @old_net_nsr NVARCHAR(50),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Open the symmetric key for encryption
+        DECLARE @sql NVARCHAR(MAX)
+        SET @sql = 'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + ';';
+        EXEC sp_executesql @sql;
+
+        -- Insert data with encryption
+        INSERT INTO price_approval_requests_price_table 
+            (req_id, fsc, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, 
+            reel_discount, pack_upcharge, tpc, offline_discount, net_nsr, old_net_nsr) 
+        OUTPUT INSERTED.*
+        VALUES 
+            (EncryptByKey(Key_GUID(@SymmetricKeyName), @req_id),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @fsc),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @grade),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @grade_type),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @gsm_range_from),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @gsm_range_to),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @agreed_price),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @special_discount),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @reel_discount),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @pack_upcharge),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @tpc),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @offline_discount),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @net_nsr),
+             EncryptByKey(Key_GUID(@SymmetricKeyName), @old_net_nsr)
+            );
+
+        -- Close the symmetric key
+        SET @sql = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ';';
+        EXEC sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        -- Error handling
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        PRINT 'Error: ' + @ErrorMessage;
+        RETURN;
+    END CATCH
+END;
+
+
+-- EXEC GetLatestPriceApprovalRequest 
+--     @requestId = 'NR202408020001',
+--     @SymmetricKeyName = 'YourSymmetricKeyName',
+--     @CertificateName = 'YourCertificateName';
+
+
+CREATE PROCEDURE GetLatestPriceApprovalRequest
+    @requestId NVARCHAR(128),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Open the symmetric key for decryption
+        DECLARE @sql NVARCHAR(MAX);
+        SET @sql = 'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + ';';
+        EXEC sp_executesql @sql;
+
+        -- Select and decrypt data
+        SELECT
+            CAST(REPLACE(DecryptByKey(req_id), CHAR(0), '') AS NVARCHAR(128)) AS req_id,
+            CAST(REPLACE(DecryptByKey(grade), CHAR(0), '') AS NVARCHAR(50)) AS grade,
+            CAST(REPLACE(DecryptByKey(fsc), CHAR(0), '') AS NVARCHAR(50)) AS fsc,
+            CAST(REPLACE(DecryptByKey(grade_type), CHAR(0), '') AS NVARCHAR(50)) AS grade_type,
+            CAST(REPLACE(DecryptByKey(gsm_range_from), CHAR(0), '') AS NVARCHAR(MAX)) AS gsm_range_from,
+            CAST(REPLACE(DecryptByKey(gsm_range_to), CHAR(0), '') AS NVARCHAR(MAX)) AS gsm_range_to,
+            CAST(REPLACE(DecryptByKey(agreed_price), CHAR(0), '') AS NVARCHAR(MAX)) AS agreed_price,
+            CAST(REPLACE(DecryptByKey(special_discount), CHAR(0), '') AS NVARCHAR(MAX)) AS special_discount,
+            CAST(REPLACE(DecryptByKey(reel_discount), CHAR(0), '') AS NVARCHAR(MAX)) AS reel_discount,
+            CAST(REPLACE(DecryptByKey(pack_upcharge), CHAR(0), '') AS NVARCHAR(MAX)) AS pack_upcharge,
+            CAST(REPLACE(DecryptByKey(tpc), CHAR(0), '') AS NVARCHAR(MAX)) AS tpc,
+            CAST(REPLACE(DecryptByKey(offline_discount), CHAR(0), '') AS NVARCHAR(MAX)) AS offline_discount,
+            CAST(REPLACE(DecryptByKey(net_nsr), CHAR(0), '') AS NVARCHAR(MAX)) AS net_nsr,
+            CAST(REPLACE(DecryptByKey(old_net_nsr), CHAR(0), '') AS NVARCHAR(MAX)) AS old_net_nsr,
+            id
+        FROM price_approval_requests_price_table
+        WHERE CAST(REPLACE(DecryptByKey(req_id), CHAR(0), '') AS NVARCHAR(128)) = @requestId
+          AND id = (SELECT MAX(id) 
+                    FROM price_approval_requests_price_table 
+                    WHERE CAST(REPLACE(DecryptByKey(req_id), CHAR(0), '') AS NVARCHAR(128)) = @requestId);
+
+        -- Close the symmetric key
+        SET @sql = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ';';
+        EXEC sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        -- Error handling
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        PRINT 'Error: ' + @ErrorMessage;
+        RETURN;
+    END CATCH
+END;

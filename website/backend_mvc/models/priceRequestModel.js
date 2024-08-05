@@ -290,20 +290,42 @@ async function insertPrices(data, request_id) {
     console.log(data);
     for (const item of data) {
       let fsc = item.fsc == undefined ? "N" : item.fsc;
-      const query = `INSERT INTO price_approval_requests_price_table 
-      (req_id, fsc, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, 
-      reel_discount, pack_upcharge, TPC, offline_discount, net_nsr, old_net_nsr) 
-      OUTPUT INSERTED.*
-      VALUES 
-      ('${request_id}',      '${fsc}',          '${item.grade}', 
-      '${item.gradeType}',       '${item.gsmFrom}', 
-      '${item.gsmTo}',     '${item.agreedPrice}', 
-      '${item.specialDiscount}', '${item.reelDiscount}', 
-      '${item.packUpCharge}',    '${item.tpc}',          '${item.offlineDiscount}', 
-      '${item.netNSR}',          '${item.oldNetNSR}')`;
+      // const query = `INSERT INTO price_approval_requests_price_table 
+      // (req_id, fsc, grade, grade_type, gsm_range_from, gsm_range_to, agreed_price, special_discount, 
+      // reel_discount, pack_upcharge, TPC, offline_discount, net_nsr, old_net_nsr) 
+      // OUTPUT INSERTED.*
+      // VALUES 
+      // ('${request_id}',      '${fsc}',          '${item.grade}', 
+      // '${item.gradeType}',       '${item.gsmFrom}', 
+      // '${item.gsmTo}',     '${item.agreedPrice}', 
+      // '${item.specialDiscount}', '${item.reelDiscount}', 
+      // '${item.packUpCharge}',    '${item.tpc}',          '${item.offlineDiscount}', 
+      // '${item.netNSR}',          '${item.oldNetNSR}')`;
 
       // await sql.query(`${query} `);
-      let result = await db.executeQuery(query);
+      let result = await db.executeQuery(`EXEC InsertPriceApprovalRequest 
+    @req_id ,@fsc,@grade,@grade_type,@gsm_range_from,@gsm_range_to,
+    @agreed_price,@special_discount,@reel_discount, @pack_upcharge,
+    @tpc,@offline_discount,@net_nsr,@old_net_nsr,@SymmetricKeyName,
+    @CertificateName;
+`, {
+        req_id: request_id,
+        fsc: fsc,
+        grade: item.grade,
+        grade_type: item.gradeType,
+        gsm_range_from: item.gsmFrom,
+        gsm_range_to: item.gsmTo,
+        agreed_price: item.agreedPrice,
+        special_discount: item.specialDiscount,
+        reel_discount: item.reelDiscount,
+        pack_upcharge: item.packUpCharge,
+        tpc: item.tpc,
+        offline_discount: item.offlineDiscount,
+        net_nsr: item.netNSR,
+        old_net_nsr: item.oldNetNSR,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      });
       // Add audit log for the INSERT operation
       await addAuditLog(
         "price_approval_requests_price_table",
@@ -583,11 +605,18 @@ async function fetchConsolidatedRequest(requestId) {
       consolidated[key] = Array.from(consolidated[key]).join(", ");
     });
     // Fetch all rows from the price_approval_system_price table with the maximum ID
-    const priceResult = await sql.query(`
-          SELECT *
-          FROM price_approval_requests_price_table
-          WHERE req_id = '${requestId}' AND id = (SELECT MAX(id) FROM price_approval_requests_price_table WHERE req_id = '${requestId}')
-      `);
+    // const priceResult = await sql.query(`
+    //       SELECT *
+    //       FROM price_approval_requests_price_table
+    //       WHERE req_id = '${requestId}' AND id = (SELECT MAX(id) FROM price_approval_requests_price_table WHERE req_id = '${requestId}')
+    //   `);
+    const priceResult = await db.executeQuery(`EXEC GetLatestPriceApprovalRequest 
+        @requestId,@SymmetricKeyName,@CertificateName`,
+      {
+        requestId: requestId,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      })
     return {
       consolidatedRequest: consolidated,
       priceDetails: priceResult.recordset,
@@ -624,7 +653,7 @@ async function fetchData(role, status, id) {
     for (let transaction of uniqueTransactions) {
       console.log(transaction.request_id);
       let query =
-        role == "RM" || role == "AM" 
+        role == "RM" || role == "AM"
           ? `EXEC GetPriceApprovalRequests @Id = '${id}', @Status = '${status}', @RequestId = ${transaction.request_id}, @Role = '${role}',@SymmetricKeyName = '${SYMMETRIC_KEY_NAME}', @CertificateName='${CERTIFICATE_NAME}'`
           : `EXEC GetPriceApprovalRequestsHigh  @Status = '${status}', @RequestId = ${transaction.request_id}, @Role = '${role}',@SymmetricKeyName = '${SYMMETRIC_KEY_NAME}', @CertificateName='${CERTIFICATE_NAME}'`;
       // Fetch price details with the maximum ID
