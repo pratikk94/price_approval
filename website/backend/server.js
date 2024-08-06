@@ -30,7 +30,7 @@ const config = {
   server: process.env.DB_SERVER, // You can use 'localhost\\instance' if it's a local SQL Server instance
   // password: "12345",
   // server: "PRATIK-PC\\PSPD", // You can use 'localhost\\instance' if it's a local SQL Server instance
-  port: 1433,
+  port: parseInt(process.env.DB_PORT),
   database: process.env.DB_NAME,
   options: {
     enableArithAbort: true,

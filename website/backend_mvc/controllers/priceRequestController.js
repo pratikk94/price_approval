@@ -95,20 +95,25 @@ async function processPrevApprovedTransaction(req, res) {
       );
       updatePreApprovedRequestStatus(oldRequestId, STATUS.APPROVED);
     }
-
-    const requestId = await priceRequestModel.handleNewRequest();
-    logger.info(`New request ID generated: ${requestId}`);
-
+    let requestId = "";
+    if (action == "D" && oldRequestId != "") {
+      requestId = oldRequestId;
+      logger.info(`New request ID generated: ${requestId}`);
+    } else {
+      requestId = await priceRequestModel.handleNewRequest();
+      logger.info(`New request ID generated: ${requestId}`);
+    }
     const resultA = await getRegionAndRoleByEmployeeId(am_id);
-
+    console.log(`ResultA`);
+    console.log(resultA);
     if (action == "D") {
-      logger.info(`Adding draft for request ID: ${requestId}`);
-      addADraft(requestId);
-      priceRequestModel.addTransactionToTable(
-        requestId,
-        am_id,
-        (draft = action == "D")
+      logger.info(
+        `Adding draft for request ID: ${requestId} and ${oldRequestId} and ${
+          oldRequestId == requestId
+        }`
       );
+      if (oldRequestId == "") addADraft(requestId);
+      priceRequestModel.addTransactionToTable(requestId, am_id, true);
     } else {
       try {
         const result3 = await transactionModel.acceptTransaction(
@@ -168,7 +173,7 @@ async function processPrevApprovedTransaction(req, res) {
     //   am_id,
     //   (draft = action == "D")
     // );
-    if (oldRequestId != undefined)
+    if (oldRequestId != undefined && action == "D")
       pushDataToTable(requestId, "N" + oldRequestId.substring(1));
 
     res.json({

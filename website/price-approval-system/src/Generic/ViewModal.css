@@ -1,0 +1,63 @@
+.modal-content {
+  top: 54%;
+  left: 50%;
+  height: 80vh;
+  width: 64vw;
+  margin-right: -50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: auto;
+  transition: transform 0.3s ease-out;
+  background: linear-gradient(
+    135deg,
+    #006400,
+    #00ff00
+  ); /* Vibrant green gradient background */
+}
+
+.modal-overlay {
+  background-color: rgba(
+    0,
+    0,
+    0,
+    0.5
+  ); /* Darker overlay for better focus on the modal */
+  transition: opacity 0.3s ease-out; /* Smooth transition for the overlay appearance */
+}
+
+.modal-success-content {
+  top: 50%;
+  left: 60%;
+  right: auto;
+  bottom: auto;
+  margin-right: -50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff; /* White background */
+  padding: 20px;
+  border-radius: 10px;
+  max-height: 56vh; /* Adjust the height as needed */
+  max-width: 70vw; /* Adjust the width as needed */
+}
+
+.modal-success-overlay {
+  background-color: rgba(0, 0, 0, 0.75); /* Dark overlay */
+}
+
+.close-button {
+  background-color: #156760;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.success-image {
+  max-width: 100px;
+  margin-bottom: 20px;
+}

@@ -29,7 +29,6 @@ import moment from "moment-timezone";
 import axios from "axios";
 import HistoryModal from "../Role_Business_Admin/Components/RequestHistoryModal";
 import MessagesComponent from "../components/common/History";
-import ExcelBox from "../components/common/ExcelBox";
 
 const modalStyle = {
   position: "absolute",
@@ -376,6 +375,7 @@ const CreateRequestModal = ({
   const submitFormDataMVC = async (formData) => {
     if (formData["isDraft"]) {
       setIsDraft(true);
+      setShowSuccess("true");
     }
     const draft = formData["isDraft"];
 
@@ -476,20 +476,20 @@ const CreateRequestModal = ({
         updateRequestIds(oldRequestIds, requestData["id"])
           .then((response) => {
             console.log("Update successful:", response);
+            if (!response.ok) {
+              setShowSuccess(false);
+              setErrorMessage(
+                `Failed to create request due to HTTP error! \n Reason : ${response.status}`
+              );
+              throw new Error(`HTTP error! status: ${response.status}`);
+            } else {
+              setShowSuccess(true);
+              setOpenModal(true);
+            }
           })
           .catch((error) => {
             console.error("Failed to update request IDs:", error);
           });
-      }
-      if (!response.ok) {
-        setShowSuccess(false);
-        setErrorMessage(
-          `Failed to create request due to HTTP error! \n Reason : ${response.status}`
-        );
-        throw new Error(`HTTP error! status: ${response.status}`);
-      } else {
-        setShowSuccess(true);
-        setOpenModal(true);
       }
 
       localStorage.removeItem("request_ids");

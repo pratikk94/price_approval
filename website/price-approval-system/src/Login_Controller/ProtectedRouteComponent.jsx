@@ -35,6 +35,7 @@ const ProtectedRoute = () => {
       if (data.loggedOut) {
         localStorage.removeItem("request_id");
         localStorage.removeItem("request_ids");
+        localStorage.clear();
         setSession({
           loggedIn: false,
           role: null,
