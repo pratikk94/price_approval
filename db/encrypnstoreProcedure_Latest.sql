@@ -2152,3 +2152,114 @@ ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), N'Reyansh-Hyderābād'), 1, NULL)
 
     -- Close the symmetric key after the operation
     CLOSE SYMMETRIC KEY YourSymmetricKeyName;
+
+
+
+-- Open the Symmetric Key
+OPEN SYMMETRIC KEY YourSymmetricKeyName
+DECRYPTION BY CERTIFICATE YourCertificateName;
+
+-- Insert Encrypted Data
+INSERT INTO [dbo].[material] ([id], [grade], [fsc], [grade_description], [profit_center_id], [status])
+VALUES 
+    (1, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXL'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'N         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(1 AS NVARCHAR(128))), 1),
+    (2, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'BXHS'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'N         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(2 AS NVARCHAR(128))), 1),
+    (3, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXD'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'N         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(3 AS NVARCHAR(128))), 2),
+    (4, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(4 AS NVARCHAR(128))), 1),
+    (5, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'BXHF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(5 AS NVARCHAR(128))), 1),
+    (6, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYSF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(6 AS NVARCHAR(128))), 2),
+    (7, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXL'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'N         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(7 AS NVARCHAR(128))), 1),
+    (8, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'BXHS'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(8 AS NVARCHAR(128))), 1),
+    (9, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXD'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(9 AS NVARCHAR(128))), 1),
+    (10, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(10 AS NVARCHAR(128))), 2),
+    (11, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'BXHF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'N         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(11 AS NVARCHAR(128))), 1),
+    (12, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYSF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(12 AS NVARCHAR(128))), 2),
+    (13, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXL'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'N         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(13 AS NVARCHAR(128))), 1),
+    (14, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'BXHS'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(14 AS NVARCHAR(128))), 1),
+    (15, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXD'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(15 AS NVARCHAR(128))), 2),
+    (16, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'N         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(16 AS NVARCHAR(128))), 2),
+    (17, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'BXHF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(17 AS NVARCHAR(128))), 1),
+    (18, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYSF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(18 AS NVARCHAR(128))), 2),
+    (19, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXL'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'N         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(19 AS NVARCHAR(128))), 1),
+    (20, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'BXHS'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'N         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(20 AS NVARCHAR(128))), 1),
+    (21, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXD'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(21 AS NVARCHAR(128))), 1),
+    (22, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYXF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(22 AS NVARCHAR(128))), 1),
+    (23, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'BXHF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'N         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(23 AS NVARCHAR(128))), 2),
+    (24, ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'CYSF'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Y         '), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), 'Cyber FSC'), ENCRYPTBYKEY(KEY_GUID('YourSymmetricKeyName'), CAST(24 AS NVARCHAR(128))), 1);
+
+-- Close the Symmetric Key
+CLOSE SYMMETRIC KEY YourSymmetricKeyName;
+
+
+CREATE PROCEDURE GetBusinessAdminData
+    @queryType VARCHAR(255),
+    @fsc CHAR(10) = NULL,
+    @SymmetricKeyName NVARCHAR(128),  -- Dynamic Symmetric Key
+    @CertificateName NVARCHAR(128)    -- Dynamic Certificate Name
+AS
+BEGIN
+    -- Construct dynamic SQL to open the symmetric key
+    DECLARE @sql NVARCHAR(MAX);
+    SET @sql = N'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + N';';
+    EXEC sp_executesql @sql;
+
+    IF @queryType = 'payment_terms'
+    BEGIN
+        -- Result Set 1: Payment Terms
+        SELECT 
+            CAST(REPLACE(DecryptByKey(terms), CHAR(0), '') AS NVARCHAR(128)) AS name, 
+            CAST(REPLACE(DecryptByKey(payment_terms_id), CHAR(0), '') AS NVARCHAR(128)) AS code
+        FROM 
+            payment_terms;
+    END
+    ELSE IF @queryType = 'plant'
+    BEGIN
+        -- Result Set 2: Plants
+        SELECT 
+            CAST(REPLACE(DecryptByKey(name), CHAR(0), '') AS NVARCHAR(128)) AS name, 
+           id AS code
+        FROM 
+            plant;
+    END
+    ELSE IF @queryType = 'grade'
+    BEGIN
+        -- Result Set 3: Materials
+        SELECT 
+            CAST(REPLACE(DecryptByKey(grade), CHAR(0), '') AS NVARCHAR(128)) AS name, 
+           id AS code
+        FROM 
+            material
+        WHERE 
+            CAST(REPLACE(DecryptByKey(fsc), CHAR(0), '') AS NVARCHAR(128)) = @fsc;
+    END
+    ELSE IF @queryType = 'user_master'
+    BEGIN
+        -- Result Set 4: Employees without roles
+        SELECT 
+            CAST(REPLACE(DecryptByKey(um.employee_name), CHAR(0), '') AS NVARCHAR(128)) AS name, 
+            CAST(REPLACE(DecryptByKey(um.employee_id), CHAR(0), '') AS NVARCHAR(128)) AS id
+        FROM 
+            user_master um
+        LEFT JOIN 
+            define_roles dr ON um.employee_id = dr.employee_id
+        WHERE 
+            dr.employee_id IS NULL;
+    END
+    ELSE IF @queryType = 'role'
+    BEGIN
+        -- Result Set 5: Roles
+        SELECT *
+        FROM roles;
+    END
+    ELSE IF @queryType = 'region'
+    BEGIN
+        -- Result Set 6: Regions
+        SELECT *
+        FROM region;
+    END
+
+    -- Close the symmetric key dynamically
+    SET @sql = N'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N';';
+    EXEC sp_executesql @sql;
+END;
+GO

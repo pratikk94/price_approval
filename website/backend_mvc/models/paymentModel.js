@@ -38,11 +38,15 @@ async function fetchLowestPaymentTermDetails(customers, consignees, endUses) {
 
     const query = `
     -- Define your dynamic key and certificate names
-DECLARE @SymmetricKeyName NVARCHAR(128) = ${SYMMETRIC_KEY_NAME};
-DECLARE @CertificateName NVARCHAR(128) = ${CERTIFICATE_NAME};
+DECLARE @SymmetricKeyName NVARCHAR(128) = 'YourSymmetricKeyName';
+DECLARE @CertificateName NVARCHAR(128) = 'YourCertificateName';
 
--- Open the symmetric key using the certificate
-OPEN SYMMETRIC KEY @SymmetricKeyName DECRYPTION BY CERTIFICATE @CertificateName;
+-- Build and execute dynamic SQL to open the symmetric key using the certificate
+DECLARE @OpenKeySQL NVARCHAR(MAX) = 
+    'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + 
+    ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + ';';
+
+EXEC sp_executesql @OpenKeySQL;
 
 -- Declare and populate temporary tables
 DECLARE @Customers TABLE (customer_id NVARCHAR(10));
@@ -70,10 +74,13 @@ WHERE
     AND (ptm.consignee_id IN (SELECT consignee_id FROM @Consignees) OR ptm.consignee_id IS NULL)
     AND (ptm.end_use_id IN (SELECT end_use_id FROM @EndUses) OR ptm.end_use_id IS NULL)
 GROUP BY 
-    pt.terms, pt.payment_terms_id;
+    CAST(REPLACE(DecryptByKey(pt.terms), CHAR(0), '') AS VARCHAR(128)), CAST(REPLACE(DecryptByKey(pt.payment_terms_id), CHAR(0), '') AS VARCHAR(128));
 
--- Close the symmetric key
-CLOSE SYMMETRIC KEY @SymmetricKeyName;
+-- Build and execute dynamic SQL to close the symmetric key
+DECLARE @CloseKeySQL NVARCHAR(MAX) = 
+    'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ';';
+
+EXEC sp_executesql @CloseKeySQL;
 `
 
     let result = await db.executeQuery(query);
