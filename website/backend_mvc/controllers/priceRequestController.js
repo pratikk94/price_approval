@@ -7,10 +7,10 @@ const {
   updatePreApprovedRequestStatus,
   addADraft,
 } = require("./requestController");
-
+const db = require("../config/db");
 const { getRegionAndRoleByEmployeeId } = require("../utils/fetchDetails");
 const { insertParentRequest } = require("../utils/fetchAllRequestIds");
-const { STATUS } = require("../config/constants");
+const { STATUS, SYMMETRIC_KEY_NAME, CERTIFICATE_NAME } = require("../config/constants");
 const logger = require("../utils/logger");
 async function processTransaction(req, res) {
   try {
@@ -244,14 +244,20 @@ async function fetchPriceRequestByStatus(req, res) {
 
 async function fetchNamesByIds(ids) {
   try {
-    let pool = await sql.connect(config);
-    let query = `SELECT [id], [Name] FROM [PriceApprovalSystem].[dbo].[customer] WHERE [id] IN (${ids.join(
-      ","
-    )})`;
+    // let pool = await sql.connect(config);
+    // let query = `SELECT [id], [Name] FROM [PriceApprovalSystem].[dbo].[customer] WHERE [id] IN (${ids.join(
+    //   ","
+    // )})`;
 
-    console.log("Query:", query);
-    let result = await pool.request().query(query);
-    await pool.close();
+    // console.log("Query:", query);
+    // let result = await pool.request().query(query);
+    // await pool.close();
+    let result = await db.executeQuery(`EXEC FetchNamesByIds @Ids, @SymmetricKeyName, @CertificateName`,
+      {
+        Ids : '1,2,3,4',
+        SymmetricKeyName:SYMMETRIC_KEY_NAME,
+        CertificateName:CERTIFICATE_NAME,
+    });
     return result.recordset;
   } catch (err) {
     console.error("SQL error", err);
