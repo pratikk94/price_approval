@@ -2869,3 +2869,84 @@ BEGIN
     EXEC sp_executesql @SQL;
 END;
 GO
+
+/*
+payment_terms_master
+*/
+
+ALTER TABLE [PriceApprovalSystem].[dbo].[payment_terms_master]
+ALTER COLUMN customer_id varbinary(128);
+
+ALTER TABLE [PriceApprovalSystem].[dbo].[payment_terms_master]
+ALTER COLUMN consignee_id varbinary(128);
+
+ALTER TABLE [PriceApprovalSystem].[dbo].[payment_terms_master]
+ALTER COLUMN end_use_id varbinary(128);
+
+ALTER TABLE [PriceApprovalSystem].[dbo].[payment_terms_master]
+ALTER COLUMN payment_term_id varbinary(128);
+
+
+-- Step 1: Open Symmetric Key
+OPEN SYMMETRIC KEY YourSymmetricKeyName
+DECRYPTION BY CERTIFICATE YourCertificateName;
+
+-- Step 3: Insert Data with Encryption
+INSERT INTO [PriceApprovalSystem].[dbo].[payment_terms_master]
+    (id, customer_id, consignee_id, end_use_id, payment_term_id, valid_from, valid_to, status)
+VALUES
+    (6, EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(68 AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(NULL AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(NULL AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(7 AS VARBINARY(16))),
+        '2024-01-01T00:00:00', '2023-12-31T23:59:59', 1),
+    
+    (7, EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(25 AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(NULL AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(NULL AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(6 AS VARBINARY(16))),
+        '2024-01-01T00:00:00', '2025-12-31T23:59:59', 1),
+    
+    (8, EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(68 AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(26 AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(87 AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(8 AS VARBINARY(16))),
+        '2024-01-01T00:00:00', '2025-12-31T23:59:59', 1),
+    
+    (9, EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(NULL AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(41 AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(NULL AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(3 AS VARBINARY(16))),
+        '2024-01-01T00:00:00', '2025-12-31T23:59:59', 1),
+    
+    (10, EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(68 AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(41 AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(NULL AS VARBINARY(16))),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), CAST(6 AS VARBINARY(16))),
+        '2024-01-01T00:00:00', '2025-12-31T23:59:59', 1);
+
+-- Step 4: Close Symmetric Key
+CLOSE SYMMETRIC KEY YourSymmetricKeyName;
+
+
+-- Step 1: Open Symmetric Key
+OPEN SYMMETRIC KEY YourSymmetricKeyName
+DECRYPTION BY CERTIFICATE YourCertificateName;
+
+-- Step 2: Select and Decrypt Data
+SELECT
+    id,
+    CAST(DecryptByKey(customer_id) AS INT) AS customer_id,
+    CAST(DecryptByKey(consignee_id) AS INT) AS consignee_id,
+    CAST(DecryptByKey(end_use_id) AS INT) AS end_use_id,
+    CAST(DecryptByKey(payment_term_id) AS INT) AS payment_term_id,
+    valid_from,
+    valid_to,
+    status
+FROM
+    [PriceApprovalSystem].[dbo].[payment_terms_master];
+
+-- Step 3: Close Symmetric Key
+CLOSE SYMMETRIC KEY YourSymmetricKeyName;
+
+

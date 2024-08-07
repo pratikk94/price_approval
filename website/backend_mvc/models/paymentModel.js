@@ -68,11 +68,11 @@ SELECT
 FROM 
     dbo.payment_terms_master ptm
 INNER JOIN 
-    payment_terms pt ON pt.id = ptm.payment_term_id
+    payment_terms pt ON pt.id = CAST(DecryptByKey(ptm.payment_term_id) AS INT)
 WHERE 
-    (ptm.customer_id IN (SELECT customer_id FROM @Customers) OR ptm.customer_id IS NULL)
-    AND (ptm.consignee_id IN (SELECT consignee_id FROM @Consignees) OR ptm.consignee_id IS NULL)
-    AND (ptm.end_use_id IN (SELECT end_use_id FROM @EndUses) OR ptm.end_use_id IS NULL)
+    (CAST(DecryptByKey(ptm.customer_id) AS INT) IN (SELECT customer_id FROM @Customers) OR CAST(DecryptByKey(ptm.customer_id) AS INT) IS NULL)
+    AND (CAST(DecryptByKey(ptm.consignee_id) AS INT) IN (SELECT consignee_id FROM @Consignees) OR CAST(DecryptByKey(ptm.consignee_id) AS INT) IS NULL)
+    AND (CAST(DecryptByKey(ptm.end_use_id) AS INT) IN (SELECT end_use_id FROM @EndUses) OR CAST(DecryptByKey(ptm.end_use_id) IS NULL)
 GROUP BY 
     CAST(REPLACE(DecryptByKey(pt.terms), CHAR(0), '') AS VARCHAR(128)), CAST(REPLACE(DecryptByKey(pt.payment_terms_id), CHAR(0), '') AS VARCHAR(128));
 
