@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -12,17 +12,20 @@ import {
   Box,
   CssBaseline,
   Divider,
-  // TextField,
   IconButton,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import LogoutIcon from "@mui/icons-material/Logout";
+import AccountCircle from "@mui/icons-material/AccountCircle";
 import { useTheme, useMediaQuery } from "@mui/material";
 import Dashboard from "../Generic/Dashboard";
-
 import ReportsAndAnalysis from "../Role_Approvers_RM/Screens/ReportsAndAnalytics";
 import ParentComponent from "../Generic/Main";
 import { useSession } from "../Login_Controller/SessionContext";
 import ApprovedTransactions from "../Generic/Dashboard";
+
 function ResponsiveDrawer({ logout }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activePane, setActivePane] = useState("Price Requests"); // Initialize with "Dashboard" or whichever is default
@@ -30,18 +33,25 @@ function ResponsiveDrawer({ logout }) {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { session } = useSession();
   const drawerWidth = 240;
-  // Assuming other state and variables are defined above
   const [drawerOpen, setDrawerOpen] = useState(false); // Add this line
+  const [anchorEl, setAnchorEl] = useState(null); // State for profile menu
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
   };
 
+  const handleProfileMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   const drawerItems = [
     { text: "Price Requests", component: <ParentComponent /> },
     { text: "Reports and Analytics", component: <ApprovedTransactions /> },
-
-    { text: "Dashbaord", component: <ReportsAndAnalysis /> },
+    { text: "Dashboard", component: <ReportsAndAnalysis /> },
   ];
 
   const drawer = (
@@ -87,15 +97,33 @@ function ResponsiveDrawer({ logout }) {
             Logo
           </Typography>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {session.role}
+            Price Approval System
           </Typography>
-          <Button color="inherit" onClick={logout}>
-            Logout
-          </Button>
+          <IconButton color="inherit" onClick={handleProfileMenuOpen}>
+            <AccountCircle />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleProfileMenuClose}
+          >
+            <MenuItem onClick={handleProfileMenuClose}>
+              Role: {session.role}
+            </MenuItem>
+            <MenuItem onClick={handleProfileMenuClose}>
+              Region: {session.region}
+            </MenuItem>
+            <MenuItem onClick={handleProfileMenuClose}>
+              Employee ID: {session.employee_id}
+            </MenuItem>
+          </Menu>
+          <IconButton color="inherit" onClick={logout}>
+            <LogoutIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
       <Drawer
-        variant={"temporary"}
+        variant={isMobile ? "temporary" : "permanent"}
         open={drawerOpen}
         onClose={handleDrawerToggle}
         ModalProps={{

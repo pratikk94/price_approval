@@ -10,6 +10,7 @@ export const SessionProvider = ({ children }) => {
 
   useEffect(() => {
     const savedSession = localStorage.getItem("session");
+    console.log("Saved session:", savedSession);
     if (savedSession) {
       setSession({ ...JSON.parse(savedSession), loading: false });
     } else {

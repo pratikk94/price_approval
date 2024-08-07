@@ -78,7 +78,7 @@ const RuleAddPage = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.1.101:3000/api/approvers-by-levels",
+        "http://192.168.0.5:3000/api/approvers-by-levels",
         { dataArray },
         {
           headers: {
