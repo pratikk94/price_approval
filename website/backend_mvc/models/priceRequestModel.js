@@ -570,6 +570,9 @@ async function fetchData(role, status, id) {
         { Status: status, Role: role }
       );
     }
+
+    console.log("transactionsResult", transactionsResult.recordset);
+
     let details = [];
     // For each transaction, fetch and consolidate request details
     let uniqueTransactions = transactionsResult.recordset.filter(

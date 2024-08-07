@@ -373,12 +373,17 @@ const CreateRequestModal = ({
   };
 
   const submitFormDataMVC = async (formData) => {
+    const draft = formData["isDraft"];
+    console.log(tableRowsData[0]["grade"]);
+    if (tableRowsData[0]["grade"].length == 0) {
+      setErrorMessage("Please add grade");
+      setStopExecution(true);
+      return;
+    }
     if (formData["isDraft"]) {
       setIsDraft(true);
       setShowSuccess("true");
     }
-    const draft = formData["isDraft"];
-
     try {
       let action = "N";
 
@@ -417,6 +422,7 @@ const CreateRequestModal = ({
           oldRequestId: parentId,
         };
         formData["prices"] = tableRowsData;
+
         const attachmentId = await fetchTempAttachments();
         if (attachmentId > 0) {
           formData["tempAttachmentIds"] = attachmentId;
