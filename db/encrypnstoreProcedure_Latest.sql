@@ -2821,3 +2821,51 @@ BEGIN
     EXEC sp_executesql @SQL;
 END;
 GO
+
+
+-- EXEC UpdateDefineRoles 
+--     @EmployeeId = 'e1000',
+--     @NewName = 'John Doe',
+--     @NewRole = 'Manager',
+--     @NewRegion = 'Sales office South',
+--     @NewActive = 1,
+--     @SymmetricKeyName = 'YourSymmetricKeyName',
+--     @CertificateName = 'YourCertificateName';
+
+CREATE PROCEDURE UpdateDefineRoles
+    @EmployeeId NVARCHAR(MAX),
+    @NewName NVARCHAR(MAX),
+    @NewRole NVARCHAR(MAX),
+    @NewRegion NVARCHAR(50),
+    @NewActive TINYINT,
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    DECLARE @SQL NVARCHAR(MAX);
+
+    -- Open the symmetric key with dynamic key and certificate names
+    SET @SQL = 'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + ';';
+    EXEC sp_executesql @SQL;
+
+    -- Update the define_roles table with encryption
+    UPDATE define_roles
+    SET 
+        employee_name = EncryptByKey(Key_GUID(@SymmetricKeyName), @NewName),
+        role = EncryptByKey(Key_GUID(@SymmetricKeyName), @NewRole),
+        region = EncryptByKey(Key_GUID(@SymmetricKeyName), @NewRegion),
+        active = @NewActive
+    OUTPUT 
+        CONVERT(NVARCHAR(MAX), DecryptByKey(INSERTED.employee_name)) AS employee_name,
+        CONVERT(NVARCHAR(MAX), DecryptByKey(INSERTED.role)) AS role,
+        CONVERT(NVARCHAR(MAX), DecryptByKey(INSERTED.region)) AS region,
+        INSERTED.active,
+        INSERTED.id
+    WHERE 
+        CONVERT(NVARCHAR(MAX), DecryptByKey(employee_id)) = @EmployeeId;
+
+    -- Close the symmetric key
+    SET @SQL = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ';';
+    EXEC sp_executesql @SQL;
+END;
+GO
