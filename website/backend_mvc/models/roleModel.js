@@ -1,3 +1,4 @@
+const { SYMMETRIC_KEY_NAME, CERTIFICATE_NAME } = require("../config/constants");
 const db = require("../config/db");
 const { addAuditLog } = require("../utils/auditTrails");
 
@@ -15,20 +16,33 @@ const getRoleDetails = async (role) => {
 
 const updateEmployeRole = async (roleDetails) => {
   try {
-    let query = `UPDATE define_roles
-    SET employee_name = @newName, role = @newRole, region = @newRegion, active=@newActive
-    OUTPUT INSERTED.*
-    WHERE employee_id = @employeeId`;
+    // let query = `UPDATE define_roles
+    // SET employee_name = @newName, role = @newRole, region = @newRegion, active=@newActive
+    // OUTPUT INSERTED.*
+    // WHERE employee_id = @employeeId`;
 
-    let input = {
-      employeeId: roleDetails.employee_id,
-      newName: roleDetails.employee_name,
-      newRole: roleDetails.role,
-      newActive: roleDetails.active,
-      newRegion: roleDetails.region,
-    };
+    // let input = {
+    //   employeeId: roleDetails.employee_id,
+    //   newName: roleDetails.employee_name,
+    //   newRole: roleDetails.role,
+    //   newActive: roleDetails.active,
+    //   newRegion: roleDetails.region,
+    // };
 
-    let result = await db.executeQuery(query, input);
+    let result = await db.executeQuery(`
+EXEC UpdateDefineRoles 
+    @EmployeeId,@NewName,@NewRole,@NewRegion,@NewActive,@SymmetricKeyName,
+    @CertificateName`,
+      {
+        EmployeeId: roleDetails.employee_id,
+        NewName: roleDetails.employee_name,
+        NewRole: roleDetails.role,
+        NewRegion: roleDetails.active,
+        NewActive: roleDetails.region,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+
+      });
     // Add audit log for the update operation
 
     await addAuditLog("define_roles", result.recordset[0].id, "UPDATE", null);
@@ -53,8 +67,10 @@ const fetchRoleData = async () => {
 const fetchRoleId = async (id) => {
   try {
     console.log(id, "check the id.......");
-    let result = await db.executeQuery("EXEC FetchDefinedRoleById @id", {
+    let result = await db.executeQuery("EXEC FetchDefinedRoleById @id, @SymmetricKeyName,@CertificateName`", {
       id: id,
+      SymmetricKeyName: SYMMETRIC_KEY_NAME,
+      CertificateName: CERTIFICATE_NAME
     });
     return result;
   } catch (err) {

@@ -382,16 +382,24 @@ async function insertPrices(data, request_id) {
 
 async function addTransactionToTable(requestId, userId, isDraft = false) {
   try {
-    await sql.connect(config);
+    // await sql.connect(config);
 
     // Fetch user details, including am_id and region_id
-    const userDetails = await sql.query(
-      `
-          SELECT employee_id, region
-          FROM define_roles
-          WHERE employee_id = '${userId}'
-      `
-    );
+    // const userDetails = await sql.query(
+    //   `
+    //       SELECT employee_id, region
+    //       FROM define_roles
+    //       WHERE employee_id = '${userId}'
+    //   `
+    // );
+
+    const userDetails = await db.executeQuery(`EXEC GetEmployeeRegion 
+    @UserId,@SymmetricKeyName,@CertificateName`,
+    {
+      UserId:userId,
+      SymmetricKeyName:SYMMETRIC_KEY_NAME,
+      CertificateName:CERTIFICATE_NAME
+    })
 
     if (userDetails.recordset.length === 0) {
       throw new Error("User not found");

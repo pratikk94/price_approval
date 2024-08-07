@@ -255,7 +255,7 @@ async function acceptTransaction(
     }
     console.log(query);
 
-    let transactionResult = await db.executeQuery(query,input);
+    let transactionResult = await db.executeQuery(query, input);
 
     console.log(transactionResult, "testing.................");
 
@@ -465,14 +465,14 @@ async function acceptTransaction(
         @CurrentlyPendingWith,
         @SymmetricKeyName,
         @CertificateName;`, {
-        RequestId: requestId,
-        RuleId: rule_id,
-        CurrentStatus:'Rework',
-        currently_pending_with:'RM',
-        LastUpdatedByRole: currentRole,
-        LastUpdatedById: lastUpdatedById,
-        SymmetricKeyName: SYMMETRIC_KEY_NAME,
-        CertificateName: CERTIFICATE_NAME
+            RequestId: requestId,
+            RuleId: rule_id,
+            CurrentStatus: 'Rework',
+            currently_pending_with: 'RM',
+            LastUpdatedByRole: currentRole,
+            LastUpdatedById: lastUpdatedById,
+            SymmetricKeyName: SYMMETRIC_KEY_NAME,
+            CertificateName: CERTIFICATE_NAME
           });
 
           console.log(result.recordset[0], "testing RM.................");
@@ -504,14 +504,14 @@ async function acceptTransaction(
         @CurrentlyPendingWith,
         @SymmetricKeyName,
         @CertificateName`, {
-        RequestId: requestId,
-        RuleId: rule_id,
-        CurrentStatus:'Rework',
-        currently_pending_with:'AM',
-        LastUpdatedByRole:currentRole,
-        LastUpdatedById: lastUpdatedById,
-        SymmetricKeyName: SYMMETRIC_KEY_NAME,
-        CertificateName: CERTIFICATE_NAME
+          RequestId: requestId,
+          RuleId: rule_id,
+          CurrentStatus: 'Rework',
+          currently_pending_with: 'AM',
+          LastUpdatedByRole: currentRole,
+          LastUpdatedById: lastUpdatedById,
+          SymmetricKeyName: SYMMETRIC_KEY_NAME,
+          CertificateName: CERTIFICATE_NAME
         });
         insertParentRequest(requestId, requestId);
         console.log(result1.recordset[0], "testing out side..............");
@@ -732,8 +732,15 @@ const processTransaction = async (req, res) => {
 
   try {
     // Fetch employee details
+    // `SELECT role, region FROM define_roles WHERE employee_id = '${employee_id}'`
     const employeeResult = await db.executeQuery(
-      `SELECT role, region FROM define_roles WHERE employee_id = '${employee_id}'`
+      `EXEC GetEmployeeRegion 
+    @UserId,@SymmetricKeyName,@CertificateName`,
+      {
+        UserId: employee_id,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      }
     );
     if (employeeResult.recordset.length === 0) {
       return res.status(404).send("Employee not found.");
@@ -754,7 +761,7 @@ const processTransaction = async (req, res) => {
     @Role, 
     @Region, 
     @SymmetricKeyName, 
-    @CertificateName`,{Role:role,Region:region,SymmetricKeyName:SYMMETRIC_KEY_NAME,CertificateName:CERTIFICATE_NAME});
+    @CertificateName`, { Role: role, Region: region, SymmetricKeyName: SYMMETRIC_KEY_NAME, CertificateName: CERTIFICATE_NAME });
 
     // Check if there are any matching transactions
     if (matchingTransactionsResult.recordset.length === 0) {

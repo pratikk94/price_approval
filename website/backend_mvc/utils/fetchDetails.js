@@ -25,7 +25,14 @@ async function getRegionAndRoleByEmployeeId(employeeId) {
     // Query to fetch region and role by employee_id
     // const result =
     //   await sql.query`SELECT role, region FROM dbo.define_roles WHERE employee_id = ${employeeId}`;
-      let result = await db.executeQuery(`SELECT role, region FROM dbo.define_roles WHERE employee_id=@employeeId`,{"employeeId":employeeId});
+    // `SELECT role, region FROM dbo.define_roles WHERE employee_id=@employeeId`,{"employeeId":employeeId}
+    let result = await db.executeQuery(`EXEC GetEmployeeRegion 
+        @UserId,@SymmetricKeyName,@CertificateName`,
+      {
+        UserId: employee_id,
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      });
     console.log(result.recordset);
     return result.recordset;
   } catch (err) {
