@@ -24,10 +24,12 @@ async function getRemarksWithRequests(request_id) {
 async function postRemark(remarkData) {
   try {
     const { request_id, user_id, comment } = remarkData;
-    const result = await db.executeQuery(`EXEC InsertRemark @RequestID,@UserID,@Comment`, {
+    const result = await db.executeQuery(`EXEC InsertRemark @RequestID,@UserID,@Comment,@SymmetricKeyName,@CertificateName`, {
       RequestID: request_id,
       UserID: user_id,
       Comment: comment,
+      SymmetricKeyName: SYMMETRIC_KEY_NAME,
+      CertificateName: CERTIFICATE_NAME
     });
 
     // Add audit log for the update operation

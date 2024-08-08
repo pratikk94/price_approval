@@ -4,8 +4,10 @@ const { addAuditLog } = require("../utils/auditTrails");
 
 const getRoleDetails = async (role) => {
   try {
-    const result = await db.executeQuery(`EXEC FetchRoleByRoleId @role`, {
+    const result = await db.executeQuery(`EXEC FetchRoleByRoleId @role,@SymmetricKeyName,@CertificateName`, {
       role: role,
+      SymmetricKeyName: SYMMETRIC_KEY_NAME,
+      CertificateName: CERTIFICATE_NAME
     });
     return result.recordset[0]; // returns the first record or undefined
   } catch (err) {
@@ -81,8 +83,16 @@ const fetchRoleId = async (id) => {
 
 async function fetchRoles() {
   try {
-    let result = await db.executeQuery(
-      "SELECT [id], [role], [can_approve], [can_initiate], [can_rework], [can_view], [hierarchy] FROM role_matrix ORDER BY hierarchy ASC"
+    // let result = await db.executeQuery(
+    //   "SELECT [id], [role], [can_approve], [can_initiate], [can_rework], [can_view], [hierarchy] FROM role_matrix ORDER BY hierarchy ASC"
+    // );
+    let result = await db.executeQuery(`EXEC FetchRoleMatrixData 
+    @SymmetricKeyName,
+    @CertificateName`,
+      {
+        SymmetricKeyName: SYMMETRIC_KEY_NAME,
+        CertificateName: CERTIFICATE_NAME
+      }
     );
     console.log(result.recordset);
     return result.recordset;
@@ -119,16 +129,15 @@ async function addRole(role, adjustHierarchy) {
 
 async function updateRole(role) {
   try {
-    result = await db.executeQuery(
-      "UPDATE role_matrix SET can_approve = @can_approve, can_initiate = @can_initiate, can_rework = @can_rework, can_view = @can_view WHERE id = @id",
-      {
-        can_approve: role.can_approve,
-        can_initiate: role.can_initiate,
-        can_rework: role.can_rework,
-        can_view: role.can_view,
-        id: role.id,
-      }
-    );
+    let result = await db.executeQuery("EXEC UpdateRoleMatrix @can_approve,@can_initiate,@can_rework,@can_view,@id, @SymmetricKeyName,@CertificateName`", {
+      can_approve: role.can_approve,
+      can_initiate: role.can_initiate,
+      can_rework: role.can_rework,
+      can_view: role.can_view,
+      id: role.id,
+      SymmetricKeyName: SYMMETRIC_KEY_NAME,
+      CertificateName: CERTIFICATE_NAME
+    });
     return result;
   } catch (err) {
     console.error(err);

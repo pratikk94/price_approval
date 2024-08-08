@@ -717,10 +717,10 @@ GO
 
 
 -- EXEC GetPriceApprovalRequests @Id = 'e1002', @Status = '0', @RequestId = NR202407300003, @Role = 'RM', @SymmetricKeyName = 'YourSymmetricKeyName', @CertificateName='YourCertificateName'
-EXEC GetPriceApprovalRequests @Id = 'e1002', @Status = '0',
- @RequestId = NR202408050001, @Role = 'RM',
- @SymmetricKeyName = 'YourSymmetricKeyName', 
- @CertificateName='YourCertificateName'
+-- EXEC GetPriceApprovalRequests @Id = 'e1002', @Status = '0',
+--  @RequestId = NR202408050001, @Role = 'RM',
+--  @SymmetricKeyName = 'YourSymmetricKeyName', 
+--  @CertificateName='YourCertificateName'
 
 SET ANSI_NULLS ON
 GO
@@ -2236,12 +2236,12 @@ BEGIN
     BEGIN
         -- Result Set 4: Employees without roles
         SELECT 
-            CAST(REPLACE(DecryptByKey(um.employee_name), CHAR(0), '') AS NVARCHAR(128)) AS name, 
-            CAST(REPLACE(DecryptByKey(um.employee_id), CHAR(0), '') AS NVARCHAR(128)) AS id
+            CAST(REPLACE(DecryptByKey(um.employee_name), CHAR(0), '') AS NVARCHAR(50)) AS name, 
+            CAST(REPLACE(DecryptByKey(um.employee_id), CHAR(0), '') AS NVARCHAR(50)) AS id
         FROM 
             user_master um
         LEFT JOIN 
-            define_roles dr ON um.employee_id = dr.employee_id
+            define_roles dr ON CAST(REPLACE(DecryptByKey(um.employee_id), CHAR(0), '') AS NVARCHAR(50)) = dr.employee_id
         WHERE 
             dr.employee_id IS NULL;
     END
@@ -2744,9 +2744,9 @@ BEGIN
         ELSE IF @queryType = 'user_master'
         BEGIN
         -- Result Set 4: Employees without roles
-        SELECT CONVERT(varchar, DecryptByKey(um.employee_name)) AS name, CONVERT(varchar, DecryptByKey(um.employee_id)) AS id
+        SELECT CAST(REPLACE(DecryptByKey(um.employee_name), CHAR(0), '') AS NVARCHAR(50)) AS name, CAST(REPLACE(DecryptByKey(um.employee_id), CHAR(0), '') AS NVARCHAR(50)) AS id
         FROM user_master um
-            LEFT JOIN define_roles dr ON CONVERT(varchar, DecryptByKey(um.employee_id)) = dr.employee_id
+            LEFT JOIN define_roles dr ON CAST(REPLACE(DecryptByKey(um.employee_id), CHAR(0), '') AS NVARCHAR(50)) = dr.employee_id
         WHERE dr.employee_id IS NULL;
 
     END
@@ -2949,4 +2949,328 @@ FROM
 -- Step 3: Close Symmetric Key
 CLOSE SYMMETRIC KEY YourSymmetricKeyName;
 
+-- EXEC InsertRemark 'NR202407020001', 12345, 'This is a test comment' ,'YourSymmetricKeyName','YourCertificateName'
 
+CREATE PROCEDURE dbo.InsertRemark
+     @RequestID NVARCHAR(max),
+    @UserID NVARCHAR(max),
+    @Comment NVARCHAR(MAX),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        -- Input Validation
+        IF LEN(@RequestID) = 0 OR LEN(@UserID) = 0 OR LEN(@Comment) = 0
+        BEGIN
+            RAISERROR('Invalid input parameters', 16, 1);
+            RETURN;
+        END
+
+        DECLARE @KeyGUID UNIQUEIDENTIFIER;
+        DECLARE @SQL NVARCHAR(MAX);
+        
+        -- Get the GUID of the symmetric key
+        SELECT @KeyGUID = Key_GUID(@SymmetricKeyName);
+
+        -- Open the symmetric key for encryption
+        SET @SQL = 'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName);
+        EXEC sp_executesql @SQL;
+
+        -- Insert the encrypted values into the Remarks table and return the inserted values
+        INSERT INTO dbo.Remarks (request_id, user_id, comment, created_at)
+        OUTPUT 
+            INSERTED.request_id, 
+            INSERTED.user_id, 
+            INSERTED.comment, 
+            INSERTED.created_at, 
+            INSERTED.id
+        VALUES 
+        (
+            EncryptByKey(@KeyGUID, @RequestID), 
+            EncryptByKey(@KeyGUID, @UserID), 
+            EncryptByKey(@KeyGUID, @Comment), 
+            GETDATE() -- No encryption applied to GETDATE() as it is a datetime type
+        );
+
+        -- Close the symmetric key
+        SET @SQL = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName);
+        EXEC sp_executesql @SQL;
+    END TRY
+    BEGIN CATCH
+        -- Declare variables to hold error information
+        DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        -- Close the symmetric key in case of an error
+        BEGIN TRY
+            SET @SQL = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName);
+            EXEC sp_executesql @SQL;
+        END TRY
+        BEGIN CATCH
+            -- Ignore errors during key closing, as we are already handling another error
+        END CATCH;
+
+        -- Rethrow the original error
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+-- EXEC dbo.GetRemarksByRequestIDs 
+--     @RequestIDs = 'NR202408050002,NR202408010001,NR202408050001',  
+--     @SymmetricKeyName = 'YourSymmetricKeyName',      
+--     @CertificateName = 'YourCertificateName';      
+
+CREATE PROCEDURE dbo.GetRemarksByRequestIDs
+    @RequestIDs NVARCHAR(MAX),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @SQL NVARCHAR(MAX);
+
+    BEGIN TRY
+        -- Open the symmetric key for decryption
+        SET @SQL = 'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName);
+        EXEC sp_executesql @SQL;
+
+        -- Ensure @RequestIDs are properly quoted
+        SET @RequestIDs = '''' + REPLACE(@RequestIDs, ',', ''',''') + '''';
+
+        -- Select the decrypted values
+        SET @SQL = '
+        SELECT DISTINCT
+            CONVERT(NVARCHAR(50), DecryptByKey(r.request_id)) AS request_id,
+            r.id,
+            CONCAT(
+                CAST(REPLACE(DecryptByKey(u.employee_name), CHAR(0), '''') AS NVARCHAR(128)), 
+                ''('', 
+                CAST(REPLACE(DecryptByKey(u.role), CHAR(0), '''') AS NVARCHAR(128)), 
+                '','', 
+                CAST(REPLACE(DecryptByKey(u.employee_id), CHAR(0), '''') AS NVARCHAR(128)), 
+                '')''
+            ) AS user_id,
+            CONVERT(NVARCHAR(MAX), DecryptByKey(r.comment)) AS comment,
+            CONVERT(VARCHAR, CAST(r.created_at AS DATETIME2), 103) AS created_at
+        FROM 
+            dbo.Remarks AS r
+        INNER JOIN 
+            dbo.define_roles AS u 
+            ON CONVERT(NVARCHAR(50), DecryptByKey(r.user_id)) = CAST(REPLACE(DecryptByKey(u.employee_id), CHAR(0), '''') AS NVARCHAR(128))
+        WHERE 
+            CONVERT(NVARCHAR(50), DecryptByKey(r.request_id)) IN (' + @RequestIDs + ')';
+        
+        EXEC sp_executesql @SQL;
+
+        -- Close the symmetric key
+        SET @SQL = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName);
+        EXEC sp_executesql @SQL;
+    END TRY
+    BEGIN CATCH
+        -- Declare variables to hold error information
+        DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        -- Attempt to close the symmetric key in case of an error
+        BEGIN TRY
+            SET @SQL = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName);
+            EXEC sp_executesql @SQL;
+        END TRY
+        BEGIN CATCH
+            -- Ignore errors during key closing, as we are already handling another error
+        END CATCH;
+
+        -- Rethrow the original error
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+
+
+-- DECLARE @role VARCHAR(255) = 'RM';
+-- DECLARE @SymmetricKeyName NVARCHAR(128) = 'YourSymmetricKeyName';
+-- DECLARE @CertificateName NVARCHAR(128) = 'YourCertificateName';
+
+-- EXEC FetchRoleByRoleId
+--     @role = @role,
+--     @SymmetricKeyName = @SymmetricKeyName,
+--     @CertificateName = @CertificateName;
+
+
+CREATE PROCEDURE FetchRoleByRoleId
+    @role VARCHAR(255),
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @SQL NVARCHAR(MAX);
+
+    BEGIN TRY
+        -- Open the symmetric key for decryption
+        SET @SQL = 'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName);
+        EXEC sp_executesql @SQL;
+
+        -- Select and decrypt the data from the role_matrix table
+        SELECT
+         id,
+   
+    CAST(REPLACE(DecryptByKey(role), CHAR(0), '') AS NVARCHAR(MAX))AS role,
+    CAST(DECRYPTBYKEY(can_approve) AS TINYINT) AS can_approve,
+    CAST(DECRYPTBYKEY(can_initiate) AS TINYINT) AS can_initiate,
+    CAST(DECRYPTBYKEY(can_rework) AS TINYINT) AS can_rework,
+    CAST(DECRYPTBYKEY(can_view) AS TINYINT) AS can_view,
+    hierarchy
+    FROM role_matrix
+    WHERE CAST(REPLACE(DecryptByKey(role), CHAR(0), '') AS NVARCHAR(MAX)) = @role;
+
+        -- Close the symmetric key
+        SET @SQL = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName);
+        EXEC sp_executesql @SQL;
+    END TRY
+    BEGIN CATCH
+        -- Declare variables to hold error information
+        DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
+        SELECT
+        @ErrorMessage = ERROR_MESSAGE(),
+        @ErrorSeverity = ERROR_SEVERITY(),
+        @ErrorState = ERROR_STATE();
+
+        -- Close the symmetric key in case of an error
+        BEGIN TRY
+            SET @SQL = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName);
+            EXEC sp_executesql @SQL;
+        END TRY
+        BEGIN CATCH
+            -- Ignore errors during key closing, as we are already handling another error
+        END CATCH;
+
+        -- Rethrow the original error
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+
+-- DECLARE @id INT = 2;
+-- DECLARE @can_approve BIT = 1;
+-- DECLARE @can_initiate BIT = 0;
+-- DECLARE @can_rework BIT = 1;
+-- DECLARE @can_view BIT = 1;
+-- DECLARE @SymmetricKeyName NVARCHAR(128) = 'YourSymmetricKeyName';
+-- DECLARE @CertificateName NVARCHAR(128) = 'YourCertificateName';
+
+-- EXEC UpdateRoleMatrix
+--     @id = @id,
+--     @can_approve = @can_approve,
+--     @can_initiate = @can_initiate,
+--     @can_rework = @can_rework,
+--     @can_view = @can_view,
+--     @SymmetricKeyName = @SymmetricKeyName,
+--     @CertificateName = @CertificateName;
+
+CREATE PROCEDURE UpdateRoleMatrix
+    @id INT,
+    @can_approve TINYINT,
+    @can_initiate TINYINT,
+    @can_rework TINYINT,
+    @can_view TINYINT,
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @SQL NVARCHAR(MAX);
+
+    BEGIN TRY
+        -- Open the symmetric key for decryption
+        SET @SQL = 'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName);
+        EXEC sp_executesql @SQL;
+
+        -- Update the role_matrix table
+        UPDATE role_matrix
+        SET 
+        can_approve = ENCRYPTBYKEY(KEY_GUID(@SymmetricKeyName), CAST(@can_approve AS VARBINARY(256))),
+        can_initiate = ENCRYPTBYKEY(KEY_GUID(@SymmetricKeyName), CAST(@can_initiate AS VARBINARY(256))),
+        can_rework = ENCRYPTBYKEY(KEY_GUID(@SymmetricKeyName), CAST(@can_rework AS VARBINARY(256))),
+        can_view = ENCRYPTBYKEY(KEY_GUID(@SymmetricKeyName), CAST(@can_view AS VARBINARY(256)))
+    WHERE id = @id;
+
+        -- Close the symmetric key
+        SET @SQL = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName);
+        EXEC sp_executesql @SQL;
+    END TRY
+    BEGIN CATCH
+        -- Declare variables to hold error information
+        DECLARE @ErrorMessage NVARCHAR(4000), @ErrorSeverity INT, @ErrorState INT;
+        SELECT 
+            @ErrorMessage = ERROR_MESSAGE(),
+            @ErrorSeverity = ERROR_SEVERITY(),
+            @ErrorState = ERROR_STATE();
+
+        -- Close the symmetric key in case of an error
+        BEGIN TRY
+            SET @SQL = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName);
+            EXEC sp_executesql @SQL;
+        END TRY
+        BEGIN CATCH
+            -- Ignore errors during key closing, as we are already handling another error
+        END CATCH;
+
+        -- Rethrow the original error
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+
+-- EXEC FetchRoleMatrixData 
+--     @SymmetricKeyName = 'YourSymmetricKeyName',
+--     @CertificateName = 'YourCertificateName';
+
+
+CREATE PROCEDURE FetchRoleMatrixData
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    -- Dynamically open the symmetric key using the provided certificate
+    DECLARE @sql NVARCHAR(MAX);
+
+    SET @sql = N'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) +
+               N' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + N';';
+
+    EXEC sp_executesql @sql;
+
+    -- Select and decrypt the data
+    SELECT
+        id,
+        CAST(DECRYPTBYKEY(role) AS NVARCHAR(MAX)) AS role,
+        CAST(DECRYPTBYKEY(can_approve) AS TINYINT) AS can_approve,
+        CAST(DECRYPTBYKEY(can_initiate) AS TINYINT) AS can_initiate,
+        CAST(DECRYPTBYKEY(can_rework) AS TINYINT) AS can_rework,
+        CAST(DECRYPTBYKEY(can_view) AS TINYINT) AS can_view,
+        hierarchy
+    FROM
+        role_matrix
+    ORDER BY
+        hierarchy ASC;
+
+    -- Close the symmetric key
+    SET @sql = N'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N';';
+    EXEC sp_executesql @sql;
+END;
