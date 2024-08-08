@@ -4,7 +4,12 @@ import PriceRequestModal from "../Generic/ViewModal";
 import axios from "axios";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { TablePagination, IconButton, Typography } from "@mui/material";
+import {
+  TablePagination,
+  IconButton,
+  Typography,
+  InputAdornment,
+} from "@mui/material";
 import "./DataTable.css";
 import {
   Box,
@@ -26,6 +31,7 @@ import {
   Checkbox,
   ListItemText,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
 import ViewIcon from "@mui/icons-material/Visibility";
 import { useSession } from "../Login_Controller/SessionContext";
@@ -33,6 +39,7 @@ import DownloadModal from "./DownloadModal";
 import BlockIcon from "@mui/icons-material/Block";
 import MoreTimeIcon from "@mui/icons-material/MoreTime";
 import CreateRequestModal from "./RequestModal";
+import { writeFile, utils } from "xlsx";
 function DraggableHeader({
   header,
   index,
@@ -74,6 +81,7 @@ function DraggableHeader({
         bgcolor: "#156760",
         color: "common.white",
         fontWeight: "bold",
+        width: "20vw",
         height: "24px !important", // Attempting to override with !important
         "& .MuiTableSortLabel-root": {
           // Increasing specificity for potential child components
@@ -402,7 +410,31 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
   //   setSelectedRows(newSelectedRows);
   //   setRows(newSelectedRows); // Update the parent component with the selected rows
   // }, [filteredData, selectedRowIds, setRows]);
+  const handleDownloadSelectedRows = () => {
+    const selectedData = [];
 
+    Array.from(selectedRowIds).forEach((id) => {
+      const row = data.find((row) => row.request_id === id);
+
+      if (row) {
+        row.priceDetails.forEach((priceDetail) => {
+          selectedData.push({
+            ...row.consolidatedRequest,
+            ...priceDetail,
+          });
+        });
+      }
+    });
+
+    if (selectedData.length > 0) {
+      const worksheet = utils.json_to_sheet(selectedData);
+      const workbook = utils.book_new();
+      utils.book_append_sheet(workbook, worksheet, "Selected Data");
+      writeFile(workbook, "selected_data.xlsx");
+    } else {
+      alert("No rows selected");
+    }
+  };
   return (
     <>
       <DndProvider backend={HTML5Backend}>
@@ -414,166 +446,196 @@ function ResponsiveTable({ url, rule, setRows, isRework = false }) {
             borderRadius: 2,
           }}
         >
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 2,
-              p: 1,
-              bgcolor: "background.paper",
-              borderRadius: 1,
-            }}
-          >
-            <FormControl
-              className="dataTableContainer"
+          {data.length > 0 ? (
+            <Box
+              display="flex"
+              justifyContent="space-between"
               alignItems="center"
               mb={2}
-              sx={{ mb: 2 }}
+              sx={{
+                display: "flex",
+                justifyContent: "right",
+                alignItems: "center",
+                mb: 2,
+                p: 1,
+                bgcolor: "background.paper",
+                borderRadius: 1,
+              }}
             >
-              {/* <InputLabel id="select-label">Headers</InputLabel> */}
-              <Select
-                labelId="select-label"
-                multiple
-                value={selectedHeaders}
-                onChange={handleSelectChange}
-                renderValue={(selected) => `${selected.length - 5} selected`}
+              <FormControl
+                className="dataTableContainer"
+                alignItems="center"
+                mb={2}
+                sx={{ mb: 2, paddingTop: 2 }}
               >
-                {headers
-                  .filter(
-                    (header) =>
-                      !header.includes("_id") && !header.includes("map")
-                  )
-                  .map((header) => (
-                    <MenuItem key={header} value={header}>
-                      <Checkbox
-                        checked={selectedHeaders.indexOf(header) > -1}
-                        className="menuItemCheckbox"
-                      />
-                      <ListItemText
-                        primary={
-                          header.replace("_", " ").charAt(0).toUpperCase() +
-                          header.replace("_", " ").slice(1)
-                        }
-                      />
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-            <TextField
-              label=""
-              value={searchTerm}
-              onChange={handleSearchChange}
-              sx={{ mx: 2 }}
-            />
-          </Box>
+                {/* <InputLabel id="select-label">Headers</InputLabel> */}
+                <Select
+                  labelId="select-label"
+                  multiple
+                  value={selectedHeaders}
+                  onChange={handleSelectChange}
+                  renderValue={(selected) => `${selected.length - 5} selected`}
+                >
+                  {headers
+                    .filter(
+                      (header) =>
+                        !header.includes("_id") && !header.includes("map")
+                    )
+                    .map((header) => (
+                      <MenuItem key={header} value={header}>
+                        <Checkbox
+                          checked={selectedHeaders.indexOf(header) > -1}
+                          className="menuItemCheckbox"
+                        />
+                        <ListItemText
+                          primary={
+                            header.replace("_", " ").charAt(0).toUpperCase() +
+                            header.replace("_", " ").slice(1)
+                          }
+                        />
+                      </MenuItem>
+                    ))}
+                </Select>
+              </FormControl>
+              <IconButton
+                color="inherit"
+                onClick={handleDownloadSelectedRows}
+                sx={{ mx: 2 }}
+              >
+                <DownloadIcon />
+              </IconButton>
+              <TextField
+                label=""
+                value={searchTerm}
+                onChange={handleSearchChange}
+                placeholder="Search..."
+                sx={{ mx: 2, marginRight: 12 }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+          ) : null}
           <TableContainer
             component={Paper}
-            sx={{ paddingLeft: 12, paddingRight: 12 }}
+            sx={{ paddingLeft: 2, paddingRight: 12 }}
           >
-            <Table>
-              {!isMobile && (
-                <TableHead>
-                  <TableRow>
-                    <TableCell
-                      padding="checkbox"
-                      sx={{
-                        bgcolor: "green.dark",
-                        color: "common.white",
-                        fontWeight: "bold",
-                      }}
-                    />
-                    {selectedHeaders
-                      .filter(
-                        (header) =>
-                          !header.includes("_id") && !header.includes("map")
-                      )
-                      .map((header, index) => (
-                        <DraggableHeader
-                          key={
-                            header.replace("_", " ").charAt(0).toUpperCase() +
-                            header.replace("_", " ").slice(1)
-                          }
-                          header={
-                            header.replace("_", " ").charAt(0).toUpperCase() +
-                            header.replace("_", " ").slice(1)
-                          }
-                          index={index}
-                          moveColumn={moveColumn}
-                          sortDirection={orderBy === header ? order : false}
-                          handleSort={() => handleSort(header)}
-                        />
-                      ))}
-                  </TableRow>
-                </TableHead>
-              )}
-              <TableBody>
-                {isMobile
-                  ? data.map((row, rowIndex) => (
-                      <Box key={rowIndex}>
-                        {selectedHeaders
-                          .filter(
-                            (header) =>
-                              !header.includes("_id") && !header.includes("map")
-                          )
-                          .map((header) => (
-                            <Typography key={header} variant="p">
-                              <strong>
-                                {header
-                                  .replace("_", " ")
-                                  .charAt(0)
-                                  .toUpperCase() +
-                                  header.replace("_", " ").slice(1)}
-                                :{" "}
-                              </strong>
-                              {row.consolidatedRequest[header]}
-                            </Typography>
-                          ))}
-                        <Box
-                          mt={2}
-                          display="flex"
-                          justifyContent="space-between"
-                        >
-                          <IconButton
-                            onClick={() => handleViewAction(row)}
-                            sx={{
-                              m: 1,
-                              "&:hover": {
-                                bgcolor: "secondary.light", // theme-based color
-                                transform: "scale(1.1)",
-                              },
-                            }}
+            {data.length === 0 ? (
+              <Typography variant="h6" align="center" sx={{ mt: 2, mb: 2 }}>
+                No Data Available
+              </Typography>
+            ) : (
+              <Table>
+                {!isMobile && (
+                  <TableHead>
+                    <TableRow>
+                      <TableCell
+                        padding="checkbox"
+                        sx={{
+                          bgcolor: "green.dark",
+                          color: "common.white",
+                          fontWeight: "bold",
+                        }}
+                      />
+                      {selectedHeaders
+                        .filter(
+                          (header) =>
+                            !header.includes("_id") && !header.includes("map")
+                        )
+                        .map((header, index) => (
+                          <DraggableHeader
+                            key={
+                              header.replace("_", " ").charAt(0).toUpperCase() +
+                              header.replace("_", " ").slice(1)
+                            }
+                            header={
+                              header.replace("_", " ").charAt(0).toUpperCase() +
+                              header.replace("_", " ").slice(1)
+                            }
+                            index={index}
+                            moveColumn={moveColumn}
+                            sortDirection={orderBy === header ? order : false}
+                            handleSort={() => handleSort(header)}
+                          />
+                        ))}
+                    </TableRow>
+                  </TableHead>
+                )}
+                <TableBody>
+                  {isMobile
+                    ? data.map((row, rowIndex) => (
+                        <Box key={rowIndex}>
+                          {selectedHeaders
+                            .filter(
+                              (header) =>
+                                !header.includes("_id") &&
+                                !header.includes("map")
+                            )
+                            .map((header) => (
+                              <Typography
+                                key={header}
+                                variant="p"
+                                sx={{ padding: 2 }}
+                              >
+                                <strong>
+                                  {header
+                                    .replace("_", " ")
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                    header.replace("_", " ").slice(1)}
+                                  :{" "}
+                                </strong>
+                                <center>
+                                  {row.consolidatedRequest[header]}
+                                </center>
+                              </Typography>
+                            ))}
+                          <Box
+                            mt={2}
+                            display="flex"
+                            justifyContent="space-between"
                           >
-                            <ViewIcon sx={{ color: "primary.main" }} />
-                          </IconButton>
-                          <IconButton
-                            onClick={() => handleDownloadAction(row)}
-                            sx={{
-                              m: 1,
-                              "&:hover": {
-                                bgcolor: "secondary.light", // theme-based color
-                                transform: "scale(1.1)",
-                              },
-                            }}
-                          >
-                            <DownloadIcon sx={{ color: "primary.main" }} />
-                          </IconButton>
-                          {/* Additional buttons here */}
+                            <IconButton
+                              onClick={() => handleViewAction(row)}
+                              sx={{
+                                m: 1,
+                                "&:hover": {
+                                  bgcolor: "secondary.light", // theme-based color
+                                  transform: "scale(1.1)",
+                                },
+                              }}
+                            >
+                              <ViewIcon sx={{ color: "primary.main" }} />
+                            </IconButton>
+                            <IconButton
+                              onClick={() => handleDownloadAction(row)}
+                              sx={{
+                                m: 1,
+                                "&:hover": {
+                                  bgcolor: "secondary.light", // theme-based color
+                                  transform: "scale(1.1)",
+                                },
+                              }}
+                            >
+                              <DownloadIcon sx={{ color: "primary.main" }} />
+                            </IconButton>
+                            {/* Additional buttons here */}
+                          </Box>
                         </Box>
-                      </Box>
-                    ))
-                  : getFilteredData()
-                      .slice(
-                        page * rowsPerPage,
-                        page * rowsPerPage + rowsPerPage
-                      )
-                      .map((row) => renderRow(row))}
-              </TableBody>
-            </Table>
+                      ))
+                    : getFilteredData()
+                        .slice(
+                          page * rowsPerPage,
+                          page * rowsPerPage + rowsPerPage
+                        )
+                        .map((row) => renderRow(row))}
+                </TableBody>
+              </Table>
+            )}
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"

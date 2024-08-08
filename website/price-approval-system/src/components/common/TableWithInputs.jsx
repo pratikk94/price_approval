@@ -79,6 +79,7 @@ function TableWithInputs({
     offlineDiscount: false,
   });
   const [excelData, setExcelData] = useState("");
+  const [errorRows, setErrorRows] = useState([]); // State to store rows with errors
 
   const handleTextChange = (event) => {
     setExcelData(event.target.value);
@@ -87,23 +88,49 @@ function TableWithInputs({
   const handleParse = () => {
     const rows = excelData.trim().split("\n");
     const parsedData = rows.map((row) => row.split("\t"));
-    const newRows = parsedData.map((data) => ({
-      id: uuidv4(),
-      grade: data[0] || "",
-      gradeType: data[1] || "",
-      gsmFrom: data[2] || "",
-      gsmTo: data[3] || "",
-      agreedPrice: parseFloat(data[4]) || 0,
-      specialDiscount: parseFloat(data[5]) || 0,
-      reelDiscount: parseFloat(data[6]) || 0,
-      packUpCharge: parseFloat(data[7]) || 0,
-      tpc: parseFloat(data[8]) || 0,
-      offlineDiscount: parseFloat(data[9]) || 0,
-      netNSR: parseFloat(data[10]) || 0,
-      oldNetNSR: parseFloat(data[11]) || 0,
-      profitCenter: "",
-    }));
+    const newRows = [];
+    const errors = [];
+
+    parsedData.forEach((data, index) => {
+      const row = {
+        id: uuidv4(),
+        grade: data[0] || "",
+        gradeType: data[1] || "",
+        gsmFrom: data[2] || "",
+        gsmTo: data[3] || "",
+        agreedPrice: parseFloat(data[4]) || 0,
+        specialDiscount: parseFloat(data[5]) || 0,
+        reelDiscount: parseFloat(data[6]) || 0,
+        packUpCharge: parseFloat(data[7]) || 0,
+        tpc: parseFloat(data[8]) || 0,
+        offlineDiscount: parseFloat(data[9]) || 0,
+        netNSR: parseFloat(data[10]) || 0,
+        oldNetNSR: parseFloat(data[11]) || 0,
+        profitCenter: "",
+      };
+
+      const isError =
+        !row.grade ||
+        !row.gradeType ||
+        !row.gsmFrom ||
+        !row.gsmTo ||
+        isNaN(row.agreedPrice) ||
+        isNaN(row.specialDiscount) ||
+        isNaN(row.reelDiscount) ||
+        isNaN(row.packUpCharge) ||
+        isNaN(row.tpc) ||
+        isNaN(row.offlineDiscount) ||
+        isNaN(row.netNSR) ||
+        isNaN(row.oldNetNSR);
+
+      if (isError) {
+        errors.push(index);
+      }
+      newRows.push(row);
+    });
+
     setRows((prevRows) => [...prevRows, ...newRows]);
+    setErrorRows(errors);
   };
 
   const handleMaterialChange = (option) => {
@@ -359,6 +386,10 @@ function TableWithInputs({
         fullWidth
         value={excelData}
         onChange={handleTextChange}
+        error={errorRows.length > 0}
+        helperText={
+          errorRows.length > 0 ? "Some fields are empty or invalid" : ""
+        }
       />
       <Button
         variant="contained"
@@ -424,7 +455,12 @@ function TableWithInputs({
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={index}>
+            <tr
+              key={index}
+              style={
+                errorRows.includes(index) ? { backgroundColor: "red" } : {}
+              }
+            >
               <td>
                 <Select
                   placeholder=""

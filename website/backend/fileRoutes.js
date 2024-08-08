@@ -10,7 +10,7 @@ const config = {
   //password: "12345",
   //server: "PRATIK-PC\\PSPD",
   server: process.env.DB_SERVER,
-  port: 1433,
+  port: parseInt(process.env.DB_PORT),
   database: process.env.DB_NAME,
   options: {
     enableArithAbort: true,

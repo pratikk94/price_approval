@@ -29,7 +29,6 @@ import moment from "moment-timezone";
 import axios from "axios";
 import HistoryModal from "../Role_Business_Admin/Components/RequestHistoryModal";
 import MessagesComponent from "../components/common/History";
-import ExcelBox from "../components/common/ExcelBox";
 
 const modalStyle = {
   position: "absolute",
@@ -374,11 +373,17 @@ const CreateRequestModal = ({
   };
 
   const submitFormDataMVC = async (formData) => {
+    const draft = formData["isDraft"];
+    console.log(tableRowsData[0]["grade"]);
+    if (tableRowsData[0]["grade"].length == 0) {
+      setErrorMessage("Please add grade");
+      setStopExecution(true);
+      return;
+    }
     if (formData["isDraft"]) {
       setIsDraft(true);
+      setShowSuccess("true");
     }
-    const draft = formData["isDraft"];
-
     try {
       let action = "N";
 
@@ -417,6 +422,7 @@ const CreateRequestModal = ({
           oldRequestId: parentId,
         };
         formData["prices"] = tableRowsData;
+
         const attachmentId = await fetchTempAttachments();
         if (attachmentId > 0) {
           formData["tempAttachmentIds"] = attachmentId;
@@ -476,20 +482,20 @@ const CreateRequestModal = ({
         updateRequestIds(oldRequestIds, requestData["id"])
           .then((response) => {
             console.log("Update successful:", response);
+            if (!response.ok) {
+              setShowSuccess(false);
+              setErrorMessage(
+                `Failed to create request due to HTTP error! \n Reason : ${response.status}`
+              );
+              throw new Error(`HTTP error! status: ${response.status}`);
+            } else {
+              setShowSuccess(true);
+              setOpenModal(true);
+            }
           })
           .catch((error) => {
             console.error("Failed to update request IDs:", error);
           });
-      }
-      if (!response.ok) {
-        setShowSuccess(false);
-        setErrorMessage(
-          `Failed to create request due to HTTP error! \n Reason : ${response.status}`
-        );
-        throw new Error(`HTTP error! status: ${response.status}`);
-      } else {
-        setShowSuccess(true);
-        setOpenModal(true);
       }
 
       localStorage.removeItem("request_ids");

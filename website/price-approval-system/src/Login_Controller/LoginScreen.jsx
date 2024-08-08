@@ -1,3 +1,4 @@
+// LoginScreen.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "./SessionContext";
@@ -6,12 +7,22 @@ import "./LoginPage.css";
 import { Typography } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
+import LoginPopup from "./LoginPopup";
+
 const LoginScreen = () => {
   const [employeeId, setEmployeeId] = useState("");
   const { session, setSession } = useSession();
   const navigate = useNavigate();
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
 
   const handleLogin = async () => {
+    if (employeeId === "") {
+      setPopupMessage("Please enter your Employee ID to login to the system.");
+      setPopupOpen(true);
+      return;
+    }
+
     try {
       const response = await fetch(`${backend_mvc}api/login/${employeeId}`, {
         method: "GET",
@@ -39,14 +50,20 @@ const LoginScreen = () => {
         });
         navigate("/");
       } else {
-        alert("Issue in Login. Contact business admin");
+        setPopupMessage("Issue in Login. Contact business admin");
+        setPopupOpen(true);
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert(
-        "There was an issue with the login process. Please try again later."
+      setPopupMessage(
+        "Please enter correct Employee ID to login to the system."
       );
+      setPopupOpen(true);
     }
+  };
+
+  const handleClosePopup = () => {
+    setPopupOpen(false);
   };
 
   return (
@@ -74,9 +91,15 @@ const LoginScreen = () => {
           autoPlay
           muted
           loop
+          disablePictureInPicture
           style={{ height: "84vh", width: "100vw" }} // Adjust the size as needed
         />
       </Card>
+      <LoginPopup
+        open={popupOpen}
+        message={popupMessage}
+        onClose={handleClosePopup}
+      />
     </div>
   );
 };

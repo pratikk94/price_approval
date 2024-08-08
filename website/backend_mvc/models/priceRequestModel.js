@@ -699,6 +699,9 @@ async function fetchData(role, status, id) {
         { Status: status, Role: role, SymmetricKeyName: SYMMETRIC_KEY_NAME, CertificateName: CERTIFICATE_NAME }
       );
     }
+
+    console.log("transactionsResult", transactionsResult.recordset);
+
     let details = [];
     // For each transaction, fetch and consolidate request details
     let uniqueTransactions = transactionsResult.recordset.filter(

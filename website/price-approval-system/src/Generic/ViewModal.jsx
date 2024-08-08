@@ -29,7 +29,7 @@ import { green } from "@mui/material/colors";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import axios from "axios";
 import { Grid, Modal } from "@mui/material";
-
+import "./ViewModal.css";
 function PriceTable({ price, selectedConsignees, selectedCustomers, plant }) {
   const [historyData, setHistoryData] = useState([]);
   const [open, setOpen] = useState(false);
@@ -575,7 +575,7 @@ function PriceViewModal({ open, handleClose, data, rule }) {
                 sx={{ fontSize: 40, mr: 1, verticalAlign: "middle" }}
               /> */}
                 <br />
-                {updateStatusV < 2 ? (
+                {updateStatusV < 2 && updateStatusV != 0 ? (
                   <Typography id="modal-modal-description">
                     Failed to create request.
                     <br /> Reason : {errorMessage}

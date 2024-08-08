@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Select from "react-select";
+import { backend_mvc, backend_url } from "../util";
 
 const RuleAddPage = () => {
   const [regions, setRegions] = useState([]);
@@ -15,7 +16,7 @@ const RuleAddPage = () => {
   useEffect(() => {
     // Fetch sales regions
     axios
-      .get("http://192.168.1.109:3000/api/fetch_sales_regions")
+      .get(`${backend_mvc}api/fetch_sales_regions`)
       .then((response) => {
         setRegions(response.data[0]);
       })
@@ -25,7 +26,7 @@ const RuleAddPage = () => {
 
     // Fetch roles
     axios
-      .post("http://192.168.1.109:3000/api/roles/roles")
+      .post(`${backend_mvc}api/roles/roles`)
       .then((response) => {
         setRoles(response.data);
       })
@@ -77,7 +78,7 @@ const RuleAddPage = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.1.109:3000/api/approvers-by-levels",
+        "http://192.168.0.5:3000/api/approvers-by-levels",
         { dataArray },
         {
           headers: {

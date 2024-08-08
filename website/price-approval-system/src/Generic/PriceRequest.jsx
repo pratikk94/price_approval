@@ -358,7 +358,7 @@ function PriceChangeRequest(rules, employee_id) {
   console.log("Rows", rows);
 
   return (
-    <div style={{ width: "97vw", height: "96vh" }}>
+    <div style={{ width: "84vw", height: "86vh" }}>
       <Typography variant="h4" gutterBottom>
         Price Requests
       </Typography>
