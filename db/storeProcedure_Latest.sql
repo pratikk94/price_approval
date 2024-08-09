@@ -144,20 +144,47 @@ BEGIN
 
     IF @Type = 1
     BEGIN
-        SET @Query = 'SELECT * FROM customer WHERE Category LIKE ''%CUST%''';
+        SET @Query = 'SELECT  Code,
+    CAST(REPLACE(DecryptByKey(category), CHAR(0), '') AS NVARCHAR(128)) AS category,
+    CAST(REPLACE(DecryptByKey(A_C_group), CHAR(0), '') AS NVARCHAR(128)) A_C_group,
+    CAST(REPLACE(DecryptByKey(sales_office), CHAR(0), '') AS NVARCHAR(128)) sales_office,
+    CAST(REPLACE(DecryptByKey(Name), CHAR(0), '') AS NVARCHAR(128)) Name,
+     CAST(REPLACE(DecryptByKey(City), CHAR(0), '') AS NVARCHAR(128)) City,
+     CAST(REPLACE(DecryptByKey(Search_term), CHAR(0), '') AS NVARCHAR(128)) Search_term,
+    [Status],
+    TPC_code,
+    id FROM customer WHERE CAST(REPLACE(DecryptByKey(category), CHAR(0), '') AS NVARCHAR(128)) LIKE ''%CUST%''';
     END
     ELSE IF @Type = 2
     BEGIN
-        SET @Query = 'SELECT * FROM customer WHERE Category LIKE ''%CONS%''';
+        SET @Query = 'SELECT Code,
+    CAST(REPLACE(DecryptByKey(category), CHAR(0), '') AS NVARCHAR(128)) AS category,
+    CAST(REPLACE(DecryptByKey(A_C_group), CHAR(0), '') AS NVARCHAR(128)) A_C_group,
+    CAST(REPLACE(DecryptByKey(sales_office), CHAR(0), '') AS NVARCHAR(128)) sales_office,
+    CAST(REPLACE(DecryptByKey(Name), CHAR(0), '') AS NVARCHAR(128)) Name,
+     CAST(REPLACE(DecryptByKey(City), CHAR(0), '') AS NVARCHAR(128)) City,
+     CAST(REPLACE(DecryptByKey(Search_term), CHAR(0), '') AS NVARCHAR(128)) Search_term,
+    [Status],
+    TPC_code,
+    id FROM customer WHERE CAST(REPLACE(DecryptByKey(category), CHAR(0), '') AS NVARCHAR(128)) LIKE ''%CONS%''';
     END
     ELSE IF @Type = 3
     BEGIN
-        SET @Query = 'SELECT * FROM customer WHERE Category LIKE ''%end_use%''';
+        SET @Query = 'SELECT Code,
+    CAST(REPLACE(DecryptByKey(category), CHAR(0), '') AS NVARCHAR(128)) AS category,
+    CAST(REPLACE(DecryptByKey(A_C_group), CHAR(0), '') AS NVARCHAR(128)) A_C_group,
+    CAST(REPLACE(DecryptByKey(sales_office), CHAR(0), '') AS NVARCHAR(128)) sales_office,
+    CAST(REPLACE(DecryptByKey(Name), CHAR(0), '') AS NVARCHAR(128)) Name,
+     CAST(REPLACE(DecryptByKey(City), CHAR(0), '') AS NVARCHAR(128)) City,
+     CAST(REPLACE(DecryptByKey(Search_term), CHAR(0), '') AS NVARCHAR(128)) Search_term,
+    [Status],
+    TPC_code,
+    id FROM customer WHERE CAST(REPLACE(DecryptByKey(category), CHAR(0), '') AS NVARCHAR(128)) LIKE ''%end_use%''';
     END
 
     IF @SalesOffice IS NOT NULL
     BEGIN
-        SET @Query = @Query + ' AND sales_office = @salesOffice';
+        SET @Query = @Query + ' AND CAST(REPLACE(DecryptByKey(sales_office), CHAR(0), '') AS NVARCHAR(128)) = @salesOffice';
     END
 
     -- Execute the final query

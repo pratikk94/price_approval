@@ -16,6 +16,7 @@
 //     trustServerCertificate: true, // Use this if you're on a local development environment
 //   },
 // };
+const { SYMMETRIC_KEY_NAME, CERTIFICATE_NAME } = require("../config/constants");
 const db = require("../config/db");
 async function getRegionAndRoleByEmployeeId(employeeId) {
   try {
@@ -29,7 +30,7 @@ async function getRegionAndRoleByEmployeeId(employeeId) {
     let result = await db.executeQuery(`EXEC GetEmployeeRegion 
         @UserId,@SymmetricKeyName,@CertificateName`,
       {
-        UserId: employee_id,
+        UserId: employeeId,
         SymmetricKeyName: SYMMETRIC_KEY_NAME,
         CertificateName: CERTIFICATE_NAME
       });

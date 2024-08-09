@@ -2267,6 +2267,109 @@ GO
 
 /* defined_role */
 
+-- Open the symmetric key
+OPEN SYMMETRIC KEY YourSymmetricKeyName
+    DECRYPTION BY CERTIFICATE YourCertificateName;
+
+-- Insert data into the table
+INSERT INTO dbo.define_roles
+    (employee_name, employee_id, role, region, created_by, created_date, active)
+VALUES
+    (
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Mia'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'e1000'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'BAM'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sales office North'),
+        'backend_user',
+        'Mar 26 2024  4:48AM',
+        1
+    ),
+    (
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Ethan'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'e1001'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'AM'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sales office North'),
+        'backend_user',
+        'Mar 26 2024  4:53AM',
+        1
+    ),
+    (
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Olivia'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'e1002'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'RM'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sales office North'),
+        'backend_user',
+        'Mar 26 2024  4:53AM',
+        1
+    ),
+    (
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Aiden'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'e1003'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'NSM'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sales office North'),
+        'backend_user',
+        'Mar 26 2024  4:53AM',
+        1
+    ),
+    (
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sophia'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'e1004'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'HDSM'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sales office North'),
+        'backend_user',
+        'Mar 26 2024  4:53AM',
+        1
+    ),
+    (
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Lucas'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'e1005'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Validator'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sales office North'),
+        'backend_user',
+        'Mar 26 2024  4:53AM',
+        1
+    ),
+    (
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Ava'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'e1006'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'NSM'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sales office west'),
+        'backend_user',
+        'Mar 29 2024  4:47AM',
+        1
+    ),
+    (
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Charlotte'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'e1010'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'AM'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sales office west'),
+        'backend_user',
+        'Apr  3 2024  5:14AM',
+        1
+    ),
+    (
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Isabella'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'e1008'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'NSMT'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sales office North'),
+        'backend_user',
+        'Apr  3 2024  5:24AM',
+        1
+    ),
+    (
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Liam'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'e1009'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'RM'),
+        EncryptByKey(Key_GUID('YourSymmetricKeyName'), 'Sales office west'),
+        'backend_user',
+        'Apr 23 2024 10:48AM',
+        1
+    );
+
+-- Close the symmetric key
+CLOSE SYMMETRIC KEY YourSymmetricKeyName;
+
+
 -- DECLARE @RequestIDs NVARCHAR(MAX) = '''NR202407190005'',''NR202407210001''';
 -- DECLARE @SymmetricKeyName NVARCHAR(128) = 'YourSymmetricKeyName';
 -- DECLARE @CertificateName NVARCHAR(128) = 'YourCertificateName';
@@ -2412,9 +2515,11 @@ GO
 
 
 -- EXEC FetchUserByEmployeeId
---     @employee_id = @employee_id,
+--     @employee_id = 'e1001',
 --     @SymmetricKeyName = @SymmetricKeyName,
 --     @CertificateName = @CertificateName;
+
+
 CREATE PROCEDURE FetchUserByEmployeeId
     @employee_id VARCHAR(255),
     @SymmetricKeyName NVARCHAR(128),
@@ -2436,17 +2541,17 @@ BEGIN
 
         -- Decrypt and select the values from the define_roles table where employee_id matches
         SELECT 
-            employee_id,
-            CONVERT(VARCHAR(255), DecryptByKey(employee_name)) AS employee_name,
-            CONVERT(VARCHAR(100), DecryptByKey(role)) AS role,
-            CONVERT(VARCHAR(100), DecryptByKey(region)) AS region,
+             CAST(REPLACE(DecryptByKey(employee_id), CHAR(0), '''') AS NVARCHAR(128)) AS employee_id,
+            CAST(REPLACE(DecryptByKey(employee_name), CHAR(0), '''') AS NVARCHAR(128)) AS employee_name,
+            CAST(REPLACE(DecryptByKey(role), CHAR(0), '''') AS NVARCHAR(128)) AS role,
+            CAST(REPLACE(DecryptByKey(region), CHAR(0), '''') AS NVARCHAR(128)) AS region,
             created_by,
             created_date,
             active
         FROM 
             define_roles
         WHERE
-            employee_id = @employee_id;
+            CAST(REPLACE(DecryptByKey(employee_id), CHAR(0), '''') AS NVARCHAR(128)) = 'e1001';
 
         -- Close the symmetric key
         SET @SQL = 'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName);
@@ -3273,4 +3378,92 @@ BEGIN
     -- Close the symmetric key
     SET @sql = N'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N';';
     EXEC sp_executesql @sql;
+END;
+
+
+-- EXEC GetCustomersByTypeAndSalesOffice 
+--     @Type = 1, 
+--     @SalesOffice = 'Sales office North',
+--     @SymmetricKeyName = 'YourSymmetricKeyName', 
+--     @CertificateName = 'YourCertificateName';
+
+CREATE PROCEDURE GetCustomersByTypeAndSalesOffice
+    @Type INT,
+    @SalesOffice NVARCHAR(50) = NULL,
+    @SymmetricKeyName NVARCHAR(128),
+    @CertificateName NVARCHAR(128)
+AS
+BEGIN
+    DECLARE @Query NVARCHAR(MAX);
+    DECLARE @SalesOfficeParam NVARCHAR(50) = '@salesOffice NVARCHAR(50)';
+
+    -- Open the symmetric key using the provided certificate
+    DECLARE @OpenKeySQL NVARCHAR(MAX) = 
+        N'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) +
+        N' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + N';';
+
+    EXEC sp_executesql @OpenKeySQL;
+
+    IF @Type = 1
+    BEGIN
+        SET @Query = 'SELECT 
+                            Code,
+                        CAST(REPLACE(DecryptByKey(category), CHAR(0), '''') AS NVARCHAR(128)) AS category,
+                        CAST(REPLACE(DecryptByKey(A_C_group), CHAR(0), '''') AS NVARCHAR(128)) A_C_group,
+                        CAST(REPLACE(DecryptByKey(sales_office), CHAR(0), '''') AS NVARCHAR(128)) sales_office,
+                        CAST(REPLACE(DecryptByKey(Name), CHAR(0), '''') AS NVARCHAR(128)) Name,
+                        CAST(REPLACE(DecryptByKey(City), CHAR(0), '''') AS NVARCHAR(128)) City,
+                        CAST(REPLACE(DecryptByKey(Search_term), CHAR(0), '''') AS NVARCHAR(128)) Search_term,
+                        [Status],
+                        TPC_code,
+                        id 
+                      FROM customer 
+                      WHERE CAST(REPLACE(DecryptByKey(category), CHAR(0), '''') AS NVARCHAR(128)) LIKE ''%CUST%''';
+    END
+    ELSE IF @Type = 2
+    BEGIN
+        SET @Query = 'SELECT 
+                            Code,
+                        CAST(REPLACE(DecryptByKey(category), CHAR(0), '''') AS NVARCHAR(128)) AS category,
+                        CAST(REPLACE(DecryptByKey(A_C_group), CHAR(0), '''') AS NVARCHAR(128)) A_C_group,
+                        CAST(REPLACE(DecryptByKey(sales_office), CHAR(0), '''') AS NVARCHAR(128)) sales_office,
+                        CAST(REPLACE(DecryptByKey(Name), CHAR(0), '''') AS NVARCHAR(128)) Name,
+                        CAST(REPLACE(DecryptByKey(City), CHAR(0), '''') AS NVARCHAR(128)) City,
+                        CAST(REPLACE(DecryptByKey(Search_term), CHAR(0), '''') AS NVARCHAR(128)) Search_term,
+                        [Status],
+                        TPC_code,
+                        id 
+                      FROM customer 
+                      WHERE CAST(REPLACE(DecryptByKey(category), CHAR(0), '''') AS NVARCHAR(128)) LIKE ''%CONS%''';
+    END
+    ELSE IF @Type = 3
+    BEGIN
+        SET @Query = 'SELECT 
+                            Code,
+                        CAST(REPLACE(DecryptByKey(category), CHAR(0), '''') AS NVARCHAR(128)) AS category,
+                        CAST(REPLACE(DecryptByKey(A_C_group), CHAR(0), '''') AS NVARCHAR(128)) A_C_group,
+                        CAST(REPLACE(DecryptByKey(sales_office), CHAR(0), '''') AS NVARCHAR(128)) sales_office,
+                        CAST(REPLACE(DecryptByKey(Name), CHAR(0), '''') AS NVARCHAR(128)) Name,
+                        CAST(REPLACE(DecryptByKey(City), CHAR(0), '''') AS NVARCHAR(128)) City,
+                        CAST(REPLACE(DecryptByKey(Search_term), CHAR(0), '''') AS NVARCHAR(128)) Search_term,
+                        [Status],
+                        TPC_code,
+                        id 
+                      FROM customer 
+                      WHERE CAST(REPLACE(DecryptByKey(category), CHAR(0), '''') AS NVARCHAR(128)) LIKE ''%end_use%''';
+    END
+
+    IF @SalesOffice IS NOT NULL
+    BEGIN
+        SET @Query = @Query + ' AND CAST(REPLACE(DecryptByKey(sales_office), CHAR(0), '''') AS NVARCHAR(128)) = @salesOffice';
+    END
+
+    -- Execute the final query
+    EXEC sp_executesql @Query, @SalesOfficeParam, @salesOffice = @SalesOffice;
+
+    -- Close the symmetric key
+    DECLARE @CloseKeySQL NVARCHAR(MAX) = 
+        N'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + N';';
+
+    EXEC sp_executesql @CloseKeySQL;
 END;

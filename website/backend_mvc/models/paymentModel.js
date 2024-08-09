@@ -15,73 +15,79 @@ async function fetchLowestPaymentTermDetails(customers, consignees, endUses) {
     const insertEndUses =
       endUses.length > 0 ? endUses.map((e) => `('${e}')`).join(",") : `('')`;
 
-    // const query = `
-    // DECLARE @Customers TABLE (customer_id NVARCHAR(10));
-    // DECLARE @Consignees TABLE (consignee_id NVARCHAR(10));
-    // DECLARE @EndUses TABLE (end_use_id NVARCHAR(10));
-
-
-    // -- contain properly formatted SQL values like "('value1'),('value2'),('value3')"
-    // INSERT INTO @Customers (customer_id) VALUES ${insertCustomers}; -- e.g., VALUES ('c1'),('c2'),('c3')
-    // INSERT INTO @Consignees (consignee_id) VALUES ${insertConsignees}; -- e.g., VALUES ('co1'),('co2'),('co3')
-    // INSERT INTO @EndUses (end_use_id) VALUES ${insertEndUses}; -- e.g., VALUES ('e1'),('e2'),('e3')
-
-    // -- Running the query to find the lowest payment term and its corresponding terms
-    // SELECT MIN(ptm.payment_term_id) AS LowestPaymentTerm, CONCAT(pt.payment_terms_id,pt.terms) as terms
-    // FROM dbo.payment_terms_master ptm
-    // INNER JOIN payment_terms pt ON pt.id = ptm.payment_term_id
-    // WHERE (ptm.customer_id IN (SELECT customer_id FROM @Customers) OR ptm.customer_id IS NULL)
-    //   AND (ptm.consignee_id IN (SELECT consignee_id FROM @Consignees) OR ptm.consignee_id IS NULL)
-    //   AND (ptm.end_use_id IN (SELECT end_use_id FROM @EndUses) OR ptm.end_use_id IS NULL)
-    // GROUP BY pt.terms,pt.payment_terms_id;
-    // `;
-
     const query = `
-    -- Define your dynamic key and certificate names
-DECLARE @SymmetricKeyName NVARCHAR(128) = 'YourSymmetricKeyName';
-DECLARE @CertificateName NVARCHAR(128) = 'YourCertificateName';
+    DECLARE @Customers TABLE (customer_id NVARCHAR(10));
+    DECLARE @Consignees TABLE (consignee_id NVARCHAR(10));
+    DECLARE @EndUses TABLE (end_use_id NVARCHAR(10));
 
--- Build and execute dynamic SQL to open the symmetric key using the certificate
-DECLARE @OpenKeySQL NVARCHAR(MAX) = 
-    'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + 
-    ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + ';';
 
-EXEC sp_executesql @OpenKeySQL;
+    -- contain properly formatted SQL values like "('value1'),('value2'),('value3')"
+    INSERT INTO @Customers (customer_id) VALUES ${insertCustomers}; -- e.g., VALUES ('c1'),('c2'),('c3')
+    INSERT INTO @Consignees (consignee_id) VALUES ${insertConsignees}; -- e.g., VALUES ('co1'),('co2'),('co3')
+    INSERT INTO @EndUses (end_use_id) VALUES ${insertEndUses}; -- e.g., VALUES ('e1'),('e2'),('e3')
 
--- Declare and populate temporary tables
-DECLARE @Customers TABLE (customer_id NVARCHAR(10));
-DECLARE @Consignees TABLE (consignee_id NVARCHAR(10));
-DECLARE @EndUses TABLE (end_use_id NVARCHAR(10));
+    -- Running the query to find the lowest payment term and its corresponding terms
+    SELECT MIN(ptm.payment_term_id) AS LowestPaymentTerm, CONCAT(pt.payment_terms_id,pt.terms) as terms
+    FROM dbo.payment_terms_masterD ptm
+    INNER JOIN payment_termsD pt ON pt.id = ptm.payment_term_id
+    WHERE (ptm.customer_id IN (SELECT customer_id FROM @Customers) OR ptm.customer_id IS NULL)
+      AND (ptm.consignee_id IN (SELECT consignee_id FROM @Consignees) OR ptm.consignee_id IS NULL)
+      AND (ptm.end_use_id IN (SELECT end_use_id FROM @EndUses) OR ptm.end_use_id IS NULL)
+    GROUP BY pt.terms,pt.payment_terms_id;
+    `;
 
--- Insert data into @Customers, @Consignees, and @EndUses
-INSERT INTO @Customers (customer_id) VALUES ('c1'),('c2'),('c3');
-INSERT INTO @Consignees (consignee_id) VALUES ('co1'),('co2'),('co3');
-INSERT INTO @EndUses (end_use_id) VALUES ('e1'),('e2'),('e3');
+    console.log(customers);
+    console.log(consignees);
+    console.log(endUses);
+    
 
--- Running the query to find the lowest payment term and its corresponding terms with decryption
-SELECT 
-    MIN(ptm.payment_term_id) AS LowestPaymentTerm, 
-    CONCAT(
-        CONVERT(NVARCHAR(50), DECRYPTBYKEY(pt.payment_terms_id)), 
-        CONVERT(NVARCHAR(50), DECRYPTBYKEY(pt.terms))
-    ) AS terms
-FROM 
-    dbo.payment_terms_master ptm
-INNER JOIN 
-    payment_terms pt ON pt.id = CAST(DecryptByKey(ptm.payment_term_id) AS INT)
-WHERE 
-    (CAST(DecryptByKey(ptm.customer_id) AS INT) IN (SELECT customer_id FROM @Customers) OR CAST(DecryptByKey(ptm.customer_id) AS INT) IS NULL)
-    AND (CAST(DecryptByKey(ptm.consignee_id) AS INT) IN (SELECT consignee_id FROM @Consignees) OR CAST(DecryptByKey(ptm.consignee_id) AS INT) IS NULL)
-    AND (CAST(DecryptByKey(ptm.end_use_id) AS INT) IN (SELECT end_use_id FROM @EndUses) OR CAST(DecryptByKey(ptm.end_use_id) IS NULL)
-GROUP BY 
-    CAST(REPLACE(DecryptByKey(pt.terms), CHAR(0), '') AS VARCHAR(128)), CAST(REPLACE(DecryptByKey(pt.payment_terms_id), CHAR(0), '') AS VARCHAR(128));
 
--- Build and execute dynamic SQL to close the symmetric key
-DECLARE @CloseKeySQL NVARCHAR(MAX) = 
-    'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ';';
+//     const query = `
+//     -- Define your dynamic key and certificate names
+// DECLARE @SymmetricKeyName NVARCHAR(128) = 'YourSymmetricKeyName';
+// DECLARE @CertificateName NVARCHAR(128) = 'YourCertificateName';
 
-EXEC sp_executesql @CloseKeySQL;
-`
+// -- Build and execute dynamic SQL to open the symmetric key using the certificate
+// DECLARE @OpenKeySQL NVARCHAR(MAX) = 
+//     'OPEN SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + 
+//     ' DECRYPTION BY CERTIFICATE ' + QUOTENAME(@CertificateName) + ';';
+
+// EXEC sp_executesql @OpenKeySQL;
+
+// -- Declare and populate temporary tables
+// DECLARE @Customers TABLE (customer_id NVARCHAR(10));
+// DECLARE @Consignees TABLE (consignee_id NVARCHAR(10));
+// DECLARE @EndUses TABLE (end_use_id NVARCHAR(10));
+
+// -- Insert data into @Customers, @Consignees, and @EndUses
+// INSERT INTO @Customers (customer_id) VALUES ('c1'),('c2'),('c3');
+// INSERT INTO @Consignees (consignee_id) VALUES ('co1'),('co2'),('co3');
+// INSERT INTO @EndUses (end_use_id) VALUES ('e1'),('e2'),('e3');
+
+// -- Running the query to find the lowest payment term and its corresponding terms with decryption
+// SELECT 
+//     MIN(ptm.payment_term_id) AS LowestPaymentTerm, 
+//     CONCAT(
+//         CONVERT(NVARCHAR(50), DECRYPTBYKEY(pt.payment_terms_id)), 
+//         CONVERT(NVARCHAR(50), DECRYPTBYKEY(pt.terms))
+//     ) AS terms
+// FROM 
+//     dbo.payment_terms_master ptm
+// INNER JOIN 
+//     payment_terms pt ON pt.id = CAST(DecryptByKey(ptm.payment_term_id) AS INT)
+// WHERE 
+//     (CAST(DecryptByKey(ptm.customer_id) AS INT) IN (SELECT customer_id FROM @Customers) OR CAST(DecryptByKey(ptm.customer_id) AS INT) IS NULL)
+//     AND (CAST(DecryptByKey(ptm.consignee_id) AS INT) IN (SELECT consignee_id FROM @Consignees) OR CAST(DecryptByKey(ptm.consignee_id) AS INT) IS NULL)
+//     AND (CAST(DecryptByKey(ptm.end_use_id) AS INT) IN (SELECT end_use_id FROM @EndUses) OR CAST(DecryptByKey(ptm.end_use_id) IS NULL)
+// GROUP BY 
+//     CAST(REPLACE(DecryptByKey(pt.terms), CHAR(0), '') AS VARCHAR(128)), CAST(REPLACE(DecryptByKey(pt.payment_terms_id), CHAR(0), '') AS VARCHAR(128));
+
+// -- Build and execute dynamic SQL to close the symmetric key
+// DECLARE @CloseKeySQL NVARCHAR(MAX) = 
+//     'CLOSE SYMMETRIC KEY ' + QUOTENAME(@SymmetricKeyName) + ';';
+
+// EXEC sp_executesql @CloseKeySQL;
+// `
 
     let result = await db.executeQuery(query);
 

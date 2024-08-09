@@ -1,5 +1,5 @@
-export const backend_url = "http://192.168.1.109:3001/";
-export const backend_mvc = "http://192.168.1.109:3000/";
+export const backend_url = "http://192.168.1.110:3001/";
+export const backend_mvc = "http://192.168.1.110:3000/";
 
 export const statusFilters = new Map([
   [0, "Draft"],
