@@ -177,7 +177,7 @@ const CreateRequestModal = ({
   };
 
   const handleFormSubmit = (event, draft = false) => {
-    handleOpen();
+    // handleOpen();
     setShowSuccess(false);
     event.preventDefault();
     // const checkForEndUse =
@@ -227,8 +227,9 @@ const CreateRequestModal = ({
         }
         setStopExecution(false);
         for (let i = 0; i < tableRowsData.length; i++) {
+          console.log(tableRowsData[i], tableRowsData[i]["grade"] == "");
           if (tableRowsData[i]["grade"] == "") {
-            setErrorMessage("Select Grade for Row " + (i + 1));
+            setErrorMessage("f" + (i + 1));
             setStopExecution(e, !e);
           } else if (tableRowsData[i]["gradeType"] == "") {
             setErrorMessage("Select Grade Type for Row " + (i + 1));
@@ -286,7 +287,7 @@ const CreateRequestModal = ({
             );
           }
         } else {
-          setShowSuccess(false);
+          setShowSuccess(true);
         }
       }
     } else if (selectedCustomers.length == 0) {
@@ -382,7 +383,7 @@ const CreateRequestModal = ({
     }
     if (formData["isDraft"]) {
       setIsDraft(true);
-      setShowSuccess("true");
+      setShowSuccess(true);
     }
     try {
       let action = "N";
@@ -471,9 +472,12 @@ const CreateRequestModal = ({
           body: JSON.stringify(formData),
         }
       );
+      console.log(response);
       const oldRequestIds =
         JSON.parse(localStorage.getItem("request_ids")) || [];
       const requestData = await response.json();
+
+      console.log(requestData);
       if (draft && remarks.length == 0) {
         console.log("Remark won't be stored");
       } else handleAddRemark(requestData["id"]);
@@ -482,6 +486,7 @@ const CreateRequestModal = ({
         updateRequestIds(oldRequestIds, requestData["id"])
           .then((response) => {
             console.log("Update successful:", response);
+            console.log(response);
             if (!response.ok) {
               setShowSuccess(false);
               setErrorMessage(
@@ -490,12 +495,16 @@ const CreateRequestModal = ({
               throw new Error(`HTTP error! status: ${response.status}`);
             } else {
               setShowSuccess(true);
+
               setOpenModal(true);
             }
           })
           .catch((error) => {
             console.error("Failed to update request IDs:", error);
           });
+      } else {
+        setShowSuccess(true);
+        setOpenModal(true);
       }
 
       localStorage.removeItem("request_ids");

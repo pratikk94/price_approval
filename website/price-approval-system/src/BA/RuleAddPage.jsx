@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Select from "react-select";
-import { backend_mvc, backend_url } from "../util";
+import { backend_mvc } from "../util";
+import BAPopup from "./BAPopUp";
 
 const RuleAddPage = () => {
   const [regions, setRegions] = useState([]);
@@ -12,7 +13,7 @@ const RuleAddPage = () => {
   ]);
   const [validFrom, setValidFrom] = useState("");
   const [validTo, setValidTo] = useState("");
-
+  const [ruleSuccess, setRuleSuccess] = useState(false);
   useEffect(() => {
     // Fetch sales regions
     axios
@@ -58,6 +59,10 @@ const RuleAddPage = () => {
     return now.toISOString();
   };
 
+  const onClose = () => {
+    setRuleSuccess(false);
+  };
+
   const handleSubmit = async () => {
     const createdAt = getCurrentTimestamp();
 
@@ -78,7 +83,7 @@ const RuleAddPage = () => {
 
     try {
       const response = await axios.post(
-        "http://192.168.0.5:3000/api/approvers-by-levels",
+        `${backend_mvc}api/approvers-by-levels`,
         { dataArray },
         {
           headers: {
@@ -87,6 +92,7 @@ const RuleAddPage = () => {
         }
       );
       console.log("API response:", response.data);
+      setRuleSuccess(true);
     } catch (error) {
       console.error("Error posting data:", error);
     }
@@ -218,6 +224,13 @@ const RuleAddPage = () => {
       <button onClick={handleSubmit} style={styles.button}>
         Submit
       </button>
+      {ruleSuccess ? (
+        <BAPopup
+          message="Role created succesfully"
+          onClose={onClose}
+          open={ruleSuccess}
+        />
+      ) : null}
     </div>
   );
 };
