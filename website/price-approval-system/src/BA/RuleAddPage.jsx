@@ -61,6 +61,7 @@ const RuleAddPage = () => {
 
   const onClose = () => {
     setRuleSuccess(false);
+    window.location.reload();
   };
 
   const handleSubmit = async () => {
