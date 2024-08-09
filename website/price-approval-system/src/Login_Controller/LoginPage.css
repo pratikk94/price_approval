@@ -18,7 +18,7 @@
   z-index: -1; /* Stay behind other content */
 }
 .title {
-  color: #0056b3;
+  color: #156760;
   font-family: "Roboto", sans-serif;
 }
 /* Container for content: input field and button */
@@ -34,7 +34,7 @@
   width: 300px; /* Fixed width for the input field */
   padding: 10px; /* Padding inside the input field */
   font-size: 16px; /* Font size for the text inside the input field */
-  border: 2px solid #007bff; /* Border color similar to Bootstrap's primary */
+  border: 2px solid #156760; /* Border color similar to Bootstrap's primary */
   border-radius: 5px; /* Rounded corners */
 }
 
@@ -43,7 +43,7 @@
   padding: 10px 20px; /* Padding inside the button */
   font-size: 16px; /* Font size for the button text */
   color: white; /* White text color */
-  background-color: #007bff; /* Blue background color */
+  background-color: #156760; /* Blue background color */
   border: none; /* No border */
   border-radius: 5px; /* Rounded corners */
   cursor: pointer; /* Pointer cursor on hover */
@@ -51,5 +51,6 @@
 }
 
 .submit-button:hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  color: #000;
+  background-color: #fff; /* Darker blue on hover */
 }

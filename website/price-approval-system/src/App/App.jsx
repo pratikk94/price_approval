@@ -99,10 +99,37 @@ function ResponsiveDrawer({ logout }) {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Price Approval System
           </Typography>
-          <IconButton color="inherit" onClick={handleProfileMenuOpen}>
-            <AccountCircle />
-          </IconButton>
-          <Menu
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              border: "0.5px solid white",
+              margin: "4px",
+              paddingRight: "12px",
+              borderRadius: "5px",
+            }}
+          >
+            <IconButton
+              color="inherit"
+              onClick={() => {}}
+              // {handleProfileMenuOpen}
+            >
+              <AccountCircle sx={{ fontSize: "48px" }} />
+            </IconButton>
+            <div
+              style={{ marginLeft: "10px", marginTop: "-6px", height: "40px" }}
+            >
+              <p style={{ margin: "0px", marginTop: "-4px" }}>
+                Pratik Khanapurkar
+              </p>
+              <p style={{ marginTop: "6px", marginBottom: "0px" }}>
+                {session.role} - {session.region}
+              </p>
+              <p style={{ marginTop: "-6px" }}></p>
+            </div>
+          </div>
+
+          {/* <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={handleProfileMenuClose}
@@ -116,7 +143,7 @@ function ResponsiveDrawer({ logout }) {
             <MenuItem onClick={handleProfileMenuClose}>
               Employee ID: {session.employee_id}
             </MenuItem>
-          </Menu>
+          </Menu> */}
           <IconButton color="inherit" onClick={logout}>
             <LogoutIcon />
           </IconButton>
